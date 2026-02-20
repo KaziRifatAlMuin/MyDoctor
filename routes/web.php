@@ -92,12 +92,15 @@ Route::middleware('auth')->group(function () {
 Route::prefix('health')->name('health.')->group(function () {
     // Public health pages
     Route::view('/hospitals', 'health.hospitals')->name('hospitals');
+    Route::view('/tips', 'health.tips')->name('tips');
     
     // Protected health pages
     Route::middleware('auth')->group(function () {
         Route::view('/records', 'health.records')->name('records');
         Route::view('/tracking', 'health.tracking')->name('tracking');
         Route::view('/consultation', 'health.consultation')->name('consultation');
+        Route::view('/symptoms', 'health.symptoms')->name('symptoms');
+        Route::view('/suggestions', 'health.suggestions')->name('suggestions');
     });
 });
 
@@ -114,6 +117,7 @@ Route::prefix('medicine')->name('medicine.')->group(function () {
     // Protected medicine pages
     Route::middleware('auth')->group(function () {
         Route::view('/prescriptions', 'medicine.prescriptions')->name('prescriptions');
+        Route::view('/reminders', 'medicine.reminders')->name('reminders');
     });
 });
 
