@@ -12,13 +12,23 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
+            $table->id('UserID'); // Primary key with custom name
+            $table->string('Picture')->nullable(); // Profile picture path
+            $table->string('Name');
+            $table->date('DateOfBirth')->nullable();
+            $table->string('Phone')->nullable();
+            $table->string('Email')->unique();
+            $table->string('Occupation')->nullable();
+            $table->string('BloodGroup')->nullable(); // A+, B+, O+, etc.
+            $table->timestamp('CreatedAt')->useCurrent(); // Current timestamp
+            
+            // Laravel required fields
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
-            $table->timestamps();
+            
+            // Remove the default timestamps() and use our custom CreatedAt
+            // $table->timestamps(); // Comment this out or remove it
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
