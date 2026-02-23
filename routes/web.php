@@ -87,6 +87,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/suggestions', function () {
         return view('suggestions');
     })->name('suggestions');
+
+    // Email verification: send verification notification
+    Route::post('/email/verification-notification', function (\Illuminate\Http\Request $request) {
+        $request->user()->sendEmailVerificationNotification();
+        return back()->with('status', 'verification-link-sent');
+    })->name('verification.send');
 });
 
 /*

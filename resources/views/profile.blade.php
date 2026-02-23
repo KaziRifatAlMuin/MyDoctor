@@ -433,16 +433,7 @@
                                 <i class="fas fa-chevron-right text-muted" style="font-size:0.8rem;"></i>
                             </button>
 
-                            @if (!auth()->user()->email_verified_at)
-                                <form method="POST" action="{{ route('verification.send') }}">
-                                    @csrf
-                                    <button type="submit" class="action-btn text-start w-100">
-                                        <span><i class="fas fa-envelope-open me-2" style="color:#dd6b20;"></i>Verify Email
-                                            Address</span>
-                                        <i class="fas fa-chevron-right text-muted" style="font-size:0.8rem;"></i>
-                                    </button>
-                                </form>
-                            @endif
+                            {{-- Email verification UI removed (handled elsewhere) --}}
 
                             <div class="mt-2">
                                 <button class="action-btn danger text-start" data-bs-toggle="modal"
