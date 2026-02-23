@@ -26,6 +26,7 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow-x: hidden;
+            background-color: #ffffff;
         }
 
         /* Banner Styles */
@@ -38,6 +39,44 @@
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
+        }
+
+        /* Compact navbar for non-home pages */
+        .page-nav-bar {
+            position: relative;
+            width: 100%;
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .page-nav-bar .banner-nav {
+            position: relative;
+            top: auto;
+            left: auto;
+            right: auto;
+            padding: 14px 40px;
+        }
+
+        /* Dark text links on white navbar */
+        .page-nav-bar .banner-nav-link {
+            color: #2d3748;
+            text-shadow: none;
+        }
+
+        .page-nav-bar .banner-nav-link:hover {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .page-nav-bar .banner-nav-link.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        /* User circle on white bar */
+        .page-nav-bar .user-circle {
+            border-color: #667eea;
         }
 
         /* Navbar Styles - Positioned absolutely on banner */
@@ -798,8 +837,8 @@
     @stack('styles')
 </head>
 <body>
-    <!-- Banner Section -->
-    <div class="banner">
+    <!-- Banner / Navbar -->
+    <div class="{{ request()->routeIs('home') ? 'banner' : 'page-nav-bar' }}">
         <!-- Navigation on Banner -->
         <nav class="banner-nav">
             <!-- Logo -->
@@ -840,8 +879,8 @@
 <div class="user-menu" id="userMenu">
     <div class="user-circle" onclick="toggleUserDropdown()">
         @auth
-            @if(auth()->user()->profile_picture)
-                <img src="{{ Storage::url(auth()->user()->profile_picture) }}" alt="{{ auth()->user()->name }}">
+            @if(auth()->user()->Picture)
+                <img src="{{ asset('storage/' . auth()->user()->Picture) }}" alt="{{ auth()->user()->Name }}">
             @else
                 <i class="fas fa-user-circle"></i>
             @endif
@@ -854,8 +893,8 @@
         @auth
             <!-- LOGGED IN USER MENU -->
             <div class="dropdown-header">
-                <h6>{{ auth()->user()->name }}</h6>
-                <p>{{ auth()->user()->email }}</p>
+                <h6>{{ auth()->user()->Name }}</h6>
+                <p>{{ auth()->user()->Email }}</p>
             </div>
             
             <a href="{{ route('profile') }}" class="dropdown-item-custom">
@@ -905,7 +944,8 @@
 </div>
         </nav>
 
-<!-- Banner Section with Hero Image -->
+@if(request()->routeIs('home'))
+<!-- Banner Hero Section (Home only) -->
 <div class="banner position-relative overflow-hidden">
     <!-- Background Image with Overlay -->
     
@@ -982,6 +1022,7 @@
         </div>
     </div>
 </div>
+@endif
 
     <!-- Main Content -->
     <main class="main-content">

@@ -83,7 +83,7 @@
             align-items: center;
             gap: 14px;
             padding: 0.85rem 1.5rem;
-            border-bottom: 1px solid #f8f9fa;
+            border-bottom: 1px solid #e2e8f0;
         }
 
         .info-item:last-child {
@@ -239,7 +239,7 @@
         }
 
         .section-bg {
-            background: #f8f9fa;
+            background: #ffffff;
             min-height: calc(100vh - 400px);
             padding: 2.5rem 0 3rem;
         }
