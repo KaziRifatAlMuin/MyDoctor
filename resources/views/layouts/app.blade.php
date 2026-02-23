@@ -910,10 +910,7 @@
                 <i class="fas fa-lightbulb"></i> Suggestions
             </a>
             
-            <!-- Register - Show for ALL users (both logged in and guests) -->
-            <a href="{{ route('register') }}" class="dropdown-item-custom">
-                <i class="fas fa-user-plus"></i> Register
-            </a>
+            <!-- Register link hidden for authenticated users -->
             
             <!-- Check for admin by email -->
             @if(auth()->user()->email === 'admin@mydoctor.com')

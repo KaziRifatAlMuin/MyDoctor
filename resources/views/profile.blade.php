@@ -436,11 +436,13 @@
                             {{-- Email verification UI removed (handled elsewhere) --}}
 
                             <div class="mt-2">
-                                <button class="action-btn danger text-start" data-bs-toggle="modal"
-                                    data-bs-target="#deleteAccountModal">
-                                    <span><i class="fas fa-user-times me-2"></i>Delete Account</span>
-                                    <i class="fas fa-chevron-right" style="font-size:0.8rem;"></i>
-                                </button>
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" class="action-btn danger text-start w-100">
+                                        <span><i class="fas fa-sign-out-alt me-2"></i>Sign Out</span>
+                                        <i class="fas fa-chevron-right" style="font-size:0.8rem;"></i>
+                                    </button>
+                                </form>
                             </div>
 
                         </div>
@@ -686,55 +688,7 @@
     </div>
 
 
-    {{-- ════════════════════════════════════════════════════════ --}}
-    {{-- Modal: Delete Account                                     --}}
-    {{-- ════════════════════════════════════════════════════════ --}}
-    <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 rounded-4 shadow">
-
-                <div class="modal-header border-0 px-4 pt-4">
-                    <h5 class="modal-title fw-bold text-danger" id="deleteAccountLabel">
-                        <i class="fas fa-exclamation-triangle me-2"></i>Delete Account
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-
-                <div class="modal-body px-4">
-                    <div class="alert border-0 rounded-3 mb-3" style="background:rgba(229,62,62,0.08); color:#c53030;">
-                        <i class="fas fa-info-circle me-2"></i>
-                        This action is <strong>permanent and irreversible</strong>. All your data will be lost.
-                    </div>
-                    <form method="POST" action="{{ route('profile.destroy') }}" id="deleteAccountForm">
-                        @csrf
-                        @method('DELETE')
-                        <div>
-                            <label class="form-label fw-semibold small">
-                                Confirm your password to proceed
-                            </label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-white border-end-0">
-                                    <i class="fas fa-lock text-danger"></i>
-                                </span>
-                                <input type="password" name="password" class="form-control border-start-0"
-                                    placeholder="Enter your password" required>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-
-                <div class="modal-footer border-0 px-4 pb-4">
-                    <button type="button" class="btn btn-light rounded-pill px-4"
-                        data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" form="deleteAccountForm" class="btn btn-danger rounded-pill px-4 fw-semibold">
-                        <i class="fas fa-trash-alt me-2"></i>Delete Account
-                    </button>
-                </div>
-
-            </div>
-        </div>
-    </div>
+    {{-- Delete account removed; replaced with Sign Out in actions --}}
 
 @endsection
 
