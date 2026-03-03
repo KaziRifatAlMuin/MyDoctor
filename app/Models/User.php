@@ -10,18 +10,14 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    protected $primaryKey = 'UserID';
-    public $timestamps = false;
-
     protected $fillable = [
-        'Picture',
-        'Name',
-        'DateOfBirth',
-        'Phone',
-        'Email',
-        'Occupation',
-        'BloodGroup',
-        'CreatedAt',
+        'picture',
+        'name',
+        'date_of_birth',
+        'phone',
+        'email',
+        'occupation',
+        'blood_group',
         'password',
     ];
 
@@ -31,9 +27,28 @@ class User extends Authenticatable
     ];
 
     protected $casts = [
-        'email_verified_at' => 'datetime',
-        'DateOfBirth' => 'date',
-        'CreatedAt' => 'datetime',
-        'password' => 'hashed',
+        'date_of_birth'      => 'date',
+        'email_verified_at'  => 'datetime',
+        'password'           => 'hashed',
     ];
+
+    public function healthMetrics()
+    {
+        return $this->hasMany(HealthMetric::class);
+    }
+
+    public function symptoms()
+    {
+        return $this->hasMany(Symptom::class);
+    }
+
+    public function medicines()
+    {
+        return $this->hasMany(Medicine::class);
+    }
+
+    public function medicineLogs()
+    {
+        return $this->hasMany(MedicineLog::class);
+    }
 }
