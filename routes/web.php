@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\HealthController;
 
 
 /*
@@ -19,7 +20,6 @@ Route::get('/', function () {
 
 // Main navigation pages
 Route::view('/medicine', 'medicine')->name('medicine');
-Route::view('/health', 'health')->name('health');
 Route::view('/community', 'community')->name('community');
 Route::view('/help', 'help')->name('help');
 
@@ -73,6 +73,9 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile/picture', [ProfileController::class, 'updatePicture'])->name('profile.picture');
     Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    
+    // Health Dashboard
+    Route::get('/health', [HealthController::class, 'index'])->name('health');
     
     // Notifications
     Route::get('/notifications', function () {

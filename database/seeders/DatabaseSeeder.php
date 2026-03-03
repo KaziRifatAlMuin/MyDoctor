@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Models\UserAddress;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Database\Seeders\MedicalSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -58,6 +59,9 @@ class DatabaseSeeder extends Seeder
 
         // 11. EnvironmentMetrics — depends on environments
         EnvironmentMetric::factory(50)->create();
+
+        // 12. Medical seeding for user id=1 (targeted)
+        $this->call(MedicalSeeder::class);
     }
 }
 

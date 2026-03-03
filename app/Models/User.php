@@ -31,4 +31,24 @@ class User extends Authenticatable
         'email_verified_at'  => 'datetime',
         'password'           => 'hashed',
     ];
+
+    public function healthMetrics()
+    {
+        return $this->hasMany(HealthMetric::class);
+    }
+
+    public function symptoms()
+    {
+        return $this->hasMany(Symptom::class);
+    }
+
+    public function medicines()
+    {
+        return $this->hasMany(Medicine::class);
+    }
+
+    public function medicineLogs()
+    {
+        return $this->hasMany(MedicineLog::class);
+    }
 }
