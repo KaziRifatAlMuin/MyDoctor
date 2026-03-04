@@ -7,7 +7,8 @@
         /* ── Page Section ── */
         .health-section {
             background: #f8f9fb;
-            min-height: calc(100vh - 80px);
+            /* let the section height be determined by content for a dynamic white background */
+            min-height: auto;
             padding: 2.5rem 0 3rem;
         }
 
@@ -766,8 +767,8 @@
              *  CONFIG DATA from PHP
              * ═══════════════════════════════════════════════════════ */
             const metricFieldDefs = @json(collect($metricConfig)->map(fn($c) => $c['js_fields']));
-            const symptomsList    = @json($symptomsList);
-            const diseasesData    = @json($allDiseases->map(fn($d) => ['id' => $d->id, 'name' => $d->disease_name, 'bn' => $d->disease_name_bn]));
+            const symptomsList    = @json($symptomsList, JSON_UNESCAPED_UNICODE);
+            const diseasesData    = @json($allDiseases->map(fn($d) => ['id' => $d->id, 'name' => $d->disease_name, 'bn' => $d->disease_name_bn]), JSON_UNESCAPED_UNICODE);
 
             /* ═══════════════════════════════════════════════════════
              *  REUSABLE: Searchable dropdown builder

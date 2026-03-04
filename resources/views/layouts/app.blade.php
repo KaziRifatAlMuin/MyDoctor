@@ -23,6 +23,10 @@
             box-sizing: border-box;
         }
 
+        html, body {
+            height: 100%;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow-x: hidden;
@@ -288,10 +292,17 @@
         }
 
         /* Main Content */
+        .app-root {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
         .main-content {
             padding: 40px 20px;
             max-width: 1200px;
             margin: 0 auto;
+            flex: 1 0 auto;
         }
 
         /* Chatbot Icon */
@@ -837,6 +848,7 @@
     @stack('styles')
 </head>
 <body>
+    <div class="app-root">
     <!-- Banner / Navbar -->
     <div class="{{ request()->routeIs('home') ? 'banner' : 'page-nav-bar' }}">
         <!-- Navigation on Banner -->
@@ -1193,6 +1205,8 @@
     </script>
     
     @stack('scripts')
+
+    </div>
 
     <!-- Footer -->
     <footer class="footer">
