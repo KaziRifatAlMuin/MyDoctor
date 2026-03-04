@@ -51,4 +51,21 @@ class User extends Authenticatable
     {
         return $this->hasMany(MedicineLog::class);
     }
+
+    public function uploads()
+    {
+        return $this->hasMany(Upload::class);
+    }
+
+    public function userDiseases()
+    {
+        return $this->hasMany(UserDisease::class);
+    }
+
+    public function diseases()
+    {
+        return $this->belongsToMany(Disease::class, 'user_diseases')
+                    ->withPivot('diagnosed_at', 'status', 'notes')
+                    ->withTimestamps();
+    }
 }

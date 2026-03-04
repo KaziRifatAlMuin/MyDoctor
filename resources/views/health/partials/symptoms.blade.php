@@ -1,4 +1,11 @@
 {{-- ── Symptoms Tab ── --}}
+@php $symptomsBn = config('health.symptoms'); @endphp
+<div class="d-flex justify-content-end mb-3">
+    <button class="btn text-white" data-bs-toggle="modal" data-bs-target="#addSymptomModal"
+        style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px; font-size: 0.88rem;">
+        <i class="fas fa-plus me-1"></i> Log Symptom
+    </button>
+</div>
 <div class="row g-4">
 
     {{-- Severity Distribution Chart --}}
@@ -54,6 +61,7 @@
                                     <th>Severity</th>
                                     <th>Date</th>
                                     <th>Note</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -65,7 +73,12 @@
                                                     style="width: 30px; height: 30px; font-size: 0.7rem; border-radius: 8px;">
                                                     <i class="fas fa-thermometer-half"></i>
                                                 </div>
-                                                <span class="fw-semibold">{{ $symptom->symptom_name }}</span>
+                                                <div>
+                                                    <span class="fw-semibold">{{ $symptom->symptom_name }}</span>
+                                                    @if (!empty($symptomsBn[$symptom->symptom_name]))
+                                                        <span class="bn-label d-block">({{ $symptomsBn[$symptom->symptom_name] }})</span>
+                                                    @endif
+                                                </div>
                                             </div>
                                         </td>
                                         <td>
@@ -90,6 +103,21 @@
                                             @else
                                                 <span class="text-muted">—</span>
                                             @endif
+                                        </td>
+                                        <td>
+                                            <div class="action-btn-group">
+                                                <button type="button" class="btn btn-sm btn-outline-primary"
+                                                    onclick="openEditSymptom({{ $symptom->id }}, '{{ addslashes($symptom->symptom_name) }}', {{ $symptom->severity_level ?? 5 }}, '{{ $symptom->recorded_at->format('Y-m-d\TH:i') }}', '{{ addslashes($symptom->note ?? '') }}')">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <form action="{{ route('health.symptom.destroy', $symptom) }}" method="POST"
+                                                    onsubmit="return confirm('Delete this symptom?')" class="d-inline">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </td>
                                     </tr>
                                 @endforeach

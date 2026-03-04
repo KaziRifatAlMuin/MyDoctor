@@ -1,14 +1,26 @@
 {{-- ── Overview Tab ── --}}
+@php
+    $metricConfig = config('health.metric_types');
+    $symptomsBn = config('health.symptoms');
+    $diseasesBnMap = config('health.diseases');
+@endphp
 <div class="row g-4">
 
-    {{-- Left Column: Latest Metrics + Adherence --}}
+    {{-- Left Column: Latest Metrics + Recent Symptoms + Recent Uploads --}}
     <div class="col-lg-8">
 
         {{-- Latest Metrics Summary --}}
         <div class="health-card mb-4">
             <div class="health-card-header">
-                <h5><i class="fas fa-tachometer-alt"></i> Latest Health Metrics</h5>
-                <span class="health-card-badge bg-light text-muted">{{ $latestMetrics->count() }} types</span>
+                <h5><i class="fas fa-tachometer-alt"></i> Latest Health Metrics (সর্বশেষ স্বাস্থ্য মেট্রিক্স)</h5>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="health-card-badge bg-light text-muted">{{ $latestMetrics->count() }} types</span>
+                    <button class="btn btn-sm text-white"
+                        data-bs-toggle="modal" data-bs-target="#addMetricModal"
+                        style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 8px; font-size: 0.75rem; padding: 0.25rem 0.6rem;">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
             </div>
             <div class="health-card-body">
                 @if ($latestMetrics->isEmpty())
@@ -26,7 +38,8 @@
                                             <div class="metric-type-name">
                                                 <i class="fas fa-circle me-1"
                                                     style="font-size: 0.5rem; color: #667eea;"></i>
-                                                {{ ucfirst(str_replace('_', ' ', $type)) }}
+                                                {{ $metricConfig[$type]['en'] ?? ucfirst(str_replace('_', ' ', $type)) }}
+                                                <span class="bn-label">({{ $metricConfig[$type]['bn'] ?? '' }})</span>
                                             </div>
                                             <div class="metric-value-pills">
                                                 @if (is_array($metric->value))
@@ -52,10 +65,17 @@
         </div>
 
         {{-- Recent Symptoms --}}
-        <div class="health-card">
+        <div class="health-card mb-4">
             <div class="health-card-header">
-                <h5><i class="fas fa-notes-medical"></i> Recent Symptoms</h5>
-                <span class="health-card-badge bg-light text-muted">last 5</span>
+                <h5><i class="fas fa-notes-medical"></i> Recent Symptoms (সাম্প্রতিক লক্ষণ)</h5>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="health-card-badge bg-light text-muted">last 5</span>
+                    <button class="btn btn-sm text-white"
+                        data-bs-toggle="modal" data-bs-target="#addSymptomModal"
+                        style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 8px; font-size: 0.75rem; padding: 0.25rem 0.6rem;">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
             </div>
             <div class="health-card-body">
                 @if ($symptoms->isEmpty())
@@ -76,7 +96,12 @@
                         <tbody>
                             @foreach ($symptoms->take(5) as $symptom)
                                 <tr>
-                                    <td class="fw-semibold">{{ $symptom->symptom_name }}</td>
+                                    <td>
+                                        <span class="fw-semibold">{{ $symptom->symptom_name }}</span>
+                                        @if (!empty($symptomsBn[$symptom->symptom_name]))
+                                            <span class="bn-label">({{ $symptomsBn[$symptom->symptom_name] }})</span>
+                                        @endif
+                                    </td>
                                     <td>
                                         @if ($symptom->severity_level)
                                             <span class="severity-badge severity-{{ $symptom->severity_level }}">
@@ -93,6 +118,106 @@
                             @endforeach
                         </tbody>
                     </table>
+                @endif
+            </div>
+        </div>
+
+        {{-- Active Conditions --}}
+        <div class="health-card mb-4">
+            <div class="health-card-header">
+                <h5><i class="fas fa-virus"></i> Active Conditions (সক্রিয় রোগ)</h5>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="health-card-badge bg-light text-muted">{{ $userDiseases->whereIn('status', ['active', 'chronic'])->count() }} active</span>
+                    <button class="btn btn-sm text-white"
+                        data-bs-toggle="modal" data-bs-target="#addDiseaseModal"
+                        style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 8px; font-size: 0.75rem; padding: 0.25rem 0.6rem;">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="health-card-body">
+                @php
+                    $activeConditions = $userDiseases->whereIn('status', ['active', 'chronic', 'managed'])->take(5);
+                @endphp
+                @if ($activeConditions->isEmpty())
+                    <div class="empty-state">
+                        <i class="fas fa-virus-slash d-block"></i>
+                        <p>No active conditions recorded.</p>
+                    </div>
+                @else
+                    @foreach ($activeConditions as $ud)
+                        <div class="d-flex align-items-center gap-3 py-2 {{ !$loop->last ? 'border-bottom' : '' }}">
+                            <div class="stat-summary-icon red" style="width: 36px; height: 36px; font-size: 0.9rem;">
+                                <i class="fas fa-virus"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold" style="font-size: 0.88rem; color: #2d3748;">
+                                    {{ $ud->disease->disease_name ?? 'Unknown' }}
+                                    @php
+                                        $bnName = $ud->disease->disease_name_bn ?? ($diseasesBnMap[$ud->disease->disease_name ?? ''] ?? '');
+                                    @endphp
+                                    @if ($bnName)
+                                        <span class="bn-label">({{ $bnName }})</span>
+                                    @endif
+                                </div>
+                                <div style="font-size: 0.75rem; color: #a0aec0;">
+                                    {{ $ud->diagnosed_at ? 'Since ' . $ud->diagnosed_at->format('M Y') : '' }}
+                                </div>
+                            </div>
+                            @php
+                                $statusColor = match($ud->status) {
+                                    'active' => 'severity-8',
+                                    'chronic' => 'severity-5',
+                                    'managed' => 'severity-3',
+                                    default => 'severity-1',
+                                };
+                            @endphp
+                            <span class="severity-badge {{ $statusColor }} text-capitalize">{{ $ud->status }}</span>
+                        </div>
+                    @endforeach
+                @endif
+            </div>
+        </div>
+
+        {{-- Recent Documents --}}
+        <div class="health-card">
+            <div class="health-card-header">
+                <h5><i class="fas fa-file-medical"></i> Recent Documents</h5>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="health-card-badge bg-light text-muted">{{ $uploads->count() }} total</span>
+                    <button class="btn btn-sm text-white"
+                        data-bs-toggle="modal" data-bs-target="#addUploadModal"
+                        style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 8px; font-size: 0.75rem; padding: 0.25rem 0.6rem;">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="health-card-body">
+                @if ($uploads->isEmpty())
+                    <div class="empty-state">
+                        <i class="fas fa-file-medical d-block"></i>
+                        <p>No documents uploaded yet.</p>
+                    </div>
+                @else
+                    @foreach ($uploads->take(4) as $upload)
+                        <div class="d-flex align-items-center gap-3 py-2 {{ !$loop->last ? 'border-bottom' : '' }}">
+                            <div class="stat-summary-icon {{ $upload->type === 'prescription' ? 'purple' : 'blue' }}" style="width: 36px; height: 36px; font-size: 0.9rem;">
+                                <i class="fas fa-{{ $upload->type === 'prescription' ? 'prescription' : 'file-medical-alt' }}"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold" style="font-size: 0.88rem; color: #2d3748;">
+                                    {{ Str::limit($upload->title, 35) }}
+                                </div>
+                                <div style="font-size: 0.75rem; color: #a0aec0;">
+                                    {{ $upload->doctor_name ?? '' }}
+                                    {{ $upload->document_date ? '· ' . $upload->document_date->format('M d, Y') : '' }}
+                                </div>
+                            </div>
+                            <span class="health-card-badge {{ $upload->type === 'prescription' ? 'bg-primary bg-opacity-10 text-primary' : 'bg-success bg-opacity-10 text-success' }}">
+                                {{ ucfirst($upload->type) }}
+                            </span>
+                        </div>
+                    @endforeach
                 @endif
             </div>
         </div>

@@ -34,7 +34,7 @@ class LoginController extends Controller
         ]);
 
         if (Auth::attempt([
-            'Email' => $request->Email,
+            'email' => $request->Email,
             'password' => $request->password
         ], $request->filled('remember'))) {
             
