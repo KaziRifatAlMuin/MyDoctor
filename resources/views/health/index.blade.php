@@ -7,7 +7,8 @@
         /* ── Page Section ── */
         .health-section {
             background: #f8f9fb;
-            min-height: calc(100vh - 80px);
+            /* let the section height be determined by content for a dynamic white background */
+            min-height: auto;
             padding: 2.5rem 0 3rem;
         }
 
