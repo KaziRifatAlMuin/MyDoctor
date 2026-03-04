@@ -41,10 +41,10 @@ jobs:
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: database/testing.sqlite
-        run: php artisan key:generate --ansi && php artisan migrate --force --no-interaction
+        run: php artisan key:generate --ansi && php artisan migrate --force
 
       - name: Run test suite
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: database/testing.sqlite
-        run: php artisan test --no-interaction --verbose
+        run: php artisan test --ansi
