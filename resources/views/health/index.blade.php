@@ -389,6 +389,22 @@
     <div class="health-section">
         <div class="container" style="max-width: 1140px;">
 
+            {{-- ── Flash Messages ── --}}
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show mb-3" role="alert"
+                    style="border-radius: 12px; border: none; font-size: 0.9rem;">
+                    <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+            @if (session('error'))
+                <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert"
+                    style="border-radius: 12px; border: none; font-size: 0.9rem;">
+                    <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+
             {{-- ── Page Header ── --}}
             <div class="d-flex align-items-center justify-content-between mb-4">
                 <div>
@@ -425,9 +441,21 @@
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="diseases-tab" data-bs-toggle="tab" data-bs-target="#diseasesPane"
+                        type="button" role="tab">
+                        <i class="fas fa-virus me-1"></i> Diseases
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
                     <button class="nav-link" id="prescriptions-tab" data-bs-toggle="tab" data-bs-target="#prescriptions"
                         type="button" role="tab">
                         <i class="fas fa-prescription-bottle-alt me-1"></i> Prescriptions
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="reports-tab" data-bs-toggle="tab" data-bs-target="#reportsPane"
+                        type="button" role="tab">
+                        <i class="fas fa-file-medical-alt me-1"></i> Reports
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -456,9 +484,19 @@
                     @include('health.partials.symptoms')
                 </div>
 
+                {{-- Diseases Tab --}}
+                <div class="tab-pane fade" id="diseasesPane" role="tabpanel">
+                    @include('health.partials.diseases')
+                </div>
+
                 {{-- Prescriptions Tab --}}
                 <div class="tab-pane fade" id="prescriptions" role="tabpanel">
-                    @include('health.partials.prescriptions')
+                    @include('health.partials.uploads', ['uploadType' => 'prescription', 'uploadItems' => $prescriptionUploads])
+                </div>
+
+                {{-- Reports Tab --}}
+                <div class="tab-pane fade" id="reportsPane" role="tabpanel">
+                    @include('health.partials.uploads', ['uploadType' => 'report', 'uploadItems' => $reportUploads])
                 </div>
 
                 {{-- Medicine Logs Tab --}}
@@ -469,12 +507,343 @@
 
         </div>
     </div>
+
+    {{-- ══════════════════════════════════════════ --}}
+    {{-- ── MODALS ── --}}
+    {{-- ══════════════════════════════════════════ --}}
+
+    {{-- Add Health Metric Modal --}}
+    <div class="modal fade" id="addMetricModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 16px; border: none;">
+                <div class="modal-header" style="border-bottom: 1px solid #f0f0f0; padding: 1.25rem 1.5rem;">
+                    <h5 class="modal-title fw-bold" style="color: #667eea;">
+                        <i class="fas fa-chart-line me-2"></i>Record Health Metric
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="{{ route('health.metric.store') }}" method="POST">
+                    @csrf
+                    <div class="modal-body" style="padding: 1.5rem;">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Metric Type</label>
+                            <select name="metric_type" id="metricTypeSelect" class="form-select"
+                                style="border-radius: 10px;" required>
+                                <option value="">Select metric type...</option>
+                                <option value="blood_pressure">Blood Pressure</option>
+                                <option value="blood_glucose">Blood Glucose</option>
+                                <option value="heart_rate">Heart Rate</option>
+                                <option value="body_weight">Body Weight</option>
+                                <option value="bmi">BMI</option>
+                                <option value="oxygen_saturation">Oxygen Saturation</option>
+                                <option value="temperature">Temperature</option>
+                            </select>
+                        </div>
+
+                        {{-- Dynamic fields container --}}
+                        <div id="metricFieldsContainer"></div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Recorded At</label>
+                            <input type="datetime-local" name="recorded_at" class="form-control"
+                                style="border-radius: 10px;" value="{{ now()->format('Y-m-d\TH:i') }}" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="border-top: 1px solid #f0f0f0; padding: 1rem 1.5rem;">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal"
+                            style="border-radius: 10px;">Cancel</button>
+                        <button type="submit" class="btn text-white"
+                            style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px;">
+                            <i class="fas fa-save me-1"></i> Save Metric
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Add Symptom Modal --}}
+    <div class="modal fade" id="addSymptomModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 16px; border: none;">
+                <div class="modal-header" style="border-bottom: 1px solid #f0f0f0; padding: 1.25rem 1.5rem;">
+                    <h5 class="modal-title fw-bold" style="color: #667eea;">
+                        <i class="fas fa-notes-medical me-2"></i>Log Symptom
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="{{ route('health.symptom.store') }}" method="POST">
+                    @csrf
+                    <div class="modal-body" style="padding: 1.5rem;">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Symptom Name</label>
+                            <input type="text" name="symptom_name" class="form-control" style="border-radius: 10px;"
+                                placeholder="e.g., Headache, Fever, Cough..." required list="symptomSuggestions">
+                            <datalist id="symptomSuggestions">
+                                <option value="Headache">
+                                <option value="Fever">
+                                <option value="Cough">
+                                <option value="Fatigue">
+                                <option value="Nausea">
+                                <option value="Dizziness">
+                                <option value="Chest pain">
+                                <option value="Shortness of breath">
+                                <option value="Joint pain">
+                                <option value="Back pain">
+                                <option value="Abdominal pain">
+                                <option value="Loss of appetite">
+                                <option value="Insomnia">
+                                <option value="Palpitations">
+                                <option value="Blurred vision">
+                                <option value="Swollen feet">
+                                <option value="Dry mouth">
+                                <option value="Frequent urination">
+                                <option value="Skin rash">
+                                <option value="Numbness">
+                            </datalist>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Severity Level
+                                (1-10)</label>
+                            <input type="range" name="severity_level" id="severityRange" class="form-range" min="1"
+                                max="10" value="5" oninput="document.getElementById('severityValue').textContent=this.value">
+                            <div class="d-flex justify-content-between" style="font-size: 0.78rem; color: #a0aec0;">
+                                <span>Mild</span>
+                                <span class="fw-bold" id="severityValue" style="color: #667eea; font-size: 1.1rem;">5</span>
+                                <span>Severe</span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Recorded At</label>
+                            <input type="datetime-local" name="recorded_at" class="form-control"
+                                style="border-radius: 10px;" value="{{ now()->format('Y-m-d\TH:i') }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Note (Optional)</label>
+                            <textarea name="note" class="form-control" style="border-radius: 10px;" rows="2"
+                                placeholder="Any additional details..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="border-top: 1px solid #f0f0f0; padding: 1rem 1.5rem;">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal"
+                            style="border-radius: 10px;">Cancel</button>
+                        <button type="submit" class="btn text-white"
+                            style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px;">
+                            <i class="fas fa-save me-1"></i> Log Symptom
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Add Disease Modal --}}
+    <div class="modal fade" id="addDiseaseModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 16px; border: none;">
+                <div class="modal-header" style="border-bottom: 1px solid #f0f0f0; padding: 1.25rem 1.5rem;">
+                    <h5 class="modal-title fw-bold" style="color: #667eea;">
+                        <i class="fas fa-virus me-2"></i>Add Disease Record
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="{{ route('health.disease.store') }}" method="POST">
+                    @csrf
+                    <div class="modal-body" style="padding: 1.5rem;">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Disease</label>
+                            <select name="disease_id" class="form-select" style="border-radius: 10px;" required>
+                                <option value="">Select a disease...</option>
+                                @foreach ($allDiseases as $disease)
+                                    <option value="{{ $disease->id }}">{{ $disease->disease_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Status</label>
+                            <select name="status" class="form-select" style="border-radius: 10px;" required>
+                                <option value="active">Active</option>
+                                <option value="chronic">Chronic</option>
+                                <option value="managed">Managed</option>
+                                <option value="recovered">Recovered</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Diagnosed Date</label>
+                            <input type="date" name="diagnosed_at" class="form-control" style="border-radius: 10px;">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Notes (Optional)</label>
+                            <textarea name="notes" class="form-control" style="border-radius: 10px;" rows="2"
+                                placeholder="Any relevant notes about this condition..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="border-top: 1px solid #f0f0f0; padding: 1rem 1.5rem;">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal"
+                            style="border-radius: 10px;">Cancel</button>
+                        <button type="submit" class="btn text-white"
+                            style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px;">
+                            <i class="fas fa-save me-1"></i> Add Disease
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Upload Modal --}}
+    <div class="modal fade" id="addUploadModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content" style="border-radius: 16px; border: none;">
+                <div class="modal-header" style="border-bottom: 1px solid #f0f0f0; padding: 1.25rem 1.5rem;">
+                    <h5 class="modal-title fw-bold" style="color: #667eea;">
+                        <i class="fas fa-cloud-upload-alt me-2"></i>Upload Document
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="{{ route('health.upload.store') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-body" style="padding: 1.5rem;">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Title</label>
+                                <input type="text" name="title" class="form-control" style="border-radius: 10px;"
+                                    placeholder="e.g., Blood Test Report" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Document Type</label>
+                                <select name="type" class="form-select" style="border-radius: 10px;" required>
+                                    <option value="prescription">Prescription</option>
+                                    <option value="report">Medical Report</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Upload Image</label>
+                                <input type="file" name="file" class="form-control" style="border-radius: 10px;"
+                                    accept="image/jpeg,image/png,image/jpg,image/gif,image/webp" required
+                                    id="uploadFileInput">
+                                <div class="form-text">Accepted: JPG, PNG, GIF, WebP. Max 5MB.</div>
+                                <div id="imagePreviewContainer" class="mt-2 d-none">
+                                    <img id="imagePreview" src="" alt="Preview"
+                                        style="max-height: 150px; border-radius: 10px; border: 2px solid #edf2f7;">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Doctor Name</label>
+                                <input type="text" name="doctor_name" class="form-control" style="border-radius: 10px;"
+                                    placeholder="Dr. ...">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Institution</label>
+                                <input type="text" name="institution" class="form-control" style="border-radius: 10px;"
+                                    placeholder="Hospital/Clinic name">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Document Date</label>
+                                <input type="date" name="document_date" class="form-control"
+                                    style="border-radius: 10px;">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Notes</label>
+                                <input type="text" name="notes" class="form-control" style="border-radius: 10px;"
+                                    placeholder="Quick note (optional)">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Summary</label>
+                                <textarea name="summary" class="form-control" style="border-radius: 10px;" rows="2"
+                                    placeholder="Brief summary of the document..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="border-top: 1px solid #f0f0f0; padding: 1rem 1.5rem;">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal"
+                            style="border-radius: 10px;">Cancel</button>
+                        <button type="submit" class="btn text-white"
+                            style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px;">
+                            <i class="fas fa-cloud-upload-alt me-1"></i> Upload
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+
+            // ── Dynamic metric fields ──
+            const metricFieldDefs = {
+                blood_pressure: [
+                    { name: 'value_systolic', label: 'Systolic', placeholder: 'e.g., 120', min: 60, max: 250 },
+                    { name: 'value_diastolic', label: 'Diastolic', placeholder: 'e.g., 80', min: 40, max: 160 }
+                ],
+                blood_glucose: [
+                    { name: 'value_value', label: 'Glucose Level (mg/dL)', placeholder: 'e.g., 110', min: 30, max: 600 }
+                ],
+                heart_rate: [
+                    { name: 'value_bpm', label: 'Heart Rate (bpm)', placeholder: 'e.g., 72', min: 30, max: 220 }
+                ],
+                body_weight: [
+                    { name: 'value_value', label: 'Weight (kg)', placeholder: 'e.g., 68.5', min: 1, max: 300, step: '0.1' }
+                ],
+                bmi: [
+                    { name: 'value_value', label: 'BMI (kg/m²)', placeholder: 'e.g., 24.5', min: 10, max: 60, step: '0.1' }
+                ],
+                oxygen_saturation: [
+                    { name: 'value_value', label: 'SpO2 (%)', placeholder: 'e.g., 98', min: 50, max: 100 }
+                ],
+                temperature: [
+                    { name: 'value_value', label: 'Temperature (°C)', placeholder: 'e.g., 37.0', min: 34, max: 43, step: '0.1' }
+                ]
+            };
+
+            const metricTypeSelect = document.getElementById('metricTypeSelect');
+            const fieldsContainer = document.getElementById('metricFieldsContainer');
+
+            if (metricTypeSelect) {
+                metricTypeSelect.addEventListener('change', function() {
+                    fieldsContainer.innerHTML = '';
+                    const fields = metricFieldDefs[this.value];
+                    if (!fields) return;
+                    const row = document.createElement('div');
+                    row.className = 'row g-3 mb-3';
+                    fields.forEach(f => {
+                        const col = document.createElement('div');
+                        col.className = fields.length === 1 ? 'col-12' : 'col-6';
+                        col.innerHTML = `
+                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">${f.label}</label>
+                            <input type="number" name="${f.name}" class="form-control" style="border-radius: 10px;"
+                                placeholder="${f.placeholder}" min="${f.min}" max="${f.max}"
+                                step="${f.step || '1'}" required>
+                        `;
+                        row.appendChild(col);
+                    });
+                    fieldsContainer.appendChild(row);
+                });
+            }
+
+            // ── Image preview ──
+            const fileInput = document.getElementById('uploadFileInput');
+            const previewContainer = document.getElementById('imagePreviewContainer');
+            const previewImg = document.getElementById('imagePreview');
+
+            if (fileInput) {
+                fileInput.addEventListener('change', function() {
+                    if (this.files && this.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = e => {
+                            previewImg.src = e.target.result;
+                            previewContainer.classList.remove('d-none');
+                        };
+                        reader.readAsDataURL(this.files[0]);
+                    } else {
+                        previewContainer.classList.add('d-none');
+                    }
+                });
+            }
 
             // ── Metric trend charts (one per metric type) ──
             @foreach ($metricsByType as $type => $records)
@@ -483,7 +852,6 @@
                     if (!ctx) return;
 
                     const labels = @json($records->pluck('recorded_at')->map(fn($d) => $d->format('M d')));
-                    // Extract first numeric value from the JSON value column
                     const rawValues = @json($records->pluck('value'));
                     const data = rawValues.map(v => {
                         if (typeof v === 'number') return v;

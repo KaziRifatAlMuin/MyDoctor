@@ -1,4 +1,10 @@
 {{-- ── Symptoms Tab ── --}}
+<div class="d-flex justify-content-end mb-3">
+    <button class="btn text-white" data-bs-toggle="modal" data-bs-target="#addSymptomModal"
+        style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px; font-size: 0.88rem;">
+        <i class="fas fa-plus me-1"></i> Log Symptom
+    </button>
+</div>
 <div class="row g-4">
 
     {{-- Severity Distribution Chart --}}

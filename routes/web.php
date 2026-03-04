@@ -77,6 +77,14 @@ Route::middleware('auth')->group(function () {
     // Health Dashboard
     Route::get('/health', [HealthController::class, 'index'])->name('health');
     
+    // Health CRUD operations
+    Route::post('/health/metric', [HealthController::class, 'storeMetric'])->name('health.metric.store');
+    Route::post('/health/symptom', [HealthController::class, 'storeSymptom'])->name('health.symptom.store');
+    Route::post('/health/disease', [HealthController::class, 'storeDisease'])->name('health.disease.store');
+    Route::delete('/health/disease/{userDisease}', [HealthController::class, 'destroyDisease'])->name('health.disease.destroy');
+    Route::post('/health/upload', [HealthController::class, 'storeUpload'])->name('health.upload.store');
+    Route::delete('/health/upload/{upload}', [HealthController::class, 'destroyUpload'])->name('health.upload.destroy');
+    
     // Notifications
     Route::get('/notifications', function () {
         return view('notifications');

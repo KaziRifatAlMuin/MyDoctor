@@ -32,7 +32,7 @@ class UserFactory extends Factory
             'occupation'        => fake()->jobTitle(),
             'blood_group'       => fake()->randomElement(['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']),
             'email_verified_at' => now(),
-            'password'          => static::$password ??= Hash::make('password'),
+            'password'          => static::$password ??= Hash::make('abcd1234'),
             'remember_token'    => Str::random(10),
         ];
     }

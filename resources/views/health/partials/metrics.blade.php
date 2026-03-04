@@ -4,12 +4,23 @@
         <div class="health-card-body">
             <div class="empty-state">
                 <i class="fas fa-chart-line d-block"></i>
-                <p>No health metrics recorded yet.<br>Start tracking your blood pressure, heart rate, weight, and more.
-                </p>
+                <p>No health metrics recorded yet.<br>Start tracking your blood pressure, heart rate, weight, and more.</p>
+                <button class="btn text-white mt-3" data-bs-toggle="modal" data-bs-target="#addMetricModal"
+                    style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px; font-size: 0.88rem;">
+                    <i class="fas fa-plus me-1"></i> Record Your First Metric
+                </button>
             </div>
         </div>
     </div>
 @else
+    {{-- Add Button --}}
+    <div class="d-flex justify-content-end mb-3">
+        <button class="btn text-white" data-bs-toggle="modal" data-bs-target="#addMetricModal"
+            style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px; font-size: 0.88rem;">
+            <i class="fas fa-plus me-1"></i> Record Metric
+        </button>
+    </div>
+
     {{-- Charts per metric type --}}
     <div class="row g-4 mb-4">
         @foreach ($metricsByType as $type => $records)

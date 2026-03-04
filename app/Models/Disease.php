@@ -13,4 +13,16 @@ class Disease extends Model
         'disease_name',
         'description',
     ];
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'user_diseases')
+                    ->withPivot('diagnosed_at', 'status', 'notes')
+                    ->withTimestamps();
+    }
+
+    public function userDiseases()
+    {
+        return $this->hasMany(UserDisease::class);
+    }
 }

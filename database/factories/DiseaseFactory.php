@@ -19,6 +19,20 @@ class DiseaseFactory extends Factory
             'Rheumatoid Arthritis', 'Lupus', 'Multiple Sclerosis', 'Celiac Disease', 'Fibromyalgia',
             'Chronic Fatigue Syndrome', 'Sleep Apnea', 'Obesity', 'Vitamin D Deficiency', 'Iron Deficiency',
             'High Cholesterol', 'Fatty Liver', 'Polycystic Ovary Syndrome', 'Endometriosis', 'Prostate Enlargement',
+            'Pneumonia', 'Bronchitis', 'Sinusitis', 'Tonsillitis', 'Appendicitis',
+            'Gallstones', 'Pancreatitis', 'Peptic Ulcer Disease', 'Crohn\'s Disease', 'Ulcerative Colitis',
+            'Chronic Bronchitis', 'Emphysema', 'Pulmonary Fibrosis', 'Sarcoidosis', 'Meningitis',
+            'Encephalitis', 'Bell\'s Palsy', 'Carpal Tunnel Syndrome', 'Sciatica', 'Herniated Disc',
+            'Osteoarthritis', 'Bursitis', 'Tendinitis', 'Plantar Fasciitis', 'Scoliosis',
+            'Cataracts', 'Glaucoma', 'Macular Degeneration', 'Conjunctivitis', 'Retinopathy',
+            'Hearing Loss', 'Tinnitus', 'Vertigo', 'Otitis Media', 'Deviated Septum',
+            'Atrial Fibrillation', 'Deep Vein Thrombosis', 'Pulmonary Embolism', 'Peripheral Artery Disease', 'Varicose Veins',
+            'Leukemia', 'Lymphoma', 'Breast Cancer', 'Lung Cancer', 'Colorectal Cancer',
+            'Prostate Cancer', 'Skin Cancer', 'Thyroid Cancer', 'Bladder Cancer', 'Pancreatic Cancer',
+            'Ovarian Cancer', 'Cervical Cancer', 'Liver Cancer', 'Stomach Cancer', 'Esophageal Cancer',
+            'Psoriatic Arthritis', 'Ankylosing Spondylitis', 'Sjogren\'s Syndrome', 'Raynaud\'s Disease', 'Vitiligo',
+            'Alopecia', 'Rosacea', 'Acne', 'Dermatitis', 'Cellulitis',
+            'Hypothyroidism', 'Hyperthyroidism', 'Addison\'s Disease', 'Cushing\'s Syndrome', 'Gestational Diabetes',
         ];
 
         static $index = 0;
