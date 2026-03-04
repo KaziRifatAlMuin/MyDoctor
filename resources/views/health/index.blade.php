@@ -382,6 +382,25 @@
         .metric-value-pill strong {
             color: #667eea;
         }
+
+        /* ── Searchable Dropdown ── */
+        .searchable-dropdown { position: relative; }
+        .searchable-dropdown .dropdown-menu {
+            width: 100%; max-height: 220px; overflow-y: auto;
+            border-radius: 10px; box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0; padding: 0.25rem 0;
+        }
+        .searchable-dropdown .dropdown-item:hover,
+        .searchable-dropdown .dropdown-item:focus {
+            background: rgba(102,126,234,0.08); color: #2d3748;
+        }
+
+        /* ── Action buttons in tables ── */
+        .action-btn-group { display: flex; gap: 4px; flex-wrap: nowrap; }
+        .action-btn-group .btn { padding: 0.2rem 0.45rem; border-radius: 6px; font-size: 0.72rem; }
+
+        /* ── Bangla subtitle ── */
+        .bn-label { font-size: 0.78rem; color: #a0aec0; font-weight: 400; }
     </style>
 @endpush
 
@@ -512,49 +531,40 @@
     {{-- ── MODALS ── --}}
     {{-- ══════════════════════════════════════════ --}}
 
-    {{-- Add Health Metric Modal --}}
+    {{-- ── Add / Edit Health Metric Modal ── --}}
     <div class="modal fade" id="addMetricModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="border-radius: 16px; border: none;">
                 <div class="modal-header" style="border-bottom: 1px solid #f0f0f0; padding: 1.25rem 1.5rem;">
                     <h5 class="modal-title fw-bold" style="color: #667eea;">
-                        <i class="fas fa-chart-line me-2"></i>Record Health Metric
+                        <i class="fas fa-chart-line me-2"></i><span id="metricModalLabel">Record Health Metric</span>
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form action="{{ route('health.metric.store') }}" method="POST">
+                <form id="metricForm" action="{{ route('health.metric.store') }}" method="POST">
                     @csrf
+                    <input type="hidden" name="_method" id="metricFormMethod" value="POST">
                     <div class="modal-body" style="padding: 1.5rem;">
                         <div class="mb-3">
-                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Metric Type</label>
-                            <select name="metric_type" id="metricTypeSelect" class="form-select"
-                                style="border-radius: 10px;" required>
+                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Metric Type (মেট্রিক ধরন)</label>
+                            <select name="metric_type" id="metricTypeSelect" class="form-select" style="border-radius: 10px;" required>
                                 <option value="">Select metric type...</option>
-                                <option value="blood_pressure">Blood Pressure</option>
-                                <option value="blood_glucose">Blood Glucose</option>
-                                <option value="heart_rate">Heart Rate</option>
-                                <option value="body_weight">Body Weight</option>
-                                <option value="bmi">BMI</option>
-                                <option value="oxygen_saturation">Oxygen Saturation</option>
-                                <option value="temperature">Temperature</option>
+                                @foreach ($metricConfig as $key => $cfg)
+                                    <option value="{{ $key }}">{{ $cfg['en'] }} ({{ $cfg['bn'] }})</option>
+                                @endforeach
                             </select>
                         </div>
-
-                        {{-- Dynamic fields container --}}
                         <div id="metricFieldsContainer"></div>
-
                         <div class="mb-3">
                             <label class="form-label fw-semibold" style="font-size: 0.85rem;">Recorded At</label>
-                            <input type="datetime-local" name="recorded_at" class="form-control"
+                            <input type="datetime-local" name="recorded_at" id="metricRecordedAt" class="form-control"
                                 style="border-radius: 10px;" value="{{ now()->format('Y-m-d\TH:i') }}" required>
                         </div>
                     </div>
                     <div class="modal-footer" style="border-top: 1px solid #f0f0f0; padding: 1rem 1.5rem;">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal"
-                            style="border-radius: 10px;">Cancel</button>
-                        <button type="submit" class="btn text-white"
-                            style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px;">
-                            <i class="fas fa-save me-1"></i> Save Metric
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 10px;">Cancel</button>
+                        <button type="submit" class="btn text-white" style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px;">
+                            <i class="fas fa-save me-1"></i> <span id="metricSubmitLabel">Save Metric</span>
                         </button>
                     </div>
                 </form>
@@ -562,74 +572,55 @@
         </div>
     </div>
 
-    {{-- Add Symptom Modal --}}
+    {{-- ── Add / Edit Symptom Modal ── --}}
     <div class="modal fade" id="addSymptomModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="border-radius: 16px; border: none;">
                 <div class="modal-header" style="border-bottom: 1px solid #f0f0f0; padding: 1.25rem 1.5rem;">
                     <h5 class="modal-title fw-bold" style="color: #667eea;">
-                        <i class="fas fa-notes-medical me-2"></i>Log Symptom
+                        <i class="fas fa-notes-medical me-2"></i><span id="symptomModalLabel">Log Symptom</span>
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form action="{{ route('health.symptom.store') }}" method="POST">
+                <form id="symptomForm" action="{{ route('health.symptom.store') }}" method="POST">
                     @csrf
+                    <input type="hidden" name="_method" id="symptomFormMethod" value="POST">
                     <div class="modal-body" style="padding: 1.5rem;">
+                        {{-- Searchable Symptom Dropdown --}}
                         <div class="mb-3">
-                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Symptom Name</label>
-                            <input type="text" name="symptom_name" class="form-control" style="border-radius: 10px;"
-                                placeholder="e.g., Headache, Fever, Cough..." required list="symptomSuggestions">
-                            <datalist id="symptomSuggestions">
-                                <option value="Headache">
-                                <option value="Fever">
-                                <option value="Cough">
-                                <option value="Fatigue">
-                                <option value="Nausea">
-                                <option value="Dizziness">
-                                <option value="Chest pain">
-                                <option value="Shortness of breath">
-                                <option value="Joint pain">
-                                <option value="Back pain">
-                                <option value="Abdominal pain">
-                                <option value="Loss of appetite">
-                                <option value="Insomnia">
-                                <option value="Palpitations">
-                                <option value="Blurred vision">
-                                <option value="Swollen feet">
-                                <option value="Dry mouth">
-                                <option value="Frequent urination">
-                                <option value="Skin rash">
-                                <option value="Numbness">
-                            </datalist>
+                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Symptom (লক্ষণ)</label>
+                            <div class="position-relative" id="symptomDropdownWrap">
+                                <input type="text" id="symptomSearchInput" class="form-control" style="border-radius: 10px;"
+                                    placeholder="Search symptom / লক্ষণ খুঁজুন..." autocomplete="off">
+                                <input type="hidden" name="symptom_name" id="symptomNameHidden" required>
+                                <div id="symptomDropdownList" class="dropdown-menu w-100 shadow-sm" style="max-height: 220px; overflow-y: auto; border-radius: 10px; display: none;"></div>
+                            </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Severity Level
-                                (1-10)</label>
-                            <input type="range" name="severity_level" id="severityRange" class="form-range" min="1"
-                                max="10" value="5" oninput="document.getElementById('severityValue').textContent=this.value">
+                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Severity Level (তীব্রতা) (1-10)</label>
+                            <input type="range" name="severity_level" id="severityRange" class="form-range" min="1" max="10" value="5"
+                                oninput="document.getElementById('severityValue').textContent=this.value">
                             <div class="d-flex justify-content-between" style="font-size: 0.78rem; color: #a0aec0;">
-                                <span>Mild</span>
+                                <span>Mild (মৃদু)</span>
                                 <span class="fw-bold" id="severityValue" style="color: #667eea; font-size: 1.1rem;">5</span>
-                                <span>Severe</span>
+                                <span>Severe (তীব্র)</span>
                             </div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold" style="font-size: 0.85rem;">Recorded At</label>
-                            <input type="datetime-local" name="recorded_at" class="form-control"
+                            <input type="datetime-local" name="recorded_at" id="symptomRecordedAt" class="form-control"
                                 style="border-radius: 10px;" value="{{ now()->format('Y-m-d\TH:i') }}" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold" style="font-size: 0.85rem;">Note (Optional)</label>
-                            <textarea name="note" class="form-control" style="border-radius: 10px;" rows="2"
+                            <textarea name="note" id="symptomNote" class="form-control" style="border-radius: 10px;" rows="2"
                                 placeholder="Any additional details..."></textarea>
                         </div>
                     </div>
                     <div class="modal-footer" style="border-top: 1px solid #f0f0f0; padding: 1rem 1.5rem;">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal"
-                            style="border-radius: 10px;">Cancel</button>
-                        <button type="submit" class="btn text-white"
-                            style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px;">
-                            <i class="fas fa-save me-1"></i> Log Symptom
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 10px;">Cancel</button>
+                        <button type="submit" class="btn text-white" style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px;">
+                            <i class="fas fa-save me-1"></i> <span id="symptomSubmitLabel">Log Symptom</span>
                         </button>
                     </div>
                 </form>
@@ -637,53 +628,52 @@
         </div>
     </div>
 
-    {{-- Add Disease Modal --}}
+    {{-- ── Add / Edit Disease Modal ── --}}
     <div class="modal fade" id="addDiseaseModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="border-radius: 16px; border: none;">
                 <div class="modal-header" style="border-bottom: 1px solid #f0f0f0; padding: 1.25rem 1.5rem;">
                     <h5 class="modal-title fw-bold" style="color: #667eea;">
-                        <i class="fas fa-virus me-2"></i>Add Disease Record
+                        <i class="fas fa-virus me-2"></i><span id="diseaseModalLabel">Add Disease Record</span>
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form action="{{ route('health.disease.store') }}" method="POST">
+                <form id="diseaseForm" action="{{ route('health.disease.store') }}" method="POST">
                     @csrf
+                    <input type="hidden" name="_method" id="diseaseFormMethod" value="POST">
                     <div class="modal-body" style="padding: 1.5rem;">
+                        <div class="mb-3" id="diseaseSelectWrapper">
+                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Disease (রোগ)</label>
+                            <div class="position-relative" id="diseaseDropdownWrap">
+                                <input type="text" id="diseaseSearchInput" class="form-control" style="border-radius: 10px;"
+                                    placeholder="Search disease / রোগ খুঁজুন..." autocomplete="off">
+                                <input type="hidden" name="disease_id" id="diseaseIdHidden" required>
+                                <div id="diseaseDropdownList" class="dropdown-menu w-100 shadow-sm" style="max-height: 220px; overflow-y: auto; border-radius: 10px; display: none;"></div>
+                            </div>
+                        </div>
                         <div class="mb-3">
-                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Disease</label>
-                            <select name="disease_id" class="form-select" style="border-radius: 10px;" required>
-                                <option value="">Select a disease...</option>
-                                @foreach ($allDiseases as $disease)
-                                    <option value="{{ $disease->id }}">{{ $disease->disease_name }}</option>
-                                @endforeach
+                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Status (অবস্থা)</label>
+                            <select name="status" id="diseaseStatus" class="form-select" style="border-radius: 10px;" required>
+                                <option value="active">Active (সক্রিয়)</option>
+                                <option value="chronic">Chronic (দীর্ঘস্থায়ী)</option>
+                                <option value="managed">Managed (নিয়ন্ত্রিত)</option>
+                                <option value="recovered">Recovered (সুস্থ)</option>
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Status</label>
-                            <select name="status" class="form-select" style="border-radius: 10px;" required>
-                                <option value="active">Active</option>
-                                <option value="chronic">Chronic</option>
-                                <option value="managed">Managed</option>
-                                <option value="recovered">Recovered</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Diagnosed Date</label>
-                            <input type="date" name="diagnosed_at" class="form-control" style="border-radius: 10px;">
+                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Diagnosed Date (নির্ণয়ের তারিখ)</label>
+                            <input type="date" name="diagnosed_at" id="diseaseDiagnosedAt" class="form-control" style="border-radius: 10px;">
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold" style="font-size: 0.85rem;">Notes (Optional)</label>
-                            <textarea name="notes" class="form-control" style="border-radius: 10px;" rows="2"
+                            <textarea name="notes" id="diseaseNotes" class="form-control" style="border-radius: 10px;" rows="2"
                                 placeholder="Any relevant notes about this condition..."></textarea>
                         </div>
                     </div>
                     <div class="modal-footer" style="border-top: 1px solid #f0f0f0; padding: 1rem 1.5rem;">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal"
-                            style="border-radius: 10px;">Cancel</button>
-                        <button type="submit" class="btn text-white"
-                            style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px;">
-                            <i class="fas fa-save me-1"></i> Add Disease
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 10px;">Cancel</button>
+                        <button type="submit" class="btn text-white" style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px;">
+                            <i class="fas fa-save me-1"></i> <span id="diseaseSubmitLabel">Add Disease</span>
                         </button>
                     </div>
                 </form>
@@ -691,76 +681,74 @@
         </div>
     </div>
 
-    {{-- Upload Modal --}}
+    {{-- ── Add / Edit Upload Modal ── --}}
     <div class="modal fade" id="addUploadModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content" style="border-radius: 16px; border: none;">
                 <div class="modal-header" style="border-bottom: 1px solid #f0f0f0; padding: 1.25rem 1.5rem;">
                     <h5 class="modal-title fw-bold" style="color: #667eea;">
-                        <i class="fas fa-cloud-upload-alt me-2"></i>Upload Document
+                        <i class="fas fa-cloud-upload-alt me-2"></i><span id="uploadModalLabel">Upload Document</span>
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form action="{{ route('health.upload.store') }}" method="POST" enctype="multipart/form-data">
+                <form id="uploadForm" action="{{ route('health.upload.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
+                    <input type="hidden" name="_method" id="uploadFormMethod" value="POST">
                     <div class="modal-body" style="padding: 1.5rem;">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Title</label>
-                                <input type="text" name="title" class="form-control" style="border-radius: 10px;"
+                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Title (শিরোনাম)</label>
+                                <input type="text" name="title" id="uploadTitle" class="form-control" style="border-radius: 10px;"
                                     placeholder="e.g., Blood Test Report" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Document Type</label>
-                                <select name="type" class="form-select" style="border-radius: 10px;" required>
-                                    <option value="prescription">Prescription</option>
-                                    <option value="report">Medical Report</option>
+                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Document Type (ধরন)</label>
+                                <select name="type" id="uploadType" class="form-select" style="border-radius: 10px;" required>
+                                    <option value="prescription">Prescription (প্রেসক্রিপশন)</option>
+                                    <option value="report">Medical Report (রিপোর্ট)</option>
                                 </select>
                             </div>
                             <div class="col-12">
                                 <label class="form-label fw-semibold" style="font-size: 0.85rem;">Upload Image</label>
                                 <input type="file" name="file" class="form-control" style="border-radius: 10px;"
-                                    accept="image/jpeg,image/png,image/jpg,image/gif,image/webp" required
+                                    accept="image/jpeg,image/png,image/jpg,image/gif,image/webp"
                                     id="uploadFileInput">
-                                <div class="form-text">Accepted: JPG, PNG, GIF, WebP. Max 5MB.</div>
+                                <div class="form-text" id="uploadFileHint">Accepted: JPG, PNG, GIF, WebP. Max 5MB.</div>
                                 <div id="imagePreviewContainer" class="mt-2 d-none">
                                     <img id="imagePreview" src="" alt="Preview"
                                         style="max-height: 150px; border-radius: 10px; border: 2px solid #edf2f7;">
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Doctor Name</label>
-                                <input type="text" name="doctor_name" class="form-control" style="border-radius: 10px;"
+                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Doctor Name (ডাক্তারের নাম)</label>
+                                <input type="text" name="doctor_name" id="uploadDoctorName" class="form-control" style="border-radius: 10px;"
                                     placeholder="Dr. ...">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Institution</label>
-                                <input type="text" name="institution" class="form-control" style="border-radius: 10px;"
+                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Institution (প্রতিষ্ঠান)</label>
+                                <input type="text" name="institution" id="uploadInstitution" class="form-control" style="border-radius: 10px;"
                                     placeholder="Hospital/Clinic name">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Document Date</label>
-                                <input type="date" name="document_date" class="form-control"
-                                    style="border-radius: 10px;">
+                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Document Date (তারিখ)</label>
+                                <input type="date" name="document_date" id="uploadDocumentDate" class="form-control" style="border-radius: 10px;">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold" style="font-size: 0.85rem;">Notes</label>
-                                <input type="text" name="notes" class="form-control" style="border-radius: 10px;"
+                                <input type="text" name="notes" id="uploadNotes" class="form-control" style="border-radius: 10px;"
                                     placeholder="Quick note (optional)">
                             </div>
                             <div class="col-12">
-                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Summary</label>
-                                <textarea name="summary" class="form-control" style="border-radius: 10px;" rows="2"
+                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Summary (সারসংক্ষেপ)</label>
+                                <textarea name="summary" id="uploadSummary" class="form-control" style="border-radius: 10px;" rows="2"
                                     placeholder="Brief summary of the document..."></textarea>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer" style="border-top: 1px solid #f0f0f0; padding: 1rem 1.5rem;">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal"
-                            style="border-radius: 10px;">Cancel</button>
-                        <button type="submit" class="btn text-white"
-                            style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px;">
-                            <i class="fas fa-cloud-upload-alt me-1"></i> Upload
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 10px;">Cancel</button>
+                        <button type="submit" class="btn text-white" style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px;">
+                            <i class="fas fa-save me-1"></i> <span id="uploadSubmitLabel">Upload</span>
                         </button>
                     </div>
                 </form>
@@ -774,83 +762,269 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
 
-            // ── Dynamic metric fields ──
-            const metricFieldDefs = {
-                blood_pressure: [
-                    { name: 'value_systolic', label: 'Systolic', placeholder: 'e.g., 120', min: 60, max: 250 },
-                    { name: 'value_diastolic', label: 'Diastolic', placeholder: 'e.g., 80', min: 40, max: 160 }
-                ],
-                blood_glucose: [
-                    { name: 'value_value', label: 'Glucose Level (mg/dL)', placeholder: 'e.g., 110', min: 30, max: 600 }
-                ],
-                heart_rate: [
-                    { name: 'value_bpm', label: 'Heart Rate (bpm)', placeholder: 'e.g., 72', min: 30, max: 220 }
-                ],
-                body_weight: [
-                    { name: 'value_value', label: 'Weight (kg)', placeholder: 'e.g., 68.5', min: 1, max: 300, step: '0.1' }
-                ],
-                bmi: [
-                    { name: 'value_value', label: 'BMI (kg/m²)', placeholder: 'e.g., 24.5', min: 10, max: 60, step: '0.1' }
-                ],
-                oxygen_saturation: [
-                    { name: 'value_value', label: 'SpO2 (%)', placeholder: 'e.g., 98', min: 50, max: 100 }
-                ],
-                temperature: [
-                    { name: 'value_value', label: 'Temperature (°C)', placeholder: 'e.g., 37.0', min: 34, max: 43, step: '0.1' }
-                ]
-            };
+            /* ═══════════════════════════════════════════════════════
+             *  CONFIG DATA from PHP
+             * ═══════════════════════════════════════════════════════ */
+            const metricFieldDefs = @json(collect($metricConfig)->map(fn($c) => $c['js_fields']));
+            const symptomsList    = @json($symptomsList);
+            const diseasesData    = @json($allDiseases->map(fn($d) => ['id' => $d->id, 'name' => $d->disease_name, 'bn' => $d->disease_name_bn]));
 
-            const metricTypeSelect = document.getElementById('metricTypeSelect');
-            const fieldsContainer = document.getElementById('metricFieldsContainer');
-
-            if (metricTypeSelect) {
-                metricTypeSelect.addEventListener('change', function() {
-                    fieldsContainer.innerHTML = '';
-                    const fields = metricFieldDefs[this.value];
-                    if (!fields) return;
-                    const row = document.createElement('div');
-                    row.className = 'row g-3 mb-3';
-                    fields.forEach(f => {
-                        const col = document.createElement('div');
-                        col.className = fields.length === 1 ? 'col-12' : 'col-6';
-                        col.innerHTML = `
-                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">${f.label}</label>
-                            <input type="number" name="${f.name}" class="form-control" style="border-radius: 10px;"
-                                placeholder="${f.placeholder}" min="${f.min}" max="${f.max}"
-                                step="${f.step || '1'}" required>
-                        `;
-                        row.appendChild(col);
+            /* ═══════════════════════════════════════════════════════
+             *  REUSABLE: Searchable dropdown builder
+             * ═══════════════════════════════════════════════════════ */
+            function initSearchableDropdown(searchInput, dropdownList, hiddenInput, items, opts = {}) {
+                function renderList(filter = '') {
+                    const f = filter.toLowerCase();
+                    const filtered = items.filter(i => {
+                        const txt = (i.label + ' ' + (i.sub || '')).toLowerCase();
+                        return txt.includes(f);
                     });
-                    fieldsContainer.appendChild(row);
-                });
-            }
-
-            // ── Image preview ──
-            const fileInput = document.getElementById('uploadFileInput');
-            const previewContainer = document.getElementById('imagePreviewContainer');
-            const previewImg = document.getElementById('imagePreview');
-
-            if (fileInput) {
-                fileInput.addEventListener('change', function() {
-                    if (this.files && this.files[0]) {
-                        const reader = new FileReader();
-                        reader.onload = e => {
-                            previewImg.src = e.target.result;
-                            previewContainer.classList.remove('d-none');
-                        };
-                        reader.readAsDataURL(this.files[0]);
+                    dropdownList.innerHTML = '';
+                    if (filtered.length === 0) {
+                        dropdownList.innerHTML = '<div class="dropdown-item text-muted" style="font-size:0.85rem;">No results found</div>';
                     } else {
-                        previewContainer.classList.add('d-none');
+                        filtered.forEach(item => {
+                            const a = document.createElement('a');
+                            a.href = '#';
+                            a.className = 'dropdown-item';
+                            a.style.cssText = 'font-size:0.85rem; padding:0.45rem 1rem; white-space:normal;';
+                            a.innerHTML = item.sub ? `${item.label} <span style="color:#a0aec0;">(${item.sub})</span>` : item.label;
+                            a.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                searchInput.value = item.label + (item.sub ? ' (' + item.sub + ')' : '');
+                                hiddenInput.value = item.value;
+                                dropdownList.style.display = 'none';
+                            });
+                            dropdownList.appendChild(a);
+                        });
+                    }
+                    dropdownList.style.display = 'block';
+                }
+
+                searchInput.addEventListener('focus', () => renderList(searchInput.value));
+                searchInput.addEventListener('input', () => renderList(searchInput.value));
+                document.addEventListener('click', function(e) {
+                    if (!searchInput.parentElement.contains(e.target)) {
+                        dropdownList.style.display = 'none';
                     }
                 });
             }
 
-            // ── Metric trend charts (one per metric type) ──
+            /* ═══════════════════════════════════════════════════════
+             *  SYMPTOM searchable dropdown
+             * ═══════════════════════════════════════════════════════ */
+            const symptomItems = Object.entries(symptomsList).map(([en, bn]) => ({
+                label: en, sub: bn, value: en
+            }));
+            const symptomSearch = document.getElementById('symptomSearchInput');
+            const symptomDDList = document.getElementById('symptomDropdownList');
+            const symptomHidden = document.getElementById('symptomNameHidden');
+            if (symptomSearch) {
+                initSearchableDropdown(symptomSearch, symptomDDList, symptomHidden, symptomItems);
+            }
+
+            /* ═══════════════════════════════════════════════════════
+             *  DISEASE searchable dropdown
+             * ═══════════════════════════════════════════════════════ */
+            const diseaseItems = diseasesData.map(d => ({
+                label: d.name, sub: d.bn || '', value: String(d.id)
+            }));
+            const diseaseSearch = document.getElementById('diseaseSearchInput');
+            const diseaseDDList = document.getElementById('diseaseDropdownList');
+            const diseaseHidden = document.getElementById('diseaseIdHidden');
+            if (diseaseSearch) {
+                initSearchableDropdown(diseaseSearch, diseaseDDList, diseaseHidden, diseaseItems);
+            }
+
+            /* ═══════════════════════════════════════════════════════
+             *  DYNAMIC METRIC FIELDS
+             * ═══════════════════════════════════════════════════════ */
+            const metricTypeSelect = document.getElementById('metricTypeSelect');
+            const fieldsContainer  = document.getElementById('metricFieldsContainer');
+
+            function buildMetricFields(type, existingValues = {}) {
+                fieldsContainer.innerHTML = '';
+                const fields = metricFieldDefs[type];
+                if (!fields) return;
+                const row = document.createElement('div');
+                row.className = 'row g-3 mb-3';
+                fields.forEach(f => {
+                    const col = document.createElement('div');
+                    col.className = fields.length === 1 ? 'col-12' : 'col-6';
+                    const val = existingValues[f.name] !== undefined ? existingValues[f.name] : '';
+                    col.innerHTML = `
+                        <label class="form-label fw-semibold" style="font-size: 0.85rem;">${f.label}</label>
+                        <input type="number" name="${f.name}" class="form-control" style="border-radius: 10px;"
+                            placeholder="${f.placeholder}" min="${f.min}" max="${f.max}"
+                            step="${f.step || '1'}" value="${val}" required>
+                    `;
+                    row.appendChild(col);
+                });
+                fieldsContainer.appendChild(row);
+            }
+
+            if (metricTypeSelect) {
+                metricTypeSelect.addEventListener('change', function() {
+                    buildMetricFields(this.value);
+                });
+            }
+
+            /* ═══════════════════════════════════════════════════════
+             *  IMAGE PREVIEW
+             * ═══════════════════════════════════════════════════════ */
+            const fileInput = document.getElementById('uploadFileInput');
+            const prevContainer = document.getElementById('imagePreviewContainer');
+            const prevImg = document.getElementById('imagePreview');
+            if (fileInput) {
+                fileInput.addEventListener('change', function() {
+                    if (this.files && this.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = e => { prevImg.src = e.target.result; prevContainer.classList.remove('d-none'); };
+                        reader.readAsDataURL(this.files[0]);
+                    } else { prevContainer.classList.add('d-none'); }
+                });
+            }
+
+            /* ═══════════════════════════════════════════════════════
+             *  EDIT helpers — called from partials via onclick
+             * ═══════════════════════════════════════════════════════ */
+            window.openEditMetric = function(id, type, values, recordedAt) {
+                document.getElementById('metricModalLabel').textContent = 'Edit Health Metric';
+                document.getElementById('metricSubmitLabel').textContent = 'Update Metric';
+                const form = document.getElementById('metricForm');
+                form.action = '/health/metric/' + id;
+                document.getElementById('metricFormMethod').value = 'PUT';
+                metricTypeSelect.value = type;
+
+                // build value map for pre-fill
+                const cfg = metricFieldDefs[type];
+                const valMap = {};
+                if (cfg) {
+                    cfg.forEach(f => {
+                        const key = f.name.replace('value_', '');
+                        if (values[key] !== undefined) valMap[f.name] = values[key];
+                    });
+                }
+                buildMetricFields(type, valMap);
+                document.getElementById('metricRecordedAt').value = recordedAt;
+                new bootstrap.Modal(document.getElementById('addMetricModal')).show();
+            };
+
+            window.openEditSymptom = function(id, name, severity, recordedAt, note) {
+                document.getElementById('symptomModalLabel').textContent = 'Edit Symptom';
+                document.getElementById('symptomSubmitLabel').textContent = 'Update Symptom';
+                const form = document.getElementById('symptomForm');
+                form.action = '/health/symptom/' + id;
+                document.getElementById('symptomFormMethod').value = 'PUT';
+                const bn = symptomsList[name] || '';
+                document.getElementById('symptomSearchInput').value = name + (bn ? ' (' + bn + ')' : '');
+                document.getElementById('symptomNameHidden').value = name;
+                document.getElementById('severityRange').value = severity;
+                document.getElementById('severityValue').textContent = severity;
+                document.getElementById('symptomRecordedAt').value = recordedAt;
+                document.getElementById('symptomNote').value = note || '';
+                new bootstrap.Modal(document.getElementById('addSymptomModal')).show();
+            };
+
+            window.openEditDisease = function(id, status, diagnosedAt, notes) {
+                document.getElementById('diseaseModalLabel').textContent = 'Edit Disease Record';
+                document.getElementById('diseaseSubmitLabel').textContent = 'Update Disease';
+                const form = document.getElementById('diseaseForm');
+                form.action = '/health/disease/' + id;
+                document.getElementById('diseaseFormMethod').value = 'PUT';
+                document.getElementById('diseaseSelectWrapper').style.display = 'none';
+                document.getElementById('diseaseIdHidden').removeAttribute('required');
+                document.getElementById('diseaseStatus').value = status;
+                document.getElementById('diseaseDiagnosedAt').value = diagnosedAt || '';
+                document.getElementById('diseaseNotes').value = notes || '';
+                new bootstrap.Modal(document.getElementById('addDiseaseModal')).show();
+            };
+
+            window.openEditUpload = function(id, title, type, doctorName, institution, docDate, notes, summary) {
+                document.getElementById('uploadModalLabel').textContent = 'Edit Document';
+                document.getElementById('uploadSubmitLabel').textContent = 'Update';
+                const form = document.getElementById('uploadForm');
+                form.action = '/health/upload/' + id;
+                document.getElementById('uploadFormMethod').value = 'PUT';
+                document.getElementById('uploadFileInput').removeAttribute('required');
+                document.getElementById('uploadFileHint').textContent = 'Leave empty to keep existing image.';
+                document.getElementById('uploadTitle').value = title;
+                document.getElementById('uploadType').value = type;
+                document.getElementById('uploadDoctorName').value = doctorName || '';
+                document.getElementById('uploadInstitution').value = institution || '';
+                document.getElementById('uploadDocumentDate').value = docDate || '';
+                document.getElementById('uploadNotes').value = notes || '';
+                document.getElementById('uploadSummary').value = summary || '';
+                new bootstrap.Modal(document.getElementById('addUploadModal')).show();
+            };
+
+            /* Reset modals to "Add" mode when closed */
+            ['addMetricModal','addSymptomModal','addDiseaseModal','addUploadModal'].forEach(modalId => {
+                const el = document.getElementById(modalId);
+                if (!el) return;
+                el.addEventListener('hidden.bs.modal', function() {
+                    if (modalId === 'addMetricModal') {
+                        document.getElementById('metricModalLabel').textContent = 'Record Health Metric';
+                        document.getElementById('metricSubmitLabel').textContent = 'Save Metric';
+                        document.getElementById('metricForm').action = '{{ route("health.metric.store") }}';
+                        document.getElementById('metricFormMethod').value = 'POST';
+                        metricTypeSelect.value = '';
+                        fieldsContainer.innerHTML = '';
+                        document.getElementById('metricRecordedAt').value = '{{ now()->format("Y-m-d\\TH:i") }}';
+                    }
+                    if (modalId === 'addSymptomModal') {
+                        document.getElementById('symptomModalLabel').textContent = 'Log Symptom';
+                        document.getElementById('symptomSubmitLabel').textContent = 'Log Symptom';
+                        document.getElementById('symptomForm').action = '{{ route("health.symptom.store") }}';
+                        document.getElementById('symptomFormMethod').value = 'POST';
+                        document.getElementById('symptomSearchInput').value = '';
+                        document.getElementById('symptomNameHidden').value = '';
+                        document.getElementById('severityRange').value = 5;
+                        document.getElementById('severityValue').textContent = '5';
+                        document.getElementById('symptomRecordedAt').value = '{{ now()->format("Y-m-d\\TH:i") }}';
+                        document.getElementById('symptomNote').value = '';
+                    }
+                    if (modalId === 'addDiseaseModal') {
+                        document.getElementById('diseaseModalLabel').textContent = 'Add Disease Record';
+                        document.getElementById('diseaseSubmitLabel').textContent = 'Add Disease';
+                        document.getElementById('diseaseForm').action = '{{ route("health.disease.store") }}';
+                        document.getElementById('diseaseFormMethod').value = 'POST';
+                        document.getElementById('diseaseSelectWrapper').style.display = '';
+                        document.getElementById('diseaseIdHidden').setAttribute('required', 'required');
+                        document.getElementById('diseaseSearchInput').value = '';
+                        document.getElementById('diseaseIdHidden').value = '';
+                        document.getElementById('diseaseStatus').value = 'active';
+                        document.getElementById('diseaseDiagnosedAt').value = '';
+                        document.getElementById('diseaseNotes').value = '';
+                    }
+                    if (modalId === 'addUploadModal') {
+                        document.getElementById('uploadModalLabel').textContent = 'Upload Document';
+                        document.getElementById('uploadSubmitLabel').textContent = 'Upload';
+                        document.getElementById('uploadForm').action = '{{ route("health.upload.store") }}';
+                        document.getElementById('uploadFormMethod').value = 'POST';
+                        document.getElementById('uploadFileInput').setAttribute('required', 'required');
+                        document.getElementById('uploadFileHint').textContent = 'Accepted: JPG, PNG, GIF, WebP. Max 5MB.';
+                        document.getElementById('uploadTitle').value = '';
+                        document.getElementById('uploadType').value = 'prescription';
+                        document.getElementById('uploadDoctorName').value = '';
+                        document.getElementById('uploadInstitution').value = '';
+                        document.getElementById('uploadDocumentDate').value = '';
+                        document.getElementById('uploadNotes').value = '';
+                        document.getElementById('uploadSummary').value = '';
+                        prevContainer.classList.add('d-none');
+                    }
+                });
+            });
+
+            /* ═══════════════════════════════════════════════════════
+             *  CHARTS
+             * ═══════════════════════════════════════════════════════ */
+
+            // ── Metric trend charts ──
             @foreach ($metricsByType as $type => $records)
                 (function() {
                     const ctx = document.getElementById('chart-{{ Str::slug($type) }}');
                     if (!ctx) return;
-
                     const labels = @json($records->pluck('recorded_at')->map(fn($d) => $d->format('M d')));
                     const rawValues = @json($records->pluck('value'));
                     const data = rawValues.map(v => {
@@ -861,57 +1035,10 @@
                         }
                         return parseFloat(v) || 0;
                     }).reverse();
-                    const labelsReversed = [...labels].reverse();
-
                     new Chart(ctx, {
                         type: 'line',
-                        data: {
-                            labels: labelsReversed,
-                            datasets: [{
-                                label: '{{ ucfirst($type) }}',
-                                data: data,
-                                borderColor: '#667eea',
-                                backgroundColor: 'rgba(102,126,234,0.08)',
-                                borderWidth: 2,
-                                tension: 0.4,
-                                fill: true,
-                                pointRadius: 3,
-                                pointBackgroundColor: '#667eea',
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    display: false
-                                }
-                            },
-                            scales: {
-                                x: {
-                                    grid: {
-                                        display: false
-                                    },
-                                    ticks: {
-                                        font: {
-                                            size: 10
-                                        },
-                                        color: '#a0aec0'
-                                    }
-                                },
-                                y: {
-                                    grid: {
-                                        color: '#f0f0f0'
-                                    },
-                                    ticks: {
-                                        font: {
-                                            size: 10
-                                        },
-                                        color: '#a0aec0'
-                                    }
-                                }
-                            }
-                        }
+                        data: { labels: [...labels].reverse(), datasets: [{ label: '{{ ucfirst(str_replace("_"," ",$type)) }}', data: data, borderColor: '#667eea', backgroundColor: 'rgba(102,126,234,0.08)', borderWidth: 2, tension: 0.4, fill: true, pointRadius: 3, pointBackgroundColor: '#667eea' }] },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#a0aec0' } }, y: { grid: { color: '#f0f0f0' }, ticks: { font: { size: 10 }, color: '#a0aec0' } } } }
                     });
                 })();
             @endforeach
@@ -921,89 +1048,25 @@
             if (adhCtx) {
                 new Chart(adhCtx, {
                     type: 'doughnut',
-                    data: {
-                        labels: ['Taken', 'Missed'],
-                        datasets: [{
-                            data: [{{ $totalTaken }}, {{ $totalMissed }}],
-                            backgroundColor: ['#38a169', '#e53e3e'],
-                            borderWidth: 0,
-                            hoverOffset: 6,
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        cutout: '72%',
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
-                        }
-                    }
+                    data: { labels: ['Taken', 'Missed'], datasets: [{ data: [{{ $totalTaken }}, {{ $totalMissed }}], backgroundColor: ['#38a169', '#e53e3e'], borderWidth: 0, hoverOffset: 6 }] },
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '72%', plugins: { legend: { display: false } } }
                 });
             }
 
-            // ── Severity distribution bar chart ──
+            // ── Severity bar chart ──
             const sevCtx = document.getElementById('severityChart');
             if (sevCtx) {
                 const sevLabels = @json($severityDistribution->keys()->map(fn($k) => 'Level ' . $k));
                 const sevData = @json($severityDistribution->values());
                 const sevColors = sevData.map((_, i) => {
                     const lvl = parseInt(sevLabels[i]?.replace('Level ', '')) || 1;
-                    if (lvl <= 2) return '#38a169';
-                    if (lvl <= 4) return '#dd6b20';
-                    if (lvl <= 6) return '#c05621';
-                    if (lvl <= 8) return '#e53e3e';
-                    return '#c53030';
+                    if (lvl <= 2) return '#38a169'; if (lvl <= 4) return '#dd6b20';
+                    if (lvl <= 6) return '#c05621'; if (lvl <= 8) return '#e53e3e'; return '#c53030';
                 });
-
                 new Chart(sevCtx, {
                     type: 'bar',
-                    data: {
-                        labels: sevLabels,
-                        datasets: [{
-                            label: 'Count',
-                            data: sevData,
-                            backgroundColor: sevColors,
-                            borderRadius: 6,
-                            barThickness: 28,
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
-                        },
-                        scales: {
-                            x: {
-                                grid: {
-                                    display: false
-                                },
-                                ticks: {
-                                    font: {
-                                        size: 10
-                                    },
-                                    color: '#a0aec0'
-                                }
-                            },
-                            y: {
-                                beginAtZero: true,
-                                grid: {
-                                    color: '#f0f0f0'
-                                },
-                                ticks: {
-                                    stepSize: 1,
-                                    font: {
-                                        size: 10
-                                    },
-                                    color: '#a0aec0'
-                                }
-                            }
-                        }
-                    }
+                    data: { labels: sevLabels, datasets: [{ label: 'Count', data: sevData, backgroundColor: sevColors, borderRadius: 6, barThickness: 28 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#a0aec0' } }, y: { beginAtZero: true, grid: { color: '#f0f0f0' }, ticks: { stepSize: 1, font: { size: 10 }, color: '#a0aec0' } } } }
                 });
             }
         });

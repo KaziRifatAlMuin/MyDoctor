@@ -84,14 +84,19 @@
                                 <i class="fas fa-calendar me-1"></i>
                                 {{ $upload->document_date ? $upload->document_date->format('M d, Y') : $upload->created_at->format('M d, Y') }}
                             </span>
-                            <form action="{{ route('health.upload.destroy', $upload) }}" method="POST"
-                                onsubmit="return confirm('Delete this upload?')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius: 8px; font-size: 0.72rem;">
-                                    <i class="fas fa-trash"></i>
+                            <div class="action-btn-group">
+                                <button type="button" class="btn btn-sm btn-outline-primary"
+                                    onclick="openEditUpload({{ $upload->id }}, '{{ addslashes($upload->title) }}', '{{ $upload->type }}', '{{ addslashes($upload->doctor_name ?? '') }}', '{{ addslashes($upload->institution ?? '') }}', '{{ $upload->document_date ? $upload->document_date->format('Y-m-d') : '' }}', '{{ addslashes($upload->notes ?? '') }}', '{{ addslashes($upload->summary ?? '') }}')">
+                                    <i class="fas fa-edit"></i>
                                 </button>
-                            </form>
+                                <form action="{{ route('health.upload.destroy', $upload) }}" method="POST"
+                                    onsubmit="return confirm('Delete this upload?')" class="d-inline">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>

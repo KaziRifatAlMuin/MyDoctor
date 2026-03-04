@@ -1,4 +1,9 @@
 {{-- ── Overview Tab ── --}}
+@php
+    $metricConfig = config('health.metric_types');
+    $symptomsBn = config('health.symptoms');
+    $diseasesBnMap = config('health.diseases');
+@endphp
 <div class="row g-4">
 
     {{-- Left Column: Latest Metrics + Recent Symptoms + Recent Uploads --}}
@@ -7,7 +12,7 @@
         {{-- Latest Metrics Summary --}}
         <div class="health-card mb-4">
             <div class="health-card-header">
-                <h5><i class="fas fa-tachometer-alt"></i> Latest Health Metrics</h5>
+                <h5><i class="fas fa-tachometer-alt"></i> Latest Health Metrics (সর্বশেষ স্বাস্থ্য মেট্রিক্স)</h5>
                 <div class="d-flex align-items-center gap-2">
                     <span class="health-card-badge bg-light text-muted">{{ $latestMetrics->count() }} types</span>
                     <button class="btn btn-sm text-white"
@@ -33,7 +38,8 @@
                                             <div class="metric-type-name">
                                                 <i class="fas fa-circle me-1"
                                                     style="font-size: 0.5rem; color: #667eea;"></i>
-                                                {{ ucfirst(str_replace('_', ' ', $type)) }}
+                                                {{ $metricConfig[$type]['en'] ?? ucfirst(str_replace('_', ' ', $type)) }}
+                                                <span class="bn-label">({{ $metricConfig[$type]['bn'] ?? '' }})</span>
                                             </div>
                                             <div class="metric-value-pills">
                                                 @if (is_array($metric->value))
@@ -61,7 +67,7 @@
         {{-- Recent Symptoms --}}
         <div class="health-card mb-4">
             <div class="health-card-header">
-                <h5><i class="fas fa-notes-medical"></i> Recent Symptoms</h5>
+                <h5><i class="fas fa-notes-medical"></i> Recent Symptoms (সাম্প্রতিক লক্ষণ)</h5>
                 <div class="d-flex align-items-center gap-2">
                     <span class="health-card-badge bg-light text-muted">last 5</span>
                     <button class="btn btn-sm text-white"
@@ -90,7 +96,12 @@
                         <tbody>
                             @foreach ($symptoms->take(5) as $symptom)
                                 <tr>
-                                    <td class="fw-semibold">{{ $symptom->symptom_name }}</td>
+                                    <td>
+                                        <span class="fw-semibold">{{ $symptom->symptom_name }}</span>
+                                        @if (!empty($symptomsBn[$symptom->symptom_name]))
+                                            <span class="bn-label">({{ $symptomsBn[$symptom->symptom_name] }})</span>
+                                        @endif
+                                    </td>
                                     <td>
                                         @if ($symptom->severity_level)
                                             <span class="severity-badge severity-{{ $symptom->severity_level }}">
@@ -114,7 +125,7 @@
         {{-- Active Conditions --}}
         <div class="health-card mb-4">
             <div class="health-card-header">
-                <h5><i class="fas fa-virus"></i> Active Conditions</h5>
+                <h5><i class="fas fa-virus"></i> Active Conditions (সক্রিয় রোগ)</h5>
                 <div class="d-flex align-items-center gap-2">
                     <span class="health-card-badge bg-light text-muted">{{ $userDiseases->whereIn('status', ['active', 'chronic'])->count() }} active</span>
                     <button class="btn btn-sm text-white"
@@ -142,6 +153,12 @@
                             <div class="flex-grow-1">
                                 <div class="fw-semibold" style="font-size: 0.88rem; color: #2d3748;">
                                     {{ $ud->disease->disease_name ?? 'Unknown' }}
+                                    @php
+                                        $bnName = $ud->disease->disease_name_bn ?? ($diseasesBnMap[$ud->disease->disease_name ?? ''] ?? '');
+                                    @endphp
+                                    @if ($bnName)
+                                        <span class="bn-label">({{ $bnName }})</span>
+                                    @endif
                                 </div>
                                 <div style="font-size: 0.75rem; color: #a0aec0;">
                                     {{ $ud->diagnosed_at ? 'Since ' . $ud->diagnosed_at->format('M Y') : '' }}

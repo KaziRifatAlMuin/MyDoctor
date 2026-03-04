@@ -1,4 +1,5 @@
 {{-- ── Metrics Tab ── --}}
+@php $metricConfig = config('health.metric_types'); @endphp
 @if ($metricsByType->isEmpty())
     <div class="health-card">
         <div class="health-card-body">
@@ -29,7 +30,8 @@
                     <div class="health-card-header">
                         <h5>
                             <i class="fas fa-wave-square"></i>
-                            {{ ucfirst(str_replace('_', ' ', $type)) }}
+                            {{ $metricConfig[$type]['en'] ?? ucfirst(str_replace('_', ' ', $type)) }}
+                            <span class="bn-label">({{ $metricConfig[$type]['bn'] ?? '' }})</span>
                         </h5>
                         <span class="health-card-badge bg-light text-muted">{{ $records->count() }} records</span>
                     </div>
@@ -57,14 +59,15 @@
                             <th>Type</th>
                             <th>Values</th>
                             <th>Recorded At</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($healthMetrics as $metric)
                             <tr>
                                 <td>
-                                    <span
-                                        class="fw-semibold text-capitalize">{{ str_replace('_', ' ', $metric->metric_type) }}</span>
+                                    <span class="fw-semibold text-capitalize">{{ $metricConfig[$metric->metric_type]['en'] ?? str_replace('_', ' ', $metric->metric_type) }}</span>
+                                    <span class="bn-label d-block">({{ $metricConfig[$metric->metric_type]['bn'] ?? '' }})</span>
                                 </td>
                                 <td>
                                     <div class="metric-value-pills">
@@ -81,6 +84,21 @@
                                     </div>
                                 </td>
                                 <td>{{ $metric->recorded_at->format('M d, Y h:i A') }}</td>
+                                <td>
+                                    <div class="action-btn-group">
+                                        <button type="button" class="btn btn-sm btn-outline-primary"
+                                            onclick="openEditMetric({{ $metric->id }}, '{{ $metric->metric_type }}', {{ json_encode($metric->value) }}, '{{ $metric->recorded_at->format('Y-m-d\TH:i') }}')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <form action="{{ route('health.metric.destroy', $metric) }}" method="POST"
+                                            onsubmit="return confirm('Delete this metric?')" class="d-inline">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>

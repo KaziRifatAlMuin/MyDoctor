@@ -77,12 +77,22 @@ Route::middleware('auth')->group(function () {
     // Health Dashboard
     Route::get('/health', [HealthController::class, 'index'])->name('health');
     
-    // Health CRUD operations
+    // Health CRUD operations — Store
     Route::post('/health/metric', [HealthController::class, 'storeMetric'])->name('health.metric.store');
     Route::post('/health/symptom', [HealthController::class, 'storeSymptom'])->name('health.symptom.store');
     Route::post('/health/disease', [HealthController::class, 'storeDisease'])->name('health.disease.store');
-    Route::delete('/health/disease/{userDisease}', [HealthController::class, 'destroyDisease'])->name('health.disease.destroy');
     Route::post('/health/upload', [HealthController::class, 'storeUpload'])->name('health.upload.store');
+
+    // Health CRUD operations — Update
+    Route::put('/health/metric/{healthMetric}', [HealthController::class, 'updateMetric'])->name('health.metric.update');
+    Route::put('/health/symptom/{symptom}', [HealthController::class, 'updateSymptom'])->name('health.symptom.update');
+    Route::put('/health/disease/{userDisease}', [HealthController::class, 'updateDisease'])->name('health.disease.update');
+    Route::put('/health/upload/{upload}', [HealthController::class, 'updateUpload'])->name('health.upload.update');
+
+    // Health CRUD operations — Delete
+    Route::delete('/health/metric/{healthMetric}', [HealthController::class, 'destroyMetric'])->name('health.metric.destroy');
+    Route::delete('/health/symptom/{symptom}', [HealthController::class, 'destroySymptom'])->name('health.symptom.destroy');
+    Route::delete('/health/disease/{userDisease}', [HealthController::class, 'destroyDisease'])->name('health.disease.destroy');
     Route::delete('/health/upload/{upload}', [HealthController::class, 'destroyUpload'])->name('health.upload.destroy');
     
     // Notifications

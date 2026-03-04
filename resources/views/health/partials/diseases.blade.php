@@ -1,4 +1,5 @@
 {{-- ── Diseases Tab ── --}}
+@php $diseasesBnMap = config('health.diseases'); @endphp
 <div class="row g-4">
 
     {{-- Disease Summary --}}
@@ -22,13 +23,16 @@
                             'managed' => '#3182ce',
                             'recovered' => '#38a169',
                         ];
+                        $statusBn = ['active' => 'সক্রিয়', 'chronic' => 'দীর্ঘস্থায়ী', 'managed' => 'নিয়ন্ত্রিত', 'recovered' => 'সুস্থ'];
                     @endphp
                     <div class="mb-3">
                         @foreach (['active', 'chronic', 'managed', 'recovered'] as $status)
                             <div class="d-flex justify-content-between align-items-center py-2 {{ !$loop->last ? 'border-bottom' : '' }}">
                                 <div class="d-flex align-items-center gap-2">
                                     <i class="fas fa-circle" style="font-size: 0.5rem; color: {{ $statusColors[$status] }};"></i>
-                                    <span class="fw-semibold text-capitalize" style="font-size: 0.88rem;">{{ $status }}</span>
+                                    <span class="fw-semibold text-capitalize" style="font-size: 0.88rem;">{{ $status }}
+                                        <span class="bn-label">({{ $statusBn[$status] }})</span>
+                                    </span>
                                 </div>
                                 <span class="fw-bold" style="color: {{ $statusColors[$status] }};">
                                     {{ $statusCounts->get($status, 0) }}
@@ -38,7 +42,7 @@
                     </div>
                     <div class="text-center mt-3">
                         <span class="fw-bold" style="font-size: 1.8rem; color: #2d3748;">{{ $userDiseases->count() }}</span>
-                        <div class="text-muted" style="font-size: 0.82rem;">Total Conditions</div>
+                        <div class="text-muted" style="font-size: 0.82rem;">Total Conditions (মোট রোগ)</div>
                     </div>
                 @endif
 
@@ -74,7 +78,7 @@
                                     <th>Status</th>
                                     <th>Diagnosed</th>
                                     <th>Notes</th>
-                                    <th>Action</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -88,10 +92,11 @@
                                                 </div>
                                                 <div>
                                                     <span class="fw-semibold">{{ $ud->disease->disease_name ?? 'Unknown' }}</span>
-                                                    @if ($ud->disease && $ud->disease->description)
-                                                        <div style="font-size: 0.72rem; color: #a0aec0;">
-                                                            {{ Str::limit($ud->disease->description, 50) }}
-                                                        </div>
+                                                    @php
+                                                        $bnName = $ud->disease->disease_name_bn ?? ($diseasesBnMap[$ud->disease->disease_name ?? ''] ?? '');
+                                                    @endphp
+                                                    @if ($bnName)
+                                                        <span class="bn-label d-block">({{ $bnName }})</span>
                                                     @endif
                                                 </div>
                                             </div>
@@ -105,10 +110,11 @@
                                                     'recovered' => 'severity-1',
                                                     default => 'severity-3',
                                                 };
+                                                $statusBnLabel = ['active' => 'সক্রিয়', 'chronic' => 'দীর্ঘস্থায়ী', 'managed' => 'নিয়ন্ত্রিত', 'recovered' => 'সুস্থ'];
                                             @endphp
                                             <span class="severity-badge {{ $badgeClass }} text-capitalize">
                                                 <i class="fas fa-circle" style="font-size: 0.4rem;"></i>
-                                                {{ $ud->status }}
+                                                {{ $ud->status }} ({{ $statusBnLabel[$ud->status] ?? '' }})
                                             </span>
                                         </td>
                                         <td>
@@ -122,15 +128,19 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <form action="{{ route('health.disease.destroy', $ud) }}" method="POST"
-                                                onsubmit="return confirm('Remove this disease record?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                    style="border-radius: 8px; font-size: 0.75rem;">
-                                                    <i class="fas fa-trash"></i>
+                                            <div class="action-btn-group">
+                                                <button type="button" class="btn btn-sm btn-outline-primary"
+                                                    onclick="openEditDisease({{ $ud->id }}, '{{ $ud->status }}', '{{ $ud->diagnosed_at ? $ud->diagnosed_at->format('Y-m-d') : '' }}', '{{ addslashes($ud->notes ?? '') }}')">
+                                                    <i class="fas fa-edit"></i>
                                                 </button>
-                                            </form>
+                                                <form action="{{ route('health.disease.destroy', $ud) }}" method="POST"
+                                                    onsubmit="return confirm('Remove this disease record?')" class="d-inline">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </td>
                                     </tr>
                                 @endforeach

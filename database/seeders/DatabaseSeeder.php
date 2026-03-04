@@ -18,6 +18,7 @@ use App\Models\UserDisease;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Database\Seeders\MedicalSeeder;
+use Database\Seeders\TranslationSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -27,12 +28,20 @@ class DatabaseSeeder extends Seeder
      * Seed the application's database.
      * FK-safe insertion order is maintained.
      * Minimum 100+ per table, extra 50+ for user 1.
-     * All user passwords: abcd1234
+     * All user passwords: password
      */
     public function run(): void
     {
-        // 1. Users — no FK dependencies (100+)
-        User::factory(120)->create();
+        // 0. Translations — must be first so back-fill works on diseases
+        $this->call(TranslationSeeder::class);
+
+        // 1. Users — no FK dependencies (50 sequential emails)
+        for ($i = 1; $i <= 50; $i++) {
+            User::factory()->create([
+                'email' => "user{$i}@gmail.com",
+                'name'  => "User {$i}",
+            ]);
+        }
 
         // 2. Diseases — no FK dependencies (120 unique diseases)
         Disease::factory(120)->create();

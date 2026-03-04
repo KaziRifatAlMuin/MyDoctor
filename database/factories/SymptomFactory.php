@@ -9,12 +9,7 @@ class SymptomFactory extends Factory
 {
     public function definition(): array
     {
-        $symptoms = [
-            'Headache', 'Fever', 'Cough', 'Fatigue', 'Nausea',
-            'Dizziness', 'Chest pain', 'Shortness of breath', 'Joint pain', 'Back pain',
-            'Abdominal pain', 'Loss of appetite', 'Insomnia', 'Palpitations', 'Blurred vision',
-            'Swollen feet', 'Dry mouth', 'Frequent urination', 'Skin rash', 'Numbness',
-        ];
+        $symptoms = array_keys(config('health.symptoms'));
 
         return [
             'user_id'        => User::inRandomOrder()->first()?->id ?? User::factory(),

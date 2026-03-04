@@ -12,6 +12,7 @@ use App\Models\MedicineLog;
 use App\Models\Disease;
 use App\Models\UserDisease;
 use App\Models\Upload;
+use App\Models\Translation;
 
 class HealthController extends Controller
 {
@@ -22,6 +23,20 @@ class HealthController extends Controller
     {
         $user = Auth::user();
 
+        // Load translations from DB (falls back to config if table is empty)
+        $symptomsList  = Translation::allOfType(Translation::TYPE_SYMPTOM);  // ['English' => 'বাংলা', …]
+        $metricConfig  = config('health.metric_types'); // keyed array with en, bn, fields, unit
+        $diseasesBn    = Translation::allOfType(Translation::TYPE_DISEASE);   // ['English' => 'বাংলা', …]
+
+        // Enrich metric bn labels from DB translations
+        $metricBn = Translation::allOfType(Translation::TYPE_METRIC);
+        foreach ($metricConfig as $key => &$cfg) {
+            if (isset($metricBn[$key])) {
+                $cfg['bn'] = $metricBn[$key];
+            }
+        }
+        unset($cfg);
+
         // Health Metrics — latest 50, grouped by type
         $healthMetrics = HealthMetric::where('user_id', $user->id)
             ->orderByDesc('recorded_at')
@@ -31,21 +46,17 @@ class HealthController extends Controller
         $metricsByType = $healthMetrics->groupBy('metric_type');
 
         // Latest value per metric type for summary cards
-        $latestMetrics = $healthMetrics->groupBy('metric_type')->map(function ($group) {
-            return $group->first();
-        });
+        $latestMetrics = $healthMetrics->groupBy('metric_type')->map(fn($group) => $group->first());
 
-        // Symptoms — latest 20
+        // Symptoms — latest 30
         $symptoms = Symptom::where('user_id', $user->id)
             ->orderByDesc('recorded_at')
-            ->limit(20)
+            ->limit(30)
             ->get();
 
         // Medicines with schedules
         $medicines = Medicine::where('user_id', $user->id)
-            ->with(['schedules' => function ($q) {
-                $q->orderByDesc('start_date');
-            }])
+            ->with(['schedules' => fn($q) => $q->orderByDesc('start_date')])
             ->get();
 
         // Medicine logs — last 30 days
@@ -79,18 +90,7 @@ class HealthController extends Controller
             ->get();
 
         $prescriptionUploads = $uploads->where('type', 'prescription');
-        $reportUploads = $uploads->where('type', 'report');
-
-        // Metric type definitions for smart form
-        $metricTypes = [
-            'blood_pressure'    => ['fields' => ['systolic' => 'number', 'diastolic' => 'number'], 'unit' => 'mmHg'],
-            'blood_glucose'     => ['fields' => ['value' => 'number'], 'unit' => 'mg/dL'],
-            'heart_rate'        => ['fields' => ['bpm' => 'number'], 'unit' => 'bpm'],
-            'body_weight'       => ['fields' => ['value' => 'number'], 'unit' => 'kg'],
-            'bmi'               => ['fields' => ['value' => 'number'], 'unit' => 'kg/m²'],
-            'oxygen_saturation' => ['fields' => ['value' => 'number'], 'unit' => '%'],
-            'temperature'       => ['fields' => ['value' => 'number'], 'unit' => '°C'],
-        ];
+        $reportUploads       = $uploads->where('type', 'report');
 
         return view('health.index', compact(
             'user',
@@ -110,43 +110,33 @@ class HealthController extends Controller
             'uploads',
             'prescriptionUploads',
             'reportUploads',
-            'metricTypes'
+            'symptomsList',
+            'metricConfig',
+            'diseasesBn'
         ));
     }
 
-    /**
-     * Store a new health metric.
-     */
+    /* ====================================================================
+     *  STORE methods
+     * ==================================================================== */
+
     public function storeMetric(Request $request)
     {
+        $validTypes = implode(',', array_keys(config('health.metric_types')));
+
         $request->validate([
-            'metric_type' => 'required|string|in:blood_pressure,blood_glucose,heart_rate,body_weight,bmi,oxygen_saturation,temperature',
-            'recorded_at'  => 'required|date',
+            'metric_type' => "required|string|in:$validTypes",
+            'recorded_at' => 'required|date',
         ]);
 
         $metricType = $request->metric_type;
-
-        // Build value JSON from dynamic fields
-        $valueFields = [
-            'blood_pressure'    => ['systolic', 'diastolic'],
-            'blood_glucose'     => ['value'],
-            'heart_rate'        => ['bpm'],
-            'body_weight'       => ['value'],
-            'bmi'               => ['value'],
-            'oxygen_saturation' => ['value'],
-            'temperature'       => ['value'],
-        ];
-
-        $units = [
-            'blood_pressure' => 'mmHg', 'blood_glucose' => 'mg/dL', 'heart_rate' => 'bpm',
-            'body_weight' => 'kg', 'bmi' => 'kg/m²', 'oxygen_saturation' => '%', 'temperature' => '°C',
-        ];
+        $cfg        = config("health.metric_types.$metricType");
 
         $value = [];
-        foreach ($valueFields[$metricType] as $field) {
+        foreach ($cfg['fields'] as $field) {
             $value[$field] = $request->input("value_$field", 0);
         }
-        $value['unit'] = $units[$metricType];
+        $value['unit'] = $cfg['unit'];
 
         HealthMetric::create([
             'user_id'     => Auth::id(),
@@ -158,9 +148,6 @@ class HealthController extends Controller
         return redirect()->route('health')->with('success', 'Health metric recorded successfully.');
     }
 
-    /**
-     * Store a new symptom.
-     */
     public function storeSymptom(Request $request)
     {
         $request->validate([
@@ -181,24 +168,16 @@ class HealthController extends Controller
         return redirect()->route('health')->with('success', 'Symptom recorded successfully.');
     }
 
-    /**
-     * Store a user disease association.
-     */
     public function storeDisease(Request $request)
     {
         $request->validate([
-            'disease_id'    => 'required|exists:diseases,id',
-            'diagnosed_at'  => 'nullable|date',
-            'status'        => 'required|in:active,recovered,chronic,managed',
-            'notes'         => 'nullable|string|max:1000',
+            'disease_id'   => 'required|exists:diseases,id',
+            'diagnosed_at' => 'nullable|date',
+            'status'       => 'required|in:active,recovered,chronic,managed',
+            'notes'        => 'nullable|string|max:1000',
         ]);
 
-        // Prevent duplicate
-        $exists = UserDisease::where('user_id', Auth::id())
-            ->where('disease_id', $request->disease_id)
-            ->exists();
-
-        if ($exists) {
+        if (UserDisease::where('user_id', Auth::id())->where('disease_id', $request->disease_id)->exists()) {
             return redirect()->route('health')->with('error', 'This disease is already in your records.');
         }
 
@@ -213,9 +192,6 @@ class HealthController extends Controller
         return redirect()->route('health')->with('success', 'Disease record added successfully.');
     }
 
-    /**
-     * Store an upload (prescription or report).
-     */
     public function storeUpload(Request $request)
     {
         $request->validate([
@@ -246,35 +222,134 @@ class HealthController extends Controller
         return redirect()->route('health')->with('success', ucfirst($request->type) . ' uploaded successfully.');
     }
 
-    /**
-     * Delete an upload.
-     */
-    public function destroyUpload(Upload $upload)
+    /* ====================================================================
+     *  UPDATE methods
+     * ==================================================================== */
+
+    public function updateMetric(Request $request, HealthMetric $healthMetric)
     {
-        if ($upload->user_id !== Auth::id()) {
-            abort(403);
+        if ($healthMetric->user_id !== Auth::id()) abort(403);
+
+        $validTypes = implode(',', array_keys(config('health.metric_types')));
+
+        $request->validate([
+            'metric_type' => "required|string|in:$validTypes",
+            'recorded_at' => 'required|date',
+        ]);
+
+        $metricType = $request->metric_type;
+        $cfg        = config("health.metric_types.$metricType");
+
+        $value = [];
+        foreach ($cfg['fields'] as $field) {
+            $value[$field] = $request->input("value_$field", 0);
+        }
+        $value['unit'] = $cfg['unit'];
+
+        $healthMetric->update([
+            'metric_type' => $metricType,
+            'recorded_at' => $request->recorded_at,
+            'value'       => $value,
+        ]);
+
+        return redirect()->route('health')->with('success', 'Health metric updated successfully.');
+    }
+
+    public function updateSymptom(Request $request, Symptom $symptom)
+    {
+        if ($symptom->user_id !== Auth::id()) abort(403);
+
+        $request->validate([
+            'symptom_name'   => 'required|string|max:255',
+            'severity_level' => 'required|integer|min:1|max:10',
+            'recorded_at'    => 'required|date',
+            'note'           => 'nullable|string|max:1000',
+        ]);
+
+        $symptom->update($request->only('symptom_name', 'severity_level', 'recorded_at', 'note'));
+
+        return redirect()->route('health')->with('success', 'Symptom updated successfully.');
+    }
+
+    public function updateDisease(Request $request, UserDisease $userDisease)
+    {
+        if ($userDisease->user_id !== Auth::id()) abort(403);
+
+        $request->validate([
+            'status'       => 'required|in:active,recovered,chronic,managed',
+            'diagnosed_at' => 'nullable|date',
+            'notes'        => 'nullable|string|max:1000',
+        ]);
+
+        $userDisease->update($request->only('status', 'diagnosed_at', 'notes'));
+
+        return redirect()->route('health')->with('success', 'Disease record updated successfully.');
+    }
+
+    public function updateUpload(Request $request, Upload $upload)
+    {
+        if ($upload->user_id !== Auth::id()) abort(403);
+
+        $request->validate([
+            'title'         => 'required|string|max:255',
+            'type'          => 'required|in:prescription,report',
+            'file'          => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'summary'       => 'nullable|string|max:2000',
+            'notes'         => 'nullable|string|max:1000',
+            'doctor_name'   => 'nullable|string|max:255',
+            'institution'   => 'nullable|string|max:255',
+            'document_date' => 'nullable|date',
+        ]);
+
+        $data = $request->only('title', 'type', 'summary', 'notes', 'doctor_name', 'institution', 'document_date');
+
+        if ($request->hasFile('file')) {
+            if ($upload->file_path && Storage::disk('public')->exists($upload->file_path)) {
+                Storage::disk('public')->delete($upload->file_path);
+            }
+            $data['file_path'] = $request->file('file')->store('uploads', 'public');
         }
 
-        if (Storage::disk('public')->exists($upload->file_path)) {
+        $upload->update($data);
+
+        return redirect()->route('health')->with('success', ucfirst($request->type) . ' updated successfully.');
+    }
+
+    /* ====================================================================
+     *  DELETE methods
+     * ==================================================================== */
+
+    public function destroyMetric(HealthMetric $healthMetric)
+    {
+        if ($healthMetric->user_id !== Auth::id()) abort(403);
+        $healthMetric->delete();
+        return redirect()->route('health')->with('success', 'Health metric deleted.');
+    }
+
+    public function destroySymptom(Symptom $symptom)
+    {
+        if ($symptom->user_id !== Auth::id()) abort(403);
+        $symptom->delete();
+        return redirect()->route('health')->with('success', 'Symptom record deleted.');
+    }
+
+    public function destroyDisease(UserDisease $userDisease)
+    {
+        if ($userDisease->user_id !== Auth::id()) abort(403);
+        $userDisease->delete();
+        return redirect()->route('health')->with('success', 'Disease record removed.');
+    }
+
+    public function destroyUpload(Upload $upload)
+    {
+        if ($upload->user_id !== Auth::id()) abort(403);
+
+        if ($upload->file_path && Storage::disk('public')->exists($upload->file_path)) {
             Storage::disk('public')->delete($upload->file_path);
         }
 
         $upload->delete();
 
         return redirect()->route('health')->with('success', 'Upload deleted successfully.');
-    }
-
-    /**
-     * Delete a user disease record.
-     */
-    public function destroyDisease(UserDisease $userDisease)
-    {
-        if ($userDisease->user_id !== Auth::id()) {
-            abort(403);
-        }
-
-        $userDisease->delete();
-
-        return redirect()->route('health')->with('success', 'Disease record removed.');
     }
 }
