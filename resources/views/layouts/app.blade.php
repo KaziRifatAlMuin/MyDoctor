@@ -865,6 +865,13 @@
                         <i class="fas fa-home me-1"></i> Home
                     </a>
                 </li>
+                @auth
+                <li class="banner-nav-item">
+                    <a href="{{ route('dashboard') }}" class="banner-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                        <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                    </a>
+                </li>
+                @endauth
                 <li class="banner-nav-item">
                     <a href="{{ route('medicine') }}" class="banner-nav-link {{ request()->routeIs('medicine*') ? 'active' : '' }}">
                         <i class="fas fa-pills me-1"></i> Medicine
@@ -908,6 +915,10 @@
                 <h6>{{ auth()->user()->Name }}</h6>
                 <p>{{ auth()->user()->Email }}</p>
             </div>
+            
+            <a href="{{ route('dashboard') }}" class="dropdown-item-custom">
+                <i class="fas fa-tachometer-alt"></i> Dashboard
+            </a>
             
             <a href="{{ route('profile') }}" class="dropdown-item-custom">
                 <i class="fas fa-user"></i> Profile
