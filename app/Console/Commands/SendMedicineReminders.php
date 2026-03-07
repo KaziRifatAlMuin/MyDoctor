@@ -11,22 +11,22 @@ use Illuminate\Support\Facades\Log;
 class SendMedicineReminders extends Command
 {
     protected $signature = 'reminders:send';
-    protected $description = 'Send medicine reminders 3 minutes before scheduled time via push and email';
+    protected $description = 'Send medicine reminders 5 minutes before scheduled time via push and email';
 
     public function handle()
     {
         $now = now();
         
-        // Check 2-4 minutes ahead to send 3 minutes before reminder
-        $startTime = $now->copy()->addMinutes(2);
-        $endTime = $now->copy()->addMinutes(4);
+        // Check 4-6 minutes ahead to send 5 minutes before reminder
+        $startTime = $now->copy()->addMinutes(4);
+        $endTime = $now->copy()->addMinutes(6);
         
         $this->info('🔍 Checking for pending reminders...');
         $this->line('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         $this->line('📅 Current server time: ' . $now->format('Y-m-d H:i:s'));
         $this->line('⏰ Looking for reminders between:');
-        $this->line('   From: ' . $startTime->format('Y-m-d H:i:s') . ' (2 mins ahead)');
-        $this->line('   To:   ' . $endTime->format('Y-m-d H:i:s') . ' (4 mins ahead)');
+        $this->line('   From: ' . $startTime->format('Y-m-d H:i:s') . ' (4 mins ahead)');
+        $this->line('   To:   ' . $endTime->format('Y-m-d H:i:s') . ' (6 mins ahead)');
         $this->line('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
         // Get ALL pending reminders for debugging
@@ -42,8 +42,8 @@ class SendMedicineReminders extends Command
             foreach ($allPending as $reminder) {
                 $minutesUntil = $now->diffInMinutes($reminder->reminder_at, false);
                 $status = $minutesUntil < 0 ? '🔴 PAST' : 
-                         ($minutesUntil <= 4 && $minutesUntil >= 2 ? '🟢 NOW (3min)' : 
-                         ($minutesUntil < 2 ? '🟡 VERY SOON' : '🟡 FUTURE'));
+                         ($minutesUntil <= 6 && $minutesUntil >= 4 ? '🟢 NOW (5min)' : 
+                         ($minutesUntil < 4 ? '🟡 VERY SOON' : '🟡 FUTURE'));
                 $this->line(sprintf(
                     '   %s ID: %d | %s | %s | %s (%d min from now)',
                     $status,
@@ -56,21 +56,21 @@ class SendMedicineReminders extends Command
             }
         }
 
-        // Get reminders scheduled 2-4 minutes from now (to send 3 minutes before)
+        // Get reminders scheduled 4-6 minutes from now (to send 5 minutes before)
         $reminders = MedicineReminder::with(['schedule.medicine.user'])
             ->where('status', 'pending')
             ->whereBetween('reminder_at', [$startTime, $endTime])
             ->get();
 
         $this->line('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        $this->line('🎯 Reminders in 2-4-min-ahead window (3 minutes before): ' . $reminders->count());
+        $this->line('🎯 Reminders in 4-6-min-ahead window (5 minutes before): ' . $reminders->count());
         
         if ($reminders->count() > 0) {
-            $this->line('📋 Reminders to process now (will be sent 3 minutes before):');
+            $this->line('📋 Reminders to process now (will be sent 5 minutes before):');
             foreach ($reminders as $reminder) {
                 $minutesUntil = $now->diffInMinutes($reminder->reminder_at, false);
                 $this->line(sprintf(
-                    '   ▶️  ID: %d | %s | %s | %s | (in %d min - sending 3 min before)',
+                    '   ▶️  ID: %d | %s | %s | %s | (in %d min - sending 5 min before)',
                     $reminder->id,
                     $reminder->reminder_at->format('H:i:s'),
                     $reminder->schedule->medicine->medicine_name,
@@ -102,15 +102,15 @@ class SendMedicineReminders extends Command
                 $this->line("   ⏰ Scheduled: {$reminder->reminder_at->format('H:i:s')}");
                 $this->line("   🕒 Current: " . now()->format('H:i:s'));
                 $this->line("   ⏱️  Time until reminder: {$minutesUntil} minutes");
-                $this->line("   📢 Sending reminder 3 minutes before scheduled time");
+                $this->line("   📢 Sending reminder 5 minutes before scheduled time");
 
                 // Send push notification
                 if ($user->wantsPushNotifications()) {
                     try {
                         $user->notify(new MedicinePushNotification($reminder));
                         $pushCount++;
-                        $this->info("   ✅ Push notification sent (3 minutes before)");
-                        Log::info("Push sent for reminder {$reminder->id} to user {$user->id} (3 minutes before)");
+                        $this->info("   ✅ Push notification sent (5 minutes before)");
+                        Log::info("Push sent for reminder {$reminder->id} to user {$user->id} (5 minutes before)");
                     } catch (\Exception $e) {
                         $this->error("   ❌ Push failed: " . $e->getMessage());
                         Log::error("Push failed: " . $e->getMessage());
@@ -124,8 +124,8 @@ class SendMedicineReminders extends Command
                     try {
                         $user->notify(new MedicineEmailNotification($reminder));
                         $emailCount++;
-                        $this->info("   ✅ Email queued (3 minutes before)");
-                        Log::info("Email queued for reminder {$reminder->id} to user {$user->id} (3 minutes before)");
+                        $this->info("   ✅ Email queued (5 minutes before)");
+                        Log::info("Email queued for reminder {$reminder->id} to user {$user->id} (5 minutes before)");
                     } catch (\Exception $e) {
                         $this->error("   ❌ Email failed: " . $e->getMessage());
                         Log::error("Email failed: " . $e->getMessage());
@@ -145,8 +145,8 @@ class SendMedicineReminders extends Command
         $this->table(
             ['Type', 'Count'],
             [
-                ['Push Notifications (3 min before)', $pushCount],
-                ['Emails (3 min before)', $emailCount],
+                ['Push Notifications (5 min before)', $pushCount],
+                ['Emails (5 min before)', $emailCount],
                 ['Skipped', $skippedCount],
             ]
         );
