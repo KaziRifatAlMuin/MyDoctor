@@ -1,0 +1,159 @@
+<?php
+
+namespace App\Console\Commands;
+
+use App\Models\MedicineReminder;
+use App\Notifications\MedicinePushNotification;
+use App\Notifications\MedicineEmailNotification;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
+
+class SendMedicineReminders extends Command
+{
+    protected $signature = 'reminders:send';
+    protected $description = 'Send medicine reminders 3 minutes before scheduled time via push and email';
+
+    public function handle()
+    {
+        $now = now();
+        
+        // Check 2-4 minutes ahead to send 3 minutes before reminder
+        $startTime = $now->copy()->addMinutes(2);
+        $endTime = $now->copy()->addMinutes(4);
+        
+        $this->info('🔍 Checking for pending reminders...');
+        $this->line('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        $this->line('📅 Current server time: ' . $now->format('Y-m-d H:i:s'));
+        $this->line('⏰ Looking for reminders between:');
+        $this->line('   From: ' . $startTime->format('Y-m-d H:i:s') . ' (2 mins ahead)');
+        $this->line('   To:   ' . $endTime->format('Y-m-d H:i:s') . ' (4 mins ahead)');
+        $this->line('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+        // Get ALL pending reminders for debugging
+        $allPending = MedicineReminder::with(['schedule.medicine.user'])
+            ->where('status', 'pending')
+            ->orderBy('reminder_at')
+            ->get();
+            
+        $this->line('📊 Total pending reminders in database: ' . $allPending->count());
+        
+        if ($allPending->count() > 0) {
+            $this->line('📋 All pending reminders:');
+            foreach ($allPending as $reminder) {
+                $minutesUntil = $now->diffInMinutes($reminder->reminder_at, false);
+                $status = $minutesUntil < 0 ? '🔴 PAST' : 
+                         ($minutesUntil <= 4 && $minutesUntil >= 2 ? '🟢 NOW (3min)' : 
+                         ($minutesUntil < 2 ? '🟡 VERY SOON' : '🟡 FUTURE'));
+                $this->line(sprintf(
+                    '   %s ID: %d | %s | %s | %s (%d min from now)',
+                    $status,
+                    $reminder->id,
+                    $reminder->reminder_at->format('H:i:s'),
+                    $reminder->schedule->medicine->medicine_name,
+                    $reminder->status,
+                    $minutesUntil
+                ));
+            }
+        }
+
+        // Get reminders scheduled 2-4 minutes from now (to send 3 minutes before)
+        $reminders = MedicineReminder::with(['schedule.medicine.user'])
+            ->where('status', 'pending')
+            ->whereBetween('reminder_at', [$startTime, $endTime])
+            ->get();
+
+        $this->line('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        $this->line('🎯 Reminders in 2-4-min-ahead window (3 minutes before): ' . $reminders->count());
+        
+        if ($reminders->count() > 0) {
+            $this->line('📋 Reminders to process now (will be sent 3 minutes before):');
+            foreach ($reminders as $reminder) {
+                $minutesUntil = $now->diffInMinutes($reminder->reminder_at, false);
+                $this->line(sprintf(
+                    '   ▶️  ID: %d | %s | %s | %s | (in %d min - sending 3 min before)',
+                    $reminder->id,
+                    $reminder->reminder_at->format('H:i:s'),
+                    $reminder->schedule->medicine->medicine_name,
+                    $reminder->status,
+                    $minutesUntil
+                ));
+            }
+        }
+
+        $pushCount = 0;
+        $emailCount = 0;
+        $skippedCount = 0;
+
+        foreach ($reminders as $reminder) {
+            try {
+                $user = $reminder->schedule->medicine->user;
+                
+                if (!$user) {
+                    $skippedCount++;
+                    $this->warn("⚠️  No user found for reminder ID: {$reminder->id}");
+                    continue;
+                }
+
+                $minutesUntil = $now->diffInMinutes($reminder->reminder_at, false);
+                
+                $this->line('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                $this->line("💊 Processing: {$reminder->schedule->medicine->medicine_name}");
+                $this->line("   👤 User: {$user->name} ({$user->email})");
+                $this->line("   ⏰ Scheduled: {$reminder->reminder_at->format('H:i:s')}");
+                $this->line("   🕒 Current: " . now()->format('H:i:s'));
+                $this->line("   ⏱️  Time until reminder: {$minutesUntil} minutes");
+                $this->line("   📢 Sending reminder 3 minutes before scheduled time");
+
+                // Send push notification
+                if ($user->wantsPushNotifications()) {
+                    try {
+                        $user->notify(new MedicinePushNotification($reminder));
+                        $pushCount++;
+                        $this->info("   ✅ Push notification sent (3 minutes before)");
+                        Log::info("Push sent for reminder {$reminder->id} to user {$user->id} (3 minutes before)");
+                    } catch (\Exception $e) {
+                        $this->error("   ❌ Push failed: " . $e->getMessage());
+                        Log::error("Push failed: " . $e->getMessage());
+                    }
+                } else {
+                    $this->line("   ⏸️  Push disabled by user");
+                }
+
+                // Send email notification
+                if ($user->wantsEmailNotifications()) {
+                    try {
+                        $user->notify(new MedicineEmailNotification($reminder));
+                        $emailCount++;
+                        $this->info("   ✅ Email queued (3 minutes before)");
+                        Log::info("Email queued for reminder {$reminder->id} to user {$user->id} (3 minutes before)");
+                    } catch (\Exception $e) {
+                        $this->error("   ❌ Email failed: " . $e->getMessage());
+                        Log::error("Email failed: " . $e->getMessage());
+                    }
+                } else {
+                    $this->line("   ⏸️  Email disabled by user");
+                }
+
+            } catch (\Exception $e) {
+                $this->error("❌ Error processing reminder: " . $e->getMessage());
+                Log::error("Reminder send failed: " . $e->getMessage());
+                $skippedCount++;
+            }
+        }
+
+        $this->line('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        $this->table(
+            ['Type', 'Count'],
+            [
+                ['Push Notifications (3 min before)', $pushCount],
+                ['Emails (3 min before)', $emailCount],
+                ['Skipped', $skippedCount],
+            ]
+        );
+
+        $this->info('✅ Completed at ' . now()->format('Y-m-d H:i:s'));
+        $this->line('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        
+        return 0;
+    }
+}
