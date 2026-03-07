@@ -7,17 +7,27 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Auth\Events\Registered;
 
 class RegisterController extends Controller
 {
     /**
      * Where to redirect users after registration.
+     *
+     * @var string
      */
-    protected $redirectTo = '/login'; // Redirect to login after registration
+    protected $redirectTo = '/';
+
+    /**
+     * Create a new controller instance.
+     */
+    public function __construct()
+    {
+        $this->middleware('guest');
+    }
 
     /**
      * Show the application registration form.
-     * Available to ALL users (no guest middleware in constructor)
      */
     public function showRegistrationForm()
     {
@@ -25,7 +35,7 @@ class RegisterController extends Controller
     }
 
     /**
-     * Handle a registration request.
+     * Handle a registration request for the application.
      */
     public function register(Request $request)
     {
@@ -33,18 +43,20 @@ class RegisterController extends Controller
 
         $user = $this->create($request->all());
 
-        // Optional: Log out current user if you want to switch to new account
-        // auth()->logout();
-        
-        // Redirect to login page with success message
-        return redirect()->route('login')->with('success', 'Registration successful! Please login with your new account.');
+        // Auto login after registration (optional - remove if you want manual login)
+        auth()->login($user);
+
+        return redirect($this->redirectTo);
     }
 
+    /**
+     * Get a validator for an incoming registration request.
+     */
     protected function validator(array $data)
     {
         return Validator::make($data, [
             'Name' => ['required', 'string', 'max:255'],
-            'Email' => ['required', 'string', 'email', 'max:255', 'unique:users,Email'],
+            'Email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'Phone' => ['nullable', 'string', 'max:20'],
             'DateOfBirth' => ['nullable', 'date'],
@@ -53,17 +65,21 @@ class RegisterController extends Controller
         ]);
     }
 
+    /**
+     * Create a new user instance after a valid registration.
+     */
     protected function create(array $data)
     {
         return User::create([
-            'Name' => $data['Name'],
-            'Email' => $data['Email'],
+            'name' => $data['Name'],
+            'email' => $data['Email'],
             'password' => Hash::make($data['password']),
-            'Phone' => $data['Phone'] ?? null,
-            'DateOfBirth' => $data['DateOfBirth'] ?? null,
-            'Occupation' => $data['Occupation'] ?? null,
-            'BloodGroup' => $data['BloodGroup'] ?? null,
-            'CreatedAt' => now(),
+            'phone' => $data['Phone'] ?? null,
+            'date_of_birth' => $data['DateOfBirth'] ?? null,
+            'occupation' => $data['Occupation'] ?? null,
+            'blood_group' => $data['BloodGroup'] ?? null,
+            // 'email_notifications' => true, // Default to true
+            // 'push_notifications' => true,  // Default to true
         ]);
     }
 }
