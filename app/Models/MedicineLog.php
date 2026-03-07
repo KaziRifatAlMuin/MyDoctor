@@ -9,21 +9,17 @@ class MedicineLog extends Model
 {
     use HasFactory;
 
-    protected $table = 'medicine_logs';
-    protected $primaryKey = 'LogID';
-    public $timestamps = false;
-
     protected $fillable = [
-        'MedicineID',
-        'UserID',
-        'Date',
-        'TotalScheduled',
-        'TotalTaken',
-        'TotalMissed'
+        'medicine_id',
+        'user_id',
+        'date',
+        'total_scheduled',
+        'total_taken',
+        'total_missed'
     ];
 
     protected $casts = [
-        'Date' => 'date',
+        'date' => 'date',
     ];
 
     /**
@@ -31,7 +27,7 @@ class MedicineLog extends Model
      */
     public function medicine()
     {
-        return $this->belongsTo(Medicine::class, 'MedicineID', 'MedicineID');
+        return $this->belongsTo(Medicine::class);
     }
 
     /**
@@ -39,7 +35,7 @@ class MedicineLog extends Model
      */
     public function user()
     {
-        return $this->belongsTo(User::class, 'UserID', 'UserID');
+        return $this->belongsTo(User::class);
     }
 
     /**
@@ -47,10 +43,10 @@ class MedicineLog extends Model
      */
     public function getAdherenceRateAttribute()
     {
-        if ($this->TotalScheduled === 0) {
+        if ($this->total_scheduled === 0) {
             return 0;
         }
-        return round(($this->TotalTaken / $this->TotalScheduled) * 100, 2);
+        return round(($this->total_taken / $this->total_scheduled) * 100, 2);
     }
 
     /**

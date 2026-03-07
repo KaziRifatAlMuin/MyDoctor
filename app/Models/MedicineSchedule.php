@@ -9,25 +9,24 @@ class MedicineSchedule extends Model
 {
     use HasFactory;
 
-    protected $table = 'medicine_schedules';
-    protected $primaryKey = 'ScheduleID';
-    public $timestamps = false;
-
     protected $fillable = [
-        'MedicineID',
-        'DosagePeriodDays',
-        'FrequencyPerDay',
-        'IntervalHours',
-        'DosageTimeBinary',
-        'StartDate',
-        'EndDate',
-        'IsActive'
+        'medicine_id',
+        'dosage_period_days',
+        'frequency_per_day',
+        'interval_hours',
+        'dosage_time_binary',
+        'start_date',
+        'end_date',
+        'is_active'
     ];
 
     protected $casts = [
-        'StartDate' => 'date',
-        'EndDate' => 'date',
-        'IsActive' => 'boolean',
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'is_active' => 'boolean',
+        'dosage_period_days' => 'integer',
+        'frequency_per_day' => 'integer',
+        'interval_hours' => 'integer',
     ];
 
     /**
@@ -35,7 +34,7 @@ class MedicineSchedule extends Model
      */
     public function medicine()
     {
-        return $this->belongsTo(Medicine::class, 'MedicineID', 'MedicineID');
+        return $this->belongsTo(Medicine::class);
     }
 
     /**
@@ -43,7 +42,7 @@ class MedicineSchedule extends Model
      */
     public function reminders()
     {
-        return $this->hasMany(MedicineReminder::class, 'ScheduleID', 'ScheduleID');
+        return $this->hasMany(MedicineReminder::class, 'schedule_id');
     }
 
     /**
@@ -52,9 +51,9 @@ class MedicineSchedule extends Model
     public function pendingReminders()
     {
         return $this->reminders()
-            ->where('Status', 'pending')
-            ->where('ReminderDateTime', '<=', now())
-            ->orderBy('ReminderDateTime');
+            ->where('status', 'pending')
+            ->where('reminder_at', '<=', now())
+            ->orderBy('reminder_at');
     }
 
     /**
@@ -63,9 +62,9 @@ class MedicineSchedule extends Model
     public function upcomingReminders($limit = 5)
     {
         return $this->reminders()
-            ->where('Status', 'pending')
-            ->where('ReminderDateTime', '>', now())
-            ->orderBy('ReminderDateTime')
+            ->where('status', 'pending')
+            ->where('reminder_at', '>', now())
+            ->orderBy('reminder_at')
             ->limit($limit);
     }
 
@@ -74,8 +73,12 @@ class MedicineSchedule extends Model
      */
     public function getDosageTimesArrayAttribute()
     {
-        $binary = $this->DosageTimeBinary;
+        $binary = $this->dosage_time_binary;
         $times = [];
+        
+        if (!$binary) {
+            return $times;
+        }
         
         // Binary is 48 bits (24 hours * 2 for half-hour intervals)
         for ($i = 0; $i < 48; $i++) {
@@ -105,15 +108,15 @@ class MedicineSchedule extends Model
     {
         $date = is_string($date) ? \Carbon\Carbon::parse($date) : $date;
         
-        if (!$this->IsActive) {
+        if (!$this->is_active) {
             return false;
         }
         
-        if ($date->lt($this->StartDate)) {
+        if ($date->lt($this->start_date)) {
             return false;
         }
         
-        if ($this->EndDate && $date->gt($this->EndDate)) {
+        if ($this->end_date && $date->gt($this->end_date)) {
             return false;
         }
         
@@ -125,16 +128,16 @@ class MedicineSchedule extends Model
      */
     public function getPeriodLabelAttribute()
     {
-        if ($this->DosagePeriodDays == 0) {
+        if ($this->dosage_period_days == 0) {
             return 'প্রয়োজন অনুযায়ী';
-        } elseif ($this->DosagePeriodDays == 1) {
+        } elseif ($this->dosage_period_days == 1) {
             return 'প্রতিদিন';
-        } elseif ($this->DosagePeriodDays == 7) {
+        } elseif ($this->dosage_period_days == 7) {
             return 'সাপ্তাহিক';
-        } elseif ($this->DosagePeriodDays == 30) {
+        } elseif ($this->dosage_period_days == 30) {
             return 'মাসিক';
         } else {
-            return "প্রতি {$this->DosagePeriodDays} দিন";
+            return "প্রতি {$this->dosage_period_days} দিন";
         }
     }
 }

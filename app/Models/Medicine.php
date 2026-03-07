@@ -9,23 +9,19 @@ class Medicine extends Model
 {
     use HasFactory;
 
-    protected $table = 'medicines';
-    protected $primaryKey = 'MedicineID';
-    public $timestamps = false;
-
     protected $fillable = [
-        'UserID',
-        'MedicineName',
-        'Type',
-        'ValuePerDose',
-        'Unit',
-        'Rule',
-        'DoseLimit',
+        'user_id',
+        'medicine_name',
+        'type',
+        'value_per_dose',
+        'unit',
+        'rule',
+        'dose_limit'
     ];
 
     protected $casts = [
-        'ValuePerDose' => 'decimal:2',
-        'CreatedAt' => 'datetime',
+        'value_per_dose' => 'decimal:2',
+        'dose_limit' => 'integer',
     ];
 
     /**
@@ -33,7 +29,7 @@ class Medicine extends Model
      */
     public function user()
     {
-        return $this->belongsTo(User::class, 'UserID', 'UserID');
+        return $this->belongsTo(User::class);
     }
 
     /**
@@ -41,7 +37,7 @@ class Medicine extends Model
      */
     public function schedules()
     {
-        return $this->hasMany(MedicineSchedule::class, 'MedicineID', 'MedicineID');
+        return $this->hasMany(MedicineSchedule::class);
     }
 
     /**
@@ -49,11 +45,11 @@ class Medicine extends Model
      */
     public function activeSchedule()
     {
-        return $this->hasOne(MedicineSchedule::class, 'MedicineID', 'MedicineID')
-            ->where('IsActive', true)
+        return $this->hasOne(MedicineSchedule::class)
+            ->where('is_active', true)
             ->where(function($q) {
-                $q->whereNull('EndDate')
-                  ->orWhere('EndDate', '>=', now()->toDateString());
+                $q->whereNull('end_date')
+                  ->orWhere('end_date', '>=', now()->toDateString());
             });
     }
 
@@ -62,7 +58,7 @@ class Medicine extends Model
      */
     public function logs()
     {
-        return $this->hasMany(MedicineLog::class, 'MedicineID', 'MedicineID');
+        return $this->hasMany(MedicineLog::class);
     }
 
     /**
@@ -70,8 +66,9 @@ class Medicine extends Model
      */
     public function todayLog()
     {
-        return $this->hasOne(MedicineLog::class, 'MedicineID', 'MedicineID')
-            ->where('Date', now()->toDateString());
+        return $this->hasOne(MedicineLog::class)
+            ->where('date', now()->toDateString())
+            ->where('user_id', $this->user_id);
     }
 
     /**
@@ -82,10 +79,10 @@ class Medicine extends Model
         return $this->hasManyThrough(
             MedicineReminder::class,
             MedicineSchedule::class,
-            'MedicineID',
-            'ScheduleID',
-            'MedicineID',
-            'ScheduleID'
+            'medicine_id',
+            'schedule_id',
+            'id',
+            'id'
         );
     }
 
@@ -95,9 +92,21 @@ class Medicine extends Model
     public function pendingReminders()
     {
         return $this->reminders()
-            ->where('Status', 'pending')
-            ->where('ReminderDateTime', '<=', now())
-            ->orderBy('ReminderDateTime');
+            ->where('status', 'pending')
+            ->where('reminder_at', '<=', now())
+            ->orderBy('reminder_at');
+    }
+
+    /**
+     * Get upcoming reminders for this medicine.
+     */
+    public function upcomingReminders($limit = 5)
+    {
+        return $this->reminders()
+            ->where('status', 'pending')
+            ->where('reminder_at', '>', now())
+            ->orderBy('reminder_at')
+            ->limit($limit);
     }
 
     /**
@@ -112,10 +121,10 @@ class Medicine extends Model
             'injection' => 'ইনজেকশন',
             'drops' => 'ড্রপস',
             'cream' => 'ক্রিম',
-            'inhaler' => 'ইনহেলার',
+            'inhaler' => 'ইনহালার',
             'other' => 'অন্যান্য'
         ];
-        return $labels[$this->Type] ?? ucfirst($this->Type);
+        return $labels[$this->type] ?? ucfirst($this->type);
     }
 
     /**
@@ -130,7 +139,7 @@ class Medicine extends Model
             'before_sleep' => 'ঘুমানোর আগে',
             'anytime' => 'যেকোনো সময়'
         ];
-        return $labels[$this->Rule] ?? ucfirst(str_replace('_', ' ', $this->Rule));
+        return $labels[$this->rule] ?? ucfirst(str_replace('_', ' ', $this->rule));
     }
 
     /**
@@ -138,6 +147,6 @@ class Medicine extends Model
      */
     public function getUnitLabelAttribute()
     {
-        return strtoupper($this->Unit);
+        return strtoupper($this->unit);
     }
 }

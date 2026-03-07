@@ -9,20 +9,16 @@ class MedicineReminder extends Model
 {
     use HasFactory;
 
-    protected $table = 'medicine_reminders';
-    protected $primaryKey = 'ReminderID';
-    public $timestamps = false;
-
     protected $fillable = [
-        'ScheduleID',
-        'ReminderDateTime',
-        'Status',
-        'TakenAt'
+        'schedule_id',
+        'reminder_at',
+        'status',
+        'taken_at'
     ];
 
     protected $casts = [
-        'ReminderDateTime' => 'datetime',
-        'TakenAt' => 'datetime',
+        'reminder_at' => 'datetime',
+        'taken_at' => 'datetime',
     ];
 
     /**
@@ -30,7 +26,7 @@ class MedicineReminder extends Model
      */
     public function schedule()
     {
-        return $this->belongsTo(MedicineSchedule::class, 'ScheduleID', 'ScheduleID');
+        return $this->belongsTo(MedicineSchedule::class, 'schedule_id');
     }
 
     /**
@@ -47,11 +43,10 @@ class MedicineReminder extends Model
     public function markAsTaken()
     {
         $this->update([
-            'Status' => 'taken',
-            'TakenAt' => now()
+            'status' => 'taken',
+            'taken_at' => now()
         ]);
 
-        // Update medicine log
         $this->updateLog('taken');
         
         return $this;
@@ -62,7 +57,7 @@ class MedicineReminder extends Model
      */
     public function markAsMissed()
     {
-        $this->update(['Status' => 'missed']);
+        $this->update(['status' => 'missed']);
         $this->updateLog('missed');
         
         return $this;
@@ -73,65 +68,83 @@ class MedicineReminder extends Model
      */
     private function updateLog($action)
     {
-        $date = $this->ReminderDateTime->toDateString();
-        $medicineId = $this->schedule->MedicineID;
+        $date = $this->reminder_at->toDateString();
+        $medicineId = $this->schedule->medicine_id;
+        $userId = $this->schedule->medicine->user_id;
         
         $log = MedicineLog::firstOrCreate(
             [
-                'MedicineID' => $medicineId,
-                'Date' => $date
+                'medicine_id' => $medicineId,
+                'user_id' => $userId,
+                'date' => $date
             ],
             [
-                'UserID' => $this->schedule->medicine->UserID,
-                'TotalScheduled' => 0,
-                'TotalTaken' => 0,
-                'TotalMissed' => 0
+                'total_scheduled' => 0,
+                'total_taken' => 0,
+                'total_missed' => 0
             ]
         );
 
-        // Count scheduled doses for this day
         $totalScheduled = MedicineReminder::whereHas('schedule', function($q) use ($medicineId) {
-                $q->where('MedicineID', $medicineId);
+                $q->where('medicine_id', $medicineId);
             })
-            ->whereDate('ReminderDateTime', $date)
+            ->whereDate('reminder_at', $date)
             ->count();
         
-        $log->TotalScheduled = $totalScheduled;
+        $log->total_scheduled = $totalScheduled;
         
         if ($action === 'taken') {
-            $log->TotalTaken += 1;
+            $log->total_taken += 1;
         } else {
-            $log->TotalMissed += 1;
+            $log->total_missed += 1;
         }
         
         $log->save();
     }
 
     /**
-     * Get status label in Bengali.
+     * Get status label.
      */
     public function getStatusLabelAttribute()
     {
         $labels = [
-            'pending' => 'অপেক্ষমান',
-            'taken' => 'খাওয়া হয়েছে',
-            'missed' => 'মিস হয়েছে',
-            'skipped' => 'বাদ দেওয়া হয়েছে'
+            'pending' => 'Pending',
+            'taken' => 'Taken',
+            'missed' => 'Missed',
+            'snoozed' => 'Snoozed'
         ];
-        return $labels[$this->Status] ?? ucfirst($this->Status);
+        return $labels[$this->status] ?? ucfirst($this->status);
     }
 
     /**
-     * Get status color class.
+     * Get notification message.
      */
-    public function getStatusColorAttribute()
+    public function getNotificationMessage(): string
     {
-        $colors = [
-            'pending' => 'warning',
-            'taken' => 'success',
-            'missed' => 'danger',
-            'skipped' => 'secondary'
+        $medicineName = $this->schedule->medicine->medicine_name;
+        $time = $this->reminder_at->format('h:i A');
+        return "Time to take {$medicineName} at {$time}";
+    }
+
+    /**
+     * Get notification title.
+     */
+    public function getNotificationTitle(): string
+    {
+        return '💊 ' . $this->schedule->medicine->medicine_name;
+    }
+
+    /**
+     * Get notification data array.
+     */
+    public function getNotificationData(): array
+    {
+        return [
+            'reminder_id' => $this->id,
+            'medicine_id' => $this->schedule->medicine->id,
+            'medicine_name' => $this->schedule->medicine->medicine_name,
+            'time' => $this->reminder_at->format('h:i A'),
+            'url' => route('medicine.reminders'),
         ];
-        return $colors[$this->Status] ?? 'secondary';
     }
 }
