@@ -1,0 +1,72 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class NotificationPreferenceController extends Controller
+{
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
+    public function index()
+    {
+        $user = Auth::user();
+        return view('profile.notifications', compact('user'));
+    }
+
+    public function update(Request $request)
+    {
+        $user = Auth::user();
+        
+        $validated = $request->validate([
+            'email_notifications' => 'sometimes|boolean',
+            'push_notifications' => 'sometimes|boolean',
+            'reminder_before_minutes' => 'nullable|integer|min:0|max:120',
+        ]);
+
+        $user->email_notifications = $validated['email_notifications'] ?? $user->email_notifications;
+        $user->push_notifications = $validated['push_notifications'] ?? $user->push_notifications;
+
+        $settings = $user->notification_settings ?? [];
+        $settings['reminder_before_minutes'] = $validated['reminder_before_minutes'] ?? 5;
+        $user->notification_settings = $settings;
+        
+        $user->save();
+
+        return redirect()->back()->with('success', 'Notification preferences updated successfully.');
+    }
+
+    public function toggleEmail(Request $request)
+    {
+        $user = Auth::user();
+        $newState = $user->toggleEmailNotifications();
+        
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'email_notifications' => $newState
+            ]);
+        }
+        
+        return redirect()->back()->with('success', 'Email notifications ' . ($newState ? 'enabled' : 'disabled'));
+    }
+
+    public function togglePush(Request $request)
+    {
+        $user = Auth::user();
+        $newState = $user->togglePushNotifications();
+        
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'push_notifications' => $newState
+            ]);
+        }
+        
+        return redirect()->back()->with('success', 'Push notifications ' . ($newState ? 'enabled' : 'disabled'));
+    }
+}
