@@ -1179,7 +1179,7 @@
                             Records</a></li>
                         <li><a href="{{ route('health.symptoms') }}"><i class="fas fa-chevron-right me-2"></i>Symptom
                                 Tracker</a></li>
-                        <li><a href="{{ route('health.suggestions') }}"><i class="fas fa-chevron-right me-2"></i>AI
+                        <li><a href="{{ route('suggestions') }}"><i class="fas fa-chevron-right me-2"></i>AI
                                 Suggestions</a></li>
                     </ul>
                 </div>

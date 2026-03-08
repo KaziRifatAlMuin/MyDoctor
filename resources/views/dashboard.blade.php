@@ -1355,25 +1355,25 @@
                 </a>
             </div>
 
-            {{-- 9 Medicine Search --}}
+            {{-- 9 Smart Suggestions --}}
             <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-6">
-                <a href="{{ route('medicine.search') }}" class="feature-nav-card">
-                    <div class="feature-nav-icon qa-icon-indigo">
-                        <i class="fas fa-search"></i>
+                <a href="{{ route('suggestions') }}" class="feature-nav-card">
+                    <div class="feature-nav-icon qa-icon-teal">
+                        <i class="fas fa-lightbulb"></i>
                     </div>
-                    <div class="feature-nav-title">Medicine Search</div>
-                    <div class="feature-nav-desc">Find medicines & details</div>
+                    <div class="feature-nav-title">Smart Suggestions</div>
+                    <div class="feature-nav-desc">Personalized health insights</div>
                 </a>
             </div>
 
-            {{-- 10 Medical Records --}}
+            {{-- 10 Help Center --}}
             <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-6">
-                <a href="{{ route('health') }}#logs" class="feature-nav-card">
-                    <div class="feature-nav-icon qa-icon-blue">
-                        <i class="fas fa-folder-open"></i>
+                <a href="{{ route('help') }}" class="feature-nav-card">
+                    <div class="feature-nav-icon qa-icon-yellow">
+                        <i class="fas fa-question-circle"></i>
                     </div>
-                    <div class="feature-nav-title">Medical Records</div>
-                    <div class="feature-nav-desc">All your health files in one place</div>
+                    <div class="feature-nav-title">Help Center</div>
+                    <div class="feature-nav-desc">FAQs, guides & support</div>
                 </a>
             </div>
 
