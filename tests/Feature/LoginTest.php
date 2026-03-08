@@ -93,7 +93,7 @@ class LoginTest extends TestCase
 
         $response = $this->actingAs($user)->get(route('login'));
 
-        $response->assertRedirect('/');
+        $response->assertRedirect(route('dashboard'));
     }
 
     #[Test]

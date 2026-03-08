@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,13 +10,13 @@
     <link rel="icon" type="image/png" href="{{ asset('images/logos/applogo.jpg') }}">
     <link rel="shortcut icon" href="{{ asset('images/logos/applogo.jpg') }}" type="image/x-icon">
     <title>@yield('title', 'My Doctor') - Healthcare Platform</title>
-    
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <!-- Custom CSS -->
     <style>
         * {
@@ -24,11 +25,13 @@
             box-sizing: border-box;
         }
 
-        html, body {
+        html,
+        body {
             height: 100%;
         }
 
-        html, body {
+        html,
+        body {
             height: 100%;
         }
 
@@ -43,8 +46,8 @@
             position: relative;
             width: 100%;
             height: 400px;
-            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), 
-                        url('{{ asset('images/banners/Home banner.jpg') }}');
+            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+                url('{{ asset('images/banners/Home banner.jpg') }}');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -56,7 +59,7 @@
             width: 100%;
             background: #ffffff;
             border-bottom: 1px solid #e2e8f0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         }
 
         .page-nav-bar .banner-nav {
@@ -187,7 +190,7 @@
             right: 0;
             background-color: white;
             border-radius: 12px;
-            box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
             min-width: 220px;
             display: none;
             z-index: 1000;
@@ -204,6 +207,7 @@
                 opacity: 0;
                 transform: translateY(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -355,7 +359,7 @@
             border-radius: 20px;
             font-size: 0.9rem;
             white-space: nowrap;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
             opacity: 0;
             transition: opacity 0.3s ease;
             pointer-events: none;
@@ -374,7 +378,7 @@
             height: 500px;
             background: white;
             border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
             display: none;
             z-index: 999;
             overflow: hidden;
@@ -391,6 +395,7 @@
                 opacity: 0;
                 transform: translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -512,9 +517,17 @@
         }
 
         @keyframes gradientMove {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
         .footer-logo {
@@ -710,25 +723,25 @@
             .footer {
                 padding: 40px 0 20px;
             }
-            
+
             .footer-title {
                 margin-bottom: 20px;
             }
-            
+
             .footer-bottom-links {
                 justify-content: center;
                 margin-top: 15px;
                 flex-wrap: wrap;
             }
-            
+
             .social-links {
                 justify-content: center;
             }
-            
+
             .footer-logo {
                 justify-content: center;
             }
-            
+
             .footer-text {
                 text-align: center;
             }
@@ -832,9 +845,17 @@
         }
 
         @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-            100% { transform: translateY(0px); }
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
         }
 
         /* Remove old banner styles if they conflict */
@@ -848,15 +869,16 @@
             .banner {
                 min-height: 500px;
             }
-            
+
             .banner h1 {
                 font-size: 2rem;
             }
         }
     </style>
-    
+
     @stack('styles')
 </head>
+
 <body>
     <div class="app-root">
         <!-- Banner / Navbar -->
@@ -871,27 +893,46 @@
                 <!-- Navigation Menu -->
                 <ul class="banner-nav-menu">
                     <li class="banner-nav-item">
-                        <a href="{{ route('home') }}" class="banner-nav-link {{ request()->routeIs('home') ? 'active' : '' }}">
+                        <a href="{{ route('home') }}"
+                            class="banner-nav-link {{ request()->routeIs('home') ? 'active' : '' }}">
                             <i class="fas fa-home me-1"></i> Home
                         </a>
                     </li>
+                    @auth
+                        <li class="banner-nav-item">
+                            <a href="{{ route('dashboard') }}"
+                                class="banner-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                                <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="banner-nav-item">
+                            <a href="{{ route('suggestions') }}"
+                                class="banner-nav-link {{ request()->routeIs('suggestions*') ? 'active' : '' }}">
+                                <i class="fas fa-lightbulb me-1"></i> Suggestions
+                            </a>
+                        </li>
+                    @endauth
                     <li class="banner-nav-item">
-                        <a href="{{ route('medicine.index') }}" class="banner-nav-link {{ request()->routeIs('medicine*') ? 'active' : '' }}">
+                        <a href="{{ route('medicine.index') }}"
+                            class="banner-nav-link {{ request()->routeIs('medicine*') ? 'active' : '' }}">
                             <i class="fas fa-pills me-1"></i> Medicine
                         </a>
                     </li>
                     <li class="banner-nav-item">
-                        <a href="{{ route('health') }}" class="banner-nav-link {{ request()->routeIs('health*') ? 'active' : '' }}">
+                        <a href="{{ route('health') }}"
+                            class="banner-nav-link {{ request()->routeIs('health*') ? 'active' : '' }}">
                             <i class="fas fa-heartbeat me-1"></i> Health
                         </a>
                     </li>
                     <li class="banner-nav-item">
-                        <a href="{{ route('community') }}" class="banner-nav-link {{ request()->routeIs('community*') ? 'active' : '' }}">
+                        <a href="{{ route('community') }}"
+                            class="banner-nav-link {{ request()->routeIs('community*') ? 'active' : '' }}">
                             <i class="fas fa-users me-1"></i> Community
                         </a>
                     </li>
                     <li class="banner-nav-item">
-                        <a href="{{ route('help') }}" class="banner-nav-link {{ request()->routeIs('help*') ? 'active' : '' }}">
+                        <a href="{{ route('help') }}"
+                            class="banner-nav-link {{ request()->routeIs('help*') ? 'active' : '' }}">
                             <i class="fas fa-question-circle me-1"></i> Help
                         </a>
                     </li>
@@ -901,8 +942,9 @@
                 <div class="user-menu" id="userMenu">
                     <div class="user-circle" onclick="toggleUserDropdown()">
                         @auth
-                            @if(auth()->user()->Picture)
-                                <img src="{{ asset('storage/' . auth()->user()->Picture) }}" alt="{{ auth()->user()->Name }}">
+                            @if (auth()->user()->Picture)
+                                <img src="{{ asset('storage/' . auth()->user()->Picture) }}"
+                                    alt="{{ auth()->user()->Name }}">
                             @else
                                 <i class="fas fa-user-circle"></i>
                             @endif
@@ -910,7 +952,7 @@
                             <i class="fas fa-user-circle"></i>
                         @endauth
                     </div>
-                    
+
                     <div class="user-dropdown" id="userDropdown">
                         @auth
                             <!-- LOGGED IN USER MENU -->
@@ -918,56 +960,39 @@
                                 <h6>{{ auth()->user()->Name }}</h6>
                                 <p>{{ auth()->user()->Email }}</p>
                             </div>
-                            
+
+                            <a href="{{ route('dashboard') }}" class="dropdown-item-custom">
+                                <i class="fas fa-tachometer-alt"></i> Dashboard
+                            </a>
+
                             <a href="{{ route('profile') }}" class="dropdown-item-custom">
                                 <i class="fas fa-user"></i> Profile
                             </a>
-                            
+
                             <a href="{{ route('notifications') }}" class="dropdown-item-custom">
                                 <i class="fas fa-bell"></i> Notifications
                                 <span class="notification-badge" style="background-color: #6c757d;">0</span>
                             </a>
-                            
+
                             <a href="{{ route('suggestions') }}" class="dropdown-item-custom">
                                 <i class="fas fa-lightbulb"></i> Suggestions
                             </a>
 
-                            <!-- Notification Quick Toggles -->
-                            <div class="divider"></div>
-                            <div class="px-3 py-2">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span><i class="fas fa-envelope me-2"></i>Email Alerts</span>
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" 
-                                               onchange="toggleEmailQuick()" 
-                                               {{ auth()->user()->email_notifications ? 'checked' : '' }}>
-                                    </div>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span><i class="fas fa-bell me-2"></i>Push Alerts</span>
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" 
-                                               onchange="togglePushQuick()" 
-                                               {{ auth()->user()->push_notifications ? 'checked' : '' }}>
-                                    </div>
-                                </div>
-                                <small class="text-muted d-block mt-2">
-                                    <a href="{{ route('profile.notifications') }}">Advanced settings</a>
-                                </small>
-                            </div>
-                            
+                            <!-- Register link hidden for authenticated users -->
+
                             <!-- Check for admin by email -->
-                            @if(auth()->user()->email === 'admin@mydoctor.com')
+                            @if (auth()->user()->email === 'admin@mydoctor.com')
                                 <div class="divider"></div>
                                 <a href="{{ route('admin.dashboard') }}" class="dropdown-item-custom">
                                     <i class="fas fa-cog"></i> Admin Panel
                                 </a>
                             @endif
-                            
+
                             <div class="divider"></div>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-                                <button type="submit" class="dropdown-item-custom" style="width: 100%; border: none; background: none; cursor: pointer; color: #dc3545;">
+                                <button type="submit" class="dropdown-item-custom"
+                                    style="width: 100%; border: none; background: none; cursor: pointer; color: #dc3545;">
                                     <i class="fas fa-sign-out-alt"></i> Logout
                                 </button>
                             </form>
@@ -976,7 +1001,7 @@
                             <a href="{{ route('login') }}" class="dropdown-item-custom">
                                 <i class="fas fa-sign-in-alt"></i> Login
                             </a>
-                            
+
                             <a href="{{ route('register') }}" class="dropdown-item-custom">
                                 <i class="fas fa-user-plus"></i> Register
                             </a>
@@ -985,7 +1010,7 @@
                 </div>
             </nav>
 
-            @if(request()->routeIs('home'))
+            @if (request()->routeIs('home'))
                 <!-- Banner Hero Section (Home only) -->
                 <div class="banner position-relative overflow-hidden">
                     <!-- Banner Content with Container Layout -->
@@ -993,30 +1018,36 @@
                         <div class="row min-vh-50 align-items-center">
                             <!-- Left Column - Text and Buttons -->
                             <div class="col-lg-7 text-white">
-                                <h1 class="display-3 fw-bold mt-5 pt-4 mb-4">Your Health,<br>Our <span class="text-warning">Priority</span></h1>
-                                <p class="lead mb-4">Experience healthcare reimagined with AI-powered insights, medicine reminders, and community support.</p>
-                                
+                                <h1 class="display-3 fw-bold mt-5 pt-4 mb-4">Your Health,<br>Our <span
+                                        class="text-warning">Priority</span></h1>
+                                <p class="lead mb-4">Experience healthcare reimagined with AI-powered insights, medicine
+                                    reminders, and community support.</p>
+
                                 @guest
                                     <div class="d-flex gap-3">
-                                        <a href="{{ route('register') }}" class="btn btn-light btn-lg rounded-pill px-5 py-3 fw-semibold">
+                                        <a href="{{ route('register') }}"
+                                            class="btn btn-light btn-lg rounded-pill px-5 py-3 fw-semibold">
                                             Get Started <i class="fas fa-arrow-right ms-2"></i>
                                         </a>
-                                        <button onclick="toggleChatbot()" class="btn btn-outline-light btn-lg rounded-pill px-5 py-3 fw-semibold">
+                                        <button onclick="toggleChatbot()"
+                                            class="btn btn-outline-light btn-lg rounded-pill px-5 py-3 fw-semibold">
                                             <i class="fas fa-robot me-2"></i>Ask AI
                                         </button>
                                     </div>
                                 @else
                                     <div class="d-flex gap-3">
-                                        <a href="{{ route('health.tracking') }}" class="btn btn-light btn-lg rounded-pill px-5 py-3 fw-semibold">
+                                        <a href="{{ route('dashboard') }}"
+                                            class="btn btn-light btn-lg rounded-pill px-5 py-3 fw-semibold">
                                             Dashboard <i class="fas fa-arrow-right ms-2"></i>
                                         </a>
-                                        <button onclick="toggleChatbot()" class="btn btn-outline-light btn-lg rounded-pill px-5 py-3 fw-semibold">
+                                        <button onclick="toggleChatbot()"
+                                            class="btn btn-outline-light btn-lg rounded-pill px-5 py-3 fw-semibold">
                                             <i class="fas fa-robot me-2"></i>Ask AI
                                         </button>
                                     </div>
                                 @endguest
                             </div>
-                            
+
                             <!-- Right Column - Statistics with Icons -->
                             <div class="col-lg-5 mt-5 pt-4 text-white">
                                 <div class="row g-4">
@@ -1081,13 +1112,13 @@
                 <h5><i class="fas fa-robot me-2"></i>Health Assistant</h5>
                 <button onclick="toggleChatbot()"><i class="fas fa-times"></i></button>
             </div>
-            
+
             <!-- Disclaimer Banner -->
             <div class="bg-warning bg-opacity-10 p-2 text-center small" style="border-bottom: 1px solid #dee2e6;">
                 <i class="fas fa-exclamation-triangle text-warning me-1"></i>
                 AI-powered health information - consult a doctor for medical advice
             </div>
-            
+
             <div class="chatbot-messages" id="chatMessages">
                 <div style="text-align: center; color: #718096; padding: 20px;">
                     <i class="fas fa-robot fa-3x mb-3" style="color: #667eea;"></i>
@@ -1116,7 +1147,8 @@
                         <span class="fw-bold text-white ms-2">My Doctor</span>
                     </div>
                     <p class="footer-text">
-                        Your complete healthcare companion. Track health metrics, get medicine reminders, consult AI, and manage medical records all in one place.
+                        Your complete healthcare companion. Track health metrics, get medicine reminders, consult AI,
+                        and manage medical records all in one place.
                     </p>
                     <div class="social-links">
                         <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
@@ -1132,9 +1164,11 @@
                     <h5 class="footer-title">Quick Links</h5>
                     <ul class="footer-links">
                         <li><a href="{{ route('home') }}"><i class="fas fa-chevron-right me-2"></i>Home</a></li>
-                        <li><a href="{{ route('medicine.index') }}"><i class="fas fa-chevron-right me-2"></i>Medicine</a></li>
+                        <li><a href="{{ route('medicine.index') }}"><i
+                                    class="fas fa-chevron-right me-2"></i>Medicine</a></li>
                         <li><a href="{{ route('health') }}"><i class="fas fa-chevron-right me-2"></i>Health</a></li>
-                        <li><a href="{{ route('community') }}"><i class="fas fa-chevron-right me-2"></i>Community</a></li>
+                        <li><a href="{{ route('community') }}"><i class="fas fa-chevron-right me-2"></i>Community</a>
+                        </li>
                         <li><a href="{{ route('help') }}"><i class="fas fa-chevron-right me-2"></i>Help</a></li>
                     </ul>
                 </div>
@@ -1143,11 +1177,16 @@
                 <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
                     <h5 class="footer-title">Key Features</h5>
                     <ul class="footer-links">
-                        <li><a href="{{ route('health.tracking') }}"><i class="fas fa-chevron-right me-2"></i>Health Metrics</a></li>
-                        <li><a href="{{ route('medicine.reminders') }}"><i class="fas fa-chevron-right me-2"></i>Medicine Reminders</a></li>
-                        <li><a href="{{ route('health.records') }}"><i class="fas fa-chevron-right me-2"></i>Medical Records</a></li>
-                        <li><a href="{{ route('health.symptoms') }}"><i class="fas fa-chevron-right me-2"></i>Symptom Tracker</a></li>
-                        <li><a href="{{ route('health.suggestions') }}"><i class="fas fa-chevron-right me-2"></i>AI Suggestions</a></li>
+                        <li><a href="{{ route('health.tracking') }}"><i class="fas fa-chevron-right me-2"></i>Health
+                                Metrics</a></li>
+                        <li><a href="{{ route('medicine.reminders') }}"><i
+                                    class="fas fa-chevron-right me-2"></i>Medicine Reminders</a></li>
+                        <li><a href="{{ route('health') }}#logs"><i class="fas fa-chevron-right me-2"></i>Medical
+                            Records</a></li>
+                        <li><a href="{{ route('health.symptoms') }}"><i class="fas fa-chevron-right me-2"></i>Symptom
+                                Tracker</a></li>
+                        <li><a href="{{ route('suggestions') }}"><i class="fas fa-chevron-right me-2"></i>AI
+                                Suggestions</a></li>
                     </ul>
                 </div>
 
@@ -1199,12 +1238,12 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <!-- Push Notification Scripts -->
     @auth
-    <script src="{{ asset('js/push-notifications.js') }}"></script>
+        <script src="{{ asset('js/push-notifications.js') }}"></script>
     @endauth
-    
+
     <script>
         // User dropdown toggle
         function toggleUserDropdown() {
@@ -1220,7 +1259,7 @@
 
         // Quick notification toggles
         function toggleEmailQuick() {
-            fetch('{{ route("profile.notifications.toggle-email") }}', {
+            fetch('{{ route('profile.notifications.toggle-email') }}', {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
@@ -1229,9 +1268,9 @@
                 console.log('Email notifications toggled');
             });
         }
-        
+
         function togglePushQuick() {
-            fetch('{{ route("profile.notifications.toggle-push") }}', {
+            fetch('{{ route('profile.notifications.toggle-push') }}', {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
@@ -1249,13 +1288,13 @@
         function sendMessage() {
             const input = document.getElementById('chatInput');
             const message = input.value.trim();
-            
+
             if (!message || isTyping) return;
 
             // Add user message
             addMessage(message, 'user');
             input.value = '';
-            
+
             // Show typing indicator
             showTypingIndicator();
 
@@ -1263,7 +1302,9 @@
             setTimeout(() => {
                 removeTypingIndicator();
                 // This is where you'd integrate with your AI service
-                addMessage("I'm here to help with your health questions! This is a demo response. In production, this would connect to your AI service.", 'bot');
+                addMessage(
+                    "I'm here to help with your health questions! This is a demo response. In production, this would connect to your AI service.",
+                    'bot');
             }, 1500);
         }
 
@@ -1271,7 +1312,7 @@
         function addMessage(text, sender) {
             const messages = document.getElementById('chatMessages');
             const messageDiv = document.createElement('div');
-            
+
             if (sender === 'user') {
                 messageDiv.style.textAlign = 'right';
                 messageDiv.style.margin = '10px 0';
@@ -1283,19 +1324,19 @@
             } else {
                 messageDiv.style.textAlign = 'left';
                 messageDiv.style.margin = '10px 0';
-                
+
                 // Format bot response with line breaks and bold text
                 let formattedText = escapeHtml(text);
                 formattedText = formattedText.replace(/\n/g, '<br>');
                 formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                
+
                 messageDiv.innerHTML = `
                     <div style="background: #f0f2f5; color: #1a1a1a; padding: 12px 18px; border-radius: 18px 18px 18px 0; display: inline-block; max-width: 80%; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
                         ${formattedText}
                     </div>
                 `;
             }
-            
+
             messages.appendChild(messageDiv);
             messages.scrollTop = messages.scrollHeight;
         }
@@ -1362,7 +1403,8 @@
             this.style.height = (this.scrollHeight) + 'px';
         });
     </script>
-    
+
     @stack('scripts')
 </body>
+
 </html>

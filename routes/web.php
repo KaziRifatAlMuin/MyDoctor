@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\HealthController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Http\Request;
 
 /*
@@ -67,6 +68,9 @@ Route::middleware('auth')->group(function () {
     // Logout
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     
+    // Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
     // Profile
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::patch('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
@@ -115,9 +119,7 @@ Route::middleware('auth')->group(function () {
     })->name('notification');
     
     // Suggestions
-    Route::get('/suggestions', function () {
-        return view('suggestions');
-    })->name('suggestions');
+    Route::get('/suggestions', [App\Http\Controllers\SuggestionsController::class, 'index'])->name('suggestions');
 
     // Email verification: send verification notification
     Route::post('/email/verification-notification', function (\Illuminate\Http\Request $request) {

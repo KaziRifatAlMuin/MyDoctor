@@ -70,7 +70,7 @@
                     </div>
                     <h4>Medical Records</h4>
                     <p class="text-muted">Store prescriptions and reports securely</p>
-                    <a href="{{ route('health.records') }}" class="btn btn-outline-primary rounded-pill px-4">Learn More</a>
+                    <a href="{{ route('health') }}#logs" class="btn btn-outline-primary rounded-pill px-4">Learn More</a>
                 </div>
             </div>
             

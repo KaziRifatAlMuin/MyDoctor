@@ -19,6 +19,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Database\Seeders\MedicalSeeder;
 use Database\Seeders\TranslationSeeder;
+use Database\Seeders\PatientProfilesSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -96,6 +97,9 @@ class DatabaseSeeder extends Seeder
 
         // 14. Medical seeding for user id=1 (targeted, 50+ per table for user 1)
         $this->call(MedicalSeeder::class);
+
+        // 15. Rich patient profiles for users 1–3 (100+ records each, distinct conditions)
+        $this->call(PatientProfilesSeeder::class);
     }
 }
 

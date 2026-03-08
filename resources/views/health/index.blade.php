@@ -1070,6 +1070,28 @@
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#a0aec0' } }, y: { beginAtZero: true, grid: { color: '#f0f0f0' }, ticks: { stepSize: 1, font: { size: 10 }, color: '#a0aec0' } } } }
                 });
             }
+
+            // Activate tab based on URL hash (e.g. #prescriptions)
+            function activateTabFromHash() {
+                const raw = window.location.hash || '';
+                const hash = raw.split('?')[0];
+                if (!hash) return;
+                // try to find nav-link by data-bs-target or by id pattern
+                let target = document.querySelector(`.nav-link[data-bs-target="${hash}"]`);
+                if (!target) {
+                    const idLookup = hash.replace('#', '') + '-tab';
+                    target = document.getElementById(idLookup);
+                }
+                if (target) {
+                    // use Bootstrap's Tab API to show
+                    const tab = bootstrap.Tab.getOrCreateInstance(target);
+                    tab.show();
+                }
+            }
+
+            // activate on initial load and when the hash changes
+            activateTabFromHash();
+            window.addEventListener('hashchange', activateTabFromHash);
         });
     </script>
 @endpush

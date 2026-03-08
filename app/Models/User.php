@@ -5,11 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use NotificationChannels\WebPush\HasPushSubscriptions;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasPushSubscriptions;
+    use HasFactory, Notifiable;
 
     protected $fillable = [
         'picture',
@@ -47,6 +46,33 @@ class User extends Authenticatable
     public function routeNotificationForWebPush()
     {
         return $this->pushSubscriptions;
+    }
+
+    /**
+     * Push subscriptions relationship (minimal replacement for missing package trait)
+     */
+    public function pushSubscriptions()
+    {
+        return $this->morphMany(\App\Models\PushSubscription::class, 'subscribable');
+    }
+
+    /**
+     * Create or update a push subscription
+     */
+    public function updatePushSubscription(string $endpoint, ?string $publicKey = null, ?string $authToken = null)
+    {
+        return $this->pushSubscriptions()->updateOrCreate(
+            ['endpoint' => $endpoint],
+            ['public_key' => $publicKey, 'auth_token' => $authToken]
+        );
+    }
+
+    /**
+     * Delete a push subscription by endpoint
+     */
+    public function deletePushSubscription(string $endpoint)
+    {
+        return $this->pushSubscriptions()->where('endpoint', $endpoint)->delete();
     }
 
     /**

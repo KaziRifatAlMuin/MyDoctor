@@ -151,4 +151,41 @@ class UserModelTest extends TestCase
 
         $this->assertDatabaseMissing('health_metrics', ['user_id' => $user->id]);
     }
+
+    #[Test]
+    public function deleting_user_cascades_symptoms(): void
+    {
+        $user = User::factory()->create();
+        Symptom::factory()->count(3)->create(['user_id' => $user->id]);
+
+        $user->delete();
+
+        $this->assertDatabaseMissing('symptoms', ['user_id' => $user->id]);
+    }
+
+    #[Test]
+    public function deleting_user_cascades_medicines(): void
+    {
+        $user = User::factory()->create();
+        Medicine::factory()->count(2)->create(['user_id' => $user->id]);
+
+        $user->delete();
+
+        $this->assertDatabaseMissing('medicines', ['user_id' => $user->id]);
+    }
+
+    #[Test]
+    public function deleting_user_cascades_medicine_logs(): void
+    {
+        $user     = User::factory()->create();
+        $medicine = Medicine::factory()->create(['user_id' => $user->id]);
+        MedicineLog::factory()->create([
+            'user_id'     => $user->id,
+            'medicine_id' => $medicine->id,
+        ]);
+
+        $user->delete();
+
+        $this->assertDatabaseMissing('medicine_logs', ['user_id' => $user->id]);
+    }
 }
