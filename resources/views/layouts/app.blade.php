@@ -28,6 +28,10 @@
             height: 100%;
         }
 
+        html, body {
+            height: 100%;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow-x: hidden;
@@ -299,10 +303,17 @@
             flex-direction: column;
         }
 
+        .app-root {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
         .main-content {
             padding: 40px 20px;
             max-width: 1200px;
             margin: 0 auto;
+            flex: 1 0 auto;
             flex: 1 0 auto;
         }
 

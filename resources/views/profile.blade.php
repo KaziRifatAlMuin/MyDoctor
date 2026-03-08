@@ -272,12 +272,12 @@
                     {{-- Avatar --}}
                     <div class="col-auto">
                         <div class="position-relative" style="width:110px;">
-                            @if (auth()->user()->Picture)
-                                <img src="{{ asset('storage/' . auth()->user()->Picture) }}" alt="Profile Picture"
+                            @if (auth()->user()->picture)
+                                <img src="{{ asset('storage/' . auth()->user()->picture) }}" alt="Profile Picture"
                                     class="profile-avatar-ring">
                             @else
                                 <div class="profile-avatar-initials">
-                                    {{ strtoupper(substr(auth()->user()->Name, 0, 1)) }}
+                                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                                 </div>
                             @endif
                             <button class="camera-btn" data-bs-toggle="modal" data-bs-target="#changePictureModal"
@@ -290,23 +290,23 @@
                     {{-- Name & details --}}
                     <div class="col">
                         <h4 class="fw-bold mb-1" style="color:#2d3748;">
-                            {{ auth()->user()->Name }}
+                            {{ auth()->user()->name }}
                         </h4>
                         <p class="text-muted mb-2" style="font-size:0.9rem;">
                             <i class="fas fa-envelope me-1" style="color:#667eea;"></i>
-                            {{ auth()->user()->Email }}
+                            {{ auth()->user()->email }}
                         </p>
                         <div class="d-flex flex-wrap gap-2">
-                            @if (auth()->user()->Occupation)
+                            @if (auth()->user()->occupation)
                                 <span class="occupation-badge">
                                     <i class="fas fa-briefcase"></i>
-                                    {{ auth()->user()->Occupation }}
+                                    {{ auth()->user()->occupation }}
                                 </span>
                             @endif
-                            @if (auth()->user()->BloodGroup)
+                            @if (auth()->user()->blood_group)
                                 <span class="blood-badge">
                                     <i class="fas fa-tint"></i>
-                                    {{ auth()->user()->BloodGroup }}
+                                    {{ auth()->user()->blood_group }}
                                 </span>
                             @endif
                         </div>
@@ -336,7 +336,7 @@
                             <div>
                                 <div class="info-label">Date of Birth</div>
                                 <div class="info-value">
-                                    {{ auth()->user()->DateOfBirth ? auth()->user()->DateOfBirth->format('d M, Y') : 'Not provided' }}
+                                    {{ auth()->user()->date_of_birth ? auth()->user()->date_of_birth->format('d M, Y') : 'Not provided' }}
                                 </div>
                             </div>
                         </div>
@@ -346,7 +346,7 @@
                             <div>
                                 <div class="info-label">Phone Number</div>
                                 <div class="info-value">
-                                    {{ auth()->user()->Phone ?? 'Not provided' }}
+                                    {{ auth()->user()->phone ?? 'Not provided' }}
                                 </div>
                             </div>
                         </div>
@@ -356,7 +356,7 @@
                             <div>
                                 <div class="info-label">Occupation</div>
                                 <div class="info-value">
-                                    {{ auth()->user()->Occupation ?? 'Not provided' }}
+                                    {{ auth()->user()->occupation ?? 'Not provided' }}
                                 </div>
                             </div>
                         </div>
@@ -366,7 +366,7 @@
                             <div>
                                 <div class="info-label">Blood Group</div>
                                 <div class="info-value">
-                                    {{ auth()->user()->BloodGroup ?? 'Not provided' }}
+                                    {{ auth()->user()->blood_group ?? 'Not provided' }}
                                 </div>
                             </div>
                         </div>
@@ -394,7 +394,7 @@
                             <div>
                                 <div class="info-label">Member Since</div>
                                 <div class="info-value">
-                                    {{ auth()->user()->CreatedAt ? auth()->user()->CreatedAt->format('d M, Y') : 'N/A' }}
+                                    {{ auth()->user()->created_at ? auth()->user()->created_at->format('d M, Y') : 'N/A' }}
                                 </div>
                             </div>
                         </div>
@@ -505,8 +505,8 @@
                                     <span class="input-group-text bg-white border-end-0">
                                         <i class="fas fa-phone text-primary" style="color:#667eea!important;"></i>
                                     </span>
-                                    <input type="text" name="Phone" class="form-control border-start-0"
-                                        value="{{ old('Phone', auth()->user()->Phone) }}"
+                                    <input type="text" name="phone" class="form-control border-start-0"
+                                        value="{{ old('phone', auth()->user()->phone) }}"
                                         placeholder="e.g. +880 1234 567890">
                                 </div>
                             </div>
@@ -517,8 +517,8 @@
                                     <span class="input-group-text bg-white border-end-0">
                                         <i class="fas fa-briefcase text-primary" style="color:#667eea!important;"></i>
                                     </span>
-                                    <input type="text" name="Occupation" class="form-control border-start-0"
-                                        value="{{ old('Occupation', auth()->user()->Occupation) }}"
+                                    <input type="text" name="occupation" class="form-control border-start-0"
+                                        value="{{ old('occupation', auth()->user()->occupation) }}"
                                         placeholder="e.g. Software Engineer">
                                 </div>
                             </div>
@@ -529,11 +529,11 @@
                                     <span class="input-group-text bg-white border-end-0">
                                         <i class="fas fa-tint" style="color:#e53e3e;"></i>
                                     </span>
-                                    <select name="BloodGroup" class="form-select border-start-0">
+                                    <select name="blood_group" class="form-select border-start-0">
                                         <option value="">-- Select Blood Group --</option>
                                         @foreach (['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] as $bg)
                                             <option value="{{ $bg }}"
-                                                {{ old('BloodGroup', auth()->user()->BloodGroup) === $bg ? 'selected' : '' }}>
+                                                {{ old('blood_group', auth()->user()->blood_group) === $bg ? 'selected' : '' }}>
                                                 {{ $bg }}
                                             </option>
                                         @endforeach
@@ -582,15 +582,15 @@
                         {{-- Preview --}}
                         <div class="text-center mb-4">
                             <div class="position-relative d-inline-block">
-                                @if (auth()->user()->Picture)
-                                    <img src="{{ asset('storage/' . auth()->user()->Picture) }}" id="picturePreview"
+                                @if (auth()->user()->picture)
+                                    <img src="{{ asset('storage/' . auth()->user()->picture) }}" id="picturePreview"
                                         class="rounded-circle border border-3"
                                         style="width:100px;height:100px;object-fit:cover;border-color:#667eea!important;">
                                 @else
                                     <div id="picturePreviewInitials"
                                         class="rounded-circle d-flex align-items-center justify-content-center"
                                         style="width:100px;height:100px;background:linear-gradient(135deg,#667eea,#764ba2);font-size:2rem;font-weight:700;color:white;">
-                                        {{ strtoupper(substr(auth()->user()->Name, 0, 1)) }}
+                                        {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                                     </div>
                                     <img id="picturePreview" src="#" alt="Preview"
                                         class="rounded-circle border border-3 d-none"
@@ -601,7 +601,7 @@
 
                         <div class="mb-2">
                             <label class="form-label fw-semibold small">Choose New Picture</label>
-                            <input type="file" name="Picture" id="pictureInput" class="form-control rounded-3"
+                            <input type="file" name="picture" id="pictureInput" class="form-control rounded-3"
                                 accept="image/png, image/jpeg, image/jpg, image/webp" required>
                             <div class="form-text">Allowed: JPG, PNG, WEBP &mdash; Max 2 MB</div>
                         </div>
@@ -710,7 +710,7 @@
         });
 
         // Re-open the correct modal after validation errors (via session flash)
-        @if ($errors->hasAny(['Name', 'Phone', 'DateOfBirth', 'Occupation', 'BloodGroup']))
+        @if ($errors->hasAny(['name', 'phone', 'date_of_birth', 'occupation', 'blood_group']))
             var modal = new bootstrap.Modal(document.getElementById('editProfileModal'));
             modal.show();
         @endif

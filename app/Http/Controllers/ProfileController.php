@@ -24,19 +24,19 @@ class ProfileController extends Controller
     public function update(Request $request)
     {
         $request->validate([
-            'Name'        => 'required|string|max:255',
-            'DateOfBirth' => 'nullable|date|before:today',
-            'Phone'       => 'nullable|string|max:20',
-            'Occupation'  => 'nullable|string|max:255',
-            'BloodGroup'  => 'nullable|in:A+,A-,B+,B-,AB+,AB-,O+,O-',
+            'name'          => 'required|string|max:255',
+            'date_of_birth' => 'nullable|date|before:today',
+            'phone'         => 'nullable|string|max:20',
+            'occupation'    => 'nullable|string|max:255',
+            'blood_group'   => 'nullable|in:A+,A-,B+,B-,AB+,AB-,O+,O-',
         ]);
 
         $user = Auth::user();
-        $user->Name        = $request->Name;
-        $user->DateOfBirth = $request->DateOfBirth;
-        $user->Phone       = $request->Phone;
-        $user->Occupation  = $request->Occupation;
-        $user->BloodGroup  = $request->BloodGroup;
+        $user->name = $request->input('name');
+        $user->date_of_birth = $request->input('date_of_birth');
+        $user->phone = $request->input('phone');
+        $user->occupation = $request->input('occupation');
+        $user->blood_group = $request->input('blood_group');
         $user->save();
 
         return redirect()->route('profile')->with('success', 'Profile updated successfully.');
@@ -48,18 +48,18 @@ class ProfileController extends Controller
     public function updatePicture(Request $request)
     {
         $request->validate([
-            'Picture' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'picture' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
         $user = Auth::user();
 
         // Delete old picture if it exists
-        if ($user->Picture && Storage::disk('public')->exists($user->Picture)) {
-            Storage::disk('public')->delete($user->Picture);
+        if ($user->picture && Storage::disk('public')->exists($user->picture)) {
+            Storage::disk('public')->delete($user->picture);
         }
 
-        $path = $request->file('Picture')->store('profile-pictures', 'public');
-        $user->Picture = $path;
+        $path = $request->file('picture')->store('profile-pictures', 'public');
+        $user->picture = $path;
         $user->save();
 
         return redirect()->route('profile')->with('success', 'Profile picture updated successfully.');
@@ -103,8 +103,8 @@ class ProfileController extends Controller
         Auth::logout();
 
         // Remove profile picture from storage
-        if ($user->Picture && Storage::disk('public')->exists($user->Picture)) {
-            Storage::disk('public')->delete($user->Picture);
+        if ($user->picture && Storage::disk('public')->exists($user->picture)) {
+            Storage::disk('public')->delete($user->picture);
         }
 
         $user->delete();

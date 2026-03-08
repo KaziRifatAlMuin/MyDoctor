@@ -11,17 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('medicine_logs', function (Blueprint $table) {
+        Schema::create('environments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('medicine_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->date('date');
-            $table->unsignedInteger('total_scheduled')->default(0);
-            $table->unsignedInteger('total_taken')->default(0);
-            $table->unsignedInteger('total_missed')->default(0);
+            $table->string('location_name');
+            $table->decimal('latitude', 10, 7)->nullable();
+            $table->decimal('longitude', 10, 7)->nullable();
+            $table->dateTime('recorded_at');
+            $table->string('weather_condition')->nullable();
             $table->timestamps();
 
-            $table->unique(['medicine_id', 'user_id', 'date']);
+            $table->index(['user_id', 'recorded_at']);
         });
     }
 
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('medicine_logs');
+        Schema::dropIfExists('environments');
     }
 };
