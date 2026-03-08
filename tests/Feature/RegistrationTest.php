@@ -155,4 +155,84 @@ class RegistrationTest extends TestCase
 
         $response->assertSessionHasErrors('BloodGroup');  
     }
+
+    #[Test]
+    public function registration_fails_with_name_exceeding_255_characters(): void
+    {
+        $response = $this->post(route('register'), [
+            'Name'     => str_repeat('A', 256),
+            'Email'    => 'longname@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+
+        $response->assertSessionHasErrors('Name');
+    }
+
+    #[Test]
+    public function registration_accepts_name_of_exactly_255_characters(): void  // boundary OK
+    {
+        $response = $this->post(route('register'), [
+            'Name'     => str_repeat('A', 255),
+            'Email'    => 'exactname@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+
+        $response->assertRedirect('/');
+        $this->assertDatabaseHas('users', ['email' => 'exactname@example.com']);
+    }
+
+    #[Test]
+    public function registration_succeeds_with_password_of_exactly_8_characters(): void  // min boundary
+    {
+        $response = $this->post(route('register'), [
+            'Name'     => 'Exact Pass',
+            'Email'    => 'exact8@example.com',
+            'password' => 'pass1234',   // exactly 8 chars
+            'password_confirmation' => 'pass1234',
+        ]);
+
+        $response->assertRedirect('/');
+        $this->assertDatabaseHas('users', ['email' => 'exact8@example.com']);
+    }
+
+    #[Test]
+    public function registration_fails_with_password_of_7_characters(): void   // just below min
+    {
+        $response = $this->post(route('register'), [
+            'Name'     => 'Short Pass',
+            'Email'    => 'pass7@example.com',
+            'password' => 'pass123',   // only 7 chars
+            'password_confirmation' => 'pass123',
+        ]);
+
+        $response->assertSessionHasErrors('password');
+    }
+
+    #[Test]
+    public function authenticated_user_visiting_register_page_is_redirected(): void
+    {
+        $user = User::factory()->create();
+
+        // The RegisterController applies 'guest' middleware — auth'd users get bounced
+        $this->actingAs($user)
+             ->get(route('register'))
+             ->assertRedirect(route('dashboard'));
+    }
+
+    #[Test]
+    public function authenticated_user_posting_to_register_is_redirected(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+             ->post(route('register'), [
+                 'Name'     => 'Another User',
+                 'Email'    => 'another@example.com',
+                 'password' => 'password123',
+                 'password_confirmation' => 'password123',
+             ])
+             ->assertRedirect(route('dashboard'));
+    }
 }
