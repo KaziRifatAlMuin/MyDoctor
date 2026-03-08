@@ -955,6 +955,10 @@
                                 <p>{{ auth()->user()->Email }}</p>
                             </div>
 
+                            <a href="{{ route('dashboard') }}" class="dropdown-item-custom">
+                                <i class="fas fa-tachometer-alt"></i> Dashboard
+                            </a>
+
                             <a href="{{ route('profile') }}" class="dropdown-item-custom">
                                 <i class="fas fa-user"></i> Profile
                             </a>
@@ -1026,7 +1030,7 @@
                                     </div>
                                 @else
                                     <div class="d-flex gap-3">
-                                        <a href="{{ route('health.tracking') }}"
+                                        <a href="{{ route('dashboard') }}"
                                             class="btn btn-light btn-lg rounded-pill px-5 py-3 fw-semibold">
                                             Dashboard <i class="fas fa-arrow-right ms-2"></i>
                                         </a>

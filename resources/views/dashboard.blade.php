@@ -860,7 +860,7 @@
                     </a>
                 </div>
                 <div class="col-6 col-md-3 col-xl">
-                    <a href="{{ route('medicine') }}" class="quick-action-card">
+                    <a href="{{ route('medicine.index') }}" class="quick-action-card">
                         <div class="quick-action-icon qa-icon-cyan">
                             <i class="fas fa-pills"></i>
                         </div>
