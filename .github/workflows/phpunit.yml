@@ -10,11 +10,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -22,48 +19,32 @@ jobs:
           php-version: '8.2'
           extensions: mbstring, intl, pdo_sqlite
           ini-values: post_max_size=256M, memory_limit=2G
-          coverage: none
 
       - name: Install Composer dependencies
-        run: composer install --no-progress --no-suggest --prefer-dist --no-interaction
+        run: composer install --no-progress --no-suggest --prefer-dist
 
       - name: Prepare SQLite database
         run: |
           mkdir -p database
           touch database/testing.sqlite
-          chmod 666 database/testing.sqlite
           cp .env.example .env
+          php -r "file_exists('database/testing.sqlite') || touch('database/testing.sqlite');"
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: database/testing.sqlite
 
       - name: Create storage directories
         run: |
-          mkdir -p storage/framework/cache
-          mkdir -p storage/framework/sessions
-          mkdir -p storage/framework/views
-          mkdir -p storage/logs
-          chmod -R 777 storage
+          mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs
 
-      - name: Generate key and clear cache
+      - name: Run migrations
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: database/testing.sqlite
-        run: |
-          php artisan key:generate --ansi
-          php artisan config:clear
-          php artisan cache:clear
-
-      - name: Run migrations (Fresh)
-        env:
-          DB_CONNECTION: sqlite
-          DB_DATABASE: database/testing.sqlite
-        run: |
-          php artisan migrate:fresh --force --seed
-          php artisan db:show
+        run: php artisan key:generate --ansi && php artisan migrate --force
 
       - name: Run test suite
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: database/testing.sqlite
-        run: php artisan test --testsuite=Feature,Unit --stop-on-failure
+        run: php artisan test --ansi

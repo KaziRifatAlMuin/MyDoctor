@@ -11,6 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Check if old medicine_reminders table exists and drop it
+        if (Schema::hasTable('medicine_reminders')) {
+            Schema::drop('medicine_reminders');
+        }
+
         Schema::create('medicine_reminders', function (Blueprint $table) {
             $table->id();
             $table->foreignId('schedule_id')->constrained('medicine_schedules')->cascadeOnDelete();

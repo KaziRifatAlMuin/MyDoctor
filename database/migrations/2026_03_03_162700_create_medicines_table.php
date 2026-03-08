@@ -11,6 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Check if old medicines table exists and drop it
+        if (Schema::hasTable('medicines')) {
+            Schema::drop('medicines');
+        }
+
         Schema::create('medicines', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
