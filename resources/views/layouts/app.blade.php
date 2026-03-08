@@ -905,6 +905,12 @@
                                 <i class="fas fa-tachometer-alt me-1"></i> Dashboard
                             </a>
                         </li>
+                        <li class="banner-nav-item">
+                            <a href="{{ route('suggestions') }}"
+                                class="banner-nav-link {{ request()->routeIs('suggestions*') ? 'active' : '' }}">
+                                <i class="fas fa-lightbulb me-1"></i> Suggestions
+                            </a>
+                        </li>
                     @endauth
                     <li class="banner-nav-item">
                         <a href="{{ route('medicine.index') }}"
