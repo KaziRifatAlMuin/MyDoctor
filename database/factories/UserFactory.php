@@ -2,38 +2,38 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;  
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
- */
 class UserFactory extends Factory
 {
-        /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    protected $model = User::class;
+
     public function definition(): array
     {
         return [
-            'picture'           => null,
-            'name'              => fake()->name(),
-            'date_of_birth'     => fake()->dateTimeBetween('-60 years', '-18 years')->format('Y-m-d'),
-            'phone'             => fake()->numerify('01#########'),
-            'email'             => fake()->unique()->safeEmail(),
-            'occupation'        => fake()->jobTitle(),
-            'blood_group'       => fake()->randomElement(['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']),
+            'picture' => null,
+            'name' => fake()->name(),
+            'date_of_birth' => fake()->dateTimeBetween('-60 years', '-18 years')->format('Y-m-d'),
+            'phone' => fake()->phoneNumber(),
+            'email' => fake()->unique()->safeEmail(),
+            'occupation' => fake()->jobTitle(),
+            'blood_group' => fake()->randomElement(['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']),
             'email_verified_at' => now(),
-            'password'          => 'password',
-            'remember_token'    => Str::random(10),
+            'password' => Hash::make('password'),
+            'remember_token' => Str::random(10),
+            'email_notifications' => fake()->boolean(),
+            'push_notifications' => fake()->boolean(),
+            'notification_settings' => json_encode([
+                'reminders' => fake()->boolean(),
+                'updates' => fake()->boolean(),
+                'newsletter' => fake()->boolean(),
+            ]),
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
     public function unverified(): static
     {
         return $this->state(fn (array $attributes) => [

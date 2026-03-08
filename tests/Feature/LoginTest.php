@@ -14,63 +14,76 @@ class LoginTest extends TestCase
     #[Test]
     public function login_page_is_accessible_to_guests(): void
     {
-        $this->get(route('login'))->assertStatus(200);
+        $response = $this->get(route('login'));
+        $response->assertStatus(200);
     }
 
     #[Test]
     public function user_can_login_with_correct_credentials(): void
     {
-        $user = User::factory()->create(['email' => 'login@example.com']);
-        // UserFactory defaults password to Hash::make('password')
+        $user = User::factory()->create([
+            'email' => 'login@example.com',
+            'password' => bcrypt('password'),
+        ]);
 
-        $this->post(route('login'), [
-            'Email'    => 'login@example.com',
+        $response = $this->post(route('login'), [
+            'email' => 'login@example.com',
             'password' => 'password',
-        ])->assertRedirect('/');
+        ]);
 
+        $response->assertRedirect('/');
         $this->assertAuthenticatedAs($user);
     }
 
     #[Test]
     public function login_fails_with_wrong_password(): void
     {
-        User::factory()->create(['email' => 'wrongpass@example.com']);
+        $user = User::factory()->create([
+            'email' => 'wrongpass@example.com',
+            'password' => bcrypt('password'),
+        ]);
 
-        $this->post(route('login'), [
-            'Email'    => 'wrongpass@example.com',
+        $response = $this->post(route('login'), [
+            'email' => 'wrongpass@example.com',
             'password' => 'wrongpassword',
-        ])->assertSessionHasErrors('Email');
+        ]);
 
+        $response->assertSessionHasErrors('email');
         $this->assertGuest();
     }
 
     #[Test]
     public function login_fails_with_nonexistent_email(): void
     {
-        $this->post(route('login'), [
-            'Email'    => 'nobody@example.com',
+        $response = $this->post(route('login'), [
+            'email' => 'nobody@example.com',
             'password' => 'password',
-        ])->assertSessionHasErrors('Email');
+        ]);
 
+        $response->assertSessionHasErrors('email');
         $this->assertGuest();
     }
 
     #[Test]
     public function login_requires_email_field(): void
     {
-        $this->post(route('login'), [
-            'Email'    => '',
+        $response = $this->post(route('login'), [
+            'email' => '',
             'password' => 'password',
-        ])->assertSessionHasErrors('Email');
+        ]);
+
+        $response->assertSessionHasErrors('email');
     }
 
     #[Test]
     public function login_requires_password_field(): void
     {
-        $this->post(route('login'), [
-            'Email'    => 'someone@example.com',
+        $response = $this->post(route('login'), [
+            'email' => 'test@example.com',
             'password' => '',
-        ])->assertSessionHasErrors('password');
+        ]);
+
+        $response->assertSessionHasErrors('password');
     }
 
     #[Test]
@@ -78,9 +91,9 @@ class LoginTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)
-             ->get(route('login'))
-             ->assertRedirect('/');
+        $response = $this->actingAs($user)->get(route('login'));
+
+        $response->assertRedirect('/');
     }
 
     #[Test]
@@ -88,10 +101,9 @@ class LoginTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)
-             ->post(route('logout'))
-             ->assertRedirect('/');
+        $response = $this->actingAs($user)->post(route('logout'));
 
+        $response->assertRedirect('/');
         $this->assertGuest();
     }
 }
