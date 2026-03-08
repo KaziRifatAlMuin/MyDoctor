@@ -17,30 +17,30 @@
                 <form method="POST" action="{{ route('login') }}">
                     @csrf
 
-                    <!-- Email Field -->
+                    <!-- Email Field - FIXED: Changed name to lowercase 'email' -->
                     <div class="mb-4">
-                        <label for="Email" class="form-label fw-semibold">Email Address</label>
+                        <label for="email" class="form-label fw-semibold">Email Address</label>
                         <div class="input-group input-group-lg">
                             <span class="input-group-text bg-white border-end-0">
                                 <i class="fas fa-envelope text-primary"></i>
                             </span>
                             <input type="email" 
-                                   class="form-control border-start-0 @error('Email') is-invalid @enderror" 
-                                   id="Email" 
-                                   name="Email" 
-                                   value="{{ old('Email') }}" 
+                                   class="form-control border-start-0 @error('email') is-invalid @enderror" 
+                                   id="email" 
+                                   name="email" 
+                                   value="{{ old('email') }}" 
                                    placeholder="Enter your email"
                                    required 
                                    autofocus>
                         </div>
-                        @error('Email')
+                        @error('email')
                             <span class="text-danger small" role="alert">
                                 <strong>{{ $message }}</strong>
                             </span>
                         @enderror
                     </div>
 
-                    <!-- Password Field -->
+                    <!-- Password Field - No changes needed -->
                     <div class="mb-4">
                         <label for="password" class="form-label fw-semibold">Password</label>
                         <div class="input-group input-group-lg">
@@ -66,7 +66,7 @@
                         @enderror
                     </div>
 
-                    <!-- Remember Me & Forgot Password -->
+                    <!-- Remember Me & Forgot Password - FIXED: Keep as is -->
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" name="remember" id="remember" 
@@ -125,10 +125,8 @@
                 <i class="fas fa-heartbeat fa-6x mb-4"></i>
                 <h2 class="fw-bold mb-3">Your Health, Our Priority</h2>
                 <p class="text-center mb-4" style="max-width: 500px; opacity: 0.9;">
-                    Access quality healthcare services from the comfort of your home. 
-                    
+                    Access quality healthcare services from the comfort of your home.
                 </p>
-                
             </div>
         </div>
     </div>

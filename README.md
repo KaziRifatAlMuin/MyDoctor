@@ -154,6 +154,9 @@ npm run dev
 
 # Run the app
 php artisan serve
+
+# Turn On the Medicine Reminder ( Email & Push Notification )
+php artisan schedule:work
 ```
 
 ## Documentation diagrams

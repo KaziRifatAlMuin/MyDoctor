@@ -1,4 +1,12 @@
-*.log
+.env
+.env.*
+/vendor/
+/node_modules/
+.idea/
+.vscode/
+storage/
+public/storage
+/.phpunit.result.cache*.log
 .DS_Store
 .env
 .env.backup

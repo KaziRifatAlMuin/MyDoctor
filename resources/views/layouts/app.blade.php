@@ -1,20 +1,22 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="vapid-public-key" content="{{ env('VAPID_PUBLIC_KEY') }}">
     <link rel="icon" type="image/png" href="{{ asset('images/logos/applogo.jpg') }}">
     <link rel="shortcut icon" href="{{ asset('images/logos/applogo.jpg') }}" type="image/x-icon">
     <title>@yield('title', 'My Doctor') - Healthcare Platform</title>
-    
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <!-- Custom CSS -->
     <style>
         * {
@@ -23,7 +25,13 @@
             box-sizing: border-box;
         }
 
-        html, body {
+        html,
+        body {
+            height: 100%;
+        }
+
+        html,
+        body {
             height: 100%;
         }
 
@@ -38,8 +46,8 @@
             position: relative;
             width: 100%;
             height: 400px;
-            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), 
-                        url('{{ asset('images/banners/Home banner.jpg') }}');
+            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+                url('{{ asset('images/banners/Home banner.jpg') }}');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -51,7 +59,7 @@
             width: 100%;
             background: #ffffff;
             border-bottom: 1px solid #e2e8f0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         }
 
         .page-nav-bar .banner-nav {
@@ -182,7 +190,7 @@
             right: 0;
             background-color: white;
             border-radius: 12px;
-            box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
             min-width: 220px;
             display: none;
             z-index: 1000;
@@ -199,6 +207,7 @@
                 opacity: 0;
                 transform: translateY(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -298,10 +307,17 @@
             flex-direction: column;
         }
 
+        .app-root {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
         .main-content {
             padding: 40px 20px;
             max-width: 1200px;
             margin: 0 auto;
+            flex: 1 0 auto;
             flex: 1 0 auto;
         }
 
@@ -343,7 +359,7 @@
             border-radius: 20px;
             font-size: 0.9rem;
             white-space: nowrap;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
             opacity: 0;
             transition: opacity 0.3s ease;
             pointer-events: none;
@@ -362,7 +378,7 @@
             height: 500px;
             background: white;
             border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
             display: none;
             z-index: 999;
             overflow: hidden;
@@ -379,6 +395,7 @@
                 opacity: 0;
                 transform: translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -500,9 +517,17 @@
         }
 
         @keyframes gradientMove {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
         .footer-logo {
@@ -698,25 +723,25 @@
             .footer {
                 padding: 40px 0 20px;
             }
-            
+
             .footer-title {
                 margin-bottom: 20px;
             }
-            
+
             .footer-bottom-links {
                 justify-content: center;
                 margin-top: 15px;
                 flex-wrap: wrap;
             }
-            
+
             .social-links {
                 justify-content: center;
             }
-            
+
             .footer-logo {
                 justify-content: center;
             }
-            
+
             .footer-text {
                 text-align: center;
             }
@@ -755,338 +780,460 @@
             }
         }
 
-
-
         /* Hero Section with Background Image */
-.hero-background {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 1;
-}
+        .hero-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1;
+        }
 
-.hero-bg-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
+        .hero-bg-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
 
-.hero-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5); /* Black overlay with 50% opacity - only dims the image */
-    z-index: 2;
-}
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2;
+        }
 
-/* Statistics Card Styles */
-.statistics-card {
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
+        /* Statistics Card Styles */
+        .statistics-card {
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
 
-.backdrop-blur {
-    backdrop-filter: blur(10px);
-}
+        .backdrop-blur {
+            backdrop-filter: blur(10px);
+        }
 
-.stat-card {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 15px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: transform 0.3s ease;
-}
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease;
+        }
 
-.stat-card:hover {
-    transform: translateY(-5px);
-    background: rgba(255, 255, 255, 0.15);
-}
+        .stat-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.15);
+        }
 
-.text-white-50 {
-    color: rgba(255, 255, 255, 0.7) !important;
-}
+        .text-white-50 {
+            color: rgba(255, 255, 255, 0.7) !important;
+        }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .col-lg-5 {
-        margin-top: 2rem;
-    }
-}
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .col-lg-5 {
+                margin-top: 2rem;
+            }
+        }
 
-/* Floating Animation */
-.floating-animation {
-    animation: float 3s ease-in-out infinite;
-}
+        /* Floating Animation */
+        .floating-animation {
+            animation: float 3s ease-in-out infinite;
+        }
 
-@keyframes float {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-20px); }
-    100% { transform: translateY(0px); }
-}
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
 
-/* Remove old banner styles if they conflict */
-.banner {
-    min-height: 600px;
-    position: relative;
-}
+            50% {
+                transform: translateY(-20px);
+            }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .banner {
-        min-height: 500px;
-    }
-    
-    .banner h1 {
-        font-size: 2rem;
-    }
-}
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        /* Remove old banner styles if they conflict */
+        .banner {
+            min-height: 600px;
+            position: relative;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .banner {
+                min-height: 500px;
+            }
+
+            .banner h1 {
+                font-size: 2rem;
+            }
+        }
     </style>
-    
+
     @stack('styles')
 </head>
+
 <body>
     <div class="app-root">
-    <!-- Banner / Navbar -->
-    <div class="{{ request()->routeIs('home') ? 'banner' : 'page-nav-bar' }}">
-        <!-- Navigation on Banner -->
-        <nav class="banner-nav">
-            <!-- Logo -->
-            <div class="banner-logo">
-                <img src="{{ asset('images/logos/applogo.jpg') }}" alt="My Doctor Logo">
-            </div>
+        <!-- Banner / Navbar -->
+        <div class="{{ request()->routeIs('home') ? 'banner' : 'page-nav-bar' }}">
+            <!-- Navigation on Banner -->
+            <nav class="banner-nav">
+                <!-- Logo -->
+                <div class="banner-logo">
+                    <img src="{{ asset('images/logos/applogo.jpg') }}" alt="My Doctor Logo">
+                </div>
 
-            <!-- Navigation Menu -->
-            <ul class="banner-nav-menu">
-                <li class="banner-nav-item">
-                    <a href="{{ route('home') }}" class="banner-nav-link {{ request()->routeIs('home') ? 'active' : '' }}">
-                        <i class="fas fa-home me-1"></i> Home
-                    </a>
-                </li>
-                @auth
-                <li class="banner-nav-item">
-                    <a href="{{ route('dashboard') }}" class="banner-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                        <i class="fas fa-tachometer-alt me-1"></i> Dashboard
-                    </a>
-                </li>
-                @endauth
-                <li class="banner-nav-item">
-                    <a href="{{ route('medicine') }}" class="banner-nav-link {{ request()->routeIs('medicine*') ? 'active' : '' }}">
-                        <i class="fas fa-pills me-1"></i> Medicine
-                    </a>
-                </li>
-                <li class="banner-nav-item">
-                    <a href="{{ route('health') }}" class="banner-nav-link {{ request()->routeIs('health*') ? 'active' : '' }}">
-                        <i class="fas fa-heartbeat me-1"></i> Health
-                    </a>
-                </li>
-                <li class="banner-nav-item">
-                    <a href="{{ route('community') }}" class="banner-nav-link {{ request()->routeIs('community*') ? 'active' : '' }}">
-                        <i class="fas fa-users me-1"></i> Community
-                    </a>
-                </li>
-                <li class="banner-nav-item">
-                    <a href="{{ route('help') }}" class="banner-nav-link {{ request()->routeIs('help*') ? 'active' : '' }}">
-                        <i class="fas fa-question-circle me-1"></i> Help
-                    </a>
-                </li>
-            </ul>
-
-            <!-- User Circle Menu -->
-<div class="user-menu" id="userMenu">
-    <div class="user-circle" onclick="toggleUserDropdown()">
-        @auth
-            @if(auth()->user()->Picture)
-                <img src="{{ asset('storage/' . auth()->user()->Picture) }}" alt="{{ auth()->user()->Name }}">
-            @else
-                <i class="fas fa-user-circle"></i>
-            @endif
-        @else
-            <i class="fas fa-user-circle"></i>
-        @endauth
-    </div>
-    
-    <div class="user-dropdown" id="userDropdown">
-        @auth
-            <!-- LOGGED IN USER MENU -->
-            <div class="dropdown-header">
-                <h6>{{ auth()->user()->Name }}</h6>
-                <p>{{ auth()->user()->Email }}</p>
-            </div>
-            
-            <a href="{{ route('dashboard') }}" class="dropdown-item-custom">
-                <i class="fas fa-tachometer-alt"></i> Dashboard
-            </a>
-            
-            <a href="{{ route('profile') }}" class="dropdown-item-custom">
-                <i class="fas fa-user"></i> Profile
-            </a>
-            
-            <a href="{{ route('notifications') }}" class="dropdown-item-custom">
-                <i class="fas fa-bell"></i> Notifications
-                <span class="notification-badge" style="background-color: #6c757d;">0</span>
-            </a>
-            
-            <a href="{{ route('suggestions') }}" class="dropdown-item-custom">
-                <i class="fas fa-lightbulb"></i> Suggestions
-            </a>
-            
-            <!-- Register link hidden for authenticated users -->
-            
-            <!-- Check for admin by email -->
-            @if(auth()->user()->email === 'admin@mydoctor.com')
-                <div class="divider"></div>
-                <a href="{{ route('admin.dashboard') }}" class="dropdown-item-custom">
-                    <i class="fas fa-cog"></i> Admin Panel
-                </a>
-            @endif
-            
-            <div class="divider"></div>
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="dropdown-item-custom" style="width: 100%; border: none; background: none; cursor: pointer; color: #dc3545;">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </button>
-            </form>
-        @else
-            <!-- GUEST USER MENU -->
-            <a href="{{ route('login') }}" class="dropdown-item-custom">
-                <i class="fas fa-sign-in-alt"></i> Login
-            </a>
-            
-            <a href="{{ route('register') }}" class="dropdown-item-custom">
-                <i class="fas fa-user-plus"></i> Register
-            </a>
-        @endauth
-    </div>
-</div>
-        </nav>
-
-@if(request()->routeIs('home'))
-<!-- Banner Hero Section (Home only) -->
-<div class="banner position-relative overflow-hidden">
-    <!-- Background Image with Overlay -->
-    
-    <!-- Banner Content with Container Layout -->
-    <div class="container position-relative z-3 py-5">
-        <div class="row min-vh-50 align-items-center">
-            <!-- Left Column - Text and Buttons -->
-            <div class="col-lg-7 text-white">
-                <h1 class="display-3 fw-bold mt-5 pt-4 mb-4">Your Health,<br>Our <span class="text-warning">Priority</span></h1>
-                <p class="lead mb-4">Experience healthcare reimagined with AI-powered insights, medicine reminders, and community support.</p>
-                
-                @guest
-                    <div class="d-flex gap-3">
-                        <a href="{{ route('register') }}" class="btn btn-light btn-lg rounded-pill px-5 py-3 fw-semibold">
-                            Get Started <i class="fas fa-arrow-right ms-2"></i>
+                <!-- Navigation Menu -->
+                <ul class="banner-nav-menu">
+                    <li class="banner-nav-item">
+                        <a href="{{ route('home') }}"
+                            class="banner-nav-link {{ request()->routeIs('home') ? 'active' : '' }}">
+                            <i class="fas fa-home me-1"></i> Home
                         </a>
-                        <button onclick="toggleChatbot()" class="btn btn-outline-light btn-lg rounded-pill px-5 py-3 fw-semibold">
-                            <i class="fas fa-robot me-2"></i>Ask AI
-                        </button>
-                    </div>
-                @else
-                    <div class="d-flex gap-3">
-                        <a href="{{ route('health.tracking') }}" class="btn btn-light btn-lg rounded-pill px-5 py-3 fw-semibold">
-                            Dashboard <i class="fas fa-arrow-right ms-2"></i>
+                    </li>
+                    @auth
+                        <li class="banner-nav-item">
+                            <a href="{{ route('dashboard') }}"
+                                class="banner-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                                <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                            </a>
+                        </li>
+                    @endauth
+                    <li class="banner-nav-item">
+                        <a href="{{ route('medicine.index') }}"
+                            class="banner-nav-link {{ request()->routeIs('medicine*') ? 'active' : '' }}">
+                            <i class="fas fa-pills me-1"></i> Medicine
                         </a>
-                        <button onclick="toggleChatbot()" class="btn btn-outline-light btn-lg rounded-pill px-5 py-3 fw-semibold">
-                            <i class="fas fa-robot me-2"></i>Ask AI
-                        </button>
+                    </li>
+                    <li class="banner-nav-item">
+                        <a href="{{ route('health') }}"
+                            class="banner-nav-link {{ request()->routeIs('health*') ? 'active' : '' }}">
+                            <i class="fas fa-heartbeat me-1"></i> Health
+                        </a>
+                    </li>
+                    <li class="banner-nav-item">
+                        <a href="{{ route('community') }}"
+                            class="banner-nav-link {{ request()->routeIs('community*') ? 'active' : '' }}">
+                            <i class="fas fa-users me-1"></i> Community
+                        </a>
+                    </li>
+                    <li class="banner-nav-item">
+                        <a href="{{ route('help') }}"
+                            class="banner-nav-link {{ request()->routeIs('help*') ? 'active' : '' }}">
+                            <i class="fas fa-question-circle me-1"></i> Help
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- User Circle Menu -->
+                <div class="user-menu" id="userMenu">
+                    <div class="user-circle" onclick="toggleUserDropdown()">
+                        @auth
+                            @if (auth()->user()->Picture)
+                                <img src="{{ asset('storage/' . auth()->user()->Picture) }}"
+                                    alt="{{ auth()->user()->Name }}">
+                            @else
+                                <i class="fas fa-user-circle"></i>
+                            @endif
+                        @else
+                            <i class="fas fa-user-circle"></i>
+                        @endauth
                     </div>
-                @endguest
-            </div>
-            
-            <!-- Right Column - Statistics with Icons -->
-            <div class="col-lg-5 mt-5 pt-4 text-white">
-                <div class="row g-4">
-                    <div class="col-6">
-                        <div class="stat-card text-center p-3">
-                            <div class="stat-icon mb-2">
-                                <i class="fas fa-users fa-3x text-warning"></i>
+
+                    <div class="user-dropdown" id="userDropdown">
+                        @auth
+                            <!-- LOGGED IN USER MENU -->
+                            <div class="dropdown-header">
+                                <h6>{{ auth()->user()->Name }}</h6>
+                                <p>{{ auth()->user()->Email }}</p>
                             </div>
-                            <h3 class="text-white mb-0">50K+</h3>
-                            <small class="text-white-50">Active Users</small>
-                        </div>
+
+                            <a href="{{ route('profile') }}" class="dropdown-item-custom">
+                                <i class="fas fa-user"></i> Profile
+                            </a>
+
+                            <a href="{{ route('notifications') }}" class="dropdown-item-custom">
+                                <i class="fas fa-bell"></i> Notifications
+                                <span class="notification-badge" style="background-color: #6c757d;">0</span>
+                            </a>
+
+                            <a href="{{ route('suggestions') }}" class="dropdown-item-custom">
+                                <i class="fas fa-lightbulb"></i> Suggestions
+                            </a>
+
+                            <!-- Register link hidden for authenticated users -->
+
+                            <!-- Check for admin by email -->
+                            @if (auth()->user()->email === 'admin@mydoctor.com')
+                                <div class="divider"></div>
+                                <a href="{{ route('admin.dashboard') }}" class="dropdown-item-custom">
+                                    <i class="fas fa-cog"></i> Admin Panel
+                                </a>
+                            @endif
+
+                            <div class="divider"></div>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="dropdown-item-custom"
+                                    style="width: 100%; border: none; background: none; cursor: pointer; color: #dc3545;">
+                                    <i class="fas fa-sign-out-alt"></i> Logout
+                                </button>
+                            </form>
+                        @else
+                            <!-- GUEST USER MENU -->
+                            <a href="{{ route('login') }}" class="dropdown-item-custom">
+                                <i class="fas fa-sign-in-alt"></i> Login
+                            </a>
+
+                            <a href="{{ route('register') }}" class="dropdown-item-custom">
+                                <i class="fas fa-user-plus"></i> Register
+                            </a>
+                        @endauth
                     </div>
-                    <div class="col-6">
-                        <div class="stat-card text-center p-3">
-                            <div class="stat-icon mb-2">
-                                <i class="fas fa-file-medical fa-3x text-warning"></i>
+                </div>
+            </nav>
+
+            @if (request()->routeIs('home'))
+                <!-- Banner Hero Section (Home only) -->
+                <div class="banner position-relative overflow-hidden">
+                    <!-- Banner Content with Container Layout -->
+                    <div class="container position-relative z-3 py-5">
+                        <div class="row min-vh-50 align-items-center">
+                            <!-- Left Column - Text and Buttons -->
+                            <div class="col-lg-7 text-white">
+                                <h1 class="display-3 fw-bold mt-5 pt-4 mb-4">Your Health,<br>Our <span
+                                        class="text-warning">Priority</span></h1>
+                                <p class="lead mb-4">Experience healthcare reimagined with AI-powered insights, medicine
+                                    reminders, and community support.</p>
+
+                                @guest
+                                    <div class="d-flex gap-3">
+                                        <a href="{{ route('register') }}"
+                                            class="btn btn-light btn-lg rounded-pill px-5 py-3 fw-semibold">
+                                            Get Started <i class="fas fa-arrow-right ms-2"></i>
+                                        </a>
+                                        <button onclick="toggleChatbot()"
+                                            class="btn btn-outline-light btn-lg rounded-pill px-5 py-3 fw-semibold">
+                                            <i class="fas fa-robot me-2"></i>Ask AI
+                                        </button>
+                                    </div>
+                                @else
+                                    <div class="d-flex gap-3">
+                                        <a href="{{ route('health.tracking') }}"
+                                            class="btn btn-light btn-lg rounded-pill px-5 py-3 fw-semibold">
+                                            Dashboard <i class="fas fa-arrow-right ms-2"></i>
+                                        </a>
+                                        <button onclick="toggleChatbot()"
+                                            class="btn btn-outline-light btn-lg rounded-pill px-5 py-3 fw-semibold">
+                                            <i class="fas fa-robot me-2"></i>Ask AI
+                                        </button>
+                                    </div>
+                                @endguest
                             </div>
-                            <h3 class="text-white mb-0">10K+</h3>
-                            <small class="text-white-50">Health Records</small>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="stat-card text-center p-3">
-                            <div class="stat-icon mb-2">
-                                <i class="fas fa-clock fa-3x text-warning"></i>
+
+                            <!-- Right Column - Statistics with Icons -->
+                            <div class="col-lg-5 mt-5 pt-4 text-white">
+                                <div class="row g-4">
+                                    <div class="col-6">
+                                        <div class="stat-card text-center p-3">
+                                            <div class="stat-icon mb-2">
+                                                <i class="fas fa-users fa-3x text-warning"></i>
+                                            </div>
+                                            <h3 class="text-white mb-0">50K+</h3>
+                                            <small class="text-white-50">Active Users</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="stat-card text-center p-3">
+                                            <div class="stat-icon mb-2">
+                                                <i class="fas fa-file-medical fa-3x text-warning"></i>
+                                            </div>
+                                            <h3 class="text-white mb-0">10K+</h3>
+                                            <small class="text-white-50">Health Records</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="stat-card text-center p-3">
+                                            <div class="stat-icon mb-2">
+                                                <i class="fas fa-clock fa-3x text-warning"></i>
+                                            </div>
+                                            <h3 class="text-white mb-0">24/7</h3>
+                                            <small class="text-white-50">AI Support</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="stat-card text-center p-3">
+                                            <div class="stat-icon mb-2">
+                                                <i class="fas fa-user-md fa-3x text-warning"></i>
+                                            </div>
+                                            <h3 class="text-white mb-0">100+</h3>
+                                            <small class="text-white-50">Doctors</small>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <h3 class="text-white mb-0">24/7</h3>
-                            <small class="text-white-50">AI Support</small>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="stat-card text-center p-3">
-                            <div class="stat-icon mb-2">
-                                <i class="fas fa-user-md fa-3x text-warning"></i>
-                            </div>
-                            <h3 class="text-white mb-0">100+</h3>
-                            <small class="text-white-50">Doctors</small>
                         </div>
                     </div>
                 </div>
+            @endif
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            @yield('content')
+        </main>
+
+        <!-- Chatbot Icon -->
+        <div class="chatbot-icon" onclick="toggleChatbot()">
+            <i class="fas fa-comment-dots"></i>
+            <span class="chatbot-tooltip">Ask me about health!</span>
+        </div>
+
+        <!-- Chatbot Modal -->
+        <div class="chatbot-modal" id="chatbotModal">
+            <div class="chatbot-header">
+                <h5><i class="fas fa-robot me-2"></i>Health Assistant</h5>
+                <button onclick="toggleChatbot()"><i class="fas fa-times"></i></button>
+            </div>
+
+            <!-- Disclaimer Banner -->
+            <div class="bg-warning bg-opacity-10 p-2 text-center small" style="border-bottom: 1px solid #dee2e6;">
+                <i class="fas fa-exclamation-triangle text-warning me-1"></i>
+                AI-powered health information - consult a doctor for medical advice
+            </div>
+
+            <div class="chatbot-messages" id="chatMessages">
+                <div style="text-align: center; color: #718096; padding: 20px;">
+                    <i class="fas fa-robot fa-3x mb-3" style="color: #667eea;"></i>
+                    <p>Hello! I'm your AI health assistant.<br>How can I help you today?</p>
+                    <small class="text-muted d-block mt-2">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Ask about symptoms, medicines, diet, exercise, or general health tips
+                    </small>
+                </div>
+            </div>
+            <div class="chatbot-input">
+                <input type="text" placeholder="Type your health question..." id="chatInput">
+                <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
             </div>
         </div>
     </div>
-</div>
-@endif
 
-    <!-- Main Content -->
-    <main class="main-content">
-        @yield('content')
-    </main>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <!-- About Section -->
+                <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
+                    <div class="footer-logo mb-3">
+                        <img src="{{ asset('images/logos/applogo.jpg') }}" alt="My Doctor" height="40">
+                        <span class="fw-bold text-white ms-2">My Doctor</span>
+                    </div>
+                    <p class="footer-text">
+                        Your complete healthcare companion. Track health metrics, get medicine reminders, consult AI,
+                        and manage medical records all in one place.
+                    </p>
+                    <div class="social-links">
+                        <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
 
-    <!-- Chatbot Icon -->
-    <div class="chatbot-icon" onclick="toggleChatbot()">
-        <i class="fas fa-comment-dots"></i>
-        <span class="chatbot-tooltip">Ask me about health!</span>
-    </div>
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="footer-title">Quick Links</h5>
+                    <ul class="footer-links">
+                        <li><a href="{{ route('home') }}"><i class="fas fa-chevron-right me-2"></i>Home</a></li>
+                        <li><a href="{{ route('medicine.index') }}"><i
+                                    class="fas fa-chevron-right me-2"></i>Medicine</a></li>
+                        <li><a href="{{ route('health') }}"><i class="fas fa-chevron-right me-2"></i>Health</a></li>
+                        <li><a href="{{ route('community') }}"><i class="fas fa-chevron-right me-2"></i>Community</a>
+                        </li>
+                        <li><a href="{{ route('help') }}"><i class="fas fa-chevron-right me-2"></i>Help</a></li>
+                    </ul>
+                </div>
 
-    <!-- Chatbot Modal -->
-    <div class="chatbot-modal" id="chatbotModal">
-        <div class="chatbot-header">
-            <h5><i class="fas fa-robot me-2"></i>Health Assistant</h5>
-            <button onclick="toggleChatbot()"><i class="fas fa-times"></i></button>
-        </div>
-        
-        <!-- Disclaimer Banner -->
-        <div class="bg-warning bg-opacity-10 p-2 text-center small" style="border-bottom: 1px solid #dee2e6;">
-            <i class="fas fa-exclamation-triangle text-warning me-1"></i>
-            AI-powered health information - consult a doctor for medical advice
-        </div>
-        
-        <div class="chatbot-messages" id="chatMessages">
-            <div style="text-align: center; color: #718096; padding: 20px;">
-                <i class="fas fa-robot fa-3x mb-3" style="color: #667eea;"></i>
-                <p>Hello! I'm your AI health assistant.<br>How can I help you today?</p>
-                <small class="text-muted d-block mt-2">
-                    <i class="fas fa-info-circle me-1"></i>
-                    Ask about symptoms, medicines, diet, exercise, or general health tips
-                </small>
+                <!-- Features -->
+                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="footer-title">Key Features</h5>
+                    <ul class="footer-links">
+                        <li><a href="{{ route('health.tracking') }}"><i class="fas fa-chevron-right me-2"></i>Health
+                                Metrics</a></li>
+                        <li><a href="{{ route('medicine.reminders') }}"><i
+                                    class="fas fa-chevron-right me-2"></i>Medicine Reminders</a></li>
+                        <li><a href="{{ route('health.records') }}"><i class="fas fa-chevron-right me-2"></i>Medical
+                                Records</a></li>
+                        <li><a href="{{ route('health.symptoms') }}"><i class="fas fa-chevron-right me-2"></i>Symptom
+                                Tracker</a></li>
+                        <li><a href="{{ route('health.suggestions') }}"><i class="fas fa-chevron-right me-2"></i>AI
+                                Suggestions</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact Info -->
+                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                    <h5 class="footer-title">Contact Us</h5>
+                    <ul class="footer-contact">
+                        <li>
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>123 Healthcare Avenue, Medical District, Dhaka, Bangladesh</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-phone"></i>
+                            <span>+880 1234 567890</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-envelope"></i>
+                            <span>support@mydoctor.com</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-clock"></i>
+                            <span>24/7 Customer Support</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <hr class="footer-divider">
+
+            <!-- Bottom Bar -->
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="copyright mb-0">
+                        &copy; {{ date('Y') }} My Doctor. All rights reserved. | Making healthcare simple
+                    </p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <ul class="footer-bottom-links">
+                        <li><a href="{{ route('privacy.policy') }}">Privacy Policy</a></li>
+                        <li><a href="{{ route('terms.service') }}">Terms of Service</a></li>
+                        <li><a href="{{ route('cookie.policy') }}">Cookie Policy</a></li>
+                        <li><a href="{{ route('sitemap') }}">Sitemap</a></li>
+                    </ul>
+                </div>
             </div>
         </div>
-        <div class="chatbot-input">
-            <input type="text" placeholder="Type your health question..." id="chatInput">
-            <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
-        </div>
-    </div>
+    </footer>
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
+    <!-- Push Notification Scripts -->
+    @auth
+        <script src="{{ asset('js/push-notifications.js') }}"></script>
+    @endauth
+
     <script>
         // User dropdown toggle
         function toggleUserDropdown() {
@@ -1100,6 +1247,29 @@
             modal.classList.toggle('show');
         }
 
+        // Quick notification toggles
+        function toggleEmailQuick() {
+            fetch('{{ route('profile.notifications.toggle-email') }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            }).then(() => {
+                console.log('Email notifications toggled');
+            });
+        }
+
+        function togglePushQuick() {
+            fetch('{{ route('profile.notifications.toggle-push') }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            }).then(() => {
+                console.log('Push notifications toggled');
+            });
+        }
+
         // Chatbot variables
         let isTyping = false;
         let conversationHistory = [];
@@ -1108,22 +1278,31 @@
         function sendMessage() {
             const input = document.getElementById('chatInput');
             const message = input.value.trim();
-            
+
             if (!message || isTyping) return;
 
             // Add user message
             addMessage(message, 'user');
             input.value = '';
-            
+
             // Show typing indicator
             showTypingIndicator();
+
+            // TODO: Implement actual AI response
+            setTimeout(() => {
+                removeTypingIndicator();
+                // This is where you'd integrate with your AI service
+                addMessage(
+                    "I'm here to help with your health questions! This is a demo response. In production, this would connect to your AI service.",
+                    'bot');
+            }, 1500);
         }
 
         // Add message to chat
         function addMessage(text, sender) {
             const messages = document.getElementById('chatMessages');
             const messageDiv = document.createElement('div');
-            
+
             if (sender === 'user') {
                 messageDiv.style.textAlign = 'right';
                 messageDiv.style.margin = '10px 0';
@@ -1135,19 +1314,19 @@
             } else {
                 messageDiv.style.textAlign = 'left';
                 messageDiv.style.margin = '10px 0';
-                
+
                 // Format bot response with line breaks and bold text
                 let formattedText = escapeHtml(text);
                 formattedText = formattedText.replace(/\n/g, '<br>');
                 formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                
+
                 messageDiv.innerHTML = `
                     <div style="background: #f0f2f5; color: #1a1a1a; padding: 12px 18px; border-radius: 18px 18px 18px 0; display: inline-block; max-width: 80%; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
                         ${formattedText}
                     </div>
                 `;
             }
-            
+
             messages.appendChild(messageDiv);
             messages.scrollTop = messages.scrollHeight;
         }
@@ -1214,101 +1393,8 @@
             this.style.height = (this.scrollHeight) + 'px';
         });
     </script>
-    
+
     @stack('scripts')
-
-    </div>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="row">
-                <!-- About Section -->
-                <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
-                    <div class="footer-logo mb-3">
-                        <img src="{{ asset('images/logos/applogo.jpg') }}" alt="My Doctor" height="40">
-                        <span class="fw-bold text-white ms-2">My Doctor</span>
-                    </div>
-                    <p class="footer-text">
-                        Your complete healthcare companion. Track health metrics, get medicine reminders, consult AI, and manage medical records all in one place.
-                    </p>
-                    <div class="social-links">
-                        <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
-                        <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
-                        <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
-                    </div>
-                </div>
-
-                <!-- Quick Links -->
-                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
-                    <h5 class="footer-title">Quick Links</h5>
-                    <ul class="footer-links">
-                        <li><a href="{{ route('home') }}"><i class="fas fa-chevron-right me-2"></i>Home</a></li>
-                        <li><a href="{{ route('medicine') }}"><i class="fas fa-chevron-right me-2"></i>Medicine</a></li>
-                        <li><a href="{{ route('health') }}"><i class="fas fa-chevron-right me-2"></i>Health</a></li>
-                        <li><a href="{{ route('community') }}"><i class="fas fa-chevron-right me-2"></i>Community</a></li>
-                        <li><a href="{{ route('help') }}"><i class="fas fa-chevron-right me-2"></i>Help</a></li>
-                    </ul>
-                </div>
-
-                <!-- Features -->
-                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
-                    <h5 class="footer-title">Key Features</h5>
-                    <ul class="footer-links">
-                        <li><a href="{{ route('health.tracking') }}"><i class="fas fa-chevron-right me-2"></i>Health Metrics</a></li>
-                        <li><a href="{{ route('medicine.reminders') }}"><i class="fas fa-chevron-right me-2"></i>Medicine Reminders</a></li>
-                        <li><a href="{{ route('health.records') }}"><i class="fas fa-chevron-right me-2"></i>Medical Records</a></li>
-                        <li><a href="{{ route('health.symptoms') }}"><i class="fas fa-chevron-right me-2"></i>Symptom Tracker</a></li>
-                        <li><a href="{{ route('health.suggestions') }}"><i class="fas fa-chevron-right me-2"></i>AI Suggestions</a></li>
-                    </ul>
-                </div>
-
-                <!-- Contact Info -->
-                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
-                    <h5 class="footer-title">Contact Us</h5>
-                    <ul class="footer-contact">
-                        <li>
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span>123 Healthcare Avenue, Medical District, Dhaka, Bangladesh</span>
-                        </li>
-                        <li>
-                            <i class="fas fa-phone"></i>
-                            <span>+880 1234 567890</span>
-                        </li>
-                        <li>
-                            <i class="fas fa-envelope"></i>
-                            <span>support@mydoctor.com</span>
-                        </li>
-                        <li>
-                            <i class="fas fa-clock"></i>
-                            <span>24/7 Customer Support</span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Divider -->
-            <hr class="footer-divider">
-
-            <!-- Bottom Bar -->
-            <div class="row align-items-center">
-                <div class="col-md-6 text-center text-md-start">
-                    <p class="copyright mb-0">
-                        &copy; {{ date('Y') }} My Doctor. All rights reserved. | Making healthcare simple
-                    </p>
-                </div>
-                <div class="col-md-6 text-center text-md-end">
-                    <ul class="footer-bottom-links">
-                        <li><a href="{{ route('privacy.policy') }}">Privacy Policy</a></li>
-                        <li><a href="{{ route('terms.service') }}">Terms of Service</a></li>
-                        <li><a href="{{ route('cookie.policy') }}">Cookie Policy</a></li>
-                        <li><a href="{{ route('sitemap') }}">Sitemap</a></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </footer>
 </body>
+
 </html>

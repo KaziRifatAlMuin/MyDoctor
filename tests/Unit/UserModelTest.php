@@ -18,7 +18,20 @@ class UserModelTest extends TestCase
     #[Test]
     public function user_has_correct_fillable_attributes(): void
     {
-        $expected = ['picture', 'name', 'date_of_birth', 'phone', 'email', 'occupation', 'blood_group', 'password'];
+        $expected = [
+            'picture',
+            'name',
+            'date_of_birth',
+            'phone',
+            'email',
+            'occupation',
+            'blood_group',
+            'password',
+            'email_notifications',
+            'push_notifications',
+            'notification_settings',
+        ];
+        
         $this->assertEquals($expected, (new User())->getFillable());
     }
 
@@ -47,11 +60,41 @@ class UserModelTest extends TestCase
     }
 
     #[Test]
+    public function user_casts_email_notifications_to_boolean(): void
+    {
+        $casts = (new User())->getCasts();
+        $this->assertArrayHasKey('email_notifications', $casts);
+        $this->assertEquals('boolean', $casts['email_notifications']);
+    }
+
+    #[Test]
+    public function user_casts_push_notifications_to_boolean(): void
+    {
+        $casts = (new User())->getCasts();
+        $this->assertArrayHasKey('push_notifications', $casts);
+        $this->assertEquals('boolean', $casts['push_notifications']);
+    }
+
+    #[Test]
+    public function user_casts_notification_settings_to_array(): void
+    {
+        $casts = (new User())->getCasts();
+        $this->assertArrayHasKey('notification_settings', $casts);
+        $this->assertEquals('array', $casts['notification_settings']);
+    }
+
+    #[Test]
     public function user_can_be_created_in_database(): void
     {
-        $user = User::factory()->create(['name' => 'Test User', 'email' => 'test@example.com']);
+        $user = User::factory()->create([
+            'name' => 'Test User',
+            'email' => 'test@example.com'
+        ]);
 
-        $this->assertDatabaseHas('users', ['email' => 'test@example.com', 'name' => 'Test User']);
+        $this->assertDatabaseHas('users', [
+            'email' => 'test@example.com',
+            'name' => 'Test User'
+        ]);
     }
 
     #[Test]
@@ -89,7 +132,10 @@ class UserModelTest extends TestCase
     {
         $user = User::factory()->create();
         $medicine = Medicine::factory()->create(['user_id' => $user->id]);
-        MedicineLog::factory()->create(['user_id' => $user->id, 'medicine_id' => $medicine->id]);
+        MedicineLog::factory()->create([
+            'user_id' => $user->id,
+            'medicine_id' => $medicine->id
+        ]);
 
         $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\HasMany::class, $user->medicineLogs());
         $this->assertEquals(1, $user->medicineLogs()->count());

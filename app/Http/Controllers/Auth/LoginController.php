@@ -14,7 +14,7 @@ class LoginController extends Controller
      *
      * @var string
      */
-    protected $redirectTo = '/'; // Change from '/dashboard' to '/'
+    protected $redirectTo = '/';
 
     public function __construct()
     {
@@ -29,24 +29,24 @@ class LoginController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'Email' => 'required|email',
+            'email' => 'required|email',  // Changed from 'Email' to 'email'
             'password' => 'required|string',
         ]);
 
+        // Attempt login with lowercase 'email' to match database column
         if (Auth::attempt([
-            'email' => $request->Email,
+            'email' => $request->email,  // Changed from 'Email' to 'email'
             'password' => $request->password
         ], $request->filled('remember'))) {
             
             $request->session()->regenerate();
             
-            // Redirect to home page
             return redirect('/');
         }
 
         return back()->withErrors([
-            'Email' => 'The provided credentials do not match our records.',
-        ])->onlyInput('Email');
+            'email' => 'The provided credentials do not match our records.',  // Changed from 'Email' to 'email'
+        ])->onlyInput('email');
     }
 
     public function logout(Request $request)
