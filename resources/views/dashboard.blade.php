@@ -1267,7 +1267,7 @@
 
         <div class="row g-3 mb-4">
 
-            {{-- Health Dashboard --}}
+            {{-- 1 Health Dashboard --}}
             <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-3">
                 <a href="{{ route('health') }}" class="feature-nav-card">
                     <div class="feature-nav-icon qa-icon-purple">
@@ -1278,18 +1278,40 @@
                 </a>
             </div>
 
-            {{-- Medicine Reminders --}}
+            {{-- 2 Metrics (tab) --}}
             <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-3">
-                <a href="{{ route('medicine.reminders') }}" class="feature-nav-card">
-                    <div class="feature-nav-icon qa-icon-green">
-                        <i class="fas fa-bell"></i>
+                <a href="{{ route('health') }}#metrics" class="feature-nav-card">
+                    <div class="feature-nav-icon qa-icon-blue">
+                        <i class="fas fa-chart-line"></i>
                     </div>
-                    <div class="feature-nav-title">Medicine Reminders</div>
-                    <div class="feature-nav-desc">Never miss a dose again</div>
+                    <div class="feature-nav-title">Metrics</div>
+                    <div class="feature-nav-desc">View your recorded metrics</div>
                 </a>
             </div>
 
-            {{-- My Prescriptions --}}
+            {{-- 3 Symptoms (tab) --}}
+            <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-4">
+                <a href="{{ route('health') }}#symptomsPane" class="feature-nav-card">
+                    <div class="feature-nav-icon qa-icon-orange">
+                        <i class="fas fa-notes-medical"></i>
+                    </div>
+                    <div class="feature-nav-title">Symptoms</div>
+                    <div class="feature-nav-desc">Log & review symptoms</div>
+                </a>
+            </div>
+
+            {{-- 4 Diseases (tab) --}}
+            <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-4">
+                <a href="{{ route('health') }}#diseasesPane" class="feature-nav-card">
+                    <div class="feature-nav-icon qa-icon-red">
+                        <i class="fas fa-virus"></i>
+                    </div>
+                    <div class="feature-nav-title">Diseases</div>
+                    <div class="feature-nav-desc">Manage diagnosed conditions</div>
+                </a>
+            </div>
+
+            {{-- 5 Prescriptions (tab) --}}
             <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-4">
                 <a href="{{ route('health') }}#prescriptions" class="feature-nav-card">
                     <div class="feature-nav-icon qa-icon-red">
@@ -1300,74 +1322,41 @@
                 </a>
             </div>
 
-            {{-- Health Records --}}
-            <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-4">
-                <a href="{{ route('health') }}#logs" class="feature-nav-card">
+            {{-- 6 Reports (tab) --}}
+            <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-5">
+                <a href="{{ route('health') }}#reportsPane" class="feature-nav-card">
                     <div class="feature-nav-icon qa-icon-blue">
-                        <i class="fas fa-folder-open"></i>
+                        <i class="fas fa-file-medical-alt"></i>
                     </div>
-                    <div class="feature-nav-title">Medical Records</div>
-                    <div class="feature-nav-desc">All your health files in one place</div>
+                    <div class="feature-nav-title">Reports</div>
+                    <div class="feature-nav-desc">View medical reports</div>
                 </a>
             </div>
 
-            {{-- Symptom Tracker --}}
-            <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-4">
-                <a href="{{ route('health.symptoms') }}" class="feature-nav-card">
-                    <div class="feature-nav-icon qa-icon-orange">
-                        <i class="fas fa-stethoscope"></i>
-                    </div>
-                    <div class="feature-nav-title">Symptom Tracker</div>
-                    <div class="feature-nav-desc">Log & monitor your symptoms</div>
-                </a>
-            </div>
-
-            {{-- Smart Suggestions --}}
-            <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-4">
-                <a href="{{ route('health.suggestions') }}" class="feature-nav-card">
-                    <div class="feature-nav-icon qa-icon-teal">
-                        <i class="fas fa-lightbulb"></i>
-                    </div>
-                    <div class="feature-nav-title">Smart Suggestions</div>
-                    <div class="feature-nav-desc">Personalized health insights</div>
-                </a>
-            </div>
-
-            {{-- Community --}}
+            {{-- 7 Medicine Logs (tab) --}}
             <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-5">
-                <a href="{{ route('community') }}" class="feature-nav-card">
-                    <div class="feature-nav-icon qa-icon-pink">
-                        <i class="fas fa-users"></i>
+                <a href="{{ route('health') }}#logs" class="feature-nav-card">
+                    <div class="feature-nav-icon qa-icon-green">
+                        <i class="fas fa-clipboard-list"></i>
                     </div>
-                    <div class="feature-nav-title">Community</div>
-                    <div class="feature-nav-desc">Connect with others</div>
+                    <div class="feature-nav-title">Medicine Logs</div>
+                    <div class="feature-nav-desc">Daily medication history</div>
                 </a>
             </div>
 
-            {{-- Find Hospitals --}}
+            {{-- 8 Medicine Reminders --}}
             <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-5">
-                <a href="{{ route('health.hospitals') }}" class="feature-nav-card">
-                    <div class="feature-nav-icon qa-icon-yellow">
-                        <i class="fas fa-hospital"></i>
+                <a href="{{ route('medicine.reminders') }}" class="feature-nav-card">
+                    <div class="feature-nav-icon qa-icon-green">
+                        <i class="fas fa-bell"></i>
                     </div>
-                    <div class="feature-nav-title">Find Hospitals</div>
-                    <div class="feature-nav-desc">Nearby hospitals & clinics</div>
+                    <div class="feature-nav-title">Medicine Reminders</div>
+                    <div class="feature-nav-desc">Never miss a dose again</div>
                 </a>
             </div>
 
-            {{-- Health Tips --}}
-            <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-5">
-                <a href="{{ route('health.tips') }}" class="feature-nav-card">
-                    <div class="feature-nav-icon" style="background:rgba(56,178,172,0.12);color:#319795;">
-                        <i class="fas fa-book-medical"></i>
-                    </div>
-                    <div class="feature-nav-title">Health Tips</div>
-                    <div class="feature-nav-desc">Daily wellness articles</div>
-                </a>
-            </div>
-
-            {{-- Medicine Search --}}
-            <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-5">
+            {{-- 9 Medicine Search --}}
+            <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-6">
                 <a href="{{ route('medicine.search') }}" class="feature-nav-card">
                     <div class="feature-nav-icon qa-icon-indigo">
                         <i class="fas fa-search"></i>
@@ -1377,18 +1366,62 @@
                 </a>
             </div>
 
-            {{-- Health Tracking --}}
+            {{-- 10 Medical Records --}}
             <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-6">
-                <a href="{{ route('health.tracking') }}" class="feature-nav-card">
+                <a href="{{ route('health') }}#logs" class="feature-nav-card">
                     <div class="feature-nav-icon qa-icon-blue">
-                        <i class="fas fa-chart-area"></i>
+                        <i class="fas fa-folder-open"></i>
                     </div>
-                    <div class="feature-nav-title">Health Tracking</div>
-                    <div class="feature-nav-desc">Visualize your progress</div>
+                    <div class="feature-nav-title">Medical Records</div>
+                    <div class="feature-nav-desc">All your health files in one place</div>
                 </a>
             </div>
 
-            {{-- Appointments --}}
+            {{-- 11 Smart Suggestions --}}
+            <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-6">
+                <a href="{{ route('health.suggestions') }}" class="feature-nav-card">
+                    <div class="feature-nav-icon qa-icon-teal">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <div class="feature-nav-title">Smart Suggestions</div>
+                    <div class="feature-nav-desc">Personalized health insights</div>
+                </a>
+            </div>
+
+            {{-- 12 Community --}}
+            <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-6">
+                <a href="{{ route('community') }}" class="feature-nav-card">
+                    <div class="feature-nav-icon qa-icon-pink">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="feature-nav-title">Community</div>
+                    <div class="feature-nav-desc">Connect with others</div>
+                </a>
+            </div>
+
+            {{-- 13 Find Hospitals --}}
+            <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-6">
+                <a href="{{ route('health.hospitals') }}" class="feature-nav-card">
+                    <div class="feature-nav-icon qa-icon-yellow">
+                        <i class="fas fa-hospital"></i>
+                    </div>
+                    <div class="feature-nav-title">Find Hospitals</div>
+                    <div class="feature-nav-desc">Nearby hospitals & clinics</div>
+                </a>
+            </div>
+
+            {{-- 14 Health Tips --}}
+            <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-6">
+                <a href="{{ route('health.tips') }}" class="feature-nav-card">
+                    <div class="feature-nav-icon" style="background:rgba(56,178,172,0.12);color:#319795;">
+                        <i class="fas fa-book-medical"></i>
+                    </div>
+                    <div class="feature-nav-title">Health Tips</div>
+                    <div class="feature-nav-desc">Daily wellness articles</div>
+                </a>
+            </div>
+
+            {{-- 15 Appointments --}}
             <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-6">
                 <a href="{{ route('appointments') }}" class="feature-nav-card">
                     <div class="feature-nav-icon qa-icon-cyan">
@@ -1399,40 +1432,7 @@
                 </a>
             </div>
 
-            {{-- Nearby Pharmacy --}}
-            <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-6">
-                <a href="{{ route('pharmacy.nearby') }}" class="feature-nav-card">
-                    <div class="feature-nav-icon qa-icon-green">
-                        <i class="fas fa-clinic-medical"></i>
-                    </div>
-                    <div class="feature-nav-title">Nearby Pharmacy</div>
-                    <div class="feature-nav-desc">Find pharmacies near you</div>
-                </a>
-            </div>
-
-            {{-- Notifications --}}
-            <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-6">
-                <a href="{{ route('notifications') }}" class="feature-nav-card">
-                    <div class="feature-nav-icon qa-icon-orange">
-                        <i class="fas fa-bell"></i>
-                    </div>
-                    <div class="feature-nav-title">Notifications</div>
-                    <div class="feature-nav-desc">Stay updated on alerts</div>
-                </a>
-            </div>
-
-            {{-- Emergency --}}
-            <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-6">
-                <a href="{{ route('emergency') }}" class="feature-nav-card">
-                    <div class="feature-nav-icon qa-icon-red">
-                        <i class="fas fa-ambulance"></i>
-                    </div>
-                    <div class="feature-nav-title">Emergency</div>
-                    <div class="feature-nav-desc">Quick access in emergencies</div>
-                </a>
-            </div>
-
-            {{-- My Profile --}}
+            {{-- 16 My Profile --}}
             <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-6">
                 <a href="{{ route('profile') }}" class="feature-nav-card">
                     <div class="feature-nav-icon qa-icon-teal">
