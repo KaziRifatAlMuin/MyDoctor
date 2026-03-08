@@ -1377,14 +1377,14 @@
                 </a>
             </div>
 
-            {{-- 11 Smart Suggestions --}}
+            {{-- 11 My Medicines --}}
             <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-6">
-                <a href="{{ route('health.suggestions') }}" class="feature-nav-card">
-                    <div class="feature-nav-icon qa-icon-teal">
-                        <i class="fas fa-lightbulb"></i>
+                <a href="{{ route('medicine.my-medicines') }}" class="feature-nav-card">
+                    <div class="feature-nav-icon qa-icon-indigo">
+                        <i class="fas fa-pills"></i>
                     </div>
-                    <div class="feature-nav-title">Smart Suggestions</div>
-                    <div class="feature-nav-desc">Personalized health insights</div>
+                    <div class="feature-nav-title">My Medicines</div>
+                    <div class="feature-nav-desc">Your saved medicines list</div>
                 </a>
             </div>
 
@@ -1399,36 +1399,36 @@
                 </a>
             </div>
 
-            {{-- 13 Find Hospitals --}}
+            {{-- 13 Adherence Logs --}}
             <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-6">
-                <a href="{{ route('health.hospitals') }}" class="feature-nav-card">
-                    <div class="feature-nav-icon qa-icon-yellow">
-                        <i class="fas fa-hospital"></i>
+                <a href="{{ route('medicine.logs') }}" class="feature-nav-card">
+                    <div class="feature-nav-icon qa-icon-orange">
+                        <i class="fas fa-history"></i>
                     </div>
-                    <div class="feature-nav-title">Find Hospitals</div>
-                    <div class="feature-nav-desc">Nearby hospitals & clinics</div>
+                    <div class="feature-nav-title">Adherence Logs</div>
+                    <div class="feature-nav-desc">View medication adherence history</div>
                 </a>
             </div>
 
-            {{-- 14 Health Tips --}}
+            {{-- 14 Add Medicine --}}
             <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-6">
-                <a href="{{ route('health.tips') }}" class="feature-nav-card">
-                    <div class="feature-nav-icon" style="background:rgba(56,178,172,0.12);color:#319795;">
-                        <i class="fas fa-book-medical"></i>
+                <a href="{{ route('medicine.add') }}" class="feature-nav-card">
+                    <div class="feature-nav-icon qa-icon-indigo">
+                        <i class="fas fa-plus-circle"></i>
                     </div>
-                    <div class="feature-nav-title">Health Tips</div>
-                    <div class="feature-nav-desc">Daily wellness articles</div>
+                    <div class="feature-nav-title">Add Medicine</div>
+                    <div class="feature-nav-desc">Add a new medicine to your list</div>
                 </a>
             </div>
 
-            {{-- 15 Appointments --}}
+            {{-- 15 Schedules --}}
             <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-6">
-                <a href="{{ route('appointments') }}" class="feature-nav-card">
+                <a href="{{ route('medicine.schedules') }}" class="feature-nav-card">
                     <div class="feature-nav-icon qa-icon-cyan">
-                        <i class="fas fa-calendar-check"></i>
+                        <i class="fas fa-calendar-day"></i>
                     </div>
-                    <div class="feature-nav-title">Appointments</div>
-                    <div class="feature-nav-desc">Book & manage visits</div>
+                    <div class="feature-nav-title">Schedules</div>
+                    <div class="feature-nav-desc">View and manage medicine schedules</div>
                 </a>
             </div>
 
