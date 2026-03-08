@@ -1302,7 +1302,7 @@
 
             {{-- Health Records --}}
             <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-4">
-                <a href="{{ route('health.records') }}" class="feature-nav-card">
+                <a href="{{ route('health') }}#logs" class="feature-nav-card">
                     <div class="feature-nav-icon qa-icon-blue">
                         <i class="fas fa-folder-open"></i>
                     </div>

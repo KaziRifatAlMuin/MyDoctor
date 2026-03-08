@@ -1175,8 +1175,8 @@
                                 Metrics</a></li>
                         <li><a href="{{ route('medicine.reminders') }}"><i
                                     class="fas fa-chevron-right me-2"></i>Medicine Reminders</a></li>
-                        <li><a href="{{ route('health.records') }}"><i class="fas fa-chevron-right me-2"></i>Medical
-                                Records</a></li>
+                        <li><a href="{{ route('health') }}#logs"><i class="fas fa-chevron-right me-2"></i>Medical
+                            Records</a></li>
                         <li><a href="{{ route('health.symptoms') }}"><i class="fas fa-chevron-right me-2"></i>Symptom
                                 Tracker</a></li>
                         <li><a href="{{ route('health.suggestions') }}"><i class="fas fa-chevron-right me-2"></i>AI
