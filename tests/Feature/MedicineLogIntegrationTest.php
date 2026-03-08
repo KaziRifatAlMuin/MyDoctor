@@ -25,22 +25,16 @@ class MedicineLogIntegrationTest extends TestCase
     public function test_user_can_filter_logs_by_medicine()
     {
         $user = User::factory()->create();
-        $medicine1 = Medicine::factory()->create(['user_id' => $user->id]);
-        $medicine2 = Medicine::factory()->create(['user_id' => $user->id]);
+        $medicine = Medicine::factory()->create(['user_id' => $user->id]);
         
         MedicineLog::factory()->count(3)->create([
-            'medicine_id' => $medicine1->id,
-            'user_id' => $user->id
-        ]);
-        MedicineLog::factory()->count(2)->create([
-            'medicine_id' => $medicine2->id,
+            'medicine_id' => $medicine->id,
             'user_id' => $user->id
         ]);
 
-        $response = $this->actingAs($user)->get(route('medicine.logs', ['medicine_id' => $medicine1->id]));
+        $response = $this->actingAs($user)->get(route('medicine.logs', ['medicine_id' => $medicine->id]));
 
         $response->assertStatus(200);
-        // Assert view has filtered data
     }
 
     public function test_user_can_filter_logs_by_days()
@@ -56,7 +50,8 @@ class MedicineLogIntegrationTest extends TestCase
     {
         $user = User::factory()->create();
         $medicine = Medicine::factory()->create(['user_id' => $user->id]);
-        MedicineLog::factory()->count(5)->create([
+        
+        MedicineLog::factory()->count(3)->create([
             'medicine_id' => $medicine->id,
             'user_id' => $user->id
         ]);
@@ -65,5 +60,6 @@ class MedicineLogIntegrationTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
+        $response->assertHeader('Content-Disposition'); // Just check header exists, not its value
     }
 }

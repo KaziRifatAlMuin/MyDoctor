@@ -13,6 +13,9 @@ class MedicineLogFactory extends Factory
 
     public function definition(): array
     {
+        static $dateCounter = 0;
+        $dateCounter++;
+        
         $scheduled = fake()->numberBetween(1, 6);
         $taken = fake()->numberBetween(0, $scheduled);
         $missed = $scheduled - $taken;
@@ -20,7 +23,7 @@ class MedicineLogFactory extends Factory
         return [
             'medicine_id' => Medicine::factory(),
             'user_id' => User::factory(),
-            'date' => fake()->dateTimeBetween('-3 months', 'now')->format('Y-m-d'),
+            'date' => now()->subDays($dateCounter)->format('Y-m-d'),
             'total_scheduled' => $scheduled,
             'total_taken' => $taken,
             'total_missed' => $missed,
