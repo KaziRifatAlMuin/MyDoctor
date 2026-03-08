@@ -14,16 +14,16 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
+            'picture' => null,
             'name' => fake()->name(),
+            'date_of_birth' => fake()->dateTimeBetween('-60 years', '-18 years')->format('Y-m-d'),
+            'phone' => fake()->phoneNumber(),
             'email' => fake()->unique()->safeEmail(),
+            'occupation' => fake()->jobTitle(),
+            'blood_group' => fake()->randomElement(['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']),
             'email_verified_at' => now(),
             'password' => Hash::make('password'),
             'remember_token' => Str::random(10),
-            'picture' => null,
-            'phone' => fake()->phoneNumber(),
-            'date_of_birth' => fake()->dateTimeBetween('-60 years', '-18 years')->format('Y-m-d'),
-            'occupation' => fake()->jobTitle(),
-            'blood_group' => fake()->randomElement(['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']),
             'email_notifications' => fake()->boolean(),
             'push_notifications' => fake()->boolean(),
             'notification_settings' => json_encode([
