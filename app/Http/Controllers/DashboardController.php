@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
 use App\Models\HealthMetric;
+use App\Models\MedicineReminder;
 use App\Models\Symptom;
 use App\Models\Medicine;
 use App\Models\MedicineLog;
@@ -66,6 +67,55 @@ class DashboardController extends Controller
         $recentSymptomsCount = Symptom::where('user_id', $user->id)
             ->where('recorded_at', '>=', now()->subDays(7))->count();
 
+        // ── 30-day adherence breakdown for sparkline ──
+        $adherenceByDay = [];
+        $logsByDate = $medicineLogs->groupBy(fn($log) => $log->date->format('Y-m-d'));
+        for ($i = 29; $i >= 0; $i--) {
+            $date = now()->subDays($i)->format('Y-m-d');
+            $dayLogs = $logsByDate[$date] ?? collect();
+            $dayScheduled = $dayLogs->sum('total_scheduled');
+            $adherenceByDay[] = [
+                'date'  => now()->subDays($i)->format('M d'),
+                'rate'  => $dayScheduled > 0 ? round(($dayLogs->sum('total_taken') / $dayScheduled) * 100) : null,
+            ];
+        }
+
+        // ── Today's pending reminders ──
+        $todayReminders = MedicineReminder::whereHas('schedule.medicine', fn($q) => $q->where('user_id', $user->id))
+            ->where('status', 'pending')
+            ->whereDate('reminder_at', today())
+            ->with('schedule.medicine')
+            ->orderBy('reminder_at')
+            ->limit(8)
+            ->get();
+
+        // ── Recent uploads ──
+        $recentUploads = Upload::where('user_id', $user->id)
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get();
+
+        // ── Health score calculation ──
+        $healthScore = $this->calculateHealthScore(
+            $adherenceRate,
+            $symptoms->where('recorded_at', '>=', now()->subDays(7)),
+            $activeConditions,
+            $recentMetricsCount,
+            $latestMetrics
+        );
+
+        // ── Metric trends (last 7 readings per type) ──
+        $metricTrends = [];
+        foreach ($metricsByType->take(4) as $type => $metrics) {
+            $recent = $metrics->sortBy('recorded_at')->take(7);
+            $metricTrends[$type] = $recent->map(function ($m) {
+                $val = is_array($m->value)
+                    ? (float) collect($m->value)->reject(fn($v, $k) => $k === 'unit')->first()
+                    : (float) $m->value;
+                return ['date' => $m->recorded_at->format('M d'), 'value' => $val];
+            })->values()->toArray();
+        }
+
         return view('dashboard', compact(
             'user',
             'healthMetrics',
@@ -83,7 +133,35 @@ class DashboardController extends Controller
             'prescriptionCount',
             'reportCount',
             'recentMetricsCount',
-            'recentSymptomsCount'
+            'recentSymptomsCount',
+            'adherenceByDay',
+            'todayReminders',
+            'recentUploads',
+            'healthScore',
+            'metricTrends'
         ));
+    }
+
+    /**
+     * Calculate a composite health score (0–100).
+     */
+    private function calculateHealthScore($adherenceRate, $recentSymptoms, $activeConditions, $recentMetricsCount, $latestMetrics): int
+    {
+        $score = 50; // baseline
+
+        // Adherence contributes up to +25
+        $score += (int) ($adherenceRate * 0.25);
+
+        // Fewer recent symptoms is better (+15 max)
+        $symptomCount = $recentSymptoms->count();
+        $score += max(0, 15 - ($symptomCount * 3));
+
+        // Active tracking bonus (+10)
+        $score += min(10, $recentMetricsCount * 2);
+
+        // Penalty for many active conditions (-5 each, max -15)
+        $score -= min(15, $activeConditions->count() * 5);
+
+        return max(0, min(100, $score));
     }
 }
