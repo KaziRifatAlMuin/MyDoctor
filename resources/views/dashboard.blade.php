@@ -1291,7 +1291,7 @@
 
             {{-- My Prescriptions --}}
             <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-4">
-                <a href="{{ route('medicine.prescriptions') }}" class="feature-nav-card">
+                <a href="{{ route('health') }}#prescriptions" class="feature-nav-card">
                     <div class="feature-nav-icon qa-icon-red">
                         <i class="fas fa-prescription-bottle-alt"></i>
                     </div>
