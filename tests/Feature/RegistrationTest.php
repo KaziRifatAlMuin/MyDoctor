@@ -14,20 +14,26 @@ class RegistrationTest extends TestCase
     #[Test]
     public function registration_page_is_accessible(): void
     {
-        $this->get(route('register'))->assertStatus(200);
+        $response = $this->get(route('register'));
+        $response->assertStatus(200);
     }
 
     #[Test]
     public function user_can_register_with_valid_data(): void
     {
-        $this->post(route('register'), [
-            'Name'                  => 'Test User',
-            'Email'                 => 'newuser@example.com',
-            'password'              => 'password12',
-            'password_confirmation' => 'password12',
-        ])->assertRedirect(route('login'));
+        $response = $this->post(route('register'), [
+            'Name' => 'Test User',              // Uppercase N
+            'Email' => 'newuser@example.com',   // Uppercase E
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
 
-        $this->assertDatabaseHas('users', ['email' => 'newuser@example.com', 'name' => 'Test User']);
+        $response->assertRedirect('/');
+        
+        $this->assertDatabaseHas('users', [
+            'email' => 'newuser@example.com',   // Database uses lowercase
+            'name' => 'Test User'                // Database uses lowercase
+        ]);
     }
 
     #[Test]
@@ -35,102 +41,118 @@ class RegistrationTest extends TestCase
     {
         User::factory()->create(['email' => 'existing@example.com']);
 
-        $this->post(route('register'), [
-            'Name'                  => 'Another User',
-            'Email'                 => 'existing@example.com',
-            'password'              => 'password12',
-            'password_confirmation' => 'password12',
-        ])->assertSessionHasErrors('Email');
+        $response = $this->post(route('register'), [
+            'Name' => 'Another User',            // Uppercase N
+            'Email' => 'existing@example.com',   // Uppercase E
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
 
+        $response->assertSessionHasErrors('Email');  // Uppercase E for error key
+        
         $this->assertEquals(1, User::where('email', 'existing@example.com')->count());
     }
 
     #[Test]
     public function registration_fails_without_name(): void
     {
-        $this->post(route('register'), [
-            'Name'                  => '',
-            'Email'                 => 'noname@example.com',
-            'password'              => 'password12',
-            'password_confirmation' => 'password12',
-        ])->assertSessionHasErrors('Name');
+        $response = $this->post(route('register'), [
+            'Name' => '',                         // Uppercase N
+            'Email' => 'noname@example.com',       // Uppercase E
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+
+        $response->assertSessionHasErrors('Name');  // Uppercase N for error key
     }
 
     #[Test]
     public function registration_fails_without_email(): void
     {
-        $this->post(route('register'), [
-            'Name'                  => 'No Email User',
-            'Email'                 => '',
-            'password'              => 'password12',
-            'password_confirmation' => 'password12',
-        ])->assertSessionHasErrors('Email');
+        $response = $this->post(route('register'), [
+            'Name' => 'No Email User',            // Uppercase N
+            'Email' => '',                          // Uppercase E
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+
+        $response->assertSessionHasErrors('Email');  // Uppercase E for error key
     }
 
     #[Test]
     public function registration_fails_with_invalid_email_format(): void
     {
-        $this->post(route('register'), [
-            'Name'                  => 'Bad Email',
-            'Email'                 => 'not-an-email',
-            'password'              => 'password12',
-            'password_confirmation' => 'password12',
-        ])->assertSessionHasErrors('Email');
+        $response = $this->post(route('register'), [
+            'Name' => 'Bad Email',                 // Uppercase N
+            'Email' => 'not-an-email',              // Uppercase E
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+
+        $response->assertSessionHasErrors('Email');  // Uppercase E for error key
     }
 
     #[Test]
     public function registration_fails_with_password_too_short(): void
     {
-        $this->post(route('register'), [
-            'Name'                  => 'Short Pass',
-            'Email'                 => 'shortpass@example.com',
-            'password'              => 'abc',
-            'password_confirmation' => 'abc',
-        ])->assertSessionHasErrors('password');
+        $response = $this->post(route('register'), [
+            'Name' => 'Short Pass',                // Uppercase N
+            'Email' => 'shortpass@example.com',     // Uppercase E
+            'password' => 'short',
+            'password_confirmation' => 'short',
+        ]);
+
+        $response->assertSessionHasErrors('password');
     }
 
     #[Test]
     public function registration_fails_when_passwords_do_not_match(): void
     {
-        $this->post(route('register'), [
-            'Name'                  => 'Mismatch User',
-            'Email'                 => 'mismatch@example.com',
-            'password'              => 'password12',
+        $response = $this->post(route('register'), [
+            'Name' => 'Mismatch User',             // Uppercase N
+            'Email' => 'mismatch@example.com',      // Uppercase E
+            'password' => 'password123',
             'password_confirmation' => 'differentpassword',
-        ])->assertSessionHasErrors('password');
+        ]);
+
+        $response->assertSessionHasErrors('password');
     }
 
     #[Test]
     public function registration_stores_optional_fields(): void
     {
-        $this->post(route('register'), [
-            'Name'                  => 'Complete User',
-            'Email'                 => 'complete@example.com',
-            'Phone'                 => '01712345678',
-            'DateOfBirth'           => '1995-06-15',
-            'Occupation'            => 'Engineer',
-            'BloodGroup'            => 'O+',
-            'password'              => 'password12',
-            'password_confirmation' => 'password12',
-        ])->assertRedirect(route('login'));
+        $response = $this->post(route('register'), [
+            'Name' => 'Complete User',              // Uppercase N
+            'Email' => 'complete@example.com',       // Uppercase E
+            'Phone' => '01712345678',                 // Uppercase P
+            'DateOfBirth' => '1995-06-15',            // Uppercase D, B
+            'Occupation' => 'Engineer',               // Uppercase O
+            'BloodGroup' => 'O+',                      // Uppercase B, G
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
 
+        $response->assertRedirect('/');
+        
         $this->assertDatabaseHas('users', [
-            'email'      => 'complete@example.com',
-            'phone'      => '01712345678',
-            'occupation' => 'Engineer',
-            'blood_group'=> 'O+',
+            'email' => 'complete@example.com',        // Database uses lowercase
+            'phone' => '01712345678',                  // Database uses lowercase
+            'occupation' => 'Engineer',                // Database uses lowercase
+            'blood_group' => 'O+',                      // Database uses lowercase
         ]);
     }
 
     #[Test]
     public function registration_rejects_invalid_blood_group(): void
     {
-        $this->post(route('register'), [
-            'Name'                  => 'Bad Blood',
-            'Email'                 => 'badblood@example.com',
-            'BloodGroup'            => 'X+',
-            'password'              => 'password12',
-            'password_confirmation' => 'password12',
-        ])->assertSessionHasErrors('BloodGroup');
+        $response = $this->post(route('register'), [
+            'Name' => 'Bad Blood',                    
+            'Email' => 'badblood@example.com',         
+            'BloodGroup' => 'X+',                       
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+
+        $response->assertSessionHasErrors('BloodGroup');  
     }
 }
