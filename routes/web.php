@@ -20,7 +20,6 @@ Route::get('/', function () {
 
 // Main navigation pages
 Route::view('/medicine', 'medicine')->name('medicine');
-Route::view('/health', 'health')->name('health');
 Route::view('/community', 'community')->name('community');
 Route::view('/help', 'help')->name('help');
 

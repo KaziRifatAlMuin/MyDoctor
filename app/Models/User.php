@@ -12,14 +12,14 @@ class User extends Authenticatable
     use HasFactory, Notifiable, HasPushSubscriptions;
 
     protected $fillable = [
-        'name',
-        'email',
-        'password',
         'picture',
-        'phone',
+        'name',
         'date_of_birth',
+        'phone',
+        'email',
         'occupation',
         'blood_group',
+        'password',
         'email_notifications',
         'push_notifications',
         'notification_settings',
@@ -31,8 +31,9 @@ class User extends Authenticatable
     ];
 
     protected $casts = [
-        'email_verified_at' => 'datetime',
         'date_of_birth' => 'date',
+        'email_verified_at' => 'datetime',
+        'password'           => 'hashed',
         'email_notifications' => 'boolean',
         'push_notifications' => 'boolean',
         'notification_settings' => 'array',
@@ -101,7 +102,42 @@ class User extends Authenticatable
         $this->save();
         return $this->push_notifications;
     }
+public function healthMetrics()
+    {
+        return $this->hasMany(HealthMetric::class);
+    }
 
+    public function symptoms()
+    {
+        return $this->hasMany(Symptom::class);
+    }
+
+    public function medicines()
+    {
+        return $this->hasMany(Medicine::class);
+    }
+
+    public function medicineLogs()
+    {
+        return $this->hasMany(MedicineLog::class);
+    }
+
+    public function uploads()
+    {
+        return $this->hasMany(Upload::class);
+    }
+
+    public function userDiseases()
+    {
+        return $this->hasMany(UserDisease::class);
+    }
+
+    public function diseases()
+    {
+        return $this->belongsToMany(Disease::class, 'user_diseases')
+                    ->withPivot('diagnosed_at', 'status', 'notes')
+                    ->withTimestamps();
+    }
     /**
      * Get user's full name
      */
