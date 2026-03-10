@@ -925,7 +925,7 @@
                         </a>
                     </li>
                     <li class="banner-nav-item">
-                        <a href="{{ route('community') }}"
+                        <a href="{{ route('community.landing') }}"
                             class="banner-nav-link {{ request()->routeIs('community*') ? 'active' : '' }}">
                             <i class="fas fa-users me-1"></i> Community
                         </a>
@@ -978,6 +978,27 @@
                                 <i class="fas fa-lightbulb"></i> Suggestions
                             </a>
 
+                                  <!-- Notification Quick Toggles -->
+                            <div class="divider"></div>
+                            <div class="px-3 py-2">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span><i class="fas fa-envelope me-2"></i>Email Alerts</span>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" 
+                                               onchange="toggleEmailQuick()" 
+                                               {{ auth()->user()->email_notifications ? 'checked' : '' }}>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span><i class="fas fa-bell me-2"></i>Push Alerts</span>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" 
+                                               onchange="togglePushQuick()" 
+                                               {{ auth()->user()->push_notifications ? 'checked' : '' }}>
+                                    </div>
+                                </div>
+                               
+                            </div>
                             <!-- Register link hidden for authenticated users -->
 
                             <!-- Check for admin by email -->
@@ -1167,7 +1188,7 @@
                         <li><a href="{{ route('medicine.index') }}"><i
                                     class="fas fa-chevron-right me-2"></i>Medicine</a></li>
                         <li><a href="{{ route('health') }}"><i class="fas fa-chevron-right me-2"></i>Health</a></li>
-                        <li><a href="{{ route('community') }}"><i class="fas fa-chevron-right me-2"></i>Community</a>
+                        <li><a href="{{ route('community.landing') }}"><i class="fas fa-chevron-right me-2"></i>Community</a>
                         </li>
                         <li><a href="{{ route('help') }}"><i class="fas fa-chevron-right me-2"></i>Help</a></li>
                     </ul>
