@@ -22,7 +22,7 @@
                     </div>
                     <h4>Community Posting</h4>
                     <p class="text-muted">Connect with others sharing similar health experiences</p>
-                    <a href="{{ route('community') }}" class="btn btn-outline-primary rounded-pill px-4">Learn More</a>
+                    <a href="{{ route('community.landing') }}" class="btn btn-outline-primary rounded-pill px-4">Learn More</a>
                 </div>
             </div>
             
