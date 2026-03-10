@@ -687,7 +687,7 @@
                                 style="font-size: 0.85rem; color: #667eea;">
                                 <i class="fas fa-tachometer-alt me-2"></i>Dashboard
                             </a>
-                            <a href="{{ route('community') }}" class="d-block text-decoration-none"
+                            <a href="{{ route('community.landing') }}" class="d-block text-decoration-none"
                                 style="font-size: 0.85rem; color: #667eea;">
                                 <i class="fas fa-users me-2"></i>Community
                             </a>
