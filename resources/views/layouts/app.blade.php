@@ -1261,9 +1261,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Push Notification Scripts -->
-    @auth
-        <script src="{{ asset('js/push-notifications.js') }}"></script>
-    @endauth
+  
 
     <script>
         // User dropdown toggle
