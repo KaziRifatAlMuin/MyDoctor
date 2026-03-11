@@ -15,6 +15,17 @@ class Disease extends Model
         'description',
     ];
 
+    /**
+     * Get the posts for this disease
+     */
+    public function posts()
+    {
+        return $this->hasMany(Post::class);
+    }
+
+    /**
+     * Get the users who have this disease
+     */
     public function users()
     {
         return $this->belongsToMany(User::class, 'user_diseases')
@@ -22,6 +33,9 @@ class Disease extends Model
                     ->withTimestamps();
     }
 
+    /**
+     * Get the user diseases pivot records
+     */
     public function userDiseases()
     {
         return $this->hasMany(UserDisease::class);
