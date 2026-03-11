@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Log;
 
 class User extends Authenticatable
 {
@@ -38,8 +39,6 @@ class User extends Authenticatable
         'notification_settings' => 'array',
     ];
 
-
-
     /**
      * Route notifications for Web Push
      */
@@ -49,7 +48,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Push subscriptions relationship (minimal replacement for missing package trait)
+     * Push subscriptions relationship
      */
     public function pushSubscriptions()
     {
@@ -57,14 +56,73 @@ class User extends Authenticatable
     }
 
     /**
-     * Create or update a push subscription
+     * Update or create a push subscription
      */
-    public function updatePushSubscription(string $endpoint, ?string $publicKey = null, ?string $authToken = null)
+    public function updatePushSubscription(string $endpoint, ?string $publicKey = null, ?string $authToken = null, string $contentEncoding = 'aesgcm')
     {
-        return $this->pushSubscriptions()->updateOrCreate(
-            ['endpoint' => $endpoint],
-            ['public_key' => $publicKey, 'auth_token' => $authToken]
-        );
+        try {
+            Log::info('Updating push subscription for user ' . $this->id, [
+                'endpoint_prefix' => substr($endpoint, 0, 50) . '...',
+                'has_public_key' => !is_null($publicKey),
+                'has_auth_token' => !is_null($authToken)
+            ]);
+
+            // First, clean up any orphaned subscriptions with same endpoint for different users
+            \App\Models\PushSubscription::where('endpoint', $endpoint)
+                ->where('subscribable_id', '!=', $this->id)
+                ->delete();
+
+            // Update or create the subscription
+            $subscription = $this->pushSubscriptions()->updateOrCreate(
+                ['endpoint' => $endpoint],
+                [
+                    'public_key' => $publicKey,
+                    'auth_token' => $authToken,
+                    'content_encoding' => $contentEncoding,
+                ]
+            );
+
+            Log::info('Push subscription saved', [
+                'subscription_id' => $subscription->id,
+                'user_id' => $this->id
+            ]);
+
+            return $subscription;
+
+        } catch (\Exception $e) {
+            Log::error('Failed to update push subscription', [
+                'user_id' => $this->id,
+                'error' => $e->getMessage(),
+                'endpoint' => substr($endpoint, 0, 100) . '...'
+            ]);
+            
+            // Try one more time with a more aggressive approach
+            try {
+                // Force delete any existing subscription with this endpoint
+                \App\Models\PushSubscription::where('endpoint', $endpoint)->delete();
+                
+                // Create fresh
+                $subscription = $this->pushSubscriptions()->create([
+                    'endpoint' => $endpoint,
+                    'public_key' => $publicKey,
+                    'auth_token' => $authToken,
+                    'content_encoding' => $contentEncoding,
+                ]);
+                
+                Log::info('Push subscription created after retry', [
+                    'subscription_id' => $subscription->id
+                ]);
+                
+                return $subscription;
+                
+            } catch (\Exception $e2) {
+                Log::error('Critical push subscription failure', [
+                    'user_id' => $this->id,
+                    'error' => $e2->getMessage()
+                ]);
+                throw $e2;
+            }
+        }
     }
 
     /**
@@ -72,6 +130,11 @@ class User extends Authenticatable
      */
     public function deletePushSubscription(string $endpoint)
     {
+        Log::info('Deleting push subscription', [
+            'user_id' => $this->id,
+            'endpoint_prefix' => substr($endpoint, 0, 50) . '...'
+        ]);
+        
         return $this->pushSubscriptions()->where('endpoint', $endpoint)->delete();
     }
 
@@ -80,7 +143,7 @@ class User extends Authenticatable
      */
     public function wantsEmailNotifications(): bool
     {
-        return $this->email_notifications;
+        return $this->email_notifications ?? true;
     }
 
     /**
@@ -88,7 +151,7 @@ class User extends Authenticatable
      */
     public function wantsPushNotifications(): bool
     {
-        return $this->push_notifications;
+        return $this->push_notifications ?? true;
     }
 
     /**
@@ -128,7 +191,9 @@ class User extends Authenticatable
         $this->save();
         return $this->push_notifications;
     }
-public function healthMetrics()
+
+    // Health relationships
+    public function healthMetrics()
     {
         return $this->hasMany(HealthMetric::class);
     }
@@ -164,11 +229,33 @@ public function healthMetrics()
                     ->withPivot('diagnosed_at', 'status', 'notes')
                     ->withTimestamps();
     }
+
+    // Community relationships
+    public function posts()
+    {
+        return $this->hasMany(Post::class);
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
+
+    public function postLikes()
+    {
+        return $this->hasMany(PostLike::class);
+    }
+
+    public function commentLikes()
+    {
+        return $this->hasMany(CommentLike::class);
+    }
+
     /**
      * Get user's full name
      */
-public function getNameAttribute()
-{
-    return $this->attributes['name'] ?? null;
-}
+    public function getNameAttribute()
+    {
+        return $this->attributes['name'] ?? null;
+    }
 }

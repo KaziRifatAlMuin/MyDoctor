@@ -6,11 +6,21 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\NotificationPreferenceController;
+use App\Http\Controllers\MedicineController;
+use App\Http\Controllers\MedicineScheduleController;
+use App\Http\Controllers\MedicineReminderController;
+use App\Http\Controllers\MedicineLogController;
+use App\Http\Controllers\SuggestionsController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CommunityController;
 use Illuminate\Http\Request;
+
+
 
 /*
 |--------------------------------------------------------------------------
-| Public Routes (Accessible to everyone)
+| Public Routes
 |--------------------------------------------------------------------------
 */
 
@@ -21,7 +31,6 @@ Route::get('/', function () {
 
 // Main navigation pages
 Route::view('/medicine', 'medicine')->name('medicine');
-Route::view('/community', 'community')->name('community');
 Route::view('/help', 'help')->name('help');
 
 // Footer pages
@@ -37,23 +46,15 @@ Route::view('/emergency', 'emergency')->name('emergency');
 
 /*
 |--------------------------------------------------------------------------
-| REGISTER ROUTES - Accessible to EVERYONE (including logged in users)
+| Auth Routes
 |--------------------------------------------------------------------------
 */
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register', [RegisterController::class, 'register']);
 
-/*
-|--------------------------------------------------------------------------
-| Guest Routes (Only non-logged in users)
-|--------------------------------------------------------------------------
-*/
 Route::middleware('guest')->group(function () {
-    // Login
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login']);
-    
-    // Forgot password
     Route::get('/forgot-password', function () {
         return view('auth.forgot-password');
     })->name('password.request');
@@ -61,14 +62,11 @@ Route::middleware('guest')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Authenticated Routes (Only logged in users)
+| Authenticated Routes
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->group(function () {
-    // Logout
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-    
-    // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
     // Profile
@@ -79,31 +77,21 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     
     // Notification Preferences
-    Route::get('/profile/notifications', [App\Http\Controllers\NotificationPreferenceController::class, 'index'])
-        ->name('profile.notifications');
-    Route::put('/profile/notifications', [App\Http\Controllers\NotificationPreferenceController::class, 'update'])
-        ->name('profile.notifications.update');
-    Route::post('/profile/notifications/toggle-email', [App\Http\Controllers\NotificationPreferenceController::class, 'toggleEmail'])
-        ->name('profile.notifications.toggle-email');
-    Route::post('/profile/notifications/toggle-push', [App\Http\Controllers\NotificationPreferenceController::class, 'togglePush'])
-        ->name('profile.notifications.toggle-push');
+    Route::get('/profile/notifications', [NotificationPreferenceController::class, 'index'])->name('profile.notifications');
+    Route::put('/profile/notifications', [NotificationPreferenceController::class, 'update'])->name('profile.notifications.update');
+    Route::post('/profile/notifications/toggle-email', [NotificationPreferenceController::class, 'toggleEmail'])->name('profile.notifications.toggle-email');
+    Route::post('/profile/notifications/toggle-push', [NotificationPreferenceController::class, 'togglePush'])->name('profile.notifications.toggle-push');
     
-    // Health Dashboard
+    // Health
     Route::get('/health', [HealthController::class, 'index'])->name('health');
-    
-    // Health CRUD operations — Store
     Route::post('/health/metric', [HealthController::class, 'storeMetric'])->name('health.metric.store');
     Route::post('/health/symptom', [HealthController::class, 'storeSymptom'])->name('health.symptom.store');
     Route::post('/health/disease', [HealthController::class, 'storeDisease'])->name('health.disease.store');
     Route::post('/health/upload', [HealthController::class, 'storeUpload'])->name('health.upload.store');
-
-    // Health CRUD operations — Update
     Route::put('/health/metric/{healthMetric}', [HealthController::class, 'updateMetric'])->name('health.metric.update');
     Route::put('/health/symptom/{symptom}', [HealthController::class, 'updateSymptom'])->name('health.symptom.update');
     Route::put('/health/disease/{userDisease}', [HealthController::class, 'updateDisease'])->name('health.disease.update');
     Route::put('/health/upload/{upload}', [HealthController::class, 'updateUpload'])->name('health.upload.update');
-
-    // Health CRUD operations — Delete
     Route::delete('/health/metric/{healthMetric}', [HealthController::class, 'destroyMetric'])->name('health.metric.destroy');
     Route::delete('/health/symptom/{symptom}', [HealthController::class, 'destroySymptom'])->name('health.symptom.destroy');
     Route::delete('/health/disease/{userDisease}', [HealthController::class, 'destroyDisease'])->name('health.disease.destroy');
@@ -119,9 +107,9 @@ Route::middleware('auth')->group(function () {
     })->name('notification');
     
     // Suggestions
-    Route::get('/suggestions', [App\Http\Controllers\SuggestionsController::class, 'index'])->name('suggestions');
+    Route::get('/suggestions', [SuggestionsController::class, 'index'])->name('suggestions');
 
-    // Email verification: send verification notification
+    // Email verification
     Route::post('/email/verification-notification', function (\Illuminate\Http\Request $request) {
         $request->user()->sendEmailVerificationNotification();
         return back()->with('status', 'verification-link-sent');
@@ -135,33 +123,41 @@ Route::middleware('auth')->group(function () {
 */
 Route::middleware('auth')->group(function () {
     Route::post('/push-subscriptions', function (Request $request) {
-        $user = auth()->user();
-        $user->updatePushSubscription(
-            $request->endpoint,
-            $request->keys['p256dh'],
-            $request->keys['auth']
-        );
-        return response()->json(['success' => true]);
+        try {
+            $user = auth()->user();
+            $user->updatePushSubscription(
+                $request->endpoint,
+                $request->keys['p256dh'],
+                $request->keys['auth']
+            );
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            \Log::error('Push subscription error: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to save subscription'], 500);
+        }
     });
     
     Route::post('/push-subscriptions/delete', function (Request $request) {
-        $user = auth()->user();
-        $user->deletePushSubscription($request->endpoint);
-        return response()->json(['success' => true]);
+        try {
+            $user = auth()->user();
+            $user->deletePushSubscription($request->endpoint);
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            \Log::error('Push subscription delete error: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to delete subscription'], 500);
+        }
     });
 });
 
 /*
 |--------------------------------------------------------------------------
-| Health Related Routes - Additional Pages
+| Health Related Routes
 |--------------------------------------------------------------------------
 */
 Route::prefix('health')->name('health.')->group(function () {
-    // Public health pages
     Route::view('/hospitals', 'health.hospitals')->name('hospitals');
     Route::view('/tips', 'health.tips')->name('tips');
     
-    // Protected health pages
     Route::middleware('auth')->group(function () {
         Route::view('/records', 'health.records')->name('records');
         Route::view('/tracking', 'health.tracking')->name('tracking');
@@ -173,55 +169,76 @@ Route::prefix('health')->name('health.')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Medicine Related Routes - COMPLETE (from first developer)
+| Community Routes - MATCHING JAVASCRIPT CALLS
+|--------------------------------------------------------------------------
+*/
+Route::prefix('community')->name('community.')->group(function () {
+    // Page routes (return HTML)
+    Route::get('/landing', [CommunityController::class, 'landing'])->name('landing');
+    Route::get('/forum', [CommunityController::class, 'index'])->name('index');
+    Route::get('/posts/{post}', [CommunityController::class, 'showPost'])->name('posts.show');
+    
+    // API routes (return JSON) - THESE MUST MATCH THE JAVASCRIPT CALLS
+    Route::get('/posts/load', [CommunityController::class, 'loadPosts'])->name('posts.load');
+    Route::get('/posts/{post}/comments', [CommunityController::class, 'loadComments'])->name('posts.comments.load');
+    Route::get('/posts/{post}/comments/more', [CommunityController::class, 'loadMoreComments'])->name('posts.comments.more');
+    
+    // Post CRUD - MATCHING JAVASCRIPT PATHS
+    Route::post('/posts', [CommunityController::class, 'storePost'])->name('posts.store');  // For /community/posts
+    Route::post('/posts/{post}/update', [CommunityController::class, 'updatePost'])->name('posts.update');
+    Route::post('/posts/{post}/delete', [CommunityController::class, 'destroyPost'])->name('posts.destroy');
+    Route::post('/posts/{post}/like', [CommunityController::class, 'togglePostLike'])->name('posts.like');
+    // User details for modal
+Route::get('/user/{userId}', [CommunityController::class, 'getUserDetails'])->name('user.details');
+    // Comment CRUD - MATCHING JAVASCRIPT PATHS
+    Route::post('/posts/{post}/comments', [CommunityController::class, 'storeComment'])->name('comments.store');
+    Route::post('/comments/{comment}/update', [CommunityController::class, 'updateComment'])->name('comments.update');
+    Route::post('/comments/{comment}/delete', [CommunityController::class, 'destroyComment'])->name('comments.destroy');
+    Route::post('/comments/{comment}/like', [CommunityController::class, 'toggleCommentLike'])->name('comments.like');
+});
+/*
+|--------------------------------------------------------------------------
+| Medicine Routes
 |--------------------------------------------------------------------------
 */
 Route::prefix('medicine')->name('medicine.')->middleware('auth')->group(function () {
-    // Main medicine page
     Route::view('/', 'medicine')->name('index');
+    Route::get('/my-medicines', [MedicineController::class, 'index'])->name('my-medicines');
+    Route::get('/add', [MedicineController::class, 'create'])->name('add');
+    Route::post('/store', [MedicineController::class, 'store'])->name('store');
+    Route::get('/{id}/edit', [MedicineController::class, 'edit'])->name('edit');
+    Route::put('/{id}', [MedicineController::class, 'update'])->name('update');
+    Route::delete('/{id}', [MedicineController::class, 'destroy'])->name('destroy');
     
-    // Medicine management
-    Route::get('/my-medicines', [App\Http\Controllers\MedicineController::class, 'index'])->name('my-medicines');
-    Route::get('/add', [App\Http\Controllers\MedicineController::class, 'create'])->name('add');
-    Route::post('/store', [App\Http\Controllers\MedicineController::class, 'store'])->name('store');
-    Route::get('/{id}/edit', [App\Http\Controllers\MedicineController::class, 'edit'])->name('edit');
-    Route::put('/{id}', [App\Http\Controllers\MedicineController::class, 'update'])->name('update');
-    Route::delete('/{id}', [App\Http\Controllers\MedicineController::class, 'destroy'])->name('destroy');
+    Route::get('/schedules', [MedicineScheduleController::class, 'index'])->name('schedules');
+    Route::get('/schedules/create', [MedicineScheduleController::class, 'create'])->name('schedules.create');
+    Route::post('/schedules', [MedicineScheduleController::class, 'store'])->name('schedules.store');
+    Route::get('/schedules/{id}/edit', [MedicineScheduleController::class, 'edit'])->name('schedules.edit');
+    Route::put('/schedules/{id}', [MedicineScheduleController::class, 'update'])->name('schedules.update');
+    Route::delete('/schedules/{id}', [MedicineScheduleController::class, 'destroy'])->name('schedules.destroy');
+    Route::post('/schedules/{id}/generate-reminders', [MedicineScheduleController::class, 'generateReminders'])->name('schedules.generate-reminders');
     
-    // Schedule management
-    Route::get('/schedules', [App\Http\Controllers\MedicineScheduleController::class, 'index'])->name('schedules');
-    Route::get('/schedules/create', [App\Http\Controllers\MedicineScheduleController::class, 'create'])->name('schedules.create');
-    Route::post('/schedules', [App\Http\Controllers\MedicineScheduleController::class, 'store'])->name('schedules.store');
-    Route::get('/schedules/{id}/edit', [App\Http\Controllers\MedicineScheduleController::class, 'edit'])->name('schedules.edit');
-    Route::put('/schedules/{id}', [App\Http\Controllers\MedicineScheduleController::class, 'update'])->name('schedules.update');
-    Route::delete('/schedules/{id}', [App\Http\Controllers\MedicineScheduleController::class, 'destroy'])->name('schedules.destroy');
-    Route::post('/schedules/{id}/generate-reminders', [App\Http\Controllers\MedicineScheduleController::class, 'generateReminders'])->name('schedules.generate-reminders');
+    Route::get('/reminders', [MedicineReminderController::class, 'index'])->name('reminders');
+    Route::post('/reminders/{id}/taken', [MedicineReminderController::class, 'markTaken'])->name('reminders.taken');
+    Route::post('/reminders/{id}/missed', [MedicineReminderController::class, 'markMissed'])->name('reminders.missed');
+    Route::post('/reminders/{id}/taken-from-notification', [MedicineReminderController::class, 'markTakenFromNotification'])->name('reminders.taken-from-notification');
+    Route::post('/reminders/{id}/snooze', [MedicineReminderController::class, 'snooze'])->name('reminders.snooze');
+    Route::post('/reminders/mark-multiple-taken', [MedicineReminderController::class, 'markMultipleTaken'])->name('reminders.mark-multiple-taken');
     
-    // Reminder management
-    Route::get('/reminders', [App\Http\Controllers\MedicineReminderController::class, 'index'])->name('reminders');
-    Route::post('/reminders/{id}/taken', [App\Http\Controllers\MedicineReminderController::class, 'markTaken'])->name('reminders.taken');
-    Route::post('/reminders/{id}/missed', [App\Http\Controllers\MedicineReminderController::class, 'markMissed'])->name('reminders.missed');
-    Route::post('/reminders/{id}/taken-from-notification', [App\Http\Controllers\MedicineReminderController::class, 'markTakenFromNotification'])->name('reminders.taken-from-notification');
-    Route::post('/reminders/{id}/snooze', [App\Http\Controllers\MedicineReminderController::class, 'snooze'])->name('reminders.snooze');
-    Route::post('/reminders/mark-multiple-taken', [App\Http\Controllers\MedicineReminderController::class, 'markMultipleTaken'])->name('reminders.mark-multiple-taken');
+    Route::get('/logs', [MedicineLogController::class, 'index'])->name('logs');
+    Route::get('/logs/export', [MedicineLogController::class, 'export'])->name('logs.export');
     
-    // Logs and reports
-    Route::get('/logs', [App\Http\Controllers\MedicineLogController::class, 'index'])->name('logs');
-    Route::get('/logs/export', [App\Http\Controllers\MedicineLogController::class, 'export'])->name('logs.export');
-    
-    // Public medicine pages (from second developer)
     Route::withoutMiddleware('auth')->group(function () {
         Route::view('/search', 'medicine.search')->name('search');
         Route::view('/delivery', 'medicine.delivery')->name('delivery');
     });
     
-    // Protected medicine pages (from second developer)
     Route::view('/prescriptions', 'medicine.prescriptions')->name('prescriptions');
 });
 
 /*
 |--------------------------------------------------------------------------
-| Admin Routes (Protected by admin middleware)
+| Admin Routes
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
