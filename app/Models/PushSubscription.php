@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use NotificationChannels\WebPush\PushSubscription as WebPushSubscription;
 
-class PushSubscription extends Model
+class PushSubscription extends WebPushSubscription
 {
     protected $table = 'push_subscriptions';
 
@@ -17,7 +17,7 @@ class PushSubscription extends Model
         'content_encoding',
     ];
 
-    public function subscribable()
+    public function subscribable(): \Illuminate\Database\Eloquent\Relations\MorphTo
     {
         return $this->morphTo();
     }

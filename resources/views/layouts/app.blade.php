@@ -1261,9 +1261,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Push Notification Scripts -->
-    @auth
-        <script src="{{ asset('js/push-notifications.js') }}"></script>
-    @endauth
+  
 
     <script>
         // User dropdown toggle
@@ -1423,7 +1421,50 @@
             this.style.height = 'auto';
             this.style.height = (this.scrollHeight) + 'px';
         });
+
+        // Quick toggle functions for notifications
+        async function toggleEmailQuick() {
+            try {
+                const response = await fetch('/profile/notifications/toggle-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+                if (response.ok) {
+                    console.log('Email notifications toggled');
+                }
+            } catch (error) {
+                console.error('Failed to toggle email notifications:', error);
+            }
+        }
+
+        async function togglePushQuick() {
+            try {
+                const response = await fetch('/profile/notifications/toggle-push', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+                if (response.ok) {
+                    console.log('Push notifications toggled');
+                }
+            } catch (error) {
+                console.error('Failed to toggle push notifications:', error);
+            }
+        }
+
+        // Make functions global
+        window.toggleEmailQuick = toggleEmailQuick;
+        window.togglePushQuick = togglePushQuick;
     </script>
+
+    @auth
+        <script src="{{ asset('js/push-notifications.js') }}"></script>
+    @endauth
 
     @stack('scripts')
 </body>

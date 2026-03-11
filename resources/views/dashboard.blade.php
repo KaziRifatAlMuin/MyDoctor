@@ -1390,7 +1390,7 @@
 
             {{-- 12 Community --}}
             <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-6">
-                <a href="{{ route('community') }}" class="feature-nav-card">
+                <a href="{{ route('community.landing') }}" class="feature-nav-card">
                     <div class="feature-nav-icon qa-icon-pink">
                         <i class="fas fa-users"></i>
                     </div>
