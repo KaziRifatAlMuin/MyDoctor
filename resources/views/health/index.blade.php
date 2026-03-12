@@ -778,8 +778,10 @@
                 function renderList(filter = '') {
                     const f = filter.toLowerCase();
                     const filtered = items.filter(i => {
-                        const txt = (i.label + ' ' + (i.sub || '')).toLowerCase();
-                        return txt.includes(f);
+                        // Search in both English (label) and Bangla (sub)
+                        const english = i.label.toLowerCase();
+                        const bangla = (i.sub || '').toLowerCase();
+                        return english.includes(f) || bangla.includes(f);
                     });
                     dropdownList.innerHTML = '';
                     if (filtered.length === 0) {
@@ -789,7 +791,7 @@
                             const a = document.createElement('a');
                             a.href = '#';
                             a.className = 'dropdown-item';
-                            a.style.cssText = 'font-size:0.85rem; padding:0.45rem 1rem; white-space:normal;';
+                            a.style.cssText = 'font-size:0.85rem; padding:0.45rem 1rem; white-space:normal;'
                             a.innerHTML = item.sub ? `${item.label} <span style="color:#a0aec0;">(${item.sub})</span>` : item.label;
                             a.addEventListener('click', function(e) {
                                 e.preventDefault();
@@ -803,13 +805,22 @@
                     dropdownList.style.display = 'block';
                 }
 
-                searchInput.addEventListener('focus', () => renderList(searchInput.value));
+                // Show all items by default when input gets focus
+                searchInput.addEventListener('focus', () => {
+                    renderList(searchInput.value);
+                    dropdownList.style.display = 'block';
+                });
+                // Filter as user types (searches in both English and Bangla)
                 searchInput.addEventListener('input', () => renderList(searchInput.value));
+                // Close dropdown when clicking outside
                 document.addEventListener('click', function(e) {
                     if (!searchInput.parentElement.contains(e.target)) {
                         dropdownList.style.display = 'none';
                     }
                 });
+                
+                // Initialize: Show all items by default
+                renderList('');
             }
 
             /* ═══════════════════════════════════════════════════════

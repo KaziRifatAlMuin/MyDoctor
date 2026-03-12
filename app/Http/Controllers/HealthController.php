@@ -148,12 +148,12 @@ class HealthController extends Controller
             'value'       => $value,
         ]);
 
-        // Redirect back to referring page if admin is viewing a user, otherwise to health
-        $referer = $request->header('referer');
-        if ($referer && str_contains($referer, '/user/')) {
-            return back()->with('success', 'Health metric recorded successfully.');
+        // Redirect with fragment - to user show if admin is viewing a user, otherwise to health dashboard
+        if ($request->input('user_id')) {
+            // Admin is adding for a user
+            return redirect(route('users.show', $userId) . '#metrics')->with('success', 'Health metric recorded successfully.');
         }
-        return redirect()->route('health')->with('success', 'Health metric recorded successfully.');
+        return redirect(route('health') . '#metrics')->with('success', 'Health metric recorded successfully.');
     }
 
     public function storeSymptom(Request $request)
@@ -176,12 +176,12 @@ class HealthController extends Controller
             'note'           => $request->note,
         ]);
 
-        // Redirect back to referring page if admin is viewing a user, otherwise to health
-        $referer = $request->header('referer');
-        if ($referer && str_contains($referer, '/user/')) {
-            return back()->with('success', 'Symptom recorded successfully.');
+        // Redirect with fragment - to user show if admin is viewing a user, otherwise to health dashboard
+        if ($request->input('user_id')) {
+            // Admin is adding for a user
+            return redirect(route('users.show', $userId) . '#symptomsPane')->with('success', 'Symptom recorded successfully.');
         }
-        return redirect()->route('health')->with('success', 'Symptom recorded successfully.');
+        return redirect(route('health') . '#symptomsPane')->with('success', 'Symptom recorded successfully.');
     }
 
     public function storeDisease(Request $request)
@@ -208,12 +208,12 @@ class HealthController extends Controller
             'notes'        => $request->notes,
         ]);
 
-        // Redirect back to referring page if admin is viewing a user, otherwise to health
-        $referer = $request->header('referer');
-        if ($referer && str_contains($referer, '/user/')) {
-            return back()->with('success', 'Disease record added successfully.');
+        // Redirect with fragment - to user show if admin is viewing a user, otherwise to health dashboard
+        if ($request->input('user_id')) {
+            // Admin is adding for a user
+            return redirect(route('users.show', $userId) . '#diseasesPane')->with('success', 'Disease record added successfully.');
         }
-        return redirect()->route('health')->with('success', 'Disease record added successfully.');
+        return redirect(route('health') . '#diseasesPane')->with('success', 'Disease record added successfully.');
     }
 
     public function storeUpload(Request $request)
@@ -246,12 +246,14 @@ class HealthController extends Controller
             'document_date' => $request->document_date,
         ]);
 
-        // Redirect back to referring page if admin is viewing a user, otherwise to health
-        $referer = $request->header('referer');
-        if ($referer && str_contains($referer, '/user/')) {
-            return back()->with('success', ucfirst($request->type) . ' uploaded successfully.');
+        // Redirect with fragment - to user show if admin is viewing a user, otherwise to health dashboard
+        if ($request->input('user_id')) {
+            // Admin is adding for a user
+            $fragment = $request->type === 'prescription' ? '#prescriptions' : '#reportsPane';
+            return redirect(route('users.show', $userId) . $fragment)->with('success', ucfirst($request->type) . ' uploaded successfully.');
         }
-        return redirect()->route('health')->with('success', ucfirst($request->type) . ' uploaded successfully.');
+        $fragment = $request->type === 'prescription' ? '#prescriptions' : '#reportsPane';
+        return redirect(route('health') . $fragment)->with('success', ucfirst($request->type) . ' uploaded successfully.');
     }
 
     /* ====================================================================
@@ -288,10 +290,10 @@ class HealthController extends Controller
         $referer = $request->header('referer');
         if ($referer && str_contains($referer, '/user/')) {
             $userId = $request->input('user_id') ? (int)$request->input('user_id') : $healthMetric->user_id;
-            return redirect()->route('users.show', $userId)->fragment('metrics')->with('success', 'Health metric updated successfully.');
+            return redirect(route('users.show', $userId) . '#metrics')->with('success', 'Health metric updated successfully.');
         }
 
-        return redirect()->route('health')->with('success', 'Health metric updated successfully.');
+        return redirect(route('health') . '#metrics')->with('success', 'Health metric updated successfully.');
     }
 
     public function updateSymptom(Request $request, Symptom $symptom)
@@ -311,10 +313,10 @@ class HealthController extends Controller
         $referer = $request->header('referer');
         if ($referer && str_contains($referer, '/user/')) {
             $userId = $request->input('user_id') ? (int)$request->input('user_id') : $symptom->user_id;
-            return redirect()->route('users.show', $userId)->fragment('symptomsPane')->with('success', 'Symptom updated successfully.');
+            return redirect(route('users.show', $userId) . '#symptomsPane')->with('success', 'Symptom updated successfully.');
         }
 
-        return redirect()->route('health')->with('success', 'Symptom updated successfully.');
+        return redirect(route('health') . '#symptomsPane')->with('success', 'Symptom updated successfully.');
     }
 
     public function updateDisease(Request $request, UserDisease $userDisease)
@@ -333,10 +335,10 @@ class HealthController extends Controller
         $referer = $request->header('referer');
         if ($referer && str_contains($referer, '/user/')) {
             $userId = $request->input('user_id') ? (int)$request->input('user_id') : $userDisease->user_id;
-            return redirect()->route('users.show', $userId)->fragment('diseasesPane')->with('success', 'Disease record updated successfully.');
+            return redirect(route('users.show', $userId) . '#diseasesPane')->with('success', 'Disease record updated successfully.');
         }
 
-        return redirect()->route('health')->with('success', 'Disease record updated successfully.');
+        return redirect(route('health') . '#diseasesPane')->with('success', 'Disease record updated successfully.');
     }
 
     public function updateUpload(Request $request, Upload $upload)
@@ -369,11 +371,11 @@ class HealthController extends Controller
         $referer = $request->header('referer');
         if ($referer && str_contains($referer, '/user/')) {
             $userId = $request->input('user_id') ? (int)$request->input('user_id') : $upload->user_id;
-            $fragment = $upload->type === 'prescription' ? 'prescriptions' : 'reportsPane';
-            return redirect()->route('users.show', $userId)->fragment($fragment)->with('success', ucfirst($upload->type) . ' updated successfully.');
+            $fragment = $upload->type === 'prescription' ? '#prescriptions' : '#reportsPane';
+            return redirect(route('users.show', $userId) . $fragment)->with('success', ucfirst($upload->type) . ' updated successfully.');
         }
 
-        return redirect()->route('health')->with('success', ucfirst($request->type) . ' updated successfully.');
+        return redirect(route('health') . ($upload->type === 'prescription' ? '#prescriptions' : '#reportsPane'))->with('success', ucfirst($request->type) . ' updated successfully.');
     }
 
     /* ====================================================================
@@ -388,9 +390,9 @@ class HealthController extends Controller
         $healthMetric->delete();
         
         if ($user->role === 'admin') {
-            return redirect()->route('users.show', $userId)->fragment('metrics')->with('success', 'Health metric deleted.');
+            return redirect(route('users.show', $userId) . '#metrics')->with('success', 'Health metric deleted.');
         }
-        return redirect()->route('health')->with('success', 'Health metric deleted.');
+        return redirect(route('health') . '#metrics')->with('success', 'Health metric deleted.');
     }
 
     public function destroySymptom(Symptom $symptom)
@@ -401,9 +403,9 @@ class HealthController extends Controller
         $symptom->delete();
         
         if ($user->role === 'admin') {
-            return redirect()->route('users.show', $userId)->fragment('symptomsPane')->with('success', 'Symptom record deleted.');
+            return redirect(route('users.show', $userId) . '#symptomsPane')->with('success', 'Symptom record deleted.');
         }
-        return redirect()->route('health')->with('success', 'Symptom record deleted.');
+        return redirect(route('health') . '#symptomsPane')->with('success', 'Symptom record deleted.');
     }
 
     public function destroyDisease(UserDisease $userDisease)
@@ -414,9 +416,9 @@ class HealthController extends Controller
         $userDisease->delete();
         
         if ($user->role === 'admin') {
-            return redirect()->route('users.show', $userId)->fragment('diseasesPane')->with('success', 'Disease record removed.');
+            return redirect(route('users.show', $userId) . '#diseasesPane')->with('success', 'Disease record removed.');
         }
-        return redirect()->route('health')->with('success', 'Disease record removed.');
+        return redirect(route('health') . '#diseasesPane')->with('success', 'Disease record removed.');
     }
 
     public function destroyUpload(Upload $upload)
@@ -432,9 +434,9 @@ class HealthController extends Controller
         $upload->delete();
 
         if ($user->role === 'admin') {
-            $fragment = $upload->type === 'prescription' ? 'prescriptions' : 'reportsPane';
-            return redirect()->route('users.show', $userId)->fragment($fragment)->with('success', 'Upload deleted successfully.');
+            $fragment = $upload->type === 'prescription' ? '#prescriptions' : '#reportsPane';
+            return redirect(route('users.show', $userId) . $fragment)->with('success', 'Upload deleted successfully.');
         }
-        return redirect()->route('health')->with('success', 'Upload deleted successfully.');
+        return redirect(route('health') . ($upload->type === 'prescription' ? '#prescriptions' : '#reportsPane'))->with('success', 'Upload deleted successfully.');
     }
 }

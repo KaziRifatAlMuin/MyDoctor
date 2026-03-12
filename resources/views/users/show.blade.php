@@ -1053,7 +1053,7 @@
                                 <input type="file" name="file" class="form-control"
                                     accept="image/jpeg,image/png,image/jpg,image/gif,image/webp" id="uploadFileInput"
                                     required>
-                                <div class="form-text">Accepted: JPG, PNG, GIF, WebP. Max 5MB.</div>
+                                <div class="form-text" id="uploadFileHint">Accepted: JPG, PNG, GIF, WebP. Max 5MB.</div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Doctor Name</label>
@@ -1107,33 +1107,48 @@
             const symptomDropdown = document.getElementById('symptomDropdownList');
             const symptomHidden = document.getElementById('symptomNameHidden');
 
-            if (symptomSearch) {
-                symptomSearch.addEventListener('input', function() {
-                    const query = this.value.toLowerCase();
-                    symptomDropdown.innerHTML = '';
-
-                    if (!query) {
-                        symptomDropdown.style.display = 'none';
-                        return;
-                    }
-
-                    const matches = Object.keys(symptoms).filter(s => s.toLowerCase().includes(query) || (symptoms[s] && symptoms[s].toLowerCase().includes(query)));
-                    if (matches.length) {
-                        matches.forEach(symptom => {
-                            const bn = symptoms[symptom] || '';
-                            const opt = document.createElement('a');
-                            opt.className = 'dropdown-item';
-                            opt.href = '#';
-                            opt.innerText = symptom + (bn ? ' (' + bn + ')' : '');
-                            opt.addEventListener('click', (e) => {
-                                e.preventDefault();
-                                symptomSearch.value = symptom + (bn ? ' (' + bn + ')' : '');
-                                symptomHidden.value = symptom;
-                                symptomDropdown.style.display = 'none';
-                            });
-                            symptomDropdown.appendChild(opt);
+            function renderSymptomDropdown(query = '') {
+                symptomDropdown.innerHTML = '';
+                const matches = query 
+                    ? Object.keys(symptoms).filter(s => s.toLowerCase().includes(query) || (symptoms[s] && symptoms[s].toLowerCase().includes(query)))
+                    : Object.keys(symptoms);
+                
+                if (matches.length) {
+                    matches.forEach(symptom => {
+                        const bn = symptoms[symptom] || '';
+                        const opt = document.createElement('a');
+                        opt.className = 'dropdown-item';
+                        opt.href = '#';
+                        opt.style.cssText = 'font-size:0.85rem; padding:0.45rem 1rem; white-space:normal;';
+                        opt.innerHTML = symptom + (bn ? ' <span style="color:#a0aec0;">(' + bn + ')</span>' : '');
+                        opt.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            symptomSearch.value = symptom + (bn ? ' (' + bn + ')' : '');
+                            symptomHidden.value = symptom;
+                            symptomDropdown.style.display = 'none';
                         });
-                        symptomDropdown.style.display = 'block';
+                        symptomDropdown.appendChild(opt);
+                    });
+                    symptomDropdown.style.display = 'block';
+                } else if (query) {
+                    symptomDropdown.innerHTML = '<div class="dropdown-item text-muted" style="font-size:0.85rem;">No results found</div>';
+                    symptomDropdown.style.display = 'block';
+                }
+            }
+
+            if (symptomSearch) {
+                // Show all items on focus
+                symptomSearch.addEventListener('focus', function() {
+                    renderSymptomDropdown(this.value);
+                });
+                // Filter on input
+                symptomSearch.addEventListener('input', function() {
+                    renderSymptomDropdown(this.value.toLowerCase());
+                });
+                // Close on click outside
+                document.addEventListener('click', function(e) {
+                    if (!symptomSearch.parentElement.contains(e.target)) {
+                        symptomDropdown.style.display = 'none';
                     }
                 });
             }
@@ -1143,33 +1158,48 @@
             const diseaseDropdown = document.getElementById('diseaseDropdownList');
             const diseaseHidden = document.getElementById('diseaseIdHidden');
 
-            if (diseaseSearch) {
-                diseaseSearch.addEventListener('input', function() {
-                    const query = this.value.toLowerCase();
-                    diseaseDropdown.innerHTML = '';
-
-                    if (!query) {
-                        diseaseDropdown.style.display = 'none';
-                        return;
-                    }
-
-                    const matches = diseases.filter(d => d.disease_name.toLowerCase().includes(query) || (d.disease_name_bn && d.disease_name_bn.toLowerCase().includes(query)));
-                    if (matches.length) {
-                        matches.forEach(disease => {
-                            const bn = disease.disease_name_bn || '';
-                            const opt = document.createElement('a');
-                            opt.className = 'dropdown-item';
-                            opt.href = '#';
-                            opt.innerText = disease.disease_name + (bn ? ' (' + bn + ')' : '');
-                            opt.addEventListener('click', (e) => {
-                                e.preventDefault();
-                                diseaseSearch.value = disease.disease_name + (bn ? ' (' + bn + ')' : '');
-                                diseaseHidden.value = disease.id;
-                                diseaseDropdown.style.display = 'none';
-                            });
-                            diseaseDropdown.appendChild(opt);
+            function renderDiseaseDropdown(query = '') {
+                diseaseDropdown.innerHTML = '';
+                const matches = query
+                    ? diseases.filter(d => d.disease_name.toLowerCase().includes(query) || (d.disease_name_bn && d.disease_name_bn.toLowerCase().includes(query)))
+                    : diseases;
+                
+                if (matches.length) {
+                    matches.forEach(disease => {
+                        const bn = disease.disease_name_bn || '';
+                        const opt = document.createElement('a');
+                        opt.className = 'dropdown-item';
+                        opt.href = '#';
+                        opt.style.cssText = 'font-size:0.85rem; padding:0.45rem 1rem; white-space:normal;';
+                        opt.innerHTML = disease.disease_name + (bn ? ' <span style="color:#a0aec0;">(' + bn + ')</span>' : '');
+                        opt.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            diseaseSearch.value = disease.disease_name + (bn ? ' (' + bn + ')' : '');
+                            diseaseHidden.value = disease.id;
+                            diseaseDropdown.style.display = 'none';
                         });
-                        diseaseDropdown.style.display = 'block';
+                        diseaseDropdown.appendChild(opt);
+                    });
+                    diseaseDropdown.style.display = 'block';
+                } else if (query) {
+                    diseaseDropdown.innerHTML = '<div class="dropdown-item text-muted" style="font-size:0.85rem;">No results found</div>';
+                    diseaseDropdown.style.display = 'block';
+                }
+            }
+
+            if (diseaseSearch) {
+                // Show all items on focus
+                diseaseSearch.addEventListener('focus', function() {
+                    renderDiseaseDropdown(this.value);
+                });
+                // Filter on input
+                diseaseSearch.addEventListener('input', function() {
+                    renderDiseaseDropdown(this.value.toLowerCase());
+                });
+                // Close on click outside
+                document.addEventListener('click', function(e) {
+                    if (!diseaseSearch.parentElement.contains(e.target)) {
+                        diseaseDropdown.style.display = 'none';
                     }
                 });
             }

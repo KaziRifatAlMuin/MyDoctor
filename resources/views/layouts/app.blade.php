@@ -3787,11 +3787,14 @@ window.openVideoModal = function(type, source, isReel = false) {
         // EDIT MODAL FUNCTIONS — global scope for health/partials
         // ──────────────────────────────────────────────────────────────
         window.openEditMetric = function(id, type, values, recordedAt) {
-            document.getElementById('metricModalLabel').textContent = 'Edit Health Metric';
-            document.getElementById('metricSubmitLabel').textContent = 'Update Metric';
+            const metricLabel = document.getElementById('metricModalLabel');
+            if (metricLabel) metricLabel.textContent = 'Edit Health Metric';
+            const metricSubmit = document.getElementById('metricSubmitLabel');
+            if (metricSubmit) metricSubmit.textContent = 'Update Metric';
             const form = document.getElementById('metricForm');
-            form.action = '/health/metric/' + id;
-            document.getElementById('metricFormMethod').value = 'PUT';
+            if (form) form.action = '/health/metric/' + id;
+            const methodInput = document.getElementById('metricFormMethod');
+            if (methodInput) methodInput.value = 'PUT';
             const metricTypeSelect = document.getElementById('metricTypeSelect');
             if (metricTypeSelect) metricTypeSelect.value = type;
 
@@ -3828,55 +3831,88 @@ window.openVideoModal = function(type, source, isReel = false) {
                 }
             }
 
-            document.getElementById('metricRecordedAt').value = recordedAt;
-            new bootstrap.Modal(document.getElementById('addMetricModal')).show();
+            const recordedAtInput = document.getElementById('metricRecordedAt');
+            if (recordedAtInput) recordedAtInput.value = recordedAt;
+            const modal = document.getElementById('addMetricModal');
+            if (modal) new bootstrap.Modal(modal).show();
         };
 
         window.openEditSymptom = function(id, name, severity, recordedAt, note) {
-            document.getElementById('symptomModalLabel').textContent = 'Edit Symptom';
-            document.getElementById('symptomSubmitLabel').textContent = 'Update Symptom';
+            const symptomLabel = document.getElementById('symptomModalLabel');
+            if (symptomLabel) symptomLabel.textContent = 'Edit Symptom';
+            const symptomSubmit = document.getElementById('symptomSubmitLabel');
+            if (symptomSubmit) symptomSubmit.textContent = 'Update Symptom';
             const form = document.getElementById('symptomForm');
-            form.action = '/health/symptom/' + id;
-            document.getElementById('symptomFormMethod').value = 'PUT';
+            if (form) form.action = '/health/symptom/' + id;
+            const methodInput = document.getElementById('symptomFormMethod');
+            if (methodInput) methodInput.value = 'PUT';
             const bn = (window.symptomsList || {})[name] || '';
-            document.getElementById('symptomSearchInput').value = name + (bn ? ' (' + bn + ')' : '');
-            document.getElementById('symptomNameHidden').value = name;
-            document.getElementById('severityRange').value = severity;
-            document.getElementById('severityValue').textContent = severity;
-            document.getElementById('symptomRecordedAt').value = recordedAt;
-            document.getElementById('symptomNote').value = note || '';
-            new bootstrap.Modal(document.getElementById('addSymptomModal')).show();
+            const searchInput = document.getElementById('symptomSearchInput');
+            if (searchInput) searchInput.value = name + (bn ? ' (' + bn + ')' : '');
+            const nameHidden = document.getElementById('symptomNameHidden');
+            if (nameHidden) nameHidden.value = name;
+            const severityInput = document.getElementById('severityRange');
+            if (severityInput) severityInput.value = severity;
+            const severityValue = document.getElementById('severityValue');
+            if (severityValue) severityValue.textContent = severity;
+            const recordedAtInput = document.getElementById('symptomRecordedAt');
+            if (recordedAtInput) recordedAtInput.value = recordedAt;
+            const noteInput = document.getElementById('symptomNote');
+            if (noteInput) noteInput.value = note || '';
+            const modal = document.getElementById('addSymptomModal');
+            if (modal) new bootstrap.Modal(modal).show();
         };
 
         window.openEditDisease = function(id, status, diagnosedAt, notes) {
-            document.getElementById('diseaseModalLabel').textContent = 'Edit Disease Record';
-            document.getElementById('diseaseSubmitLabel').textContent = 'Update Disease';
+            const diseaseLabel = document.getElementById('diseaseModalLabel');
+            if (diseaseLabel) diseaseLabel.textContent = 'Edit Disease Record';
+            const diseaseSubmit = document.getElementById('diseaseSubmitLabel');
+            if (diseaseSubmit) diseaseSubmit.textContent = 'Update Disease';
             const form = document.getElementById('diseaseForm');
-            form.action = '/health/disease/' + id;
-            document.getElementById('diseaseFormMethod').value = 'PUT';
-            document.getElementById('diseaseSelectWrapper').style.display = 'none';
-            document.getElementById('diseaseIdHidden').removeAttribute('required');
-            document.getElementById('diseaseStatus').value = status;
-            document.getElementById('diseaseDiagnosedAt').value = diagnosedAt || '';
-            document.getElementById('diseaseNotes').value = notes || '';
-            new bootstrap.Modal(document.getElementById('addDiseaseModal')).show();
-        };
+            if (form) form.action = '/health/disease/' + id;
+            const methodInput = document.getElementById('diseaseFormMethod');
+            if (methodInput) methodInput.value = 'PUT';
+            const selectWrapper = document.getElementById('diseaseSelectWrapper');
+            if (selectWrapper) selectWrapper.style.display = 'none';
+            const idHidden = document.getElementById('diseaseIdHidden');
+            if (idHidden) idHidden.removeAttribute('required');
+            const statusInput = document.getElementById('diseaseStatus');
+            if (statusInput) statusInput.value = status;
+            const dateInput = document.getElementById('diseaseDiagnosedAt');
+            if (dateInput) dateInput.value = diagnosedAt || '';
+            const notesInput = document.getElementById('diseaseNotes');
+            if (notesInput) notesInput.value = notes || '';
+            const modal = document.getElementById('addDiseaseModal');
+            if (modal) new bootstrap.Modal(modal).show();
+        };}
 
         window.openEditUpload = function(id, title, type, doctorName, institution, docDate, notes, summary) {
-            document.getElementById('uploadModalLabel').textContent = 'Edit Document';
-            document.getElementById('uploadSubmitLabel').textContent = 'Update';
+            const uploadLabel = document.getElementById('uploadModalLabel');
+            if (uploadLabel) uploadLabel.textContent = 'Edit Document';
+            const uploadSubmit = document.getElementById('uploadSubmitLabel');
+            if (uploadSubmit) uploadSubmit.textContent = 'Update';
             const form = document.getElementById('uploadForm');
-            form.action = '/health/upload/' + id;
-            document.getElementById('uploadFormMethod').value = 'PUT';
-            document.getElementById('uploadFileInput').removeAttribute('required');
-            document.getElementById('uploadFileHint').textContent = 'Leave empty to keep existing image.';
-            document.getElementById('uploadTitle').value = title;
-            document.getElementById('uploadType').value = type;
-            document.getElementById('uploadDoctorName').value = doctorName || '';
-            document.getElementById('uploadInstitution').value = institution || '';
-            document.getElementById('uploadDocumentDate').value = docDate || '';
-            document.getElementById('uploadNotes').value = notes || '';
-            document.getElementById('uploadSummary').value = summary || '';
+            if (form) form.action = '/health/upload/' + id;
+            const methodInput = document.getElementById('uploadFormMethod');
+            if (methodInput) methodInput.value = 'PUT';
+            const fileInput = document.getElementById('uploadFileInput');
+            if (fileInput) fileInput.removeAttribute('required');
+            const fileHint = document.getElementById('uploadFileHint');
+            if (fileHint) fileHint.textContent = 'Leave empty to keep existing image.';
+            const titleInput = document.getElementById('uploadTitle');
+            if (titleInput) titleInput.value = title;
+            const typeInput = document.getElementById('uploadType');
+            if (typeInput) typeInput.value = type;
+            const doctorInput = document.getElementById('uploadDoctorName');
+            if (doctorInput) doctorInput.value = doctorName || '';
+            const institutionInput = document.getElementById('uploadInstitution');
+            if (institutionInput) institutionInput.value = institution || '';
+            const dateInput = document.getElementById('uploadDocumentDate');
+            if (dateInput) dateInput.value = docDate || '';
+            const notesInput = document.getElementById('uploadNotes');
+            if (notesInput) notesInput.value = notes || '';
+            const summaryInput = document.getElementById('uploadSummary');
+            if (summaryInput) summaryInput.value = summary || '';
             new bootstrap.Modal(document.getElementById('addUploadModal')).show();
         };
 
