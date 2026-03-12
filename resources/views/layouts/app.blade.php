@@ -19,15 +19,11 @@
 
     <!-- Custom CSS -->
     <style>
+        /* ==================== YOUR EXISTING STYLES ==================== */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-        }
-
-        html,
-        body {
-            height: 100%;
         }
 
         html,
@@ -264,7 +260,7 @@
             margin: 8px 0;
         }
 
-        /* Notification Badge */
+        /* Notification Badge in dropdown */
         .notification-badge {
             background-color: #f56565;
             color: white;
@@ -272,6 +268,214 @@
             padding: 2px 6px;
             border-radius: 10px;
             margin-left: auto;
+        }
+
+        /* ========== UPDATED NOTIFICATION BELL STYLES ========== */
+        /* Notification Bell - Yellow normally, Green badge */
+        .notification-bell {
+            position: relative;
+            margin-right: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .notification-bell i {
+            font-size: 1.4rem;
+            color: #ffd700;
+            transition: all 0.3s ease;
+        }
+
+        .notification-bell:hover i {
+            transform: scale(1.1);
+            color: #ffc107;
+        }
+
+        .notification-bell .badge {
+            position: absolute;
+            top: -5px;
+            right: -8px;
+            background: #28a745 !important;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 3px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            animation: popIn 0.3s ease;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        /* Bell shake animation when new notification arrives */
+        @keyframes shake {
+            0% { transform: rotate(0deg); }
+            10% { transform: rotate(15deg); }
+            20% { transform: rotate(-15deg); }
+            30% { transform: rotate(10deg); }
+            40% { transform: rotate(-10deg); }
+            50% { transform: rotate(5deg); }
+            60% { transform: rotate(-5deg); }
+            70% { transform: rotate(2deg); }
+            80% { transform: rotate(-2deg); }
+            90% { transform: rotate(1deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        .notification-bell.shake i {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .notification-dropdown {
+            position: absolute;
+            top: 60px;
+            right: 0;
+            width: 350px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+            display: none;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .notification-dropdown.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        .notification-header {
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-header h6 {
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        .notification-header button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 0.8rem;
+            cursor: pointer;
+            opacity: 0.9;
+        }
+
+        .notification-header button:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+
+        .notification-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            padding: 15px 20px;
+            display: flex;
+            gap: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .notification-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .notification-item.unread {
+            background-color: #e8f0fe;
+        }
+
+        .notification-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .notification-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .notification-avatar-placeholder {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-message {
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+            color: #1a1a1a;
+        }
+
+        .notification-time {
+            font-size: 0.75rem;
+            color: #65676b;
+        }
+
+        .notification-empty {
+            padding: 40px 20px;
+            text-align: center;
+            color: #65676b;
+        }
+
+        .notification-empty i {
+            font-size: 48px;
+            color: #e0e0e0;
+            margin-bottom: 15px;
+        }
+
+        .notification-footer {
+            padding: 12px 20px;
+            text-align: center;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .notification-footer a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .notification-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
         /* Banner Content */
@@ -307,17 +511,10 @@
             flex-direction: column;
         }
 
-        .app-root {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
         .main-content {
             padding: 40px 20px;
             max-width: 1200px;
             margin: 0 auto;
-            flex: 1 0 auto;
             flex: 1 0 auto;
         }
 
@@ -778,6 +975,11 @@
                 width: 300px;
                 right: 15px;
             }
+
+            .notification-dropdown {
+                width: 300px;
+                right: 0;
+            }
         }
 
         /* Hero Section with Background Image */
@@ -874,6 +1076,712 @@
                 font-size: 2rem;
             }
         }
+
+        /* Post Modal Styles */
+        .modal-lg {
+            max-width: 800px;
+        }
+
+        .modal-content {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            border-bottom: 1px solid #e4e6eb;
+            padding: 16px 20px;
+            background: white;
+            border-radius: 16px 16px 0 0;
+        }
+
+        .modal-header .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .modal-header .btn-close {
+            background: #f0f2f5;
+            padding: 8px;
+            border-radius: 50%;
+            opacity: 1;
+            transition: all 0.2s;
+        }
+
+        .modal-header .btn-close:hover {
+            background: #e4e6eb;
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 0;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .modal-body::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .modal-body::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        .modal-body::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        /* ==================== COMMUNITY MODAL STYLES ==================== */
+        /* Post Modal Container */
+        .modal-post-container {
+            background: white;
+            color: #1a1a1a;
+            font-family: inherit;
+        }
+
+        .modal-post-container * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Post Header */
+        .modal-post-container .post-header {
+            padding: 16px 16px 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid #e4e6eb;
+        }
+
+        .modal-post-container .post-user {
+            display: flex;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .modal-post-container .user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .modal-post-container .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .modal-post-container .avatar-placeholder {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .modal-post-container .user-name {
+            font-size: 15px;
+            font-weight: 600;
+            margin: 0;
+            color: #1a1a1a;
+        }
+
+        .modal-post-container .post-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 12px;
+            color: #65676b;
+            margin: 0;
+        }
+
+        .modal-post-container .post-disease-badge {
+            background: #e7f3ff;
+            color: #1877f2;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-weight: 500;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Post Content */
+        .modal-post-container .post-text-content {
+            margin: 0;
+            line-height: 1.5;
+            font-size: 15px;
+            color: #1a1a1a;
+            white-space: pre-wrap;
+        }
+
+        .modal-post-container .post-link {
+            color: #1877f2;
+            text-decoration: none;
+            word-break: break-all;
+        }
+
+        .modal-post-container .post-link:hover {
+            text-decoration: underline;
+            color: #0e5a9e;
+        }
+
+        /* Post Action Buttons */
+        .modal-post-container .post-action-buttons {
+            display: flex;
+            gap: 8px;
+            margin: 12px 16px 0;
+            padding: 0;
+        }
+
+        .modal-post-container .post-action-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            background: #f0f2f5;
+            color: #1a1a1a;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .modal-post-container .post-action-btn:hover {
+            background: #e4e6eb;
+        }
+
+        .modal-post-container .post-action-btn.liked {
+            background: #fee !important;
+            color: #dc3545 !important;
+        }
+
+        .modal-post-container .post-action-btn.liked i {
+            color: #dc3545 !important;
+        }
+
+        /* Comments Section */
+        .modal-post-container .comments-section {
+            margin: 12px 0 0;
+            padding: 16px;
+            border-top: 1px solid #e4e6eb;
+        }
+
+        .modal-post-container .comment {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .modal-post-container .comment:last-child {
+            margin-bottom: 0;
+        }
+
+        .modal-post-container .comment-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        .modal-post-container .comment-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .modal-post-container .avatar-placeholder-small {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .modal-post-container .comment-content {
+            flex: 1;
+            background: #f0f2f5;
+            padding: 10px 12px;
+            border-radius: 18px;
+        }
+
+        .modal-post-container .comment-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+            flex-wrap: wrap;
+        }
+
+        .modal-post-container .comment-author {
+            font-weight: 600;
+            font-size: 13px;
+            color: #1a1a1a;
+            cursor: pointer;
+        }
+
+        .modal-post-container .comment-author:hover {
+            text-decoration: underline;
+            color: #1877f2;
+        }
+
+        .modal-post-container .comment-time {
+            font-size: 11px;
+            color: #65676b;
+        }
+
+        .modal-post-container .comment-text {
+            font-size: 13px;
+            color: #1a1a1a;
+            margin-bottom: 6px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .modal-post-container .comment-like-btn {
+            background: none !important;
+            border: none !important;
+            outline: none !important;
+            color: #65676b;
+            font-size: 11px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 0;
+        }
+
+        .modal-post-container .comment-like-btn.liked {
+            color: #dc3545 !important;
+        }
+
+        .modal-post-container .comment-like-btn.liked i {
+            color: #dc3545 !important;
+        }
+
+        .modal-post-container .comment-attachment {
+            margin-top: 8px;
+        }
+
+        .modal-post-container .comment-image {
+            max-width: 200px;
+            max-height: 150px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .modal-post-container .comment-link {
+            color: #1877f2;
+            text-decoration: none;
+            word-break: break-all;
+            display: inline;
+        }
+
+        .modal-post-container .comment-link:hover {
+            text-decoration: underline;
+            color: #0e5a9e;
+        }
+
+        /* Comment Form */
+        .modal-post-container .comment-form {
+            margin-top: 16px;
+        }
+
+        .modal-post-container .comment-input-group {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+        }
+
+        .modal-post-container .comment-input-wrapper {
+            flex: 1;
+            display: flex;
+            gap: 6px;
+            background: #f0f2f5;
+            border-radius: 20px;
+            padding: 4px 4px 4px 12px;
+            align-items: center;
+        }
+
+        .modal-post-container .comment-textarea {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 8px 0;
+            font-size: 13px;
+            resize: none;
+            outline: none;
+            min-height: 32px;
+            max-height: 80px;
+            font-family: inherit;
+            line-height: 1.4;
+        }
+
+        .modal-post-container .comment-submit-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 50%;
+            background: #1877f2;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .modal-post-container .comment-submit-btn:hover:not(:disabled) {
+            background: #166fe5;
+            transform: scale(1.05);
+        }
+
+        .modal-post-container .comment-submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Video Embed */
+        .modal-post-container .video-embed-wrapper {
+            width: 100%;
+            margin: 12px 0 0;
+            padding: 0;
+            display: flex;
+        }
+
+        .modal-post-container .video-embed-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            background: #000;
+        }
+
+        .modal-post-container .video-embed-container.reel-container {
+            width: auto;
+            max-width: 360px;
+            aspect-ratio: 9/16;
+        }
+
+        .modal-post-container .video-embed-container:hover .fa-play {
+            transform: scale(1.2);
+        }
+
+        /* Post Attachments */
+        .modal-post-container .post-attachments {
+            margin: 12px 0 0;
+            padding: 0;
+        }
+
+        .modal-post-container .single-file-container {
+            margin: 0 0 16px;
+            padding: 0;
+        }
+
+        .modal-post-container .multiple-files-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 0;
+            padding: 0;
+        }
+
+        .modal-post-container .file-item {
+            border: 1px solid #e4e6eb;
+            border-radius: 10px;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+
+        .modal-post-container .file-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        /* Edit/Delete Icons */
+        .modal-post-container button[onclick*="editPost"],
+        .modal-post-container button[onclick*="confirmDelete"] {
+            transition: all 0.2s;
+        }
+
+        .modal-post-container button[onclick*="editPost"]:hover {
+            background: #e7f3ff !important;
+            transform: scale(1.1);
+        }
+
+        .modal-post-container button[onclick*="confirmDelete"]:hover {
+            background: #fee !important;
+            transform: scale(1.1);
+        }
+
+        /* Spinner */
+        .modal-post-container .spinner-small {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ==================== UNIFIED COMMENT FILE PREVIEW ==================== */
+        .comment-file-preview {
+            display: none;
+            margin-top: 8px;
+            width: 100%;
+        }
+
+        .comment-file-preview > div {
+            padding: 8px 12px;
+            background: #f0f2f5;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .file-preview-content {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .file-preview-content img {
+            max-height: 40px;
+            border-radius: 4px;
+        }
+
+        .file-preview-content i {
+            font-size: 20px;
+            color: #1877f2;
+        }
+
+        .remove-file {
+            background: none;
+            border: none;
+            color: #65676b;
+            cursor: pointer;
+            padding: 4px 8px;
+            transition: color 0.2s;
+        }
+
+        .remove-file:hover {
+            color: #dc3545;
+        }
+
+        /* ==================== EDIT/DELETE MODAL STYLES ==================== */
+        /* Edit Modal */
+        #editModal .modal-content,
+        #deleteModal .modal-content {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        #editModal .modal-header,
+        #deleteModal .modal-header {
+            border-bottom: 1px solid #e4e6eb;
+            padding: 16px 20px;
+            background: white;
+            border-radius: 16px 16px 0 0;
+        }
+
+        #editModal .modal-title,
+        #deleteModal .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        #editModal .modal-title i,
+        #deleteModal .modal-title i {
+            color: #1877f2;
+        }
+
+        #editModal .modal-body,
+        #deleteModal .modal-body {
+            padding: 20px;
+        }
+
+        #editModal .form-control {
+            border: 1px solid #e4e6eb;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        #editModal .form-control:focus {
+            outline: none;
+            border-color: #1877f2;
+            box-shadow: 0 0 0 3px rgba(24, 119, 242, 0.1);
+        }
+
+        #editModal .char-counter {
+            font-size: 11px;
+            color: #65676b;
+            margin-top: 4px;
+            text-align: right;
+        }
+
+        #editModal .modal-footer,
+        #deleteModal .modal-footer {
+            border-top: 1px solid #e4e6eb;
+            padding: 12px 20px;
+        }
+
+        #editModal .btn-primary {
+            background: #1877f2;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        #editModal .btn-primary:hover {
+            background: #166fe5;
+        }
+
+        #editModal .btn-light,
+        #deleteModal .btn-light {
+            background: #f0f2f5;
+            border: 1px solid #e4e6eb;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        #editModal .btn-light:hover,
+        #deleteModal .btn-light:hover {
+            background: #e4e6eb;
+        }
+
+        #deleteModal .btn-danger {
+            background: #dc3545;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        #deleteModal .btn-danger:hover {
+            background: #c82333;
+        }
+
+        /* Close button styling for all modals */
+        .modal-header .close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            line-height: 1;
+            opacity: 0.5;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .modal-header .close:hover {
+            opacity: 1;
+            background: #f0f2f5;
+        }
+
+        /* User Modal Styles */
+        .user-modal-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #1877f2;
+            margin: 0 auto 15px;
+        }
+
+        .user-modal-placeholder {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: 600;
+            border: 3px solid #1877f2;
+            margin: 0 auto 15px;
+        }
+
+        .user-stat-card {
+            background: #f0f2f5;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .user-stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1877f2;
+        }
+
+        .user-stat-label {
+            font-size: 12px;
+            color: #65676b;
+        }
+
+        .activity-item {
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+
+        .activity-item:hover {
+            background: #e4e6eb !important;
+        }
+
+        .activity-item a {
+            color: inherit;
+            display: block;
+        }
     </style>
 
     @stack('styles')
@@ -938,95 +1846,121 @@
                     </li>
                 </ul>
 
-                <!-- User Circle Menu -->
-                <div class="user-menu" id="userMenu">
-                    <div class="user-circle" onclick="toggleUserDropdown()">
-                        @auth
-                            @if (auth()->user()->Picture)
-                                <img src="{{ asset('storage/' . auth()->user()->Picture) }}"
-                                    alt="{{ auth()->user()->Name }}">
+                <!-- Right Side Navigation (Notifications + User Menu) -->
+                <div class="nav-right">
+                    @auth
+                        <!-- Notification Bell - Yellow with Green badge -->
+                        <div class="notification-bell" id="notificationBell" onclick="toggleNotificationDropdown()">
+                            <i class="fas fa-bell"></i>
+                            <span class="badge" id="notificationCount" style="display: none;">0</span>
+                        </div>
+
+                        <!-- Notification Dropdown -->
+                        <div class="notification-dropdown" id="notificationDropdown">
+                            <div class="notification-header">
+                                <h6>Notifications</h6>
+                                <button onclick="markAllNotificationsRead()">Mark all as read</button>
+                            </div>
+                            <div class="notification-list" id="notificationList">
+                                <div class="notification-empty">
+                                    <i class="fas fa-bell-slash"></i>
+                                    <p>No notifications yet</p>
+                                </div>
+                            </div>
+                            <div class="notification-footer">
+                                <a href="{{ route('notifications.index') }}">View all notifications</a>
+                            </div>
+                        </div>
+                    @endauth
+
+                    <!-- User Circle Menu -->
+                    <div class="user-menu" id="userMenu">
+                        <div class="user-circle" onclick="toggleUserDropdown()">
+                            @auth
+                                @if (auth()->user()->picture)
+                                    <img src="{{ asset('storage/' . auth()->user()->picture) }}"
+                                        alt="{{ auth()->user()->name }}">
+                                @else
+                                    <i class="fas fa-user-circle"></i>
+                                @endif
                             @else
                                 <i class="fas fa-user-circle"></i>
-                            @endif
-                        @else
-                            <i class="fas fa-user-circle"></i>
-                        @endauth
-                    </div>
+                            @endauth
+                        </div>
 
-                    <div class="user-dropdown" id="userDropdown">
-                        @auth
-                            <!-- LOGGED IN USER MENU -->
-                            <div class="dropdown-header">
-                                <h6>{{ auth()->user()->Name }}</h6>
-                                <p>{{ auth()->user()->Email }}</p>
-                            </div>
-
-                            <a href="{{ route('dashboard') }}" class="dropdown-item-custom">
-                                <i class="fas fa-tachometer-alt"></i> Dashboard
-                            </a>
-
-                            <a href="{{ route('profile') }}" class="dropdown-item-custom">
-                                <i class="fas fa-user"></i> Profile
-                            </a>
-
-                            <a href="{{ route('notifications') }}" class="dropdown-item-custom">
-                                <i class="fas fa-bell"></i> Notifications
-                                <span class="notification-badge" style="background-color: #6c757d;">0</span>
-                            </a>
-
-                            <a href="{{ route('suggestions') }}" class="dropdown-item-custom">
-                                <i class="fas fa-lightbulb"></i> Suggestions
-                            </a>
-
-                                  <!-- Notification Quick Toggles -->
-                            <div class="divider"></div>
-                            <div class="px-3 py-2">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span><i class="fas fa-envelope me-2"></i>Email Alerts</span>
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" 
-                                               onchange="toggleEmailQuick()" 
-                                               {{ auth()->user()->email_notifications ? 'checked' : '' }}>
-                                    </div>
+                        <div class="user-dropdown" id="userDropdown">
+                            @auth
+                                <!-- LOGGED IN USER MENU -->
+                                <div class="dropdown-header">
+                                    <h6>{{ auth()->user()->name }}</h6>
+                                    <p>{{ auth()->user()->email }}</p>
                                 </div>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span><i class="fas fa-bell me-2"></i>Push Alerts</span>
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" 
-                                               onchange="togglePushQuick()" 
-                                               {{ auth()->user()->push_notifications ? 'checked' : '' }}>
-                                    </div>
-                                </div>
-                               
-                            </div>
-                            <!-- Register link hidden for authenticated users -->
 
-                            <!-- Check for admin by email -->
-                            @if (auth()->user()->email === 'admin@mydoctor.com')
-                                <div class="divider"></div>
-                                <a href="{{ route('admin.dashboard') }}" class="dropdown-item-custom">
-                                    <i class="fas fa-cog"></i> Admin Panel
+                                <a href="{{ route('dashboard') }}" class="dropdown-item-custom">
+                                    <i class="fas fa-tachometer-alt"></i> Dashboard
                                 </a>
-                            @endif
 
-                            <div class="divider"></div>
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <button type="submit" class="dropdown-item-custom"
-                                    style="width: 100%; border: none; background: none; cursor: pointer; color: #dc3545;">
-                                    <i class="fas fa-sign-out-alt"></i> Logout
-                                </button>
-                            </form>
-                        @else
-                            <!-- GUEST USER MENU -->
-                            <a href="{{ route('login') }}" class="dropdown-item-custom">
-                                <i class="fas fa-sign-in-alt"></i> Login
-                            </a>
+                                <a href="{{ route('profile') }}" class="dropdown-item-custom">
+                                    <i class="fas fa-user"></i> Profile
+                                </a>
 
-                            <a href="{{ route('register') }}" class="dropdown-item-custom">
-                                <i class="fas fa-user-plus"></i> Register
-                            </a>
-                        @endauth
+                                <a href="{{ route('notifications.index') }}" class="dropdown-item-custom" id="notification-link">
+                                    <i class="fas fa-bell"></i> Notifications
+                                    <span class="notification-badge" id="notificationCountBadge" style="display: none;">0</span>
+                                </a>
+
+                                <a href="{{ route('suggestions') }}" class="dropdown-item-custom">
+                                    <i class="fas fa-lightbulb"></i> Suggestions
+                                </a>
+
+                                <!-- Notification Quick Toggles -->
+                                <div class="divider"></div>
+                                <div class="px-3 py-2">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span><i class="fas fa-envelope me-2"></i>Email Alerts</span>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" 
+                                                   onchange="toggleEmailQuick()" 
+                                                   {{ auth()->user()->email_notifications ? 'checked' : '' }}>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span><i class="fas fa-bell me-2"></i>Push Alerts</span>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" 
+                                                   onchange="togglePushQuick()" 
+                                                   {{ auth()->user()->push_notifications ? 'checked' : '' }}>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Check for admin by email -->
+                                @if (auth()->user()->email === 'admin@mydoctor.com')
+                                    <div class="divider"></div>
+                                    <a href="{{ route('admin.dashboard') }}" class="dropdown-item-custom">
+                                        <i class="fas fa-cog"></i> Admin Panel
+                                    </a>
+                                @endif
+
+                                <div class="divider"></div>
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item-custom"
+                                        style="width: 100%; border: none; background: none; cursor: pointer; color: #dc3545;">
+                                        <i class="fas fa-sign-out-alt"></i> Logout
+                                    </button>
+                                </form>
+                            @else
+                                <!-- GUEST USER MENU -->
+                                <a href="{{ route('login') }}" class="dropdown-item-custom">
+                                    <i class="fas fa-sign-in-alt"></i> Login
+                                </a>
+
+                                <a href="{{ route('register') }}" class="dropdown-item-custom">
+                                    <i class="fas fa-user-plus"></i> Register
+                                </a>
+                            @endauth
+                        </div>
                     </div>
                 </div>
             </nav>
@@ -1157,6 +2091,141 @@
         </div>
     </div>
 
+    <!-- ==================== ALL MODALS ==================== -->
+    <!-- Image Modal -->
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content bg-transparent border-0">
+                <div class="modal-body p-0 text-center">
+                      <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close" style="background: none; border: none; font-size: 24px; line-height: 1; opacity: 0.5; cursor: pointer;">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                    <img src="" id="modalImage" class="img-fluid" style="max-height: 90vh;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Video Modal -->
+    <div class="modal fade" id="videoModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content bg-transparent border-0">
+                <div class="modal-header border-0 position-absolute top-0 end-0 z-3">
+                   <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close" style="background: none; border: none; font-size: 24px; line-height: 1; opacity: 0.5; cursor: pointer;">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body p-0 text-center">
+                    <div id="videoModalContent" style="position: relative; width: 100%; background: #000; border-radius: 8px; overflow: hidden;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Post Modal -->
+    <div class="modal fade" id="postModal" tabindex="-1" aria-labelledby="postModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="postModalLabel">
+                        <i class="fas fa-file-alt me-2" style="color: #1877f2;"></i>
+                        Post
+                    </h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close" style="background: none; border: none; font-size: 24px; line-height: 1; opacity: 0.5; cursor: pointer;">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body p-0" id="postModalBody">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-3 text-muted">Loading post...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Profile Modal -->
+    <div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="userModalLabel">
+                        <i class="fas fa-user-circle me-2 text-primary"></i>
+                        User Profile
+                    </h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close" style="background: none; border: none; font-size: 24px; line-height: 1; opacity: 0.5; cursor: pointer;">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="userModalBody">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                        Confirm Delete
+                    </h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close" style="background: none; border: none; font-size: 24px; line-height: 1; opacity: 0.5; cursor: pointer;">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">Are you sure you want to delete this? This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-edit text-primary me-2"></i>
+                        Edit Content
+                    </h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close" style="background: none; border: none; font-size: 24px; line-height: 1; opacity: 0.5; cursor: pointer;">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <textarea class="form-control" id="editContent" rows="6" placeholder="Edit your content..."></textarea>
+                    <div class="char-counter mt-2">
+                        <span id="editCharCount">0</span> / 5000
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveEditBtn">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer"></div>
+
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
@@ -1185,11 +2254,9 @@
                     <h5 class="footer-title">Quick Links</h5>
                     <ul class="footer-links">
                         <li><a href="{{ route('home') }}"><i class="fas fa-chevron-right me-2"></i>Home</a></li>
-                        <li><a href="{{ route('medicine.index') }}"><i
-                                    class="fas fa-chevron-right me-2"></i>Medicine</a></li>
+                        <li><a href="{{ route('medicine.index') }}"><i class="fas fa-chevron-right me-2"></i>Medicine</a></li>
                         <li><a href="{{ route('health') }}"><i class="fas fa-chevron-right me-2"></i>Health</a></li>
-                        <li><a href="{{ route('community.landing') }}"><i class="fas fa-chevron-right me-2"></i>Community</a>
-                        </li>
+                        <li><a href="{{ route('community.landing') }}"><i class="fas fa-chevron-right me-2"></i>Community</a></li>
                         <li><a href="{{ route('help') }}"><i class="fas fa-chevron-right me-2"></i>Help</a></li>
                     </ul>
                 </div>
@@ -1198,16 +2265,11 @@
                 <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
                     <h5 class="footer-title">Key Features</h5>
                     <ul class="footer-links">
-                        <li><a href="{{ route('health.tracking') }}"><i class="fas fa-chevron-right me-2"></i>Health
-                                Metrics</a></li>
-                        <li><a href="{{ route('medicine.reminders') }}"><i
-                                    class="fas fa-chevron-right me-2"></i>Medicine Reminders</a></li>
-                        <li><a href="{{ route('health') }}#logs"><i class="fas fa-chevron-right me-2"></i>Medical
-                            Records</a></li>
-                        <li><a href="{{ route('health.symptoms') }}"><i class="fas fa-chevron-right me-2"></i>Symptom
-                                Tracker</a></li>
-                        <li><a href="{{ route('suggestions') }}"><i class="fas fa-chevron-right me-2"></i>AI
-                                Suggestions</a></li>
+                        <li><a href="{{ route('health.tracking') }}"><i class="fas fa-chevron-right me-2"></i>Health Metrics</a></li>
+                        <li><a href="{{ route('medicine.reminders') }}"><i class="fas fa-chevron-right me-2"></i>Medicine Reminders</a></li>
+                        <li><a href="{{ route('health') }}#logs"><i class="fas fa-chevron-right me-2"></i>Medical Records</a></li>
+                        <li><a href="{{ route('health.symptoms') }}"><i class="fas fa-chevron-right me-2"></i>Symptom Tracker</a></li>
+                        <li><a href="{{ route('suggestions') }}"><i class="fas fa-chevron-right me-2"></i>AI Suggestions</a></li>
                     </ul>
                 </div>
 
@@ -1215,22 +2277,10 @@
                 <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
                     <h5 class="footer-title">Contact Us</h5>
                     <ul class="footer-contact">
-                        <li>
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span>123 Healthcare Avenue, Medical District, Dhaka, Bangladesh</span>
-                        </li>
-                        <li>
-                            <i class="fas fa-phone"></i>
-                            <span>+880 1234 567890</span>
-                        </li>
-                        <li>
-                            <i class="fas fa-envelope"></i>
-                            <span>support@mydoctor.com</span>
-                        </li>
-                        <li>
-                            <i class="fas fa-clock"></i>
-                            <span>24/7 Customer Support</span>
-                        </li>
+                        <li><i class="fas fa-map-marker-alt"></i><span>123 Healthcare Avenue, Medical District, Dhaka, Bangladesh</span></li>
+                        <li><i class="fas fa-phone"></i><span>+880 1234 567890</span></li>
+                        <li><i class="fas fa-envelope"></i><span>support@mydoctor.com</span></li>
+                        <li><i class="fas fa-clock"></i><span>24/7 Customer Support</span></li>
                     </ul>
                 </div>
             </div>
@@ -1260,14 +2310,1086 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Push Notification Scripts -->
-  
+    <!-- ==================== UNIFIED COMMUNITY MODAL SCRIPTS ==================== -->
+    <script>
+        // ==================== GLOBAL VARIABLES ====================
+        window.currentEditId = null;
+        window.currentEditType = null;
+        window.deleteId = null;
+        window.deleteType = null;
+        
+        // Global storage for comment files
+        if (!window.modalCommentFiles) {
+            window.modalCommentFiles = {};
+        }
 
+        // Helper function to find post content
+        window.findPostContent = function(postId) {
+            // Try by specific ID first
+            let element = document.getElementById(`post-content-${postId}`);
+            if (element) return element;
+            
+            // Try in modal
+            element = document.querySelector(`.modal-post-container #post-content-${postId}`);
+            if (element) return element;
+            
+            // Try by data attribute
+            const modalContainer = document.querySelector(`.modal-post-container[data-post-id="${postId}"]`);
+            if (modalContainer) {
+                // Look for paragraphs with white-space pre-wrap
+                element = modalContainer.querySelector('p[style*="white-space: pre-wrap"]');
+                if (element) return element;
+                
+                // Look for any element with post-text class
+                element = modalContainer.querySelector('.post-text, .post-text-content');
+                if (element) return element;
+            }
+            
+            return null;
+        };
+
+        // ==================== POST MODAL FUNCTIONS ====================
+        window.openPostModal = function(postId) {
+            const modalBody = document.getElementById('postModalBody');
+            if (!modalBody) {
+                console.error('Post modal body not found');
+                return;
+            }
+            
+            modalBody.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-3 text-muted">Loading post...</p></div>';
+            
+            // Show modal
+            const postModalEl = document.getElementById('postModal');
+            if (!postModalEl) {
+                console.error('Post modal element not found');
+                return;
+            }
+            
+            const postModal = new bootstrap.Modal(postModalEl);
+            postModal.show();
+            
+            // Fetch the post HTML
+            fetch(`/community/modal-post/${postId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Post is deleted or cannot be loaded');
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    modalBody.innerHTML = html;
+                    
+                    // Make sure comments section is visible
+                    const commentsSection = document.getElementById(`comments-section-${postId}`);
+                    if (commentsSection) {
+                        commentsSection.style.display = 'block';
+                    }
+                    
+                    // Initialize modal interactions
+                    setupModalInteractions(postId);
+                })
+                .catch(error => {
+                    console.error('Error loading post:', error);
+                    modalBody.innerHTML = '<div class="alert alert-danger m-3">Post is deleted or cannot load</div>';
+                });
+        };
+
+        window.setupModalInteractions = function(postId) {
+            // Auto-resize textareas in modal
+            document.querySelectorAll('#postModalBody textarea').forEach(textarea => {
+                textarea.addEventListener('input', function() {
+                    this.style.height = 'auto';
+                    this.style.height = (this.scrollHeight) + 'px';
+                });
+            });
+        };
+
+        // ==================== UNIFIED FILE HANDLING ====================
+        // This works for both community page and global modal
+
+
+
+
+
+// ==================== MODAL-SPECIFIC FUNCTIONS (for modal-post) ====================
+
+// Initialize modal-specific storage
+if (!window.modalCommentFiles) {
+    window.modalCommentFiles = {};
+}
+
+window.submitModalComment = async function(event, postId) {
+    event.preventDefault();
+    
+    const textarea = document.getElementById(`modal-comment-input-${postId}`);
+    if (!textarea) {
+        console.error('Modal textarea not found for postId:', postId);
+        return;
+    }
+    
+    const commentText = textarea.value.trim();
+    const file = window.modalCommentFiles ? window.modalCommentFiles[postId] : null;
+    
+    if (!commentText && !file) { 
+        if (typeof window.showToast === "function") {
+            window.showToast('Please write something or attach a file', 'warning');
+        }
+        return; 
+    }
+
+    const formData = new FormData();
+    formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+    formData.append('comment_details', commentText);
+    if (file) formData.append('file', file);
+
+    const submitBtn = document.getElementById(`modal-comment-submit-${postId}`);
+    if (!submitBtn) return;
+    
+    const originalHtml = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-small"></span>';
+
+    try {
+        const res = await fetch(`/community/posts/${postId}/comments`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            },
+            body: formData
+        });
+        
+        const data = await res.json();
+        
+        if (data.success) {
+            const container = document.getElementById(`comments-container-${postId}`);
+            if (container) {
+                if (container.innerHTML.includes("No comments")) container.innerHTML = "";
+                container.insertAdjacentHTML('afterbegin', data.html);
+            }
+            
+            textarea.value = ''; 
+            textarea.style.height = 'auto';
+            window.clearModalCommentFile(postId);
+            
+            const commentCounts = document.querySelectorAll(`.comment-count[data-post="${postId}"]`);
+            commentCounts.forEach(el => { if (el) el.textContent = data.comment_count; });
+            
+            if (typeof window.showToast === "function") {
+                window.showToast('Comment added!', 'success');
+            }
+        }
+    } catch (err) { 
+        console.error(err); 
+        if (typeof window.showToast === "function") {
+            window.showToast('Error adding comment', 'error');
+        }
+    } finally { 
+        submitBtn.disabled = false; 
+        submitBtn.innerHTML = originalHtml; 
+    }
+};
+
+window.handleModalCommentFileSelect = function(postId, input) {
+    console.log('Modal file selected for postId:', postId);
+    
+    const file = input.files[0];
+    if (!file) {
+        console.log('No file selected');
+        return;
+    }
+
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+        if (typeof window.showToast === "function") {
+            window.showToast('File size cannot exceed 5MB', 'warning');
+        }
+        input.value = "";
+        return;
+    }
+
+    // Store in modal-specific storage
+    if (!window.modalCommentFiles) window.modalCommentFiles = {};
+    window.modalCommentFiles[postId] = file;
+
+    // Get modal-specific preview elements
+    const previewArea = document.getElementById(`modal-comment-file-preview-${postId}`);
+    const previewContent = document.getElementById(`modal-comment-file-preview-content-${postId}`);
+    
+    console.log('Modal preview area found:', previewArea ? 'Yes' : 'No');
+    console.log('Modal preview content found:', previewContent ? 'Yes' : 'No');
+    
+    if (!previewArea || !previewContent) {
+        console.error('Modal preview elements not found for postId:', postId);
+        return;
+    }
+    
+    // Clear previous content
+    previewContent.innerHTML = '';
+
+    if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewContent.innerHTML = `
+                <img src="${e.target.result}" style="max-height:40px; border-radius:4px; margin-right:8px;">
+                <span style="font-size:12px;">${file.name.length > 20 ? file.name.substring(0,17)+'...' : file.name}</span>
+                <span style="font-size:11px; color:#65676b; margin-left:4px;">(${(file.size/1024).toFixed(1)} KB)</span>
+            `;
+            previewArea.style.display = 'block';
+            console.log('Modal preview displayed');
+        };
+        reader.readAsDataURL(file);
+    } else {
+        let icon = 'fa-file-alt';
+        if (file.type.includes('pdf')) icon = 'fa-file-pdf';
+        else if (file.type.includes('video')) icon = 'fa-file-video';
+        else if (file.type.includes('word')) icon = 'fa-file-word';
+        else if (file.type.includes('excel')) icon = 'fa-file-excel';
+        
+        previewContent.innerHTML = `
+            <i class="fas ${icon}" style="font-size:20px; color:#1877f2; margin-right:8px;"></i>
+            <span style="font-size:12px;">${file.name.length > 20 ? file.name.substring(0,17)+'...' : file.name}</span>
+            <span style="font-size:11px; color:#65676b; margin-left:4px;">(${(file.size/1024).toFixed(1)} KB)</span>
+        `;
+        previewArea.style.display = 'block';
+        console.log('Modal preview displayed');
+    }
+};
+
+window.clearModalCommentFile = function(postId) {
+    console.log('Clearing modal file for postId:', postId);
+    
+    if (window.modalCommentFiles) {
+        window.modalCommentFiles[postId] = null;
+        delete window.modalCommentFiles[postId];
+    }
+    const input = document.getElementById(`modal-comment-file-${postId}`);
+    if (input) input.value = '';
+    
+    const previewArea = document.getElementById(`modal-comment-file-preview-${postId}`);
+    if (previewArea) {
+        previewArea.style.display = 'none';
+        console.log('Modal preview hidden');
+    }
+    
+};
+
+
+        window.handleCommentFileSelect = function(postId, input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const maxSize = 5 * 1024 * 1024; // 5MB
+
+            if (file.size > maxSize) {
+                if (typeof window.showToast === 'function') {
+                    window.showToast('File size cannot exceed 5MB', 'warning');
+                }
+                input.value = "";
+                return;
+            }
+
+            // Store file in global storage
+            if (!window.modalCommentFiles) window.modalCommentFiles = {};
+            window.modalCommentFiles[postId] = file;
+
+            // Find the preview container - works in both contexts
+            const form = input.closest('form');
+            if (!form) {
+                console.error('Form not found');
+                return;
+            }
+            
+            const previewArea = form.querySelector('.comment-file-preview');
+            const previewContent = previewArea?.querySelector('.file-preview-content');
+
+            if (!previewArea || !previewContent) {
+                console.error('Preview elements not found');
+                return;
+            }
+
+            // Clear previous content
+            previewContent.innerHTML = '';
+
+            // Create preview based on file type
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewContent.innerHTML = `
+                        <img src="${e.target.result}" style="max-height:40px; border-radius:4px; margin-right:8px;">
+                        <span style="font-size:12px;">${file.name.length > 20 ? file.name.substring(0,17)+'...' : file.name}</span>
+                        <span style="font-size:11px; color:#65676b; margin-left:4px;">(${window.formatFileSize ? window.formatFileSize(file.size) : (file.size/1024).toFixed(1) + ' KB'})</span>
+                    `;
+                    
+                    // Show the preview
+                    previewArea.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                let icon = 'fa-file-alt';
+                if (file.type.includes('pdf')) icon = 'fa-file-pdf';
+                else if (file.type.includes('video')) icon = 'fa-file-video';
+                else if (file.type.includes('word')) icon = 'fa-file-word';
+                else if (file.type.includes('excel')) icon = 'fa-file-excel';
+                
+                previewContent.innerHTML = `
+                    <i class="fas ${icon}" style="font-size:20px; color:#1877f2; margin-right:8px;"></i>
+                    <span style="font-size:12px;">${file.name.length > 20 ? file.name.substring(0,17)+'...' : file.name}</span>
+                    <span style="font-size:11px; color:#65676b; margin-left:4px;">(${window.formatFileSize ? window.formatFileSize(file.size) : (file.size/1024).toFixed(1) + ' KB'})</span>
+                `;
+                
+                // Show the preview
+                previewArea.style.display = 'block';
+            }
+        };
+
+        window.clearCommentFile = function(postId) {
+            if (window.modalCommentFiles) {
+                window.modalCommentFiles[postId] = null;
+                delete window.modalCommentFiles[postId];
+            }
+
+            const fileInput = document.getElementById(`comment-file-${postId}`);
+            if (fileInput) {
+                // Hide preview
+                const form = fileInput.closest('form');
+                if (form) {
+                    const previewArea = form.querySelector('.comment-file-preview');
+                    if (previewArea) {
+                        previewArea.style.display = 'none';
+                        const previewContent = previewArea.querySelector('.file-preview-content');
+                        if (previewContent) {
+                            previewContent.innerHTML = '';
+                        }
+                    }
+                }
+                fileInput.value = '';
+            }
+        };
+
+        // ==================== UNIFIED COMMENT SUBMIT ====================
+        window.submitComment = async function(event, postId) {
+            event.preventDefault();
+
+            const textarea = document.getElementById(`comment-input-${postId}`);
+            if (!textarea) {
+                console.error('Textarea not found');
+                return;
+            }
+            
+            const comment = textarea.value.trim();
+            const file = window.modalCommentFiles ? window.modalCommentFiles[postId] : null;
+
+            if (!comment && !file) {
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Please write something or attach a file', 'warning');
+                }
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("_token", document.querySelector('meta[name="csrf-token"]').content);
+            formData.append("comment_details", comment);
+
+            if (file) {
+                formData.append("file", file);
+            }
+
+            const submitBtn = document.getElementById(`comment-submit-${postId}`);
+            const originalHtml = submitBtn ? submitBtn.innerHTML : '<i class="fas fa-paper-plane"></i>';
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-small"></span>';
+            }
+
+            try {
+                const response = await fetch(`/community/posts/${postId}/comments`, {
+                    method: "POST",
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Find the comments container
+                    const container = document.getElementById(`comments-container-${postId}`);
+                    if (container) {
+                        if (container.innerHTML.includes("No comments")) {
+                            container.innerHTML = "";
+                        }
+                        container.insertAdjacentHTML("afterbegin", data.html);
+                    }
+
+                    // Clear input
+                    if (textarea) {
+                        textarea.value = "";
+                        textarea.style.height = "auto";
+                    }
+                    
+                    // Clear file
+                    if (typeof window.clearCommentFile === 'function') {
+                        window.clearCommentFile(postId);
+                    }
+
+                    // Update comment count
+                    const commentCounts = document.querySelectorAll(`#post-${postId} .comment-count, .modal-post-container .comment-count`);
+                    commentCounts.forEach(el => {
+                        if (el) el.textContent = data.comment_count;
+                    });
+
+                    if (typeof window.showToast === 'function') {
+                        window.showToast('Comment added!', 'success');
+                    }
+                } else {
+                    if (typeof window.showToast === 'function') {
+                        window.showToast(data.message || 'Error adding comment', 'error');
+                    }
+                }
+            } catch (error) {
+                console.error(error);
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Error adding comment', 'error');
+                }
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalHtml;
+                }
+            }
+        };
+
+        // ==================== LIKE FUNCTIONS ====================
+        window.toggleLike = async function(postId, button) {
+            try {
+                const response = await fetch(`/community/posts/${postId}/like`, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const countSpan = button.querySelector(".like-count");
+                    if (countSpan) countSpan.textContent = data.count;
+
+                    const icon = button.querySelector("i");
+                    
+                    if (data.liked) {
+                        icon.classList.remove("far");
+                        icon.classList.add("fas");
+                        button.classList.add("liked");
+                        icon.style.color = "#dc3545";
+                    } else {
+                        icon.classList.remove("fas");
+                        icon.classList.add("far");
+                        button.classList.remove("liked");
+                        icon.style.color = "inherit";
+                    }
+                }
+            } catch (err) {
+                console.error("Like error:", err);
+            }
+        };
+
+        window.toggleCommentLike = async function(commentId, button) {
+            try {
+                const response = await fetch(`/community/comments/${commentId}/like`, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const countSpan = button.querySelector(".like-count");
+                    if (countSpan) countSpan.textContent = data.count;
+
+                    const icon = button.querySelector("i");
+                    
+                    if (data.liked) {
+                        icon.classList.remove("far");
+                        icon.classList.add("fas");
+                        button.classList.add("liked");
+                        icon.style.color = "#dc3545";
+                    } else {
+                        icon.classList.remove("fas");
+                        icon.classList.add("far");
+                        button.classList.remove("liked");
+                        icon.style.color = "inherit";
+                    }
+                }
+            } catch (err) {
+                console.error("Comment like error:", err);
+            }
+        };
+
+        // ==================== EDIT FUNCTIONS (FIXED) ====================
+        window.editPost = function(postId) {
+            window.currentEditId = postId;
+            window.currentEditType = 'post';
+            
+            // Use helper function to find post content
+            const contentElement = window.findPostContent(postId);
+            
+            let content = '';
+            if (contentElement) {
+                content = contentElement.textContent.trim();
+            }
+            
+            // If still no content, it might be a media-only post
+            if (!content) {
+                // Check if post exists
+                const postExists = document.getElementById(`post-${postId}`) || 
+                                   document.querySelector(`.modal-post-container[data-post-id="${postId}"]`);
+                if (!postExists) {
+                    if (typeof window.showToast === 'function') {
+                        window.showToast('Error: Post not found', 'error');
+                    }
+                    return;
+                }
+            }
+            
+            const editContent = document.getElementById('editContent');
+            const editCharCount = document.getElementById('editCharCount');
+            
+            if (editContent) {
+                editContent.value = content;
+            }
+            if (editCharCount) {
+                editCharCount.textContent = content.length;
+            }
+            
+            const editModalEl = document.getElementById('editModal');
+            if (editModalEl) {
+                const editModal = new bootstrap.Modal(editModalEl);
+                editModal.show();
+            }
+        };
+
+        window.editComment = function(commentId) {
+            window.currentEditId = commentId;
+            window.currentEditType = 'comment';
+            
+            const contentElement = document.getElementById(`comment-content-${commentId}`);
+            if (!contentElement) {
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Error: Could not find comment content', 'error');
+                }
+                return;
+            }
+            
+            const content = contentElement.textContent.trim();
+            
+            const editContent = document.getElementById('editContent');
+            const editCharCount = document.getElementById('editCharCount');
+            
+            if (editContent) {
+                editContent.value = content;
+            }
+            if (editCharCount) {
+                editCharCount.textContent = content.length;
+            }
+            
+            const editModalEl = document.getElementById('editModal');
+            if (editModalEl) {
+                const editModal = new bootstrap.Modal(editModalEl);
+                editModal.show();
+            }
+        };
+
+        // ==================== DELETE FUNCTIONS ====================
+        window.confirmDelete = function(id, type) {
+            window.deleteId = id;
+            window.deleteType = type;
+            
+            const deleteModalEl = document.getElementById('deleteModal');
+            if (deleteModalEl) {
+                const deleteModal = new bootstrap.Modal(deleteModalEl);
+                deleteModal.show();
+            }
+        };
+
+        // ==================== USER MODAL FUNCTIONS ====================
+        window.showUserModal = function(userId) {
+            const modalBody = document.getElementById('userModalBody');
+            if (!modalBody) {
+                console.error('User modal body not found');
+                return;
+            }
+            
+            modalBody.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+            
+            const userModalEl = document.getElementById('userModal');
+            if (!userModalEl) {
+                console.error('User modal element not found');
+                return;
+            }
+            
+            const userModal = new bootstrap.Modal(userModalEl);
+            userModal.show();
+            
+            fetch(`/community/user/${userId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        renderUserModal(data.user);
+                    } else {
+                        modalBody.innerHTML = '<div class="alert alert-danger">Error loading user details</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    modalBody.innerHTML = '<div class="alert alert-danger">Failed to load user details</div>';
+                });
+        };
+
+        window.renderUserModal = function(user) {
+            const modalBody = document.getElementById('userModalBody');
+            if (!modalBody) return;
+            
+            // Format recent activity
+            let recentActivityHtml = '';
+            if (user.recent_posts && user.recent_posts.length > 0) {
+                recentActivityHtml += '<div class="mt-3 px-3"><h6 class="text-start px-3 mb-2">Recent Posts</h6>';
+                user.recent_posts.forEach(post => {
+                    recentActivityHtml += `
+                        <div class="activity-item mb-2 p-2 bg-light rounded">
+                            <a href="javascript:void(0)" onclick="openPostModal(${post.id})" class="text-decoration-none">
+                                <div class="small">${post.description}</div>
+                                <small class="text-muted">${post.created_at}</small>
+                            </a>
+                        </div>
+                    `;
+                });
+                recentActivityHtml += '</div>';
+            }
+            
+            if (user.recent_comments && user.recent_comments.length > 0) {
+                recentActivityHtml += '<div class="mt-3 px-3"><h6 class="text-start px-3 mb-2">Recent Comments</h6>';
+                user.recent_comments.forEach(comment => {
+                    recentActivityHtml += `
+                        <div class="activity-item mb-2 p-2 bg-light rounded">
+                            <a href="javascript:void(0)" onclick="openPostModal(${comment.post_id})" class="text-decoration-none">
+                                <div class="small">${comment.comment_details}</div>
+                                <small class="text-muted">${comment.created_at}</small>
+                            </a>
+                        </div>
+                    `;
+                });
+                recentActivityHtml += '</div>';
+            }
+            
+            modalBody.innerHTML = `
+                <div class="text-center">
+                    ${user.avatar 
+                        ? `<img src="${user.avatar}" alt="${user.name}" class="user-modal-avatar">`
+                        : `<div class="user-modal-placeholder">${user.name.charAt(0).toUpperCase()}</div>`
+                    }
+                    <h5 class="mb-1">${user.name}</h5>
+                    <p class="text-muted small mb-2">${user.email}</p>
+                    <p class="small text-muted mb-2"><i class="fas fa-map-marker-alt me-1"></i> ${user.location || 'Not specified'}</p>
+                    <p class="small text-muted mb-3"><i class="fas fa-calendar-alt me-1"></i> Joined ${user.joined}</p>
+                    <p class="mb-3 px-3">${user.bio || 'No bio provided'}</p>
+                    
+                    <div class="row g-2 mb-3 px-3">
+                        <div class="col-6">
+                            <div class="user-stat-card">
+                                <div class="user-stat-value">${user.posts_count || 0}</div>
+                                <div class="user-stat-label">Posts</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="user-stat-card">
+                                <div class="user-stat-value">${user.comments_count || 0}</div>
+                                <div class="user-stat-label">Comments</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${recentActivityHtml}
+                </div>
+            `;
+        };
+
+        // ==================== UTILITY FUNCTIONS ====================
+        window.formatFileSize = function(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        };
+
+    window.openImageModal = function(src) {
+    const modalImage = document.getElementById('modalImage');
+    if (modalImage) {
+        modalImage.src = src;
+        
+        // Get the image modal instance
+        const imageModalEl = document.getElementById('imageModal');
+        const imageModal = new bootstrap.Modal(imageModalEl);
+        
+        // Hide the post modal first (optional - you can comment this out if you want both visible)
+        const postModalEl = document.getElementById('postModal');
+        const postModal = bootstrap.Modal.getInstance(postModalEl);
+        
+        // Show image modal
+        imageModal.show();
+        
+        // Ensure image modal is on top
+        setTimeout(() => {
+            imageModalEl.style.zIndex = '1060';
+            // Ensure backdrop is also on top
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            if (backdrops.length > 0) {
+                backdrops[backdrops.length - 1].style.zIndex = '1059';
+            }
+        }, 100);
+    }
+};
+
+window.openVideoModal = function(type, source, isReel = false) {
+    const modalContent = document.getElementById('videoModalContent');
+    if (!modalContent) return;
+    
+    if (type === 'youtube') {
+        if (isReel) {
+            modalContent.innerHTML = `
+                <div style="display: flex; justify-content: center; align-items: center; min-height: 80vh;">
+                    <div style="width: 400px; max-width: 100%;">
+                        <div style="position: relative; width: 100%; padding-bottom: 177.78%;">
+                            <iframe 
+                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; border-radius: 12px;"
+                                src="https://www.youtube.com/embed/${source}?autoplay=1&rel=0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen>
+                            </iframe>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            modalContent.innerHTML = `
+                <div style="position: relative; width: 100%; padding-bottom: 56.25%;">
+                    <iframe 
+                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; border-radius: 8px;"
+                        src="https://www.youtube.com/embed/${source}?autoplay=1&rel=0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            `;
+        }
+    } else if (type === 'file') {
+        if (isReel) {
+            modalContent.innerHTML = `
+                <div style="display: flex; justify-content: center; align-items: center; min-height: 80vh;">
+                    <div style="width: 400px; max-width: 100%;">
+                        <div style="position: relative; width: 100%; padding-bottom: 177.78%; background: #000; border-radius: 12px; overflow: hidden;">
+                            <video controls autoplay style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+                                <source src="${source}" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            modalContent.innerHTML = `
+                <div style="position: relative; width: 100%; padding-bottom: 56.25%; background: #000; border-radius: 8px; overflow: hidden;">
+                    <video controls autoplay style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+                        <source src="${source}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+            `;
+        }
+    }
+    
+    // Get the video modal instance
+    const videoModalEl = document.getElementById('videoModal');
+    const videoModal = new bootstrap.Modal(videoModalEl);
+    
+    // Show video modal
+    videoModal.show();
+    
+    // Ensure video modal is on top
+    setTimeout(() => {
+        videoModalEl.style.zIndex = '1060';
+        // Ensure backdrop is also on top
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        if (backdrops.length > 0) {
+            backdrops[backdrops.length - 1].style.zIndex = '1059';
+        }
+    }, 100);
+};
+
+        window.showToast = function(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const id = 'toast-' + Date.now();
+            const bgColor = type === 'success' ? '#28a745' : type === 'warning' ? '#ffc107' : '#dc3545';
+            const icon = type === 'success' ? 'fa-check-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-times-circle';
+            
+            const html = `
+                <div id="${id}" class="toast align-items-center text-white border-0" role="alert" style="background: ${bgColor};">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="fas ${icon} me-2"></i>${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+            
+            container.insertAdjacentHTML('beforeend', html);
+            
+            const toast = new bootstrap.Toast(document.getElementById(id), { delay: 3000 });
+            toast.show();
+            
+            document.getElementById(id).addEventListener('hidden.bs.toast', function() {
+                this.remove();
+            });
+        };
+
+        console.log('Unified community modal script loaded');
+        console.log('openPostModal available:', typeof window.openPostModal === 'function');
+        console.log('submitComment available:', typeof window.submitComment === 'function');
+    </script>
+
+    <!-- ==================== MODAL EVENT HANDLERS ==================== -->
+    <script>
+        // Set up the confirm delete button handler
+        document.addEventListener('DOMContentLoaded', function() {
+            const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+            if (confirmDeleteBtn) {
+                confirmDeleteBtn.addEventListener('click', function() {
+                    if (!window.deleteId || !window.deleteType) return;
+
+                    const url = window.deleteType === 'post'
+                        ? `/community/posts/${window.deleteId}/delete`
+                        : `/community/comments/${window.deleteId}/delete`;
+
+                    const deleteBtn = this;
+                    const originalText = deleteBtn.innerHTML;
+                    deleteBtn.disabled = true;
+                    deleteBtn.innerHTML = '<span class="spinner-small me-2"></span> Deleting...';
+
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Remove from main feed
+                            const selector = window.deleteType === 'post' ? `#post-${window.deleteId}` : `#comment-${window.deleteId}`;
+                            const element = document.querySelector(selector);
+                            
+                            if (element) {
+                                element.style.opacity = '0';
+                                element.style.transition = 'opacity 0.3s ease-out';
+                                
+                                setTimeout(() => {
+                                    element.remove();
+                                    
+                                    if (window.deleteType === 'comment') {
+                                        // Update comment count
+                                        document.querySelectorAll(`#post-${window.deleteId} .comment-count, .modal-post-container .comment-count`).forEach(el => {
+                                            el.textContent = Math.max(0, parseInt(el.textContent) - 1);
+                                        });
+                                    }
+                                }, 300);
+                            }
+                            
+                            // Also remove from modal if open
+                            const modalElement = document.querySelector(`.modal-post-container ${selector}`);
+                            if (modalElement) {
+                                modalElement.remove();
+                            }
+                            
+                            // Hide delete modal
+                            const deleteModalEl = document.getElementById('deleteModal');
+                            const deleteModal = bootstrap.Modal.getInstance(deleteModalEl);
+                            if (deleteModal) {
+                                deleteModal.hide();
+                            }
+                            
+                            if (typeof window.showToast === 'function') {
+                                window.showToast(`${window.deleteType} deleted!`, 'success');
+                            }
+                        } else {
+                            if (typeof window.showToast === 'function') {
+                                window.showToast(data.message || 'Error deleting', 'error');
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        if (typeof window.showToast === 'function') {
+                            window.showToast('Error: ' + error.message, 'error');
+                        }
+                    })
+                    .finally(() => {
+                        deleteBtn.disabled = false;
+                        deleteBtn.innerHTML = originalText;
+                    });
+                });
+            }
+        });
+
+        // Set up the save edit button handler
+        document.addEventListener('DOMContentLoaded', function() {
+            const saveEditBtn = document.getElementById('saveEditBtn');
+            if (saveEditBtn) {
+                saveEditBtn.addEventListener('click', function() {
+                    const content = document.getElementById('editContent').value.trim();
+                    if (!content || !window.currentEditId) {
+                        if (typeof window.showToast === 'function') {
+                            window.showToast('Please enter some content', 'warning');
+                        }
+                        return;
+                    }
+
+                    const url = window.currentEditType === 'post'
+                        ? `/community/posts/${window.currentEditId}/update`
+                        : `/community/comments/${window.currentEditId}/update`;
+
+                    const saveBtn = this;
+                    const originalText = saveBtn.innerHTML;
+                    saveBtn.disabled = true;
+                    saveBtn.innerHTML = '<span class="spinner-small me-2"></span> Saving...';
+
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ 
+                            description: content,
+                            comment_details: content
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            if (window.currentEditType === 'post') {
+                                // Try to update post content in multiple locations
+                                
+                                // Update in main feed
+                                const postElement = document.getElementById(`post-content-${window.currentEditId}`);
+                                if (postElement) {
+                                    postElement.textContent = content;
+                                }
+                                
+                                // Update in modal if open
+                                const modalPostElement = document.querySelector(`.modal-post-container #post-content-${window.currentEditId}`);
+                                if (modalPostElement) {
+                                    modalPostElement.textContent = content;
+                                }
+                                
+                                // Also try to update any paragraph with post text in modal
+                                const modalContainer = document.querySelector(`.modal-post-container[data-post-id="${window.currentEditId}"]`);
+                                if (modalContainer) {
+                                    const textElement = modalContainer.querySelector('p[style*="white-space: pre-wrap"]');
+                                    if (textElement) {
+                                        textElement.innerHTML = content.replace(/\n/g, '<br>');
+                                    }
+                                }
+                            } else {
+                                // Update comment content in multiple locations
+                                
+                                // Update in main feed
+                                const commentElement = document.getElementById(`comment-content-${window.currentEditId}`);
+                                if (commentElement) {
+                                    commentElement.textContent = content;
+                                    commentElement.style.opacity = '0.5';
+                                    setTimeout(() => commentElement.style.opacity = '1', 300);
+                                }
+                                
+                                // Update in modal if open
+                                const modalCommentElement = document.querySelector(`.modal-post-container #comment-content-${window.currentEditId}`);
+                                if (modalCommentElement) {
+                                    modalCommentElement.textContent = content;
+                                }
+                            }
+                            
+                            // Hide edit modal
+                            const editModalEl = document.getElementById('editModal');
+                            const editModal = bootstrap.Modal.getInstance(editModalEl);
+                            if (editModal) {
+                                editModal.hide();
+                            }
+                            
+                            if (typeof window.showToast === 'function') {
+                                window.showToast(`${window.currentEditType} updated!`, 'success');
+                            }
+                        } else {
+                            if (typeof window.showToast === 'function') {
+                                window.showToast(data.message || 'Error updating', 'error');
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        if (typeof window.showToast === 'function') {
+                            window.showToast('Error: ' + error.message, 'error');
+                        }
+                    })
+                    .finally(() => {
+                        saveBtn.disabled = false;
+                        saveBtn.innerHTML = originalText;
+                    });
+                });
+            }
+        });
+    </script>
+
+    <!-- ==================== NOTIFICATION & CHATBOT SCRIPTS ==================== -->
     <script>
         // User dropdown toggle
         function toggleUserDropdown() {
             const dropdown = document.getElementById('userDropdown');
             dropdown.classList.toggle('show');
+            
+            // Close notification dropdown if open
+            const notifDropdown = document.getElementById('notificationDropdown');
+            if (notifDropdown.classList.contains('show')) {
+                notifDropdown.classList.remove('show');
+            }
+        }
+
+        // Notification dropdown toggle
+        function toggleNotificationDropdown() {
+            const dropdown = document.getElementById('notificationDropdown');
+            dropdown.classList.toggle('show');
+            
+            // Close user dropdown if open
+            const userDropdown = document.getElementById('userDropdown');
+            if (userDropdown.classList.contains('show')) {
+                userDropdown.classList.remove('show');
+            }
+            
+            // Load notifications if dropdown is opened
+            if (dropdown.classList.contains('show')) {
+                loadNotifications();
+            }
         }
 
         // Chatbot toggle
@@ -1298,6 +3420,214 @@
                 console.log('Push notifications toggled');
             });
         }
+
+        // ========== NOTIFICATION FUNCTIONS ==========
+        // Load notifications
+        function loadNotifications() {
+            const list = document.getElementById('notificationList');
+            if (!list) return;
+            
+            list.innerHTML = `
+                <div class="text-center p-4">
+                    <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+                    <p class="mt-2">Loading notifications...</p>
+                </div>
+            `;
+            
+            fetch('/notifications?limit=5', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Failed to load');
+                return res.json();
+            })
+            .then(data => {
+                updateNotificationDropdown(data.notifications || []);
+                updateNotificationCount(data.unread_count || 0);
+            })
+            .catch(err => {
+                console.error('Failed to load notifications:', err);
+                list.innerHTML = `
+                    <div class="text-center p-4">
+                        <i class="fas fa-exclamation-circle fa-2x text-danger"></i>
+                        <p class="mt-2">Failed to load notifications</p>
+                        <button onclick="loadNotifications()" class="btn btn-sm btn-primary mt-2">Retry</button>
+                    </div>
+                `;
+            });
+        }
+
+        // Update notification dropdown
+        function updateNotificationDropdown(notifications) {
+            const list = document.getElementById('notificationList');
+            
+            if (!notifications || notifications.length === 0) {
+                list.innerHTML = `
+                    <div class="notification-empty">
+                        <i class="fas fa-bell-slash"></i>
+                        <p>No notifications yet</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            notifications.forEach(notif => {
+                const time = new Date(notif.created_at).toLocaleString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric',
+                    hour: '2-digit', 
+                    minute: '2-digit'
+                });
+                
+                const avatar = notif.from_user?.picture 
+                    ? `<img src="{{ asset('storage/') }}/${notif.from_user.picture}" alt="${notif.from_user.name || 'User'}">`
+                    : `<div class="notification-avatar-placeholder">${(notif.from_user?.name || 'U').charAt(0).toUpperCase()}</div>`;
+                
+                const postId = notif.data?.post_id || '';
+                
+                html += `
+                    <a href="javascript:void(0)" class="notification-item ${notif.read_at ? '' : 'unread'}" 
+                       onclick="handleNotificationClick(event, ${notif.id}, '${postId}')">
+                        <div class="notification-avatar">
+                            ${avatar}
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-message">${escapeHtml(notif.message)}</div>
+                            <div class="notification-time">${time}</div>
+                        </div>
+                    </a>
+                `;
+            });
+            
+            list.innerHTML = html;
+        }
+
+        // Handle notification click
+        function handleNotificationClick(event, notificationId, postId) {
+            event.preventDefault();
+            
+            // Close dropdown
+            const dropdown = document.getElementById('notificationDropdown');
+            dropdown.classList.remove('show');
+            
+            // Open post in modal
+            openPostModal(postId, notificationId);
+        }
+
+        // Mark all notifications as read
+        function markAllNotificationsRead() {
+            fetch('/notifications/mark-all-read', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Update UI
+                    document.querySelectorAll('.notification-item').forEach(item => {
+                        item.classList.remove('unread');
+                    });
+                    updateNotificationCount(0);
+                    loadNotifications(); // Reload to show all as read
+                }
+            })
+            .catch(err => console.error('Error marking all as read:', err));
+        }
+
+        // Update notification count and bell animation
+        function updateNotificationCount(count) {
+            const badge = document.getElementById('notificationCount');
+            const bell = document.getElementById('notificationBell');
+            const badge2 = document.getElementById('notificationCountBadge');
+            const previousCount = parseInt(badge.textContent) || 0;
+            
+            if (count > 0) {
+                badge.textContent = count > 99 ? '99+' : count;
+                badge.style.display = 'inline-block';
+                
+                // Shake bell if new notification arrived
+                if (count > previousCount) {
+                    bell.classList.add('shake');
+                    setTimeout(() => bell.classList.remove('shake'), 500);
+                }
+            } else {
+                badge.style.display = 'none';
+            }
+            
+            if (badge2) {
+                if (count > 0) {
+                    badge2.textContent = count;
+                    badge2.style.display = 'inline-block';
+                } else {
+                    badge2.style.display = 'none';
+                }
+            }
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return String(unsafe)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Start periodic updates
+        let notificationInterval;
+
+        function startNotificationUpdates() {
+            // Clear existing interval
+            if (notificationInterval) {
+                clearInterval(notificationInterval);
+            }
+            
+            // Update every 30 seconds
+            notificationInterval = setInterval(() => {
+                const dropdown = document.getElementById('notificationDropdown');
+                if (!dropdown.classList.contains('show')) {
+                    fetch('/notifications/unread-count', {
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(data => updateNotificationCount(data.count))
+                    .catch(err => console.error('Error updating count:', err));
+                }
+            }, 30000);
+        }
+
+        // Close dropdowns when clicking outside
+        window.onclick = function(event) {
+            if (!event.target.matches('.user-circle') && !event.target.matches('.user-circle *') &&
+                !event.target.matches('.notification-bell') && !event.target.matches('.notification-bell *')) {
+                const dropdowns = document.getElementsByClassName('user-dropdown');
+                const notifDropdowns = document.getElementsByClassName('notification-dropdown');
+                
+                for (let i = 0; i < dropdowns.length; i++) {
+                    if (dropdowns[i].classList.contains('show')) {
+                        dropdowns[i].classList.remove('show');
+                    }
+                }
+                
+                for (let i = 0; i < notifDropdowns.length; i++) {
+                    if (notifDropdowns[i].classList.contains('show')) {
+                        notifDropdowns[i].classList.remove('show');
+                    }
+                }
+            }
+        };
 
         // Chatbot variables
         let isTyping = false;
@@ -1386,29 +3716,6 @@
             }
         }
 
-        // Escape HTML to prevent XSS
-        function escapeHtml(unsafe) {
-            return unsafe
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        }
-
-        // Close dropdown when clicking outside
-        window.onclick = function(event) {
-            if (!event.target.matches('.user-circle') && !event.target.matches('.user-circle *')) {
-                const dropdowns = document.getElementsByClassName('user-dropdown');
-                for (let i = 0; i < dropdowns.length; i++) {
-                    const openDropdown = dropdowns[i];
-                    if (openDropdown.classList.contains('show')) {
-                        openDropdown.classList.remove('show');
-                    }
-                }
-            }
-        }
-
         // Enter key for chat
         document.getElementById('chatInput')?.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
@@ -1422,44 +3729,34 @@
             this.style.height = (this.scrollHeight) + 'px';
         });
 
-        // Quick toggle functions for notifications
-        async function toggleEmailQuick() {
-            try {
-                const response = await fetch('/profile/notifications/toggle-email', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    }
-                });
-                if (response.ok) {
-                    console.log('Email notifications toggled');
-                }
-            } catch (error) {
-                console.error('Failed to toggle email notifications:', error);
-            }
-        }
-
-        async function togglePushQuick() {
-            try {
-                const response = await fetch('/profile/notifications/toggle-push', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    }
-                });
-                if (response.ok) {
-                    console.log('Push notifications toggled');
-                }
-            } catch (error) {
-                console.error('Failed to toggle push notifications:', error);
-            }
-        }
-
         // Make functions global
         window.toggleEmailQuick = toggleEmailQuick;
         window.togglePushQuick = togglePushQuick;
+        window.toggleNotificationDropdown = toggleNotificationDropdown;
+        window.markAllNotificationsRead = markAllNotificationsRead;
+        window.handleNotificationClick = handleNotificationClick;
+        window.toggleChatbot = toggleChatbot;
+        window.sendMessage = sendMessage;
+        window.addMessage = addMessage;
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            if ('{{ Auth::check() }}' === '1') {
+                // Load initial count
+                fetch('/notifications/unread-count', {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    updateNotificationCount(data.count);
+                    startNotificationUpdates();
+                })
+                .catch(err => console.error('Error loading initial count:', err));
+            }
+        });
+        
     </script>
 
     @auth

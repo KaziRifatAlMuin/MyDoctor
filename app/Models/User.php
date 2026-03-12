@@ -258,4 +258,28 @@ class User extends Authenticatable
     {
         return $this->attributes['name'] ?? null;
     }
+
+
+
+
+// Add this with your other relationships
+public function notifications()
+{
+    return $this->hasMany(\App\Models\Notification::class, 'user_id');
+}
+
+public function unreadNotifications()
+{
+    return $this->hasMany(\App\Models\Notification::class, 'user_id')->unread();
+}
+
+public function sentNotifications()
+{
+    return $this->hasMany(\App\Models\Notification::class, 'from_user_id');
+}
+
+
+
+
+
 }

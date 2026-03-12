@@ -241,7 +241,7 @@ body {
 .create-post-trigger {
     background: white;
     border-radius: 12px;
-    padding: 12px;
+    padding: 7px;
     margin-bottom: 20px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     display: flex;
@@ -621,6 +621,8 @@ body {
 .post-actions-menu {
     display: flex;
     gap: 6px;
+    position: relative;
+    z-index: 100;
 }
 
 .post-menu-btn {
@@ -652,7 +654,7 @@ body {
     line-height: 1.6;
     color: #1a1a1a;
     margin-bottom: 12px;
-    white-space: pre-wrap;
+    
 }
 
 .post-attachment-image {
@@ -854,15 +856,56 @@ body {
     gap: 6px;
 }
 
+.comment-action-btn {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    padding: 4px;
+    color: #65676b;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+}
+
+.comment-action-btn:focus,
+.comment-action-btn:active,
+.comment-action-btn:hover {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+.comment-action-btn.text-danger {
+    color: #dc3545;
+}
+
+.comment-action-btn.text-danger:hover {
+    background-color: rgba(220, 53, 69, 0.1) !important;
+    border-radius: 4px;
+}
+
+.comment-action-btn:hover:not(.text-danger) {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+    border-radius: 4px;
+}
+
 .comment-text {
     font-size: 13px;
     color: #1a1a1a;
     margin-bottom: 6px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .comment-like-btn {
-    background: none;
-    border: none;
+    background: none !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
     color: #65676b;
     font-size: 11px;
     cursor: pointer;
@@ -870,6 +913,13 @@ body {
     align-items: center;
     gap: 4px;
     padding: 2px 0;
+}
+
+.comment-like-btn:focus,
+.comment-like-btn:active {
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 .comment-like-btn.liked {
@@ -880,71 +930,33 @@ body {
     color: #dc3545;
 }
 
-.comment-form {
-    margin-top: 12px;
+.comment-attachment {
+    margin-top: 8px;
 }
 
-.comment-input-group {
-    display: flex;
-    gap: 8px;
-    align-items: flex-start;
-}
-
-.user-avatar-small {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    overflow: hidden;
-    flex-shrink: 0;
+.comment-image {
+    max-width: 200px;
+    max-height: 150px;
+    border-radius: 8px;
     cursor: pointer;
 }
 
-.comment-input-wrapper {
-    flex: 1;
-    display: flex;
-    gap: 6px;
-    background: #f0f2f5;
-    border-radius: 20px;
-    padding: 4px 4px 4px 12px;
-    align-items: center;
+/* Link styles for comments */
+.comment-link {
+    color: #1877f2;
+    text-decoration: none;
+    word-break: break-all;
+    display: inline;
+    margin: 0;
+    padding: 0;
 }
 
-.comment-textarea {
-    flex: 1;
-    border: none;
-    background: transparent;
-    padding: 8px 0;
-    font-size: 13px;
-    resize: none;
-    outline: none;
-    min-height: 32px;
+.comment-link:hover {
+    text-decoration: underline;
+    color: #0e5a9e;
 }
 
-.comment-submit-btn {
-    width: 32px;
-    height: 32px;
-    border: none;
-    border-radius: 50%;
-    background: #1877f2;
-    color: white;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.comment-submit-btn:hover {
-    background: #166fe5;
-    transform: scale(1.05);
-}
-
-.comment-submit-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
+/* Load more comments button */
 .load-more-comments {
     width: 100%;
     padding: 8px;
@@ -955,6 +967,10 @@ body {
     font-size: 13px;
     cursor: pointer;
     margin-bottom: 12px;
+}
+
+.load-more-comments:hover {
+    background: #e7f3ff;
 }
 
 /* ==================== RIGHT SIDEBAR ==================== */
@@ -1431,7 +1447,7 @@ body {
                             @endif
                         </div>
                         <div class="trigger-input">
-                            <div class="trigger-placeholder">Share your health experiences....</div>
+                            <div class="trigger-placeholder">How do you feel today?</div>
                         </div>
                         <div class="trigger-icons">
                             <button class="trigger-icon" title="Photos"><i class="fas fa-image"></i></button>
@@ -1449,7 +1465,9 @@ body {
                                         <i class="fas fa-pen-fancy me-2" style="color: #1877f2;"></i>
                                         Create Post
                                     </h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close" style="background: none; border: none; font-size: 24px; line-height: 1; opacity: 0.5; cursor: pointer;">
+                                        <span aria-hidden="true">×</span>
+                                    </button>
                                 </div>
 
                                 <!-- Body -->
@@ -1481,7 +1499,7 @@ body {
                                     <div style="position: relative;">
                                         <textarea id="createPostContent" 
                                                   class="modal-textarea" 
-                                                  placeholder="What's on your mind?" 
+                                                  placeholder="Write your health experiences..." 
                                                   rows="5"
                                                   oninput="updateCreatePostCharCounter()"></textarea>
                                         
@@ -1559,45 +1577,44 @@ body {
                 </div>
 
                 <!-- Pagination - NO ICONS -->
-              <!-- Pagination - NO ICONS -->
-<div class="pagination-wrapper mt-4">
-    @if ($posts->hasPages())
-        <ul class="pagination">
-            {{-- Previous Page Link --}}
-            @if ($posts->onFirstPage())
-                <li class="page-item disabled"><span class="page-link">Prev</span></li>
-            @else
-                <li class="page-item"><a class="page-link" href="{{ $posts->previousPageUrl() }}" rel="prev">Prev</a></li>
-            @endif
+                <div class="pagination-wrapper mt-4">
+                    @if ($posts->hasPages())
+                        <ul class="pagination">
+                            {{-- Previous Page Link --}}
+                            @if ($posts->onFirstPage())
+                                <li class="page-item disabled"><span class="page-link">Prev</span></li>
+                            @else
+                                <li class="page-item"><a class="page-link" href="{{ $posts->previousPageUrl() }}" rel="prev">Prev</a></li>
+                            @endif
 
-            {{-- Pagination Elements --}}
-            @foreach ($posts->links()->elements as $element)
-                {{-- "Three Dots" Separator --}}
-                @if (is_string($element))
-                    <li class="page-item disabled"><span class="page-link">{{ $element }}</span></li>
-                @endif
+                            {{-- Pagination Elements --}}
+                            @foreach ($posts->links()->elements as $element)
+                                {{-- "Three Dots" Separator --}}
+                                @if (is_string($element))
+                                    <li class="page-item disabled"><span class="page-link">{{ $element }}</span></li>
+                                @endif
 
-                {{-- Array Of Links --}}
-                @if (is_array($element))
-                    @foreach ($element as $page => $url)
-                        @if ($page == $posts->currentPage())
-                            <li class="page-item active"><span class="page-link">{{ $page }}</span></li>
-                        @else
-                            <li class="page-item"><a class="page-link" href="{{ $url }}">{{ $page }}</a></li>
-                        @endif
-                    @endforeach
-                @endif
-            @endforeach
+                                {{-- Array Of Links --}}
+                                @if (is_array($element))
+                                    @foreach ($element as $page => $url)
+                                        @if ($page == $posts->currentPage())
+                                            <li class="page-item active"><span class="page-link">{{ $page }}</span></li>
+                                        @else
+                                            <li class="page-item"><a class="page-link" href="{{ $url }}">{{ $page }}</a></li>
+                                        @endif
+                                    @endforeach
+                                @endif
+                            @endforeach
 
-            {{-- Next Page Link --}}
-            @if ($posts->hasMorePages())
-                <li class="page-item"><a class="page-link" href="{{ $posts->nextPageUrl() }}" rel="next">Next</a></li>
-            @else
-                <li class="page-item disabled"><span class="page-link">Next</span></li>
-            @endif
-        </ul>
-    @endif
-</div>
+                            {{-- Next Page Link --}}
+                            @if ($posts->hasMorePages())
+                                <li class="page-item"><a class="page-link" href="{{ $posts->nextPageUrl() }}" rel="next">Next</a></li>
+                            @else
+                                <li class="page-item disabled"><span class="page-link">Next</span></li>
+                            @endif
+                        </ul>
+                    @endif
+                </div>
             </div>
         </div>
 
@@ -1660,145 +1677,19 @@ body {
     </div>
 </div>
 
-<!-- Modals -->
-<div class="modal fade" id="imageModal" tabindex="-1">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content bg-transparent border-0">
-            <div class="modal-body p-0 text-center">
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                <img src="" id="modalImage" class="img-fluid" style="max-height: 90vh;">
-            </div>
-        </div>
-    </div>
-</div>
+<!-- NO MODALS HERE - They are inherited from layouts.app -->
 
-<!-- Video Modal -->
-<div class="modal fade" id="videoModal" tabindex="-1" aria-labelledby="videoModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content bg-transparent border-0">
-            <div class="modal-header border-0">
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-0 text-center">
-                <div id="videoModalContent" style="position: relative; width: 100%; background: #000; border-radius: 8px; overflow: hidden;">
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
-                    Confirm Delete
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p class="mb-0">Are you sure you want to delete this? This action cannot be undone.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="editModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="fas fa-edit text-primary me-2"></i>
-                    Edit Content
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <textarea class="form-control" id="editContent" rows="6" placeholder="Edit your content..."></textarea>
-                <div class="char-counter mt-2">
-                    <span id="editCharCount">0</span> / 5000
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="saveEditBtn">Save Changes</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- User Profile Modal -->
-<div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="userModalLabel">
-                    <i class="fas fa-user-circle me-2 text-primary"></i>
-                    User Profile
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id="userModalBody">
-                <div class="text-center py-4">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Toast Container -->
-<div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer"></div>
 @endsection
 
 @push('scripts')
 <script>
+// ==================== COMMUNITY-SPECIFIC FUNCTIONS ONLY ====================
+
 // ==================== GLOBALS ====================
 const csrfToken = '{{ csrf_token() }}';
 let currentPostFiles = [];
-let currentCommentFiles = {};
-let currentEditId = null;
-let currentEditType = null;
-let deleteId = null;
-let deleteType = null;
-let deleteModal = null;
-let editModal = null;
-let userModal = null;
-let createPostModal = null;
 let createPostFiles = [];
-
-// ==================== INITIALIZATION ====================
-document.addEventListener('DOMContentLoaded', function() {
-    deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-    editModal = new bootstrap.Modal(document.getElementById('editModal'));
-    userModal = new bootstrap.Modal(document.getElementById('userModal'));
-    
-    // Auto-resize textareas
-    document.querySelectorAll('textarea').forEach(textarea => {
-        textarea.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = (this.scrollHeight) + 'px';
-        });
-    });
-    
-    // Edit modal character counter
-    const editContent = document.getElementById('editContent');
-    if (editContent) {
-        editContent.addEventListener('input', function() {
-            document.getElementById('editCharCount').textContent = this.value.length;
-        });
-    }
-});
+let createPostModal = null;
 
 // ==================== CREATE POST MODAL FUNCTIONS ====================
 function openCreatePostModal() {
@@ -1840,17 +1731,14 @@ function handleCreatePostFileSelect(input) {
         return;
     }
 
-    // Add new files to array
     createPostFiles = [...createPostFiles, ...files];
     input.value = '';
     
-    // Check total size
     const totalSize = createPostFiles.reduce((sum, f) => sum + f.size, 0);
     const maxTotalSize = 50 * 1024 * 1024;
     
     if (totalSize > maxTotalSize) {
         showToast(`Total file size exceeds 50MB limit`, 'warning');
-        // Remove the last added files if they exceed limit
         createPostFiles = createPostFiles.slice(0, createPostFiles.length - files.length);
         return;
     }
@@ -1930,14 +1818,6 @@ function clearCreatePostFile() {
     document.getElementById('fileUploadStats').textContent = '0 files';
 }
 
-function formatFileSize(bytes) {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-}
-
 function submitCreatePost() {
     const content = document.getElementById('createPostContent').value.trim();
     const diseaseId = document.getElementById('createPostDiseaseId').value;
@@ -1984,7 +1864,6 @@ function submitCreatePost() {
             document.getElementById('createPostDiseaseId').value = '';
             createPostModal.hide();
             
-            // FIX: Scroll to top and reload posts
             const postsFeed = document.getElementById('postsFeed');
             postsFeed.insertAdjacentHTML('afterbegin', data.html);
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2011,120 +1890,6 @@ document.getElementById('createPostModal')?.addEventListener('hidden.bs.modal', 
     document.getElementById('createPostDiseaseId').value = '';
 });
 
-// ==================== VIDEO MODAL FUNCTIONS ====================
-let videoModal = null;
-
-function openVideoModal(type, source, isReel = false) {
-    if (!videoModal) {
-        videoModal = new bootstrap.Modal(document.getElementById('videoModal'));
-    }
-    
-    const modalContent = document.getElementById('videoModalContent');
-    
-    if (type === 'youtube') {
-        if (isReel) {
-            modalContent.innerHTML = `
-                <div style="display: flex; justify-content: center; align-items: center; min-height: 80vh;">
-                    <div style="width: 400px; max-width: 100%;">
-                        <div style="position: relative; width: 100%; padding-bottom: 177.78%;">
-                            <iframe 
-                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; border-radius: 12px;"
-                                src="https://www.youtube.com/embed/${source}?autoplay=1&rel=0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowfullscreen>
-                            </iframe>
-                        </div>
-                    </div>
-                </div>
-            `;
-        } else {
-            modalContent.innerHTML = `
-                <div style="position: relative; width: 100%; padding-bottom: 56.25%;">
-                    <iframe 
-                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; border-radius: 8px;"
-                        src="https://www.youtube.com/embed/${source}?autoplay=1&rel=0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowfullscreen>
-                    </iframe>
-                </div>
-            `;
-        }
-    } else if (type === 'facebook') {
-        let videoUrl = isReel 
-            ? `https://www.facebook.com/reel/${source}` 
-            : `https://www.facebook.com/watch/?v=${source}`;
-        
-        if (isReel) {
-            modalContent.innerHTML = `
-                <div style="display: flex; justify-content: center; align-items: center; min-height: 80vh;">
-                    <div style="width: 400px; max-width: 100%;">
-                        <div style="position: relative; width: 100%; padding-bottom: 177.78%;">
-                            <iframe 
-                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; border-radius: 12px;"
-                                src="https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(videoUrl)}&show_text=0&autoplay=1"
-                                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture"
-                                allowfullscreen>
-                            </iframe>
-                        </div>
-                    </div>
-                </div>
-            `;
-        } else {
-            modalContent.innerHTML = `
-                <div style="position: relative; width: 100%; padding-bottom: 56.25%;">
-                    <iframe 
-                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; border-radius: 8px;"
-                        src="https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(videoUrl)}&show_text=0&autoplay=1"
-                        allow="autoplay; clipboard-write; encrypted-media; picture-in-picture"
-                        allowfullscreen>
-                    </iframe>
-                </div>
-            `;
-        }
-    } else if (type === 'file') {
-        if (isReel) {
-            modalContent.innerHTML = `
-                <div style="display: flex; justify-content: center; align-items: center; min-height: 80vh;">
-                    <div style="width: 400px; max-width: 100%;">
-                        <div style="position: relative; width: 100%; padding-bottom: 177.78%; background: #000; border-radius: 12px; overflow: hidden;">
-                            <video controls autoplay style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
-                                <source src="${source}" type="video/mp4">
-                                Your browser does not support the video tag.
-                            </video>
-                        </div>
-                    </div>
-                </div>
-            `;
-        } else {
-            modalContent.innerHTML = `
-                <div style="position: relative; width: 100%; padding-bottom: 56.25%; background: #000; border-radius: 8px; overflow: hidden;">
-                    <video controls autoplay style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
-                        <source src="${source}" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
-                </div>
-            `;
-        }
-    }
-    
-    videoModal.show();
-}
-
-// Reset modals when hidden
-document.getElementById('deleteModal')?.addEventListener('hidden.bs.modal', function() {
-    deleteId = null;
-    deleteType = null;
-    document.getElementById('confirmDeleteBtn').disabled = false;
-    document.getElementById('confirmDeleteBtn').innerHTML = 'Delete';
-});
-
-document.getElementById('editModal')?.addEventListener('hidden.bs.modal', function() {
-    currentEditId = null;
-    currentEditType = null;
-    document.getElementById('saveEditBtn').disabled = false;
-    document.getElementById('saveEditBtn').innerHTML = 'Save Changes';
-});
-
 // ==================== FILTER ====================
 function filterByDisease(diseaseId) {
     if (diseaseId === 'all') {
@@ -2134,331 +1899,7 @@ function filterByDisease(diseaseId) {
     }
 }
 
-// ==================== FILE HANDLING ====================
-function handlePostFileSelect(input) {
-    const files = Array.from(input.files);
-    if (files.length === 0) return;
-
-    const totalSize = files.reduce((sum, file) => sum + file.size, 0);
-    const maxTotalSize = 50 * 1024 * 1024;
-    
-    if (totalSize > maxTotalSize) {
-        showToast(`⚠️ Total file size cannot exceed 50MB`, 'warning');
-        input.value = '';
-        return;
-    }
-
-    const maxFileSize = 10 * 1024 * 1024;
-    const oversizedFiles = files.filter(f => f.size > maxFileSize);
-    if (oversizedFiles.length > 0) {
-        showToast(`⚠️ Each file must be less than 10MB`, 'warning');
-        input.value = '';
-        return;
-    }
-
-    currentPostFiles = [...currentPostFiles, ...files];
-    input.value = '';
-    updateFilePreview();
-}
-
-function updateFilePreview() {
-    const previewArea = document.getElementById('filePreviewArea');
-    const previewContent = document.getElementById('filePreviewContent');
-    
-    if (currentPostFiles.length === 0) {
-        previewArea.style.display = 'none';
-        return;
-    }
-    
-    const totalSize = currentPostFiles.reduce((sum, file) => sum + file.size, 0);
-    
-    let html = `
-        <div style="width: 100%;">
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #e4e6eb;">
-                <i class="fas fa-paperclip" style="font-size: 20px; color: #1877f2;"></i>
-                <span><strong>${currentPostFiles.length}</strong> file(s) selected</span>
-                <span style="margin-left: auto; color: #65676b; font-size: 13px;">
-                    <i class="fas fa-database me-1"></i>Total: ${formatFileSize(totalSize)}
-                </span>
-                <button onclick="clearPostFile()" style="background: none; border: none; color: #dc3545; cursor: pointer;" title="Clear all files">
-                    <i class="fas fa-times-circle"></i>
-                </button>
-            </div>
-        </div>
-    `;
-    
-    previewContent.innerHTML = html;
-    previewArea.style.display = 'block';
-}
-
-function removeFile(index) {
-    currentPostFiles.splice(index, 1);
-    updateFilePreview();
-}
-
-function clearPostFile() {
-    currentPostFiles = [];
-    document.getElementById('filePreviewArea').style.display = 'none';
-}
-
-// ==================== POST CREATION ====================
-function submitPost() {
-    const content = document.getElementById('postContent').value.trim();
-    const diseaseId = document.getElementById('postDiseaseId').value;
-    
-    if (!content && currentPostFiles.length === 0) {
-        showToast('Please write something or attach at least one file', 'warning');
-        return;
-    }
-
-    if (!diseaseId) {
-        showToast('Please select a disease category', 'warning');
-        return;
-    }
-
-    const formData = new FormData();
-    formData.append('disease_id', diseaseId);
-    formData.append('description', content);
-    
-    if (currentPostFiles.length > 0) {
-        currentPostFiles.forEach((file, index) => {
-            formData.append(`files[${index}]`, file);
-        });
-    }
-
-    const submitBtn = document.getElementById('submitPostBtn');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-small me-2"></span> Posting...';
-
-    fetch('/community/posts', {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': csrfToken,
-            'Accept': 'application/json',
-        },
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            document.getElementById('postContent').value = '';
-            clearPostFile();
-            document.getElementById('postDiseaseId').value = '';
-            
-            const postsFeed = document.getElementById('postsFeed');
-            postsFeed.insertAdjacentHTML('afterbegin', data.html);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            
-            showToast('✅ Post created successfully!', 'success');
-        } else {
-            showToast('❌ ' + (data.message || 'Error creating post'), 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showToast('❌ An error occurred: ' + error.message, 'error');
-    })
-    .finally(() => {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
-    });
-}
-
-// ==================== LIKE POST ====================
-function toggleLike(postId, button) {
-    fetch(`/community/posts/${postId}/like`, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': csrfToken,
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            const likeCountSpan = button.querySelector('.like-count');
-            if (likeCountSpan) {
-                likeCountSpan.textContent = data.count;
-            }
-            
-            const icon = button.querySelector('i');
-            if (icon) {
-                if (data.liked) {
-                    button.classList.add('liked');
-                    icon.className = 'fas fa-heart';
-                } else {
-                    button.classList.remove('liked');
-                    icon.className = 'far fa-heart';
-                }
-            }
-            
-            button.style.transform = 'scale(1.2)';
-            setTimeout(() => button.style.transform = 'scale(1)', 200);
-        } else {
-            showToast(data.message || 'Error liking post', 'error');
-        }
-    })
-    .catch(error => {
-        showToast('Error: ' + error.message, 'error');
-    });
-}
-
-// ==================== LIKE COMMENT ====================
-function toggleCommentLike(commentId, button) {
-    fetch(`/community/comments/${commentId}/like`, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': csrfToken,
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            const likeCountSpan = button.querySelector('.like-count');
-            if (likeCountSpan) {
-                likeCountSpan.textContent = data.count;
-            }
-            
-            const icon = button.querySelector('i');
-            if (icon) {
-                if (data.liked) {
-                    button.classList.add('liked');
-                    icon.className = 'fas fa-heart';
-                } else {
-                    button.classList.remove('liked');
-                    icon.className = 'far fa-heart';
-                }
-            }
-        } else {
-            showToast(data.message || 'Error liking comment', 'error');
-        }
-    })
-    .catch(error => {
-        showToast('Error: ' + error.message, 'error');
-    });
-}
-
-// ==================== COMMENT FUNCTIONS ====================
-function handleCommentFileSelect(postId, input) {
-    const file = input.files[0];
-    if (!file) return;
-
-    // Check file size (max 5MB for comments)
-    const maxFileSize = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxFileSize) {
-        showToast('File size cannot exceed 5MB', 'warning');
-        input.value = '';
-        return;
-    }
-
-    currentCommentFiles[postId] = file;
-    
-    const previewArea = document.getElementById(`comment-file-preview-${postId}`);
-    const previewContent = document.getElementById(`comment-file-preview-content-${postId}`);
-    
-    let previewHtml = '';
-    
-    if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            previewContent.innerHTML = `
-                <img src="${e.target.result}" style="max-height:40px;border-radius:4px;">
-                <span style="font-size:12px;">${file.name.length > 20 ? file.name.substring(0,17)+'...' : file.name}</span>
-            `;
-        };
-        reader.readAsDataURL(file);
-    } else {
-        let icon = 'fa-file-alt';
-        if (file.type.includes('pdf')) icon = 'fa-file-pdf';
-        else if (file.type.includes('video')) icon = 'fa-file-video';
-        else if (file.type.includes('word')) icon = 'fa-file-word';
-        else if (file.type.includes('excel')) icon = 'fa-file-excel';
-        
-        previewContent.innerHTML = `
-            <i class="fas ${icon}" style="font-size:20px;color:#1877f2;"></i>
-            <span style="font-size:12px;">${file.name.length > 20 ? file.name.substring(0,17)+'...' : file.name}</span>
-        `;
-    }
-    
-    previewArea.style.display = 'block';
-}
-
-function clearCommentFile(postId) {
-    currentCommentFiles[postId] = null;
-    document.getElementById(`comment-file-${postId}`).value = '';
-    const previewArea = document.getElementById(`comment-file-preview-${postId}`);
-    previewArea.style.display = 'none';
-    const previewContent = document.getElementById(`comment-file-preview-content-${postId}`);
-    if (previewContent) previewContent.innerHTML = '';
-}
-
-function submitComment(event, postId) {
-    event.preventDefault();
-    
-    const textarea = document.getElementById(`comment-input-${postId}`);
-    const content = textarea.value.trim();
-    const file = currentCommentFiles[postId];
-    
-    if (!content && !file) return;
-
-    const formData = new FormData();
-    formData.append('comment_details', content);
-    if (file) {
-        formData.append('file', file);
-    }
-
-    const submitBtn = document.getElementById(`comment-submit-${postId}`);
-    const originalText = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-small"></span>';
-
-    fetch(`/community/posts/${postId}/comments`, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': csrfToken,
-            'Accept': 'application/json',
-        },
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            textarea.value = '';
-            textarea.style.height = 'auto';
-            clearCommentFile(postId);
-            
-            const container = document.getElementById(`comments-container-${postId}`);
-            if (container) {
-                container.insertAdjacentHTML('afterbegin', data.html);
-            }
-            
-            document.querySelectorAll(`#post-${postId} .comment-count`).forEach(el => {
-                el.textContent = parseInt(el.textContent) + 1;
-            });
-            
-            const commentsSection = document.getElementById(`comments-section-${postId}`);
-            if (commentsSection && (commentsSection.style.display === 'none' || !commentsSection.style.display)) {
-                toggleComments(postId);
-            }
-            
-            showToast('Comment added!', 'success');
-        } else {
-            showToast(data.message || 'Error adding comment', 'error');
-        }
-    })
-    .catch(error => {
-        showToast('Error: ' + error.message, 'error');
-    })
-    .finally(() => {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
-    });
-}
-
+// ==================== TOGGLE COMMENTS (Community specific) ====================
 function toggleComments(postId) {
     const section = document.getElementById(`comments-section-${postId}`);
     const btn = document.getElementById(`toggle-comments-${postId}`);
@@ -2477,280 +1918,32 @@ function toggleComments(postId) {
 }
 
 function loadMoreComments(postId) {
-    const btn = document.getElementById(`load-more-${postId}`);
-    const offset = parseInt(btn.dataset.offset) || 3;
-    
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-small me-2"></span> Loading...';
-
-    fetch(`/community/posts/${postId}/comments?offset=${offset}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.html) {
-                const container = document.getElementById(`comments-container-${postId}`);
-                container.insertAdjacentHTML('beforeend', data.html);
-            }
-            
-            if (data.has_more) {
-                btn.dataset.offset = offset + data.comments.length;
-                btn.disabled = false;
-                btn.innerHTML = `<i class="fas fa-chevron-down me-1"></i>Load more comments (${data.remaining})`;
-            } else {
-                btn.remove();
-            }
-        })
-        .catch(error => {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-chevron-down me-1"></i>Try again';
-        });
+    // Instead of loading more comments, open the modal
+    openPostModal(postId);
 }
 
-// ==================== USER MODAL ====================
-function showUserModal(userId) {
-    const modalBody = document.getElementById('userModalBody');
-    modalBody.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
+// ==================== POST MENU ====================
+function togglePostMenu(postId) {
+    const menu = document.getElementById(`post-menu-${postId}`);
+    if (!menu) return;
     
-    userModal.show();
-    
-    fetch(`/community/user/${userId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                renderUserModal(data.user);
-            } else {
-                modalBody.innerHTML = '<div class="alert alert-danger">Error loading user details</div>';
-            }
-        })
-        .catch(error => {
-            modalBody.innerHTML = '<div class="alert alert-danger">Failed to load user details</div>';
-        });
-}
-
-function renderUserModal(user) {
-    const modalBody = document.getElementById('userModalBody');
-    
-    modalBody.innerHTML = `
-        <div class="text-center">
-            ${user.avatar 
-                ? `<img src="${user.avatar}" alt="${user.name}" class="user-modal-avatar">`
-                : `<div class="user-modal-placeholder">${user.name.charAt(0).toUpperCase()}</div>`
-            }
-            <h5 class="mb-1">${user.name}</h5>
-            <p class="text-muted small mb-2">${user.email}</p>
-            <p class="small text-muted mb-2"><i class="fas fa-map-marker-alt me-1"></i> ${user.location}</p>
-            <p class="small text-muted mb-3"><i class="fas fa-calendar-alt me-1"></i> Joined ${user.joined}</p>
-            <p class="mb-3 px-3">${user.bio}</p>
-            
-            <div class="row g-2 mb-3 px-3">
-                <div class="col-6">
-                    <div class="user-stat-card">
-                        <div class="user-stat-value">${user.posts_count}</div>
-                        <div class="user-stat-label">Posts</div>
-                    </div>
-                </div>
-                <div class="col-6">
-                    <div class="user-stat-card">
-                        <div class="user-stat-value">${user.comments_count}</div>
-                        <div class="user-stat-label">Comments</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-// ==================== EDIT FUNCTIONS ====================
-function editPost(postId) {
-    currentEditId = postId;
-    currentEditType = 'post';
-    
-    const contentElement = document.getElementById(`post-content-${postId}`);
-    if (!contentElement) {
-        showToast('Error: Could not find post content', 'error');
-        return;
-    }
-    
-    const content = contentElement.textContent.trim();
-    document.getElementById('editContent').value = content;
-    document.getElementById('editCharCount').textContent = content.length;
-    
-    editModal.show();
-}
-
-function editComment(commentId) {
-    currentEditId = commentId;
-    currentEditType = 'comment';
-    
-    const contentElement = document.getElementById(`comment-content-${commentId}`);
-    if (!contentElement) {
-        showToast('Error: Could not find comment content', 'error');
-        return;
-    }
-    
-    const content = contentElement.textContent.trim();
-    document.getElementById('editContent').value = content;
-    document.getElementById('editCharCount').textContent = content.length;
-    
-    editModal.show();
-}
-
-document.getElementById('saveEditBtn').addEventListener('click', function() {
-    const content = document.getElementById('editContent').value.trim();
-    if (!content || !currentEditId) {
-        showToast('Please enter some content', 'warning');
-        return;
-    }
-
-    const url = currentEditType === 'post'
-        ? `/community/posts/${currentEditId}/update`
-        : `/community/comments/${currentEditId}/update`;
-
-    const saveBtn = this;
-    const originalText = saveBtn.innerHTML;
-    saveBtn.disabled = true;
-    saveBtn.innerHTML = '<span class="spinner-small me-2"></span> Saving...';
-
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': csrfToken,
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ 
-            description: content,
-            comment_details: content
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            const elementId = currentEditType === 'post' 
-                ? `post-content-${currentEditId}`
-                : `comment-content-${currentEditId}`;
-            
-            const element = document.getElementById(elementId);
-            if (element) {
-                element.textContent = content;
-                element.style.opacity = '0.5';
-                setTimeout(() => element.style.opacity = '1', 300);
-            }
-            
-            editModal.hide();
-            showToast(`${currentEditType} updated!`, 'success');
-        } else {
-            showToast(data.message || 'Error updating', 'error');
+    document.querySelectorAll('.post-dropdown-menu').forEach(m => {
+        if (m.id !== `post-menu-${postId}`) {
+            m.style.display = 'none';
         }
-    })
-    .catch(error => {
-        showToast('Error: ' + error.message, 'error');
-    })
-    .finally(() => {
-        saveBtn.disabled = false;
-        saveBtn.innerHTML = originalText;
     });
+    
+    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+    if (!event.target.closest('.post-actions-menu')) {
+        document.querySelectorAll('.post-dropdown-menu').forEach(menu => {
+            menu.style.display = 'none';
+        });
+    }
 });
 
-// ==================== DELETE FUNCTIONS ====================
-function confirmDelete(id, type) {
-    deleteId = id;
-    deleteType = type;
-    deleteModal.show();
-}
-
-document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
-    if (!deleteId || !deleteType) return;
-
-    const url = deleteType === 'post'
-        ? `/community/posts/${deleteId}/delete`
-        : `/community/comments/${deleteId}/delete`;
-
-    const deleteBtn = this;
-    const originalText = deleteBtn.innerHTML;
-    deleteBtn.disabled = true;
-    deleteBtn.innerHTML = '<span class="spinner-small me-2"></span> Deleting...';
-
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': csrfToken,
-            'Accept': 'application/json'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            const selector = deleteType === 'post' 
-                ? `#post-${deleteId}` 
-                : `#comment-${deleteId}`;
-            
-            const element = document.querySelector(selector);
-            
-            if (element) {
-                element.style.opacity = '0';
-                element.style.transition = 'opacity 0.3s ease-out';
-                
-                setTimeout(() => {
-                    element.remove();
-                    
-                    if (deleteType === 'comment') {
-                        const postCard = element.closest?.('.post-card');
-                        if (postCard) {
-                            const postId = postCard.id.replace('post-', '');
-                            document.querySelectorAll(`#post-${postId} .comment-count`).forEach(el => {
-                                el.textContent = Math.max(0, parseInt(el.textContent) - 1);
-                            });
-                        }
-                    }
-                }, 300);
-            }
-            
-            deleteModal.hide();
-            showToast(`${deleteType} deleted!`, 'success');
-        } else {
-            showToast(data.message || 'Error deleting', 'error');
-        }
-    })
-    .catch(error => {
-        showToast('Error: ' + error.message, 'error');
-    })
-    .finally(() => {
-        deleteBtn.disabled = false;
-        deleteBtn.innerHTML = originalText;
-    });
-});
-
-// ==================== UTILITY FUNCTIONS ====================
-function showToast(message, type = 'success') {
-    const container = document.getElementById('toastContainer');
-    const id = 'toast-' + Date.now();
-    const bgColor = type === 'success' ? '#28a745' : type === 'warning' ? '#ffc107' : '#dc3545';
-    const icon = type === 'success' ? 'fa-check-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-times-circle';
-    
-    const html = `
-        <div id="${id}" class="toast align-items-center text-white border-0" role="alert" style="background: ${bgColor};">
-            <div class="d-flex">
-                <div class="toast-body">
-                    <i class="fas ${icon} me-2"></i>${message}
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-            </div>
-        </div>
-    `;
-    
-    container.insertAdjacentHTML('beforeend', html);
-    
-    const toast = new bootstrap.Toast(document.getElementById(id), { delay: 3000 });
-    toast.show();
-    
-    document.getElementById(id).addEventListener('hidden.bs.toast', function() {
-        this.remove();
-    });
-}
-
-function openImageModal(src) {
-    document.getElementById('modalImage').src = src;
-    new bootstrap.Modal(document.getElementById('imageModal')).show();
-}
 </script>
 @endpush
