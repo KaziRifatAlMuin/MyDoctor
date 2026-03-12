@@ -8,6 +8,8 @@ use App\Models\Disease;
 use App\Models\User;
 use App\Models\PostLike;
 use App\Models\CommentLike;
+use App\Models\Notification;
+use App\Services\CommunityNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -18,6 +20,13 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class CommunityController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(CommunityNotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     /**
      * Display the forum page with posts and disease filter
      */
@@ -165,65 +174,93 @@ class CommunityController extends Controller
     }
 
     /**
+     * Return post HTML for modal (with all comments)
+     */
+    public function modalPost(Post $post)
+    {
+        try {
+            // Load the post with all comments and necessary relationships
+            $post->load([
+                'user', 
+                'disease', 
+                'comments' => function($q) {
+                    $q->with(['user', 'likes'])
+                      ->withCount('likes')
+                      ->latest();
+                }
+            ])->loadCount(['likes as likes_count']);
+            
+            // Add Bengali name to disease
+            $diseaseTranslations = Config::get('health.diseases', []);
+            if ($post->disease) {
+                $post->disease->bn_name = $diseaseTranslations[$post->disease->disease_name] ?? null;
+            }
+            
+            // Return the modal post view
+            return view('community.modal-post', compact('post'));
+        } catch (\Exception $e) {
+            Log::error('Modal Post Error: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to load post'], 500);
+        }
+    }
+
+    /**
      * API endpoint to load posts (returns JSON)
      */
-/**
- * API endpoint to load posts (returns JSON)
- */
-public function loadPosts(Request $request)
-{
-    try {
-        $diseaseId = $request->get('disease');
-        $diseaseTranslations = Config::get('health.diseases', []);
-        
-        $query = Post::with(['user', 'disease'])
-            ->withCount(['likes as likes_count']);
+    public function loadPosts(Request $request)
+    {
+        try {
+            $diseaseId = $request->get('disease');
+            $diseaseTranslations = Config::get('health.diseases', []);
+            
+            $query = Post::with(['user', 'disease'])
+                ->withCount(['likes as likes_count']);
 
-        if ($diseaseId && $diseaseId !== 'all') {
-            $query->where('disease_id', $diseaseId);
+            if ($diseaseId && $diseaseId !== 'all') {
+                $query->where('disease_id', $diseaseId);
+            }
+
+            $posts = $query->latest()->get();
+            
+            $formattedPosts = $posts->map(function($post) use ($diseaseTranslations) {
+                return [
+                    'id' => $post->id,
+                    'description' => $post->description,
+                    'files' => $post->all_files,
+                    'file_count' => $post->file_count,
+                    'total_size' => $post->formatted_total_size,
+                    'like_count' => $post->likes_count,
+                    'comment_count' => $post->comment_count,
+                    'created_at' => $post->created_at,
+                    'user' => [
+                        'id' => $post->user->id,
+                        'name' => $post->user->name,
+                        'email' => $post->user->email,
+                        'avatar' => $post->user->picture ? Storage::url($post->user->picture) : null,
+                        'created_at' => $post->user->created_at,
+                    ],
+                    'disease' => $post->disease ? [
+                        'id' => $post->disease->id,
+                        'name' => $post->disease->disease_name,
+                        'bn_name' => $diseaseTranslations[$post->disease->disease_name] ?? null,
+                    ] : null,
+                    'user_liked' => Auth::check() ? $post->likes()->where('user_id', Auth::id())->exists() : false,
+                    'is_owner' => Auth::check() && $post->user_id === Auth::id(),
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'posts' => $formattedPosts
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Load Posts API Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error loading posts: ' . $e->getMessage()
+            ], 500);
         }
-
-        $posts = $query->latest()->get();
-        
-        $formattedPosts = $posts->map(function($post) use ($diseaseTranslations) {
-            return [
-                'id' => $post->id,
-                'description' => $post->description,
-                'files' => $post->all_files,
-                'file_count' => $post->file_count,
-                'total_size' => $post->formatted_total_size,
-                'like_count' => $post->likes_count,
-                'comment_count' => $post->comment_count,
-                'created_at' => $post->created_at,
-                'user' => [
-                    'id' => $post->user->id,
-                    'name' => $post->user->name,
-                    'email' => $post->user->email,
-                    'avatar' => $post->user->picture ? Storage::url($post->user->picture) : null,
-                    'created_at' => $post->user->created_at,
-                ],
-                'disease' => $post->disease ? [
-                    'id' => $post->disease->id,
-                    'name' => $post->disease->disease_name,
-                    'bn_name' => $diseaseTranslations[$post->disease->disease_name] ?? null,
-                ] : null,
-                'user_liked' => false,
-                'is_owner' => false,
-            ];
-        });
-
-        return response()->json([
-            'success' => true,
-            'posts' => $formattedPosts
-        ]);
-    } catch (\Exception $e) {
-        Log::error('Load Posts API Error: ' . $e->getMessage());
-        return response()->json([
-            'success' => false,
-            'message' => 'Error loading posts: ' . $e->getMessage()
-        ], 500);
     }
-}
 
     /**
      * API endpoint to load comments for a post (returns JSON)
@@ -596,7 +633,7 @@ public function loadPosts(Request $request)
     }
 
     /**
-     * Toggle like on a post - FIXED to prevent negative counts
+     * Toggle like on a post - FIXED to prevent negative counts and send notifications
      */
     public function togglePostLike(Request $request, Post $post)
     {
@@ -621,6 +658,10 @@ public function loadPosts(Request $request)
                 }
                 $post->refresh();
                 $liked = false;
+                
+                // Remove notification when unliked
+                $this->removeNotification($post, $user, 'like');
+                
             } else {
                 PostLike::create([
                     'post_id' => $post->id,
@@ -629,6 +670,11 @@ public function loadPosts(Request $request)
                 $post->increment('like_count');
                 $post->refresh();
                 $liked = true;
+                
+                // Send notification for new like
+                if ($this->notificationService && $post->user_id !== $user->id) {
+                    $this->notificationService->postLiked($post, $user);
+                }
             }
 
             return response()->json([
@@ -646,7 +692,27 @@ public function loadPosts(Request $request)
     }
 
     /**
-     * Store a new comment with optional file
+     * Remove notification when like is removed
+     */
+    protected function removeNotification($post, $user, $type)
+    {
+        try {
+            // Delete the notification if it exists
+            Notification::where('user_id', $post->user_id)
+                ->where('from_user_id', $user->id)
+                ->where('notifiable_type', Post::class)
+                ->where('notifiable_id', $post->id)
+                ->where('type', $type)
+                ->delete();
+                
+            Log::info('Notification removed for unlike');
+        } catch (\Exception $e) {
+            Log::error('Failed to remove notification: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Store a new comment with optional file and send notification
      */
     public function storeComment(Request $request, Post $post)
     {
@@ -698,6 +764,11 @@ public function loadPosts(Request $request)
             $comment = Comment::create($data);
             $post->increment('comment_count');
             $comment->load('user');
+
+            // Send notification for new comment
+            if ($this->notificationService && $post->user_id !== Auth::id()) {
+                $this->notificationService->commentAdded($comment, $post);
+            }
 
             $html = view('community.partials.comment', ['comment' => $comment])->render();
 
@@ -830,7 +901,7 @@ public function loadPosts(Request $request)
     }
 
     /**
-     * Toggle like on a comment - FIXED to prevent negative counts
+     * Toggle like on a comment
      */
     public function toggleCommentLike(Request $request, Comment $comment)
     {
