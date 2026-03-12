@@ -122,15 +122,23 @@ class HealthController extends Controller
 
     public function storeMetric(Request $request)
     {
+        $user = Auth::user();
+        if (!$user) abort(401);
+
+        // Use user_id from request if provided (admin context), otherwise use Auth::id()
+        $userId = $request->input('user_id') ? (int)$request->input('user_id') : Auth::id();
+
+        // Authorization: user can only add for themselves, admin can add for anyone
+        if ($userId !== $user->id && $user->role !== 'admin') {
+            abort(403);
+        }
+
         $validTypes = implode(',', array_keys(config('health.metric_types')));
 
         $request->validate([
             'metric_type' => "required|string|in:$validTypes",
             'recorded_at' => 'required|date',
         ]);
-
-        // Use user_id from request if provided (admin context), otherwise use Auth::id()
-        $userId = $request->input('user_id') ? (int)$request->input('user_id') : Auth::id();
 
         $metricType = $request->metric_type;
         $cfg        = config("health.metric_types.$metricType");
@@ -158,15 +166,23 @@ class HealthController extends Controller
 
     public function storeSymptom(Request $request)
     {
+        $user = Auth::user();
+        if (!$user) abort(401);
+
+        // Use user_id from request if provided (admin context), otherwise use Auth::id()
+        $userId = $request->input('user_id') ? (int)$request->input('user_id') : Auth::id();
+
+        // Authorization: user can only add for themselves, admin can add for anyone
+        if ($userId !== $user->id && $user->role !== 'admin') {
+            abort(403);
+        }
+
         $request->validate([
             'symptom_name'   => 'required|string|max:255',
             'severity_level' => 'required|integer|min:1|max:10',
             'recorded_at'    => 'required|date',
             'note'           => 'nullable|string|max:1000',
         ]);
-
-        // Use user_id from request if provided (admin context), otherwise use Auth::id()
-        $userId = $request->input('user_id') ? (int)$request->input('user_id') : Auth::id();
 
         Symptom::create([
             'user_id'        => $userId,
@@ -186,15 +202,23 @@ class HealthController extends Controller
 
     public function storeDisease(Request $request)
     {
+        $user = Auth::user();
+        if (!$user) abort(401);
+
+        // Use user_id from request if provided (admin context), otherwise use Auth::id()
+        $userId = $request->input('user_id') ? (int)$request->input('user_id') : Auth::id();
+
+        // Authorization: user can only add for themselves, admin can add for anyone
+        if ($userId !== $user->id && $user->role !== 'admin') {
+            abort(403);
+        }
+
         $request->validate([
             'disease_id'   => 'required|exists:diseases,id',
             'diagnosed_at' => 'nullable|date',
             'status'       => 'required|in:active,recovered,chronic,managed',
             'notes'        => 'nullable|string|max:1000',
         ]);
-
-        // Use user_id from request if provided (admin context), otherwise use Auth::id()
-        $userId = $request->input('user_id') ? (int)$request->input('user_id') : Auth::id();
 
         if (UserDisease::where('user_id', $userId)->where('disease_id', $request->disease_id)->exists()) {
             return back()->with('error', 'This disease is already in the user\'s records.');
@@ -218,6 +242,17 @@ class HealthController extends Controller
 
     public function storeUpload(Request $request)
     {
+        $user = Auth::user();
+        if (!$user) abort(401);
+
+        // Use user_id from request if provided (admin context), otherwise use Auth::id()
+        $userId = $request->input('user_id') ? (int)$request->input('user_id') : Auth::id();
+
+        // Authorization: user can only add for themselves, admin can add for anyone
+        if ($userId !== $user->id && $user->role !== 'admin') {
+            abort(403);
+        }
+
         $request->validate([
             'title'         => 'required|string|max:255',
             'type'          => 'required|in:prescription,report',
@@ -228,9 +263,6 @@ class HealthController extends Controller
             'institution'   => 'nullable|string|max:255',
             'document_date' => 'nullable|date',
         ]);
-
-        // Use user_id from request if provided (admin context), otherwise use Auth::id()
-        $userId = $request->input('user_id') ? (int)$request->input('user_id') : Auth::id();
 
         $path = $request->file('file')->store('uploads', 'public');
 
