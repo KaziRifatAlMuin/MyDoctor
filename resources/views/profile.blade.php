@@ -309,6 +309,12 @@
                                     {{ auth()->user()->blood_group }}
                                 </span>
                             @endif
+                            @if (auth()->user()->role)
+                                <span class="occupation-badge" style="background: {{ auth()->user()->role === 'admin' ? 'rgba(245,101,101,0.12)' : 'rgba(102,126,234,0.12)' }}; color: {{ auth()->user()->role === 'admin' ? '#e53e3e' : '#667eea' }};">
+                                    <i class="fas fa-user-shield"></i>
+                                    {{ ucfirst(auth()->user()->role) }}
+                                </span>
+                            @endif
                         </div>
                     </div>
 
