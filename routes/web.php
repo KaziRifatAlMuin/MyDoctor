@@ -97,15 +97,23 @@ Route::middleware('auth')->group(function () {
     Route::delete('/health/disease/{userDisease}', [HealthController::class, 'destroyDisease'])->name('health.disease.destroy');
     Route::delete('/health/upload/{upload}', [HealthController::class, 'destroyUpload'])->name('health.upload.destroy');
     
-    // Notifications
-    Route::get('/notifications', function () {
-        return view('notifications');
-    })->name('notifications');
-    
-    Route::get('/notification/{id?}', function ($id = null) {
-        return view('notification', ['id' => $id]);
-    })->name('notification');
-    
+  /*
+|--------------------------------------------------------------------------
+| Notification Routes
+|--------------------------------------------------------------------------
+*/
+Route::middleware('auth')->prefix('notifications')->name('notifications.')->group(function () {
+    Route::get('/', [App\Http\Controllers\NotificationController::class, 'index'])->name('index');
+    Route::get('/unread-count', [App\Http\Controllers\NotificationController::class, 'unreadCount'])->name('unread-count');
+    Route::post('/{id}/read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('read');
+    Route::post('/mark-all-read', [App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
+    Route::delete('/{id}/delete', [App\Http\Controllers\NotificationController::class, 'delete'])->name('delete');
+    Route::delete('/clear-all', [App\Http\Controllers\NotificationController::class, 'clearAll'])->name('clear-all');
+});
+
+
+
+
     // Suggestions
     Route::get('/suggestions', [SuggestionsController::class, 'index'])->name('suggestions');
 
@@ -169,7 +177,7 @@ Route::prefix('health')->name('health.')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Community Routes - MATCHING JAVASCRIPT CALLS
+| Community Routes - FULLY WORKING WITH MODAL DYNAMIC UPDATES
 |--------------------------------------------------------------------------
 */
 Route::prefix('community')->name('community.')->group(function () {
@@ -178,24 +186,30 @@ Route::prefix('community')->name('community.')->group(function () {
     Route::get('/forum', [CommunityController::class, 'index'])->name('index');
     Route::get('/posts/{post}', [CommunityController::class, 'showPost'])->name('posts.show');
     
-    // API routes (return JSON) - THESE MUST MATCH THE JAVASCRIPT CALLS
+    // MODAL POST - CRITICAL FOR DYNAMIC RELOADS
+    Route::get('/modal-post/{post}', [CommunityController::class, 'modalPost'])->name('modal.post');
+    
+    // API routes (JSON responses)
     Route::get('/posts/load', [CommunityController::class, 'loadPosts'])->name('posts.load');
     Route::get('/posts/{post}/comments', [CommunityController::class, 'loadComments'])->name('posts.comments.load');
     Route::get('/posts/{post}/comments/more', [CommunityController::class, 'loadMoreComments'])->name('posts.comments.more');
     
-    // Post CRUD - MATCHING JAVASCRIPT PATHS
-    Route::post('/posts', [CommunityController::class, 'storePost'])->name('posts.store');  // For /community/posts
-    Route::post('/posts/{post}/update', [CommunityController::class, 'updatePost'])->name('posts.update');
+    // Post CRUD - MATCHES YOUR JAVASCRIPT EXACTLY
+    Route::post('/posts', [CommunityController::class, 'storePost'])->name('posts.store');
+    Route::post('/posts/{post}/update', [CommunityController::class, 'updatePost'])->name('posts.update');  // ← POST not PATCH
     Route::post('/posts/{post}/delete', [CommunityController::class, 'destroyPost'])->name('posts.destroy');
     Route::post('/posts/{post}/like', [CommunityController::class, 'togglePostLike'])->name('posts.like');
-    // User details for modal
-Route::get('/user/{userId}', [CommunityController::class, 'getUserDetails'])->name('user.details');
-    // Comment CRUD - MATCHING JAVASCRIPT PATHS
+    
+    // User details for modals
+    Route::get('/user/{userId}', [CommunityController::class, 'getUserDetails'])->name('user.details');
+    
+    // Comment CRUD - MATCHES JAVASCRIPT
     Route::post('/posts/{post}/comments', [CommunityController::class, 'storeComment'])->name('comments.store');
     Route::post('/comments/{comment}/update', [CommunityController::class, 'updateComment'])->name('comments.update');
     Route::post('/comments/{comment}/delete', [CommunityController::class, 'destroyComment'])->name('comments.destroy');
     Route::post('/comments/{comment}/like', [CommunityController::class, 'toggleCommentLike'])->name('comments.like');
 });
+
 /*
 |--------------------------------------------------------------------------
 | Medicine Routes
