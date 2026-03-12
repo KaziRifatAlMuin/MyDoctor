@@ -250,6 +250,10 @@ Route::prefix('medicine')->name('medicine.')->middleware('auth')->group(function
     Route::view('/prescriptions', 'medicine.prescriptions')->name('prescriptions');
 });
 
+// Public user routes
+Route::get('/users', [App\Http\Controllers\UserController::class, 'index'])->name('users.index');
+Route::get('/user/{user}', [App\Http\Controllers\UserController::class, 'show'])->name('users.show');
+
 /*
 |--------------------------------------------------------------------------
 | Admin Routes
@@ -258,12 +262,40 @@ Route::prefix('medicine')->name('medicine.')->middleware('auth')->group(function
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\AdminDashboardController::class, 'index'])->name('dashboard');
     
-    // User management routes
-    Route::get('/users', [App\Http\Controllers\AdminDashboardController::class, 'users'])->name('users.index');
-    Route::get('/users/{user}', [App\Http\Controllers\AdminDashboardController::class, 'show'])->name('users.show');
-    
     // Future admin routes
     Route::get('/medical', [App\Http\Controllers\AdminDashboardController::class, 'medical'])->name('medical.index');
     Route::get('/analytics', [App\Http\Controllers\AdminDashboardController::class, 'analytics'])->name('analytics');
     Route::get('/settings', [App\Http\Controllers\AdminDashboardController::class, 'settings'])->name('settings');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Admin API Routes
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'admin'])->prefix('api/users')->group(function () {
+    Route::get('{id}', function ($id) {
+        $user = \App\Models\User::findOrFail($id);
+        return response()->json($user->only([
+            'id', 'name', 'email', 'phone', 'occupation', 'blood_group', 'date_of_birth', 'picture', 'role'
+        ]));
+    });
+    
+    Route::get('{id}/medical', function ($id) {
+        $user = \App\Models\User::with('medicines', 'userDiseases.disease')->findOrFail($id);
+        return response()->json([
+            'medicines' => $user->medicines->map(fn($m) => [
+                'id' => $m->id,
+                'name' => $m->name,
+                'dosage' => $m->dosage,
+                'frequency' => $m->frequency,
+                'start_date' => $m->start_date
+            ]),
+            'diseases' => $user->userDiseases->map(fn($d) => [
+                'id' => $d->id,
+                'name' => $d->disease->name,
+                'diagnosed_at' => $d->diagnosed_at
+            ])
+        ]);
+    });
 });

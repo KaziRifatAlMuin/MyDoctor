@@ -22,14 +22,63 @@ class AdminDashboardController extends Controller
         $this->middleware(['auth', 'admin']);
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        // Gather statistics for the dashboard
+        // Get paginated users with filtering
+        $query = User::query();
+        
+        // Apply search filter
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+        
+        // Apply role filter
+        if ($request->filled('role')) {
+            $query->where('role', $request->get('role'));
+        }
+        
+        // Apply sorting
+        $sort = $request->get('sort', 'latest');
+        switch ($sort) {
+            case 'oldest':
+                $query->oldest();
+                break;
+            case 'name':
+                $query->orderBy('name', 'asc');
+                break;
+            default:
+                $query->latest();
+                break;
+        }
+        
+        $users = $query->paginate(50);
+        
+        // Get statistics for the dashboard
         $stats = $this->getDashboardStats();
-        $recent_users = $this->getRecentUsers();
         $recent_activities = $this->getRecentActivities();
+        
+        // Get user statistics
+        $adminCount = User::where('role', 'admin')->count();
+        $memberCount = User::where('role', 'member')->count();
+        $recentUsers = User::whereDate('created_at', '>=', Carbon::now()->subWeek())->count();
 
-        return view('admin.dashboard', compact('stats', 'recent_users', 'recent_activities'));
+        // Add to stats array
+        $stats['admin_count'] = $adminCount;
+        $stats['member_count'] = $memberCount;
+        $stats['recent_users'] = $recentUsers;
+
+        return view('admin.dashboard', compact(
+            'stats', 
+            'recent_activities',
+            'users',
+            'adminCount',
+            'memberCount',
+            'recentUsers'
+        ));
     }
 
     private function getDashboardStats()
@@ -153,49 +202,8 @@ class AdminDashboardController extends Controller
 
     public function users(Request $request)
     {
-        $query = User::query();
-        
-        // Apply search filter
-        if ($request->filled('search')) {
-            $search = $request->get('search');
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
-        
-        // Apply role filter
-        if ($request->filled('role')) {
-            $query->where('role', $request->get('role'));
-        }
-        
-        // Apply sorting
-        $sort = $request->get('sort', 'latest');
-        switch ($sort) {
-            case 'oldest':
-                $query->oldest();
-                break;
-            case 'name':
-                $query->orderBy('name', 'asc');
-                break;
-            default:
-                $query->latest();
-                break;
-        }
-        
-        $users = $query->paginate(15);
-        
-        // Get statistics for the header cards
-        $adminCount = User::where('role', 'admin')->count();
-        $memberCount = User::where('role', 'member')->count();
-        $recentUsers = User::whereDate('created_at', '>=', Carbon::now()->subWeek())->count();
-        
-        return view('admin.users.index', compact(
-            'users', 
-            'adminCount', 
-            'memberCount', 
-            'recentUsers'
-        ));
+        // Redirect to main admin dashboard 
+        return redirect()->route('admin.dashboard', $request->all());
     }
     
     public function show(User $user)
