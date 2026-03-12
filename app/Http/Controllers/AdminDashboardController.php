@@ -26,36 +26,12 @@ class AdminDashboardController extends Controller
 
     public function index(Request $request)
     {
-        // Get paginated users with filtering
+        // Default sort: admins first (role='admin'), then by ID
         $query = User::query();
         
-        // Apply search filter
-        if ($request->filled('search')) {
-            $search = $request->get('search');
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
-        
-        // Apply role filter
-        if ($request->filled('role')) {
-            $query->where('role', $request->get('role'));
-        }
-        
-        // Apply sorting
-        $sort = $request->get('sort', 'latest');
-        switch ($sort) {
-            case 'oldest':
-                $query->oldest();
-                break;
-            case 'name':
-                $query->orderBy('name', 'asc');
-                break;
-            default:
-                $query->latest();
-                break;
-        }
+        // Order by role (admin first) then by ID
+        $query->orderByRaw("CASE WHEN role = 'admin' THEN 0 ELSE 1 END")
+              ->orderBy('id', 'asc');
         
         $users = $query->paginate(50);
         

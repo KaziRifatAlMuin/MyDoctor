@@ -260,7 +260,8 @@ class HealthController extends Controller
 
     public function updateMetric(Request $request, HealthMetric $healthMetric)
     {
-        if ($healthMetric->user_id !== Auth::id()) abort(403);
+        $user = Auth::user();
+        if (!$user || ($healthMetric->user_id !== $user->id && $user->role !== 'admin')) abort(403);
 
         $validTypes = implode(',', array_keys(config('health.metric_types')));
 
@@ -284,12 +285,19 @@ class HealthController extends Controller
             'value'       => $value,
         ]);
 
+        $referer = $request->header('referer');
+        if ($referer && str_contains($referer, '/user/')) {
+            $userId = $request->input('user_id') ? (int)$request->input('user_id') : $healthMetric->user_id;
+            return redirect()->route('users.show', $userId)->fragment('metrics')->with('success', 'Health metric updated successfully.');
+        }
+
         return redirect()->route('health')->with('success', 'Health metric updated successfully.');
     }
 
     public function updateSymptom(Request $request, Symptom $symptom)
     {
-        if ($symptom->user_id !== Auth::id()) abort(403);
+        $user = Auth::user();
+        if (!$user || ($symptom->user_id !== $user->id && $user->role !== 'admin')) abort(403);
 
         $request->validate([
             'symptom_name'   => 'required|string|max:255',
@@ -300,12 +308,19 @@ class HealthController extends Controller
 
         $symptom->update($request->only('symptom_name', 'severity_level', 'recorded_at', 'note'));
 
+        $referer = $request->header('referer');
+        if ($referer && str_contains($referer, '/user/')) {
+            $userId = $request->input('user_id') ? (int)$request->input('user_id') : $symptom->user_id;
+            return redirect()->route('users.show', $userId)->fragment('symptomsPane')->with('success', 'Symptom updated successfully.');
+        }
+
         return redirect()->route('health')->with('success', 'Symptom updated successfully.');
     }
 
     public function updateDisease(Request $request, UserDisease $userDisease)
     {
-        if ($userDisease->user_id !== Auth::id()) abort(403);
+        $user = Auth::user();
+        if (!$user || ($userDisease->user_id !== $user->id && $user->role !== 'admin')) abort(403);
 
         $request->validate([
             'status'       => 'required|in:active,recovered,chronic,managed',
@@ -315,12 +330,19 @@ class HealthController extends Controller
 
         $userDisease->update($request->only('status', 'diagnosed_at', 'notes'));
 
+        $referer = $request->header('referer');
+        if ($referer && str_contains($referer, '/user/')) {
+            $userId = $request->input('user_id') ? (int)$request->input('user_id') : $userDisease->user_id;
+            return redirect()->route('users.show', $userId)->fragment('diseasesPane')->with('success', 'Disease record updated successfully.');
+        }
+
         return redirect()->route('health')->with('success', 'Disease record updated successfully.');
     }
 
     public function updateUpload(Request $request, Upload $upload)
     {
-        if ($upload->user_id !== Auth::id()) abort(403);
+        $user = Auth::user();
+        if (!$user || ($upload->user_id !== $user->id && $user->role !== 'admin')) abort(403);
 
         $request->validate([
             'title'         => 'required|string|max:255',
@@ -344,6 +366,13 @@ class HealthController extends Controller
 
         $upload->update($data);
 
+        $referer = $request->header('referer');
+        if ($referer && str_contains($referer, '/user/')) {
+            $userId = $request->input('user_id') ? (int)$request->input('user_id') : $upload->user_id;
+            $fragment = $upload->type === 'prescription' ? 'prescriptions' : 'reportsPane';
+            return redirect()->route('users.show', $userId)->fragment($fragment)->with('success', ucfirst($upload->type) . ' updated successfully.');
+        }
+
         return redirect()->route('health')->with('success', ucfirst($request->type) . ' updated successfully.');
     }
 
@@ -353,28 +382,48 @@ class HealthController extends Controller
 
     public function destroyMetric(HealthMetric $healthMetric)
     {
-        if ($healthMetric->user_id !== Auth::id()) abort(403);
+        $user = Auth::user();
+        if (!$user || ($healthMetric->user_id !== $user->id && $user->role !== 'admin')) abort(403);
+        $userId = $healthMetric->user_id;
         $healthMetric->delete();
+        
+        if ($user->role === 'admin') {
+            return redirect()->route('users.show', $userId)->fragment('metrics')->with('success', 'Health metric deleted.');
+        }
         return redirect()->route('health')->with('success', 'Health metric deleted.');
     }
 
     public function destroySymptom(Symptom $symptom)
     {
-        if ($symptom->user_id !== Auth::id()) abort(403);
+        $user = Auth::user();
+        if (!$user || ($symptom->user_id !== $user->id && $user->role !== 'admin')) abort(403);
+        $userId = $symptom->user_id;
         $symptom->delete();
+        
+        if ($user->role === 'admin') {
+            return redirect()->route('users.show', $userId)->fragment('symptomsPane')->with('success', 'Symptom record deleted.');
+        }
         return redirect()->route('health')->with('success', 'Symptom record deleted.');
     }
 
     public function destroyDisease(UserDisease $userDisease)
     {
-        if ($userDisease->user_id !== Auth::id()) abort(403);
+        $user = Auth::user();
+        if (!$user || ($userDisease->user_id !== $user->id && $user->role !== 'admin')) abort(403);
+        $userId = $userDisease->user_id;
         $userDisease->delete();
+        
+        if ($user->role === 'admin') {
+            return redirect()->route('users.show', $userId)->fragment('diseasesPane')->with('success', 'Disease record removed.');
+        }
         return redirect()->route('health')->with('success', 'Disease record removed.');
     }
 
     public function destroyUpload(Upload $upload)
     {
-        if ($upload->user_id !== Auth::id()) abort(403);
+        $user = Auth::user();
+        if (!$user || ($upload->user_id !== $user->id && $user->role !== 'admin')) abort(403);
+        $userId = $upload->user_id;
 
         if ($upload->file_path && Storage::disk('public')->exists($upload->file_path)) {
             Storage::disk('public')->delete($upload->file_path);
@@ -382,6 +431,10 @@ class HealthController extends Controller
 
         $upload->delete();
 
+        if ($user->role === 'admin') {
+            $fragment = $upload->type === 'prescription' ? 'prescriptions' : 'reportsPane';
+            return redirect()->route('users.show', $userId)->fragment($fragment)->with('success', 'Upload deleted successfully.');
+        }
         return redirect()->route('health')->with('success', 'Upload deleted successfully.');
     }
 }

@@ -1000,7 +1000,7 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Diagnosed Date</label>
-                            <input type="date" name="diagnosed_at" id="diseaseDiagnosedAt" class="form-control">
+                            <input type="date" name="diagnosed_at" id="diseaseDiagnosedAt" class="form-control" value="{{ now()->format('Y-m-d') }}">
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Notes (Optional)</label>
@@ -1117,16 +1117,17 @@
                         return;
                     }
 
-                    const matches = Object.keys(symptoms).filter(s => s.toLowerCase().includes(query));
+                    const matches = Object.keys(symptoms).filter(s => s.toLowerCase().includes(query) || (symptoms[s] && symptoms[s].toLowerCase().includes(query)));
                     if (matches.length) {
                         matches.forEach(symptom => {
+                            const bn = symptoms[symptom] || '';
                             const opt = document.createElement('a');
                             opt.className = 'dropdown-item';
                             opt.href = '#';
-                            opt.innerText = symptom;
+                            opt.innerText = symptom + (bn ? ' (' + bn + ')' : '');
                             opt.addEventListener('click', (e) => {
                                 e.preventDefault();
-                                symptomSearch.value = symptom;
+                                symptomSearch.value = symptom + (bn ? ' (' + bn + ')' : '');
                                 symptomHidden.value = symptom;
                                 symptomDropdown.style.display = 'none';
                             });
@@ -1152,16 +1153,17 @@
                         return;
                     }
 
-                    const matches = diseases.filter(d => d.disease_name.toLowerCase().includes(query));
+                    const matches = diseases.filter(d => d.disease_name.toLowerCase().includes(query) || (d.disease_name_bn && d.disease_name_bn.toLowerCase().includes(query)));
                     if (matches.length) {
                         matches.forEach(disease => {
+                            const bn = disease.disease_name_bn || '';
                             const opt = document.createElement('a');
                             opt.className = 'dropdown-item';
                             opt.href = '#';
-                            opt.innerText = disease.disease_name;
+                            opt.innerText = disease.disease_name + (bn ? ' (' + bn + ')' : '');
                             opt.addEventListener('click', (e) => {
                                 e.preventDefault();
-                                diseaseSearch.value = disease.disease_name;
+                                diseaseSearch.value = disease.disease_name + (bn ? ' (' + bn + ')' : '');
                                 diseaseHidden.value = disease.id;
                                 diseaseDropdown.style.display = 'none';
                             });
@@ -1361,5 +1363,10 @@
                 @endif
             }, 100);
         });
+
+        // Initialize data structures for edit functions (page-specific overrides)
+        window.metricFieldDefs = @json(collect($metricConfig)->map(fn($c) => $c['js_fields']));
+        window.symptomsList = @json($symptomsList, JSON_UNESCAPED_UNICODE);
+        const diseasesData = @json($allDiseases->map(fn($d) => ['id' => $d->id, 'name' => $d->disease_name, 'bn' => $d->disease_name_bn]), JSON_UNESCAPED_UNICODE);
     </script>
 @endpush

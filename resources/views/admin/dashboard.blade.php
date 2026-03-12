@@ -9,9 +9,16 @@
 @push('styles')
     <style>
         .dashboard-section {
-            background: linear-gradient(180deg, #f0f2f8 0%, #e8ecf4 40%, #f5f7fb 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 40%, #f093fb 80%, #667eea 100%);
+            background-size: 300% 300%;
+            animation: dashboardGradient 8s ease infinite;
             min-height: 100vh;
             padding: 2rem 0 4rem;
+        }
+
+        @keyframes dashboardGradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
         }
 
         /* ── Animated Welcome Hero ── */
@@ -588,37 +595,10 @@
                 <div class="tab-content dashboard-tab-body">
                     <div class="tab-pane fade {{ $activeTab === 'users' ? 'show active' : '' }}" id="users-pane"
                         role="tabpanel">
-                        <form method="GET" action="{{ route('admin.dashboard') }}" class="filter-toolbar">
-                            <input type="hidden" name="tab" value="users">
-                            <div class="row g-3 align-items-end">
-                                <div class="col-lg-4">
-                                    <label for="search" class="form-label fw-semibold text-secondary mb-2">Search</label>
-                                    <input type="text" class="form-control" id="search" name="search"
-                                        value="{{ request('search') }}" placeholder="Search by name or email">
-                                </div>
-                                <div class="col-lg-3">
-                                    <label for="role" class="form-label fw-semibold text-secondary mb-2">Role</label>
-                                    <select class="form-select" id="role" name="role">
-                                        <option value="">All roles</option>
-                                        <option value="admin" @selected(request('role') === 'admin')>Administrators</option>
-                                        <option value="member" @selected(request('role') === 'member')>Members</option>
-                                    </select>
-                                </div>
-                                <div class="col-lg-3">
-                                    <label for="sort" class="form-label fw-semibold text-secondary mb-2">Sort by</label>
-                                    <select class="form-select" id="sort" name="sort">
-                                        <option value="latest" @selected(request('sort', 'latest') === 'latest')>Newest first</option>
-                                        <option value="oldest" @selected(request('sort') === 'oldest')>Oldest first</option>
-                                        <option value="name" @selected(request('sort') === 'name')>Name A-Z</option>
-                                    </select>
-                                </div>
-                                <div class="col-lg-2">
-                                    <button type="submit" class="btn btn-primary w-100">
-                                        <i class="fas fa-search me-1"></i>Apply
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
+                        <div style="margin-bottom: 1.5rem;">
+                            <input type="text" class="form-control" id="userSearch" placeholder="🔍 Search by name or email..." 
+                                style="border-radius: 14px; min-height: 48px; border-color: rgba(102, 126, 234, 0.14); padding: 12px 20px;">
+                        </div>
 
                         <div class="dashboard-table-card">
                             <div class="table-responsive">
@@ -711,6 +691,66 @@
 
         </div>
     </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('userSearch');
+    const tableRows = document.querySelectorAll('.dashboard-table tbody tr');
+    
+    function highlightText(text, searchTerm) {
+        if (!searchTerm) return text;
+        const regex = new RegExp(`(${searchTerm})`, 'gi');
+        return text.replace(regex, '<mark style="background-color: #fff3cd; font-weight: 600;">$1</mark>');
+    }
+    
+    searchInput.addEventListener('keyup', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        let visibleCount = 0;
+        
+        tableRows.forEach(row => {
+            // Get name and email cells
+            const nameCell = row.querySelector('.user-name');
+            const userSubtext = row.querySelector('.user-subtext');
+            const emailCell = row.cells[1]; // Email column
+            
+            const name = nameCell ? nameCell.textContent.toLowerCase() : '';
+            const email = emailCell ? emailCell.textContent.toLowerCase() : '';
+            const id = userSubtext ? userSubtext.textContent.toLowerCase() : '';
+            
+            // Check if search term matches
+            const matches = name.includes(searchTerm) || email.includes(searchTerm) || id.includes(searchTerm);
+            
+            if (searchTerm === '' || matches) {
+                row.style.display = '';
+                visibleCount++;
+                
+                // Highlight matched text
+                if (searchTerm !== '') {
+                    if (nameCell) nameCell.innerHTML = highlightText(nameCell.textContent, searchTerm);
+                    if (emailCell) emailCell.innerHTML = highlightText(emailCell.textContent, searchTerm);
+                }
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        // Show/hide "no results" message
+        let noResultsRow = document.getElementById('noResultsRow');
+        if (visibleCount === 0 && searchTerm !== '') {
+            if (!noResultsRow) {
+                const tbody = document.querySelector('.dashboard-table tbody');
+                noResultsRow = document.createElement('tr');
+                noResultsRow.id = 'noResultsRow';
+                noResultsRow.innerHTML = '<td colspan="6" class="text-center text-muted py-4">No users found matching your search.</td>';
+                tbody.appendChild(noResultsRow);
+            }
+            noResultsRow.style.display = '';
+        } else if (noResultsRow) {
+            noResultsRow.style.display = 'none';
+        }
+    });
+});
+</script>
 @endsection
 
 @push('scripts')

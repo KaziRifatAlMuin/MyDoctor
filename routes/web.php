@@ -89,9 +89,22 @@ Route::middleware('auth')->group(function () {
     Route::post('/health/disease', [HealthController::class, 'storeDisease'])->name('health.disease.store');
     Route::post('/health/upload', [HealthController::class, 'storeUpload'])->name('health.upload.store');
     Route::put('/health/metric/{healthMetric}', [HealthController::class, 'updateMetric'])->name('health.metric.update');
+    Route::get('/health/metric/{healthMetric}', function (\App\Models\HealthMetric $healthMetric) {
+        return redirect()->route('users.show', $healthMetric->user_id);
+    })->name('health.metric.view');
     Route::put('/health/symptom/{symptom}', [HealthController::class, 'updateSymptom'])->name('health.symptom.update');
+    // Friendly GET redirect: visiting a symptom URL should return to the user's profile
+    Route::get('/health/symptom/{symptom}', function (\App\Models\Symptom $symptom) {
+        return redirect()->route('users.show', $symptom->user_id);
+    })->name('health.symptom.view');
     Route::put('/health/disease/{userDisease}', [HealthController::class, 'updateDisease'])->name('health.disease.update');
+    Route::get('/health/disease/{userDisease}', function (\App\Models\UserDisease $userDisease) {
+        return redirect()->route('users.show', $userDisease->user_id);
+    })->name('health.disease.view');
     Route::put('/health/upload/{upload}', [HealthController::class, 'updateUpload'])->name('health.upload.update');
+    Route::get('/health/upload/{upload}', function (\App\Models\Upload $upload) {
+        return redirect()->route('users.show', $upload->user_id);
+    })->name('health.upload.view');
     Route::delete('/health/metric/{healthMetric}', [HealthController::class, 'destroyMetric'])->name('health.metric.destroy');
     Route::delete('/health/symptom/{symptom}', [HealthController::class, 'destroySymptom'])->name('health.symptom.destroy');
     Route::delete('/health/disease/{userDisease}', [HealthController::class, 'destroyDisease'])->name('health.disease.destroy');
