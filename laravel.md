@@ -13,6 +13,8 @@ php artisan db:seed
 php artisan migrate:fresh --seed
 php artisan make:model Post -mcrf
 php artisan route:list
+php artisan schedule:work
+php artisan reminder:send
 php artisan storage:link
 ```
 
@@ -66,6 +68,7 @@ php artisan storage:link
 | `php artisan queue:listen` | Listen for jobs and restart after each | Slower, restarts after each job |
 | `php artisan queue:retry all` | Retry all failed jobs | Use with care |
 | `php artisan queue:flush` | Delete all failed jobs | Permanent removal |
+| `php artisan schedule:work` | To automate scheduled run for reminder | Reminder schedule automator |
 | `php artisan schedule:run` | Run scheduled tasks (call from cron) | Cron: `* * * * * cd /path && php artisan schedule:run` |
 
 ## Maintenance & Deployment
@@ -75,7 +78,7 @@ php artisan storage:link
 | `php artisan down` | Put app into maintenance mode | Use before deploy changes |
 | `php artisan up` | Bring app out of maintenance mode | After deploy/work complete |
 | `php artisan key:generate` | Generate new `APP_KEY` in .env | Run once when creating project |
-| `php artisan storage:link` | Create symlink from public/storage to storage/app/public | Required for public storage files |
+| `php artisan storage:link` | Create symlink from public/storage to storage/app/public | Required to fetch & view media files from storage |
 | `php artisan vendor:publish` | Publish vendor assets/configs | Use `--tag` or `--provider` to narrow |
 
 ## Testing & Debugging
