@@ -1934,11 +1934,11 @@
                                     </div>
                                 </div>
 
-                                <!-- Check for admin by email -->
-                                @if (auth()->user()->email === 'admin@mydoctor.com')
+                                <!-- Admin Dashboard Link -->
+                                @if (auth()->user()->isAdmin())
                                     <div class="divider"></div>
                                     <a href="{{ route('admin.dashboard') }}" class="dropdown-item-custom">
-                                        <i class="fas fa-cog"></i> Admin Panel
+                                        <i class="fas fa-shield-alt"></i> Admin Dashboard
                                     </a>
                                 @endif
 
