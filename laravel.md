@@ -13,9 +13,9 @@ php artisan db:seed
 php artisan migrate:fresh --seed
 php artisan make:model Post -mcrf
 php artisan route:list
-php artisan schedule:work
-php artisan reminder:send
-php artisan storage:link
+php artisan schedule:work  ( Used for automating reminder scheduler )
+php artisan reminder:send  
+php artisan storage:link   ( Used for enabling media visibility from storage )
 ```
 
 ## Artisan — Essentials
