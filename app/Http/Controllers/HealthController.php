@@ -129,6 +129,9 @@ class HealthController extends Controller
             'recorded_at' => 'required|date',
         ]);
 
+        // Use user_id from request if provided (admin context), otherwise use Auth::id()
+        $userId = $request->input('user_id') ? (int)$request->input('user_id') : Auth::id();
+
         $metricType = $request->metric_type;
         $cfg        = config("health.metric_types.$metricType");
 
@@ -139,12 +142,17 @@ class HealthController extends Controller
         $value['unit'] = $cfg['unit'];
 
         HealthMetric::create([
-            'user_id'     => Auth::id(),
+            'user_id'     => $userId,
             'metric_type' => $metricType,
             'recorded_at' => $request->recorded_at,
             'value'       => $value,
         ]);
 
+        // Redirect back to referring page if admin is viewing a user, otherwise to health
+        $referer = $request->header('referer');
+        if ($referer && str_contains($referer, '/user/')) {
+            return back()->with('success', 'Health metric recorded successfully.');
+        }
         return redirect()->route('health')->with('success', 'Health metric recorded successfully.');
     }
 
@@ -157,14 +165,22 @@ class HealthController extends Controller
             'note'           => 'nullable|string|max:1000',
         ]);
 
+        // Use user_id from request if provided (admin context), otherwise use Auth::id()
+        $userId = $request->input('user_id') ? (int)$request->input('user_id') : Auth::id();
+
         Symptom::create([
-            'user_id'        => Auth::id(),
+            'user_id'        => $userId,
             'symptom_name'   => $request->symptom_name,
             'severity_level' => $request->severity_level,
             'recorded_at'    => $request->recorded_at,
             'note'           => $request->note,
         ]);
 
+        // Redirect back to referring page if admin is viewing a user, otherwise to health
+        $referer = $request->header('referer');
+        if ($referer && str_contains($referer, '/user/')) {
+            return back()->with('success', 'Symptom recorded successfully.');
+        }
         return redirect()->route('health')->with('success', 'Symptom recorded successfully.');
     }
 
@@ -177,18 +193,26 @@ class HealthController extends Controller
             'notes'        => 'nullable|string|max:1000',
         ]);
 
-        if (UserDisease::where('user_id', Auth::id())->where('disease_id', $request->disease_id)->exists()) {
-            return redirect()->route('health')->with('error', 'This disease is already in your records.');
+        // Use user_id from request if provided (admin context), otherwise use Auth::id()
+        $userId = $request->input('user_id') ? (int)$request->input('user_id') : Auth::id();
+
+        if (UserDisease::where('user_id', $userId)->where('disease_id', $request->disease_id)->exists()) {
+            return back()->with('error', 'This disease is already in the user\'s records.');
         }
 
         UserDisease::create([
-            'user_id'      => Auth::id(),
+            'user_id'      => $userId,
             'disease_id'   => $request->disease_id,
             'diagnosed_at' => $request->diagnosed_at,
             'status'       => $request->status,
             'notes'        => $request->notes,
         ]);
 
+        // Redirect back to referring page if admin is viewing a user, otherwise to health
+        $referer = $request->header('referer');
+        if ($referer && str_contains($referer, '/user/')) {
+            return back()->with('success', 'Disease record added successfully.');
+        }
         return redirect()->route('health')->with('success', 'Disease record added successfully.');
     }
 
@@ -205,10 +229,13 @@ class HealthController extends Controller
             'document_date' => 'nullable|date',
         ]);
 
+        // Use user_id from request if provided (admin context), otherwise use Auth::id()
+        $userId = $request->input('user_id') ? (int)$request->input('user_id') : Auth::id();
+
         $path = $request->file('file')->store('uploads', 'public');
 
         Upload::create([
-            'user_id'       => Auth::id(),
+            'user_id'       => $userId,
             'title'         => $request->title,
             'type'          => $request->type,
             'file_path'     => $path,
@@ -219,6 +246,11 @@ class HealthController extends Controller
             'document_date' => $request->document_date,
         ]);
 
+        // Redirect back to referring page if admin is viewing a user, otherwise to health
+        $referer = $request->header('referer');
+        if ($referer && str_contains($referer, '/user/')) {
+            return back()->with('success', ucfirst($request->type) . ' uploaded successfully.');
+        }
         return redirect()->route('health')->with('success', ucfirst($request->type) . ' uploaded successfully.');
     }
 
