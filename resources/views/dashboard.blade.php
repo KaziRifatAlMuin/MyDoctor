@@ -828,7 +828,7 @@
             </div>
             <div class="row g-2">
                 <div class="col-6 col-md-3 col-xl">
-                    <a href="{{ route('health') }}" class="quick-action-card">
+                    <a href="{{ route('health') }}#metrics" class="quick-action-card">
                         <div class="quick-action-icon qa-icon-purple">
                             <i class="fas fa-chart-line"></i>
                         </div>
@@ -836,7 +836,7 @@
                     </a>
                 </div>
                 <div class="col-6 col-md-3 col-xl">
-                    <a href="{{ route('health') }}" class="quick-action-card">
+                    <a href="{{ route('health') }}#symptomsPane" class="quick-action-card">
                         <div class="quick-action-icon qa-icon-orange">
                             <i class="fas fa-notes-medical"></i>
                         </div>
@@ -852,7 +852,7 @@
                     </a>
                 </div>
                 <div class="col-6 col-md-3 col-xl">
-                    <a href="{{ route('health') }}" class="quick-action-card">
+                    <a href="{{ route('health') }}#prescriptions" class="quick-action-card">
                         <div class="quick-action-icon qa-icon-red">
                             <i class="fas fa-prescription-bottle-alt"></i>
                         </div>
@@ -1335,7 +1335,7 @@
 
             {{-- 7 Medicine Logs (tab) --}}
             <div class="col-6 col-md-4 col-lg-3 fade-in-up delay-5">
-                <a href="{{ route('health') }}#logs" class="feature-nav-card">
+                <a href="{{ route('medicine.logs') }}" class="feature-nav-card">
                     <div class="feature-nav-icon qa-icon-green">
                         <i class="fas fa-clipboard-list"></i>
                     </div>
