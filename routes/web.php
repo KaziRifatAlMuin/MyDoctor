@@ -258,8 +258,11 @@ Route::prefix('medicine')->name('medicine.')->middleware('auth')->group(function
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\AdminDashboardController::class, 'index'])->name('dashboard');
     
-    // Future admin routes
+    // User management routes
     Route::get('/users', [App\Http\Controllers\AdminDashboardController::class, 'users'])->name('users.index');
+    Route::get('/users/{user}', [App\Http\Controllers\AdminDashboardController::class, 'show'])->name('users.show');
+    
+    // Future admin routes
     Route::get('/medical', [App\Http\Controllers\AdminDashboardController::class, 'medical'])->name('medical.index');
     Route::get('/analytics', [App\Http\Controllers\AdminDashboardController::class, 'analytics'])->name('analytics');
     Route::get('/settings', [App\Http\Controllers\AdminDashboardController::class, 'settings'])->name('settings');

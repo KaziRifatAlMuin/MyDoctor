@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use App\Models\User;
 use App\Models\Post;
 use App\Models\Comment;
 use App\Models\Medicine;
 use App\Models\MedicineReminder;
+use App\Models\MedicineSchedule;
 use App\Models\HealthMetric;
 use App\Models\Symptom;
 use App\Models\Disease;
@@ -149,9 +151,123 @@ class AdminDashboardController extends Controller
         }
     }
 
-    public function users()
+    public function users(Request $request)
     {
-        return redirect()->route('admin.users.index');
+        $query = User::query();
+        
+        // Apply search filter
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+        
+        // Apply role filter
+        if ($request->filled('role')) {
+            $query->where('role', $request->get('role'));
+        }
+        
+        // Apply sorting
+        $sort = $request->get('sort', 'latest');
+        switch ($sort) {
+            case 'oldest':
+                $query->oldest();
+                break;
+            case 'name':
+                $query->orderBy('name', 'asc');
+                break;
+            default:
+                $query->latest();
+                break;
+        }
+        
+        $users = $query->paginate(15);
+        
+        // Get statistics for the header cards
+        $adminCount = User::where('role', 'admin')->count();
+        $memberCount = User::where('role', 'member')->count();
+        $recentUsers = User::whereDate('created_at', '>=', Carbon::now()->subWeek())->count();
+        
+        return view('admin.users.index', compact(
+            'users', 
+            'adminCount', 
+            'memberCount', 
+            'recentUsers'
+        ));
+    }
+    
+    public function show(User $user)
+    {
+        // Get user statistics
+        $userStats = [
+            'posts' => Post::where('user_id', $user->id)->count(),
+            'comments' => Comment::where('user_id', $user->id)->count(),
+            'medicines' => Medicine::where('user_id', $user->id)->count(),
+            'health_metrics' => HealthMetric::where('user_id', $user->id)->count(),
+            'active_reminders' => MedicineReminder::whereHas('schedule', function($q) use ($user) {
+                $q->whereHas('medicine', function($q) use ($user) {
+                    $q->where('user_id', $user->id);
+                })->where('is_active', true);
+            })->count(),
+            'likes' => 0 // Placeholder for post likes received
+        ];
+        
+        // Get recent activities
+        $recentActivities = collect();
+        
+        // Recent posts
+        $recentPosts = Post::where('user_id', $user->id)
+            ->latest()
+            ->take(3)
+            ->get();
+            
+        foreach ($recentPosts as $post) {
+            $recentActivities->push([
+                'title' => 'Created a new post',
+                'description' => Str::limit($post->title ?? 'Untitled Post', 50),
+                'time' => $post->created_at->diffForHumans(),
+                'icon' => 'fa-newspaper',
+                'color' => 'success'
+            ]);
+        }
+        
+        // Recent medicines
+        $recentMedicines = Medicine::where('user_id', $user->id)
+            ->latest()
+            ->take(2)
+            ->get();
+            
+        foreach ($recentMedicines as $medicine) {
+            $recentActivities->push([
+                'title' => 'Added new medicine',
+                'description' => $medicine->medicine_name,
+                'time' => $medicine->created_at->diffForHumans(),
+                'icon' => 'fa-pills',
+                'color' => 'primary'
+            ]);
+        }
+        
+        // Recent health metrics
+        $recentMetrics = HealthMetric::where('user_id', $user->id)
+            ->latest()
+            ->take(2)
+            ->get();
+            
+        foreach ($recentMetrics as $metric) {
+            $recentActivities->push([
+                'title' => 'Recorded health data',
+                'description' => ucfirst($metric->metric_type ?? 'Health metric'),
+                'time' => $metric->created_at->diffForHumans(),
+                'icon' => 'fa-heartbeat',
+                'color' => 'danger'
+            ]);
+        }
+        
+        $recentActivities = $recentActivities->sortByDesc('time')->take(10);
+        
+        return view('admin.users.show', compact('user', 'userStats', 'recentActivities'));
     }
 
     public function medical()
