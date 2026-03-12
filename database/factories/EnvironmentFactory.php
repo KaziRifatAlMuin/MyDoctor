@@ -23,7 +23,7 @@ class EnvironmentFactory extends Factory
         $loc = fake()->randomElement($locations);
 
         return [
-            'user_id'           => User::inRandomOrder()->first()?->id ?? User::factory(),
+            'user_id'           => User::inRandomOrder()->first()?->id ?? 1,
             'location_name'     => $loc['name'],
             'latitude'          => $loc['lat'] + fake()->randomFloat(4, -0.05, 0.05),
             'longitude'         => $loc['lon'] + fake()->randomFloat(4, -0.05, 0.05),

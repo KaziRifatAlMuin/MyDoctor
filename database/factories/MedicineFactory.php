@@ -13,7 +13,7 @@ class MedicineFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => User::factory(),
+            'user_id' => User::inRandomOrder()->first()?->id ?? 1,
             'medicine_name' => fake()->word() . ' ' . fake()->randomElement(['Tablet', 'Capsule', 'Syrup']),
             'type' => fake()->randomElement(['tablet', 'capsule', 'syrup', 'injection', 'drops', 'cream', 'inhaler', 'other']),
             'value_per_dose' => fake()->randomFloat(2, 0.1, 1000),
