@@ -20,6 +20,7 @@ class User extends Authenticatable
         'role',
         'occupation',
         'blood_group',
+        'gender',
         'password',
         'email_notifications',
         'push_notifications',
