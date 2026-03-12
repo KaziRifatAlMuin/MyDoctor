@@ -1,1100 +1,737 @@
 @extends('layouts.app')
 
-@section('title', 'Admin Dashboard - System Management')
+@section('title', 'Admin Dashboard')
+
+@php
+    $activeTab = request('tab', 'users');
+@endphp
 
 @push('styles')
-<style>
-    .admin-wrapper {
-        background: linear-gradient(135deg, #f5f7fa 0%, #f0f2f5 100%);
-        min-height: 100vh;
-        padding: 20px 0;
-    }
-
-    .admin-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 40px 0;
-        margin-bottom: 40px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    }
-
-    .admin-title {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin-bottom: 10px;
-    }
-
-    .admin-subtitle {
-        font-size: 1rem;
-        opacity: 0.9;
-        font-weight: 300;
-    }
-
-    /* Stats Grid */
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 20px;
-        margin-bottom: 30px;
-    }
-
-    .stat-card {
-        background: white;
-        border-radius: 12px;
-        padding: 25px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        border-left: 4px solid #667eea;
-        transition: all 0.3s ease;
-    }
-
-    .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-    }
-
-    .stat-card.blue { border-left-color: #667eea; }
-    .stat-card.red { border-left-color: #e53e3e; }
-    .stat-card.green { border-left-color: #38a169; }
-    .stat-card.orange { border-left-color: #dd6b20; }
-
-    .stat-icon {
-        width: 50px;
-        height: 50px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        margin-bottom: 15px;
-    }
-
-    .stat-card.blue .stat-icon { background: rgba(102, 126, 234, 0.12); color: #667eea; }
-    .stat-card.red .stat-icon { background: rgba(229, 62, 62, 0.12); color: #e53e3e; }
-    .stat-card.green .stat-icon { background: rgba(56, 161, 105, 0.12); color: #38a169; }
-    .stat-card.orange .stat-icon { background: rgba(237, 137, 54, 0.12); color: #dd6b20; }
-
-    .stat-value {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #2d3748;
-        margin-bottom: 5px;
-    }
-
-    .stat-label {
-        font-size: 0.85rem;
-        color: #a0aec0;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-
-    /* Main Content */
-    .admin-tabs {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        overflow: hidden;
-    }
-
-    .admin-tabs .nav-tabs {
-        border-bottom: 2px solid #e2e8f0;
-        padding: 0;
-        background: #f7fafc;
-    }
-
-    .admin-tabs .nav-link {
-        color: #718096;
-        border: none;
-        padding: 15px 25px;
-        font-weight: 500;
-        border-bottom: 2px solid transparent;
-        transition: all 0.3s ease;
-    }
-
-    .admin-tabs .nav-link:hover {
-        color: #667eea;
-    }
-
-    .admin-tabs .nav-link.active {
-        color: #667eea;
-        border-bottom-color: #667eea;
-        background: white;
-    }
-
-    .tab-content {
-        padding: 30px;
-    }
-
-    /* Users Table */
-    .users-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .users-table thead {
-        background: #f7fafc;
-        border-bottom: 2px solid #e2e8f0;
-    }
-
-    .users-table th {
-        padding: 15px;
-        text-align: left;
-        font-weight: 600;
-        color: #2d3748;
-        font-size: 0.9rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-
-    .users-table td {
-        padding: 15px;
-        border-bottom: 1px solid #e2e8f0;
-        color: #4a5568;
-    }
-
-    .users-table tbody tr:hover {
-        background: #f7fafc;
-    }
-
-    .user-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 2px solid #e2e8f0;
-    }
-
-    .user-info {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .user-name {
-        font-weight: 500;
-        color: #2d3748;
-    }
-
-    .user-email {
-        font-size: 0.85rem;
-        color: #a0aec0;
-    }
-
-    .role-badge {
-        display: inline-block;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-    }
-
-    .role-badge.admin {
-        background: rgba(245, 101, 101, 0.12);
-        color: #e53e3e;
-    }
-
-    .role-badge.member {
-        background: rgba(102, 126, 234, 0.12);
-        color: #667eea;
-    }
-
-    .action-buttons {
-        display: flex;
-        gap: 8px;
-    }
-
-    .action-btn {
-        padding: 6px 12px;
-        border: none;
-        border-radius: 6px;
-        font-size: 0.85rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .action-btn.edit {
-        background: rgba(102, 126, 234, 0.12);
-        color: #667eea;
-    }
-
-    .action-btn.edit:hover {
-        background: rgba(102, 126, 234, 0.25);
-    }
-
-    .action-btn.view {
-        background: rgba(72, 187, 120, 0.12);
-        color: #38a169;
-    }
-
-    .action-btn.view:hover {
-        background: rgba(72, 187, 120, 0.25);
-    }
-
-    /* Filters */
-    .filters-bar {
-        display: flex;
-        gap: 12px;
-        margin-bottom: 20px;
-        flex-wrap: wrap;
-        align-items: center;
-    }
-
-    .filter-group {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-        flex-wrap: wrap;
-    }
-
-    .filter-input {
-        padding: 8px 12px;
-        border: 1px solid #e2e8f0;
-        border-radius: 6px;
-        font-size: 0.9rem;
-        width: auto;
-    }
-
-    .filter-select {
-        padding: 8px 12px;
-        border: 1px solid #e2e8f0;
-        border-radius: 6px;
-        font-size: 0.9rem;
-        background: white;
-        cursor: pointer;
-    }
-
-    .filter-btn {
-        padding: 8px 16px;
-        background: #667eea;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .filter-btn:hover {
-        background: #5568d3;
-    }
-
-    /* Medical Data Management */
-    .medical-card {
-        background: white;
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 15px;
-        border: 1px solid #e2e8f0;
-        transition: all 0.3s ease;
-    }
-
-    .medical-card:hover {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    }
-
-    .medical-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 15px;
-        padding-bottom: 15px;
-        border-bottom: 1px solid #e2e8f0;
-    }
-
-    .medical-title {
-        font-weight: 600;
-        color: #2d3748;
-        font-size: 1.1rem;
-    }
-
-    .medical-actions {
-        display: flex;
-        gap: 8px;
-    }
-
-    .medical-info {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 15px;
-        margin-bottom: 15px;
-    }
-
-    .info-item {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .info-label {
-        font-size: 0.75rem;
-        color: #a0aec0;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: 5px;
-    }
-
-    .info-value {
-        font-weight: 500;
-        color: #2d3748;
-    }
-
-    /* Modal Enhancements */
-    .modal-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-    }
-
-    .modal-header .btn-close {
-        filter: brightness(0) invert(1);
-    }
-
-    .form-label {
-        font-weight: 600;
-        color: #2d3748;
-        margin-bottom: 8px;
-        font-size: 0.9rem;
-    }
-
-    .form-control, .form-select {
-        border: 1px solid #e2e8f0;
-        border-radius: 6px;
-        padding: 8px 12px;
-    }
-
-    .form-control:focus {
-        border-color: #667eea;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    }
-
-    /* Pagination */
-    .pagination-wrapper {
-        margin-top: 20px;
-        display: flex;
-        justify-content: center;
-    }
-
-    .page-link {
-        color: #667eea;
-        border: 1px solid #e2e8f0;
-        border-radius: 4px;
-    }
-
-    .page-link:hover {
-        color: white;
-        background: #667eea;
-        border-color: #667eea;
-    }
-
-    .page-item.active .page-link {
-        background: #667eea;
-        border-color: #667eea;
-    }
-
-    /* Animation */
-    .fade-in {
-        animation: fadeIn 0.3s ease;
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .search-highlight {
-        background: rgba(102, 126, 234, 0.2);
-        border-radius: 4px;
-        padding: 2px 4px;
-    }
-
-    /* Empty State */
-    .empty-state {
-        text-align: center;
-        padding: 60px 20px;
-    }
-
-    .empty-state-icon {
-        font-size: 3rem;
-        color: #cbd5e0;
-        margin-bottom: 15px;
-    }
-
-    .empty-state-title {
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: #4a5568;
-        margin-bottom: 8px;
-    }
-
-    .empty-state-text {
-        color: #a0aec0;
-        font-size: 0.95rem;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-        .stats-grid {
-            grid-template-columns: repeat(2, 1fr);
+    <style>
+        .dashboard-section {
+            background: linear-gradient(180deg, #f0f2f8 0%, #e8ecf4 40%, #f5f7fb 100%);
+            min-height: 100vh;
+            padding: 2rem 0 4rem;
         }
 
-        .filters-bar {
-            flex-direction: column;
+        /* ── Animated Welcome Hero ── */
+        .welcome-hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 40%, #f093fb 80%, #667eea 100%);
+            background-size: 300% 300%;
+            animation: heroGradient 8s ease infinite;
+            border-radius: 28px;
+            padding: 2.5rem 2.5rem 2rem;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);
         }
 
-        .filter-input, .filter-select, .filter-btn {
-            width: 100%;
+        @keyframes heroGradient {
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
         }
 
-        .users-table {
-            font-size: 0.85rem;
+        .welcome-hero::before {
+            content: '';
+            position: absolute;
+            top: -60%;
+            right: -15%;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.06);
+            pointer-events: none;
+            animation: float 6s ease-in-out infinite;
         }
 
-        .users-table th, .users-table td {
-            padding: 10px;
+        .welcome-hero::after {
+            content: '';
+            position: absolute;
+            bottom: -40%;
+            left: 10%;
+            width: 350px;
+            height: 350px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.04);
+            pointer-events: none;
+            animation: float 8s ease-in-out infinite reverse;
         }
 
-        .admin-title {
-            font-size: 1.8rem;
-        }
-    }
+        @keyframes float {
 
-    @media (max-width: 576px) {
-        .stats-grid {
-            grid-template-columns: 1fr;
-        }
+            0%,
+            100% {
+                transform: translateY(0) scale(1);
+            }
 
-        .admin-tabs .nav-link {
-            padding: 12px 15px;
-            font-size: 0.85rem;
+            50% {
+                transform: translateY(-20px) scale(1.05);
+            }
         }
 
-        .medical-info {
-            grid-template-columns: 1fr;
+        .hero-greeting {
+            font-size: 1.7rem;
+            font-weight: 800;
+            margin-bottom: 0.25rem;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            position: relative;
+            z-index: 2;
         }
 
-        .action-buttons {
-            flex-direction: column;
+        .hero-sub {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 2;
         }
-    }
-</style>
+
+        /* ── Hero Stats ── */
+        .hero-stats {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-stat-pill {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 18px;
+            padding: 0.7rem 1.1rem;
+            min-width: 115px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: default;
+        }
+
+        .hero-stat-pill:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .hero-stat-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .hero-stat-label {
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            opacity: 0.8;
+            margin-top: 4px;
+        }
+
+        /* ── Dashboard Cards ── */
+        .dash-card {
+            background: white;
+            border-radius: 22px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            height: 100%;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .dash-card:hover {
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .dash-card-header {
+            padding: 1.25rem 1.5rem 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .dash-card-header h6 {
+            font-weight: 800;
+            color: #1a202c;
+            margin: 0;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dash-card-header h6 i {
+            color: #667eea;
+        }
+
+        .dash-card-body {
+            padding: 1.25rem 1.5rem 1.5rem;
+        }
+
+        .dash-card-link {
+            font-size: 0.78rem;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .dash-card-link:hover {
+            color: #764ba2;
+            gap: 8px;
+        }
+
+        /* ── Filter Toolbar ── */
+        .filter-toolbar {
+            border: 1px solid rgba(102, 126, 234, 0.14);
+            background: #f8f9fb;
+            border-radius: 20px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .filter-toolbar .form-control,
+        .filter-toolbar .form-select {
+            border-radius: 14px;
+            min-height: 48px;
+            border-color: rgba(102, 126, 234, 0.14);
+        }
+
+        .filter-toolbar .form-control:focus,
+        .filter-toolbar .form-select:focus {
+            border-color: rgba(102, 126, 234, 0.4);
+            box-shadow: 0 0 0 0.22rem rgba(102, 126, 234, 0.12);
+        }
+
+        /* ── Table Card ── */
+        .dashboard-table-card {
+            border: 1px solid rgba(102, 126, 234, 0.14);
+            border-radius: 20px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        }
+
+        .dashboard-table {
+            margin: 0;
+        }
+
+        .dashboard-table thead th {
+            border: none;
+            background: #f8f9fb;
+            color: #6f7c96;
+            font-size: 0.78rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 1.1rem;
+            white-space: nowrap;
+            font-weight: 700;
+        }
+
+        .dashboard-table tbody td {
+            padding: 1.1rem;
+            border-color: rgba(102, 126, 234, 0.08);
+            vertical-align: middle;
+            color: #1f2a44;
+        }
+
+        .dashboard-table tbody tr {
+            transition: background 0.2s;
+        }
+
+        .dashboard-table tbody tr:hover {
+            background: rgba(102, 126, 234, 0.04);
+        }
+
+        .user-cell {
+            display: flex;
+            align-items: center;
+            gap: 0.95rem;
+        }
+
+        .user-avatar,
+        .user-avatar-placeholder {
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .user-avatar-placeholder {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .user-name {
+            font-weight: 700;
+            color: #1f2a44;
+        }
+
+        .user-subtext {
+            color: #6f7c96;
+            font-size: 0.92rem;
+        }
+
+        .status-badge,
+        .role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.45rem 0.8rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .role-badge.role-admin {
+            background: rgba(246, 196, 83, 0.22);
+            color: #a26b00;
+        }
+
+        .role-badge.role-member {
+            background: rgba(102, 126, 234, 0.14);
+            color: #667eea;
+        }
+
+        .status-badge.status-verified {
+            background: rgba(47, 158, 114, 0.14);
+            color: #2f9e72;
+        }
+
+        .status-badge.status-pending {
+            background: rgba(246, 196, 83, 0.18);
+            color: #a26b00;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .table-actions .btn {
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .table-actions .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .pagination-shell {
+            padding: 1rem 1.25rem 1.25rem;
+        }
+
+        .pagination-shell .pagination {
+            margin-bottom: 0;
+        }
+
+        /* ── Action Panel ── */
+        .dashboard-panel {
+            border: 1px solid rgba(102, 126, 234, 0.14);
+            background: white;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+            border-radius: 22px;
+            overflow: hidden;
+        }
+
+        .dashboard-panel-head {
+            padding: 1.75rem 2rem 0;
+        }
+
+        .dashboard-panel-title {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #1f2a44;
+            margin: 0;
+        }
+
+        .dashboard-panel-copy {
+            color: #6f7c96;
+            margin: 0.5rem 0 0;
+            font-size: 0.95rem;
+        }
+
+        .dashboard-tabs {
+            padding: 1.25rem 2rem 0;
+            gap: 0.75rem;
+            border-bottom: none;
+        }
+
+        .dashboard-tabs .nav-link {
+            border: none;
+            border-radius: 18px;
+            color: #6f7c96;
+            background: #f0f2f8;
+            padding: 0.75rem 1.25rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .dashboard-tabs .nav-link:hover {
+            background: #e8ecf4;
+        }
+
+        .dashboard-tabs .nav-link.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            box-shadow: 0 12px 24px rgba(102, 126, 234, 0.22);
+        }
+
+        .dashboard-tab-body {
+            padding: 1.75rem 2rem;
+        }
+
+        /* ── Section Title ── */
+        .section-title {
+            font-weight: 800;
+            color: #1a202c;
+            font-size: 1.05rem;
+            margin-bottom: 1rem;
+            margin-top: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title i {
+            color: #667eea;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .welcome-hero {
+                padding: 1.75rem 1.25rem 1.5rem;
+                border-radius: 20px;
+            }
+
+            .hero-greeting {
+                font-size: 1.3rem;
+            }
+
+            .hero-stats {
+                gap: 0.5rem;
+            }
+
+            .hero-stat-pill {
+                min-width: 100px;
+                padding: 0.6rem 0.9rem;
+            }
+
+            .hero-stat-value {
+                font-size: 1.2rem;
+            }
+
+            .dashboard-panel-head,
+            .dashboard-tabs,
+            .dashboard-tab-body {
+                padding-inline: 1.25rem;
+            }
+        }
+
+        /* ── Fade-in-up for cards ── */
+        .fade-in-up {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .delay-1 {
+            animation-delay: 0.1s;
+        }
+
+        .delay-2 {
+            animation-delay: 0.2s;
+        }
+
+        .delay-3 {
+            animation-delay: 0.3s;
+        }
+
+        .delay-4 {
+            animation-delay: 0.4s;
+        }
+
+        .delay-5 {
+            animation-delay: 0.5s;
+        }
+
+        .delay-6 {
+            animation-delay: 0.6s;
+        }
+    </style>
 @endpush
 
 @section('content')
+    <div class="dashboard-section">
+        <div class="container" style="max-width: 1180px;">
 
-<div class="admin-wrapper">
-    <!-- Admin Header -->
-    <div class="admin-header">
-        <div class="container">
-            <h1 class="admin-title">
-                <i class="fas fa-shield-alt me-2"></i>Admin Dashboard
-            </h1>
-            <p class="admin-subtitle">Manage users, medical information, and system settings</p>
-        </div>
-    </div>
-
-    <!-- Main Content -->
-    <div class="container">
-        <!-- Stats Grid -->
-        <div class="stats-grid fade-in">
-            <div class="stat-card blue">
-                <div class="stat-icon"><i class="fas fa-users"></i></div>
-                <div class="stat-value">{{ $stats['total_users'] ?? 0 }}</div>
-                <div class="stat-label">Total Users</div>
-            </div>
-            <div class="stat-card orange">
-                <div class="stat-icon"><i class="fas fa-user-tie"></i></div>
-                <div class="stat-value">{{ $stats['admin_count'] ?? 0 }}</div>
-                <div class="stat-label">Administrators</div>
-            </div>
-            <div class="stat-card green">
-                <div class="stat-icon"><i class="fas fa-user-check"></i></div>
-                <div class="stat-value">{{ $stats['member_count'] ?? 0 }}</div>
-                <div class="stat-label">Members</div>
-            </div>
-            <div class="stat-card red">
-                <div class="stat-icon"><i class="fas fa-fire"></i></div>
-                <div class="stat-value">{{ $stats['recent_users'] ?? 0 }}</div>
-                <div class="stat-label">New This Week</div>
-            </div>
-            <div class="stat-card blue">
-                <div class="stat-icon"><i class="fas fa-pills"></i></div>
-                <div class="stat-value">{{ $stats['total_medicines'] ?? 0 }}</div>
-                <div class="stat-label">Total Medicines</div>
-            </div>
-            <div class="stat-card green">
-                <div class="stat-icon"><i class="fas fa-heartbeat"></i></div>
-                <div class="stat-value">{{ $stats['total_health_metrics'] ?? 0 }}</div>
-                <div class="stat-label">Health Metrics</div>
-            </div>
-        </div>
-
-        <!-- Tabs Section -->
-        <div class="admin-tabs fade-in" style="animation-delay: 0.1s;">
-            <ul class="nav nav-tabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="users-tab" data-bs-toggle="tab" data-bs-target="#users-content" 
-                            type="button" role="tab">
-                        <i class="fas fa-users me-2"></i>Users Management
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="medical-tab" data-bs-toggle="tab" data-bs-target="#medical-content"
-                            type="button" role="tab">
-                        <i class="fas fa-hospital-user me-2"></i>Medical Information
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="activity-tab" data-bs-toggle="tab" data-bs-target="#activity-content"
-                            type="button" role="tab">
-                        <i class="fas fa-history me-2"></i>Activity Log
-                    </button>
-                </li>
-            </ul>
-
-            <div class="tab-content">
-                <!-- Users Management Tab -->
-                <div class="tab-pane fade show active" id="users-content" role="tabpanel">
-                    <div class="filters-bar">
-                        <div class="filter-group">
-                            <input type="text" class="filter-input" id="userSearch" placeholder="Search by name or email..." style="min-width: 250px;">
-                            <select class="filter-select" id="roleFilter">
-                                <option value="">All Roles</option>
-                                <option value="admin">Administrators</option>
-                                <option value="member">Members</option>
-                            </select>
-                            <button class="filter-btn" onclick="filterUsers()">
-                                <i class="fas fa-search me-2"></i>Filter
-                            </button>
-                        </div>
-                    </div>
-
-                    @if($users && count($users) > 0)
-                        <div class="table-responsive">
-                            <table class="users-table">
-                                <thead>
-                                    <tr>
-                                        <th>User</th>
-                                        <th>Email</th>
-                                        <th>Role</th>
-                                        <th>Registration Date</th>
-                                        <th width="150">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($users as $user)
-                                        <tr class="user-row" data-role="{{ $user->role }}">
-                                            <td>
-                                                <div class="user-info">
-                                                    @if($user->picture)
-                                                        <img src="{{ asset('storage/' . $user->picture) }}" alt="{{ $user->name }}" class="user-avatar">
-                                                    @else
-                                                        <div class="user-avatar" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">
-                                                            {{ strtoupper(substr($user->name, 0, 1)) }}
-                                                        </div>
-                                                    @endif
-                                                    <div>
-                                                        <div class="user-name">{{ $user->name }}</div>
-                                                        @if($user->phone)
-                                                            <div class="user-email">{{ $user->phone }}</div>
-                                                        @endif
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>{{ $user->email }}</td>
-                                            <td>
-                                                <span class="role-badge {{ strtolower($user->role) }}">
-                                                    {{ ucfirst($user->role) }}
-                                                </span>
-                                            </td>
-                                            <td>{{ $user->created_at ? $user->created_at->format('d M, Y') : 'Unknown' }}</td>
-                                            <td>
-                                                <div class="action-buttons">
-                                                    <button class="action-btn edit" onclick="editUser({{ $user->id }})" title="Edit User">
-                                                        <i class="fas fa-edit"></i>
-                                                    </button>
-                                                    <button class="action-btn view" onclick="viewUserMedical({{ $user->id }})" title="View Medical Info">
-                                                        <i class="fas fa-heartbeat"></i>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-
-                        @if($users instanceof \Illuminate\Pagination\Paginator)
-                            <div class="pagination-wrapper">
-                                {{ $users->links() }}
-                            </div>
-                        @endif
-                    @else
-                        <div class="empty-state">
-                            <div class="empty-state-icon"><i class="fas fa-users"></i></div>
-                            <div class="empty-state-title">No Users Found</div>
-                            <div class="empty-state-text">No users match your search criteria</div>
-                        </div>
-                    @endif
-                </div>
-
-                <!-- Medical Information Tab -->
-                <div class="tab-pane fade" id="medical-content" role="tabpanel">
-                    <div class="filters-bar">
-                        <div class="filter-group">
-                            <input type="text" class="filter-input" id="medicalSearch" placeholder="Search by user name..." style="min-width: 250px;">
-                            <select class="filter-select" id="medicalTypeFilter">
-                                <option value="">All Types</option>
-                                <option value="disease">Diseases</option>
-                                <option value="medicine">Medicines</option>
-                                <option value="metric">Health Metrics</option>
-                            </select>
-                            <button class="filter-btn" onclick="filterMedical()">
-                                <i class="fas fa-search me-2"></i>Filter
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Diseases Section -->
-                    <div style="margin-bottom: 30px;">
-                        <h5 style="margin-bottom: 20px; color: #2d3748; font-weight: 600;">
-                            <i class="fas fa-virus me-2" style="color: #e53e3e;"></i>User Diseases
-                        </h5>
-                        
-                        @php
-                            $allDiseases = \App\Models\User::whereNotNull('id')
-                                ->with('userDiseases.disease')
-                                ->get()
-                                ->flatMap(fn($user) => $user->userDiseases->map(fn($ud) => [
-                                    'user' => $user,
-                                    'disease' => $ud->disease,
-                                    'diagnosed_at' => $ud->diagnosed_at,
-                                    'user_disease_id' => $ud->id
-                                ]))
-                                ->take(10);
-                        @endphp
-
-                        @if(count($allDiseases) > 0)
-                            @foreach($allDiseases as $record)
-                                <div class="medical-card medical-disease">
-                                    <div class="medical-header">
-                                        <div>
-                                            <div class="medical-title">{{ $record['disease']->name ?? 'Unknown Disease' }}</div>
-                                            <small style="color: #a0aec0;">User: <strong>{{ $record['user']->name }}</strong></small>
-                                        </div>
-                                        <div class="medical-actions">
-                                            <button class="action-btn edit" onclick="editDisease({{ $record['user_disease_id'] }}, {{ $record['user']->id }})">
-                                                <i class="fas fa-edit me-1"></i>Edit
-                                            </button>
-                                            <button class="action-btn" style="background: rgba(229, 62, 62, 0.12); color: #e53e3e;" onclick="deleteDisease({{ $record['user_disease_id'] }}, {{ $record['user']->id }})">
-                                                <i class="fas fa-trash me-1"></i>Delete
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div class="medical-info">
-                                        <div class="info-item">
-                                            <label class="info-label">Diagnosed Date</label>
-                                            <span class="info-value">{{ $record['diagnosed_at'] ? \Carbon\Carbon::parse($record['diagnosed_at'])->format('d M, Y') : 'Not specified' }}</span>
-                                        </div>
-                                        <div class="info-item">
-                                            <label class="info-label">Status</label>
-                                            <span class="info-value" style="color: #38a169;"><i class="fas fa-check-circle me-1"></i>Active</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        @else
-                            <div class="empty-state" style="padding: 40px;">
-                                <div class="empty-state-icon"><i class="fas fa-virus"></i></div>
-                                <div class="empty-state-title">No Disease Records</div>
-                            </div>
-                        @endif
-                    </div>
-
-                    <!-- Medicines Section -->
-                    <div style="margin-bottom: 30px;">
-                        <h5 style="margin-bottom: 20px; color: #2d3748; font-weight: 600;">
-                            <i class="fas fa-pills me-2" style="color: #667eea;"></i>User Medicines
-                        </h5>
-
-                        @php
-                            $allMedicines = \App\Models\Medicine::with('user')
-                                ->latest()
-                                ->take(10)
-                                ->get();
-                        @endphp
-
-                        @if(count($allMedicines) > 0)
-                            @foreach($allMedicines as $medicine)
-                                <div class="medical-card medical-medicine">
-                                    <div class="medical-header">
-                                        <div>
-                                            <div class="medical-title">{{ $medicine->name }}</div>
-                                            <small style="color: #a0aec0;">User: <strong>{{ $medicine->user->name }}</strong></small>
-                                        </div>
-                                        <div class="medical-actions">
-                                            <button class="action-btn edit" onclick="editMedicine({{ $medicine->id }}, {{ $medicine->user_id }})">
-                                                <i class="fas fa-edit me-1"></i>Edit
-                                            </button>
-                                            <button class="action-btn" style="background: rgba(229, 62, 62, 0.12); color: #e53e3e;" onclick="deleteMedicine({{ $medicine->id }}, {{ $medicine->user_id }})">
-                                                <i class="fas fa-trash me-1"></i>Delete
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div class="medical-info">
-                                        <div class="info-item">
-                                            <label class="info-label">Dosage</label>
-                                            <span class="info-value">{{ $medicine->dosage ?? 'Not specified' }}</span>
-                                        </div>
-                                        <div class="info-item">
-                                            <label class="info-label">Frequency</label>
-                                            <span class="info-value">{{ $medicine->frequency ?? 'Not specified' }}</span>
-                                        </div>
-                                        <div class="info-item">
-                                            <label class="info-label">Start Date</label>
-                                            <span class="info-value">{{ $medicine->start_date ? \Carbon\Carbon::parse($medicine->start_date)->format('d M, Y') : 'Not specified' }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        @else
-                            <div class="empty-state" style="padding: 40px;">
-                                <div class="empty-state-icon"><i class="fas fa-pills"></i></div>
-                                <div class="empty-state-title">No Medicine Records</div>
-                            </div>
-                        @endif
-                    </div>
-
-                    <!-- Health Metrics Section -->
+            {{-- ══════════════════════════════════════════════════════
+             ADMIN WELCOME HERO
+        ══════════════════════════════════════════════════════ --}}
+            <div class="welcome-hero fade-in-up">
+                <div class="d-flex align-items-center justify-content-between position-relative hero-flex-wrap"
+                    style="z-index:2;flex-wrap:wrap;gap:1.5rem;">
                     <div>
-                        <h5 style="margin-bottom: 20px; color: #2d3748; font-weight: 600;">
-                            <i class="fas fa-chart-line me-2" style="color: #38a169;"></i>Health Metrics
-                        </h5>
+                        <div class="hero-greeting">
+                            Welcome back, Admin! 👋
+                        </div>
+                        <div class="hero-sub">System status and operations overview</div>
+                    </div>
+                    <div class="hero-stats">
+                        <div class="hero-stat-pill">
+                            <div class="hero-stat-value">{{ number_format($stats['total_users'] ?? 0) }}</div>
+                            <div class="hero-stat-label"><i class="fas fa-users me-1"></i>Users</div>
+                        </div>
+                        <div class="hero-stat-pill">
+                            <div class="hero-stat-value">{{ number_format($adminCount ?? 0) }}</div>
+                            <div class="hero-stat-label"><i class="fas fa-crown me-1"></i>Admins</div>
+                        </div>
+                        <div class="hero-stat-pill">
+                            <div class="hero-stat-value">{{ number_format($stats['active_reminders'] ?? 0) }}</div>
+                            <div class="hero-stat-label"><i class="fas fa-bell me-1"></i>Active</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                        @php
-                            $allMetrics = \App\Models\HealthMetric::with('user')
-                                ->latest()
-                                ->take(10)
-                                ->get();
-                        @endphp
+            {{-- ══════════════════════════════════════════════════════
+             STATS ROW
+        ══════════════════════════════════════════════════════ --}}
+            <div class="row g-4 mb-4">
+                <div class="col-sm-6 col-lg-3 fade-in-up delay-1">
+                    <div class="dash-card">
+                        <div class="dash-card-body">
+                            <div style="font-size: 2rem; font-weight: 800; color: #667eea; line-height: 1;">
+                                {{ number_format($stats['total_users'] ?? 0) }}
+                            </div>
+                            <div style="color: #6f7c96; margin-top: 0.5rem;">Total Users</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-lg-3 fade-in-up delay-2">
+                    <div class="dash-card">
+                        <div class="dash-card-body">
+                            <div style="font-size: 2rem; font-weight: 800; color: #764ba2; line-height: 1;">
+                                {{ number_format($adminCount ?? 0) }}
+                            </div>
+                            <div style="color: #6f7c96; margin-top: 0.5rem;">Administrators</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-lg-3 fade-in-up delay-3">
+                    <div class="dash-card">
+                        <div class="dash-card-body">
+                            <div style="font-size: 2rem; font-weight: 800; color: #2f9e72; line-height: 1;">
+                                {{ number_format($memberCount ?? 0) }}
+                            </div>
+                            <div style="color: #6f7c96; margin-top: 0.5rem;">Members</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-lg-3 fade-in-up delay-4">
+                    <div class="dash-card">
+                        <div class="dash-card-body">
+                            <div style="font-size: 2rem; font-weight: 800; color: #dc5a6a; line-height: 1;">
+                                {{ number_format($stats['recent_users'] ?? 0) }}
+                            </div>
+                            <div style="color: #6f7c96; margin-top: 0.5rem;">This Week</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                        @if(count($allMetrics) > 0)
-                            @foreach($allMetrics as $metric)
-                                <div class="medical-card medical-metric">
-                                    <div class="medical-header">
-                                        <div>
-                                            <div class="medical-title">{{ $metric->metric_type }}</div>
-                                            <small style="color: #a0aec0;">User: <strong>{{ $metric->user->name ?? 'Unknown' }}</strong> | Date: {{ $metric->recorded_at ? $metric->recorded_at->format('d M, Y') : 'Not specified' }}</small>
-                                        </div>
-                                        <div class="medical-actions">
-                                            <button class="action-btn edit" onclick="editMetric({{ $metric->id }}, {{ $metric->user_id }})">
-                                                <i class="fas fa-edit me-1"></i>Edit
-                                            </button>
-                                            <button class="action-btn" style="background: rgba(229, 62, 62, 0.12); color: #e53e3e;" onclick="deleteMetric({{ $metric->id }}, {{ $metric->user_id }})">
-                                                <i class="fas fa-trash me-1"></i>Delete
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div class="medical-info">
-                                        <div class="info-item">
-                                            <label class="info-label">Value</label>
-                                            @php
-                                                $metricValue = $metric->value;
-                                                if (is_array($metricValue)) {
-                                                    $metricValue = collect($metricValue)->map(function($v) {
-                                                        return is_array($v) ? json_encode($v) : (string) $v;
-                                                    })->join(', ');
-                                                } elseif (is_null($metricValue) || $metricValue === '') {
-                                                    $metricValue = 'N/A';
-                                                }
-                                            @endphp
-                                            <span class="info-value">{{ $metricValue }}</span>
-                                        </div>
-                                        <div class="info-item">
-                                            <label class="info-label">Unit</label>
-                                            <span class="info-value">{{ $metric->unit ?? 'N/A' }}</span>
-                                        </div>
-                                        <div class="info-item">
-                                            <label class="info-label">Notes</label>
-                                            <span class="info-value">{{ $metric->notes ?? 'None' }}</span>
-                                        </div>
-                                    </div>
+            {{-- ══════════════════════════════════════════════════════
+             USERS MANAGEMENT PANEL
+        ══════════════════════════════════════════════════════ --}}
+            <section class="dashboard-panel fade-in-up delay-2">
+                <div class="dashboard-panel-head">
+                    <h2 class="dashboard-panel-title"><i class="fas fa-users me-2"></i>User Management</h2>
+                    <p class="dashboard-panel-copy">View and manage all registered users on the platform.</p>
+                </div>
+                <ul class="nav nav-pills dashboard-tabs" id="adminDashboardTabs" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link {{ $activeTab === 'users' ? 'active' : '' }}" id="users-tab"
+                            data-bs-toggle="tab" data-bs-target="#users-pane" type="button" role="tab"
+                            aria-controls="users-pane">
+                            <i class="fas fa-users me-2"></i>All Users
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content dashboard-tab-body">
+                    <div class="tab-pane fade {{ $activeTab === 'users' ? 'show active' : '' }}" id="users-pane"
+                        role="tabpanel">
+                        <form method="GET" action="{{ route('admin.dashboard') }}" class="filter-toolbar">
+                            <input type="hidden" name="tab" value="users">
+                            <div class="row g-3 align-items-end">
+                                <div class="col-lg-4">
+                                    <label for="search" class="form-label fw-semibold text-secondary mb-2">Search</label>
+                                    <input type="text" class="form-control" id="search" name="search"
+                                        value="{{ request('search') }}" placeholder="Search by name or email">
                                 </div>
-                            @endforeach
-                        @else
-                            <div class="empty-state" style="padding: 40px;">
-                                <div class="empty-state-icon"><i class="fas fa-chart-line"></i></div>
-                                <div class="empty-state-title">No Health Metrics</div>
+                                <div class="col-lg-3">
+                                    <label for="role" class="form-label fw-semibold text-secondary mb-2">Role</label>
+                                    <select class="form-select" id="role" name="role">
+                                        <option value="">All roles</option>
+                                        <option value="admin" @selected(request('role') === 'admin')>Administrators</option>
+                                        <option value="member" @selected(request('role') === 'member')>Members</option>
+                                    </select>
+                                </div>
+                                <div class="col-lg-3">
+                                    <label for="sort" class="form-label fw-semibold text-secondary mb-2">Sort by</label>
+                                    <select class="form-select" id="sort" name="sort">
+                                        <option value="latest" @selected(request('sort', 'latest') === 'latest')>Newest first</option>
+                                        <option value="oldest" @selected(request('sort') === 'oldest')>Oldest first</option>
+                                        <option value="name" @selected(request('sort') === 'name')>Name A-Z</option>
+                                    </select>
+                                </div>
+                                <div class="col-lg-2">
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="fas fa-search me-1"></i>Apply
+                                    </button>
+                                </div>
                             </div>
-                        @endif
-                    </div>
-                </div>
+                        </form>
 
-                <!-- Activity Log Tab -->
-                <div class="tab-pane fade" id="activity-content" role="tabpanel">
-                    <div style="max-width: 800px;">
-                        @if($recent_activities && count($recent_activities) > 0)
-                            <div class="timeline" style="margin: 0; padding: 0;">
-                                @foreach($recent_activities as $activity)
-                                    <div style="display: flex; gap: 20px; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid #e2e8f0;">
-                                        <div style="flex-shrink: 0;">
-                                            <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(102, 126, 234, 0.12); display: flex; align-items: center; justify-content: center; color: #667eea;">
-                                                <i class="fas {{ $activity['icon'] }}"></i>
-                                            </div>
-                                        </div>
-                                        <div style="flex: 1;">
-                                            <div style="font-weight: 600; color: #2d3748; margin-bottom: 5px;">
-                                                {{ $activity['message'] }}
-                                            </div>
-                                            <div style="color: #a0aec0; font-size: 0.85rem;">
-                                                <i class="fas fa-clock me-1"></i>{{ $activity['time'] }}
-                                            </div>
-                                        </div>
+                        <div class="dashboard-table-card">
+                            <div class="table-responsive">
+                                <table class="table dashboard-table">
+                                    <thead>
+                                        <tr>
+                                            <th>User</th>
+                                            <th>Email</th>
+                                            <th>Role</th>
+                                            <th>Status</th>
+                                            <th>Joined</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse ($users as $user)
+                                            <tr>
+                                                <td>
+                                                    <div class="user-cell">
+                                                        @if ($user->picture)
+                                                            <img src="{{ asset('storage/' . $user->picture) }}"
+                                                                alt="{{ $user->name }}" class="user-avatar">
+                                                        @else
+                                                            <span
+                                                                class="user-avatar-placeholder">{{ strtoupper(substr($user->name, 0, 2)) }}</span>
+                                                        @endif
+                                                        <div>
+                                                            <div class="user-name">{{ $user->name }}</div>
+                                                            <div class="user-subtext">ID #{{ $user->id }}</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>{{ $user->email }}</td>
+                                                <td>
+                                                    <span class="role-badge role-{{ strtolower($user->role) }}">
+                                                        <i
+                                                            class="fas {{ $user->role === 'admin' ? 'fa-crown' : 'fa-user' }}"></i>
+                                                        {{ ucfirst($user->role) }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    @if ($user->email_verified_at)
+                                                        <span class="status-badge status-verified">
+                                                            <i class="fas fa-circle-check"></i>Verified
+                                                        </span>
+                                                    @else
+                                                        <span class="status-badge status-pending">
+                                                            <i class="fas fa-clock"></i>Pending
+                                                        </span>
+                                                    @endif
+                                                </td>
+                                                <td>{{ optional($user->created_at)->format('M d, Y') }}</td>
+                                                <td>
+                                                    <div class="table-actions">
+                                                        <a href="{{ route('users.show', $user) }}"
+                                                            class="btn btn-sm btn-outline-primary">
+                                                            <i class="fas fa-arrow-up-right-from-square"></i> View
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="6" class="text-center py-5">
+                                                    <div class="text-muted">
+                                                        <i class="fas fa-users-slash fa-2x mb-3"></i>
+                                                        <div class="fw-semibold">No users found</div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            @if ($users->hasPages())
+                                <div
+                                    class="pagination-shell d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+                                    <div class="text-muted small">
+                                        Showing {{ $users->firstItem() }} to {{ $users->lastItem() }} of
+                                        {{ $users->total() }} users
                                     </div>
-                                @endforeach
-                            </div>
-                        @else
-                            <div class="empty-state">
-                                <div class="empty-state-icon"><i class="fas fa-history"></i></div>
-                                <div class="empty-state-title">No Recent Activities</div>
-                            </div>
-                        @endif
+                                    <div>{{ $users->appends(request()->query())->links() }}</div>
+                                </div>
+                            @endif
+                        </div>
                     </div>
                 </div>
-            </div>
+            </section>
+
         </div>
     </div>
-</div>
-
-<!-- Edit User Modal -->
-<div class="modal fade" id="editUserModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit User Information</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="editUserForm" method="POST">
-                @csrf
-                @method('PATCH')
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Full Name</label>
-                        <input type="text" class="form-control" id="editUserName" name="name" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input type="email" class="form-control" id="editUserEmail" name="email" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Phone</label>
-                        <input type="text" class="form-control" id="editUserPhone" name="phone">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Occupation</label>
-                        <input type="text" class="form-control" id="editUserOccupation" name="occupation">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Blood Group</label>
-                        <select class="form-select" id="editUserBloodGroup" name="blood_group">
-                            <option value="">Select Blood Group</option>
-                            <option value="O+">O+</option>
-                            <option value="O-">O-</option>
-                            <option value="A+">A+</option>
-                            <option value="A-">A-</option>
-                            <option value="B+">B+</option>
-                            <option value="B-">B-</option>
-                            <option value="AB+">AB+</option>
-                            <option value="AB-">AB-</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Date of Birth</label>
-                        <input type="date" class="form-control" id="editUserDOB" name="date_of_birth">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
-                        <i class="fas fa-save me-2"></i>Save Changes
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- View User Medical Info Modal -->
-<div class="modal fade" id="userMedicalModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">User Medical Information</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="userMedicalContent">
-                <div class="text-center py-5">
-                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #667eea;"></i>
-                    <p class="mt-3 text-muted">Loading medical information...</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 @endsection
 
 @push('scripts')
-<script>
-    let currentUserId = null;
-
-    function editUser(userId) {
-        currentUserId = userId;
-        
-        fetch(`/api/users/${userId}`)
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('editUserName').value = data.name;
-                document.getElementById('editUserEmail').value = data.email;
-                document.getElementById('editUserPhone').value = data.phone || '';
-                document.getElementById('editUserOccupation').value = data.occupation || '';
-                document.getElementById('editUserBloodGroup').value = data.blood_group || '';
-                document.getElementById('editUserDOB').value = data.date_of_birth || '';
-                
-                document.getElementById('editUserForm').action = `/profile/update`;
-                new bootstrap.Modal(document.getElementById('editUserModal')).show();
-            })
-            .catch(error => {
-                alert('Error loading user data: ' + error);
-            });
-    }
-
-    function viewUserMedical(userId) {
-        fetch(`/api/users/${userId}/medical`)
-            .then(response => response.json())
-            .then(data => {
-                let html = `
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h6 class="text-primary mb-3">
-                                <i class="fas fa-pills me-2"></i>Medicines
-                            </h6>
-                            ${data.medicines.length > 0 ? 
-                                data.medicines.map(m => `
-                                    <div class="mb-3 p-3" style="background: #f7fafc; border-radius: 8px;">
-                                        <strong>${m.name}</strong><br>
-                                        <small class="text-muted">Dosage: ${m.dosage || 'N/A'}</small><br>
-                                        <small class="text-muted">Frequency: ${m.frequency || 'N/A'}</small>
-                                    </div>
-                                `).join('')
-                                : '<p class="text-muted">No medicines recorded</p>'
-                            }
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-danger mb-3">
-                                <i class="fas fa-virus me-2"></i>Diseases
-                            </h6>
-                            ${data.diseases.length > 0 ? 
-                                data.diseases.map(d => `
-                                    <div class="mb-3 p-3" style="background: #f7fafc; border-radius: 8px;">
-                                        <strong>${d.name}</strong><br>
-                                        <small class="text-muted">Diagnosed: ${d.diagnosed_at || 'N/A'}</small>
-                                    </div>
-                                `).join('')
-                                : '<p class="text-muted">No diseases recorded</p>'
-                            }
-                        </div>
-                    </div>
-                `;
-                document.getElementById('userMedicalContent').innerHTML = html;
-            })
-            .catch(error => {
-                document.getElementById('userMedicalContent').innerHTML = `<p class="text-danger">Error loading medical information</p>`;
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Intersection Observer for fade-in-up
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.style.animationPlayState = 'running';
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, {
+                threshold: 0.1
             });
 
-        new bootstrap.Modal(document.getElementById('userMedicalModal')).show();
-    }
-
-    function editDisease(diseaseId, userId) {
-        alert('Edit disease feature - Implementation pending');
-    }
-
-    function deleteDisease(diseaseId, userId) {
-        if (confirm('Are you sure you want to delete this disease record?')) {
-            fetch(`/health/disease/${diseaseId}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                }
-            })
-            .then(response => {
-                if (response.ok) {
-                    alert('Disease deleted successfully');
-                    location.reload();
-                } else {
-                    alert('Error deleting disease');
-                }
+            document.querySelectorAll('.fade-in-up').forEach(function(el) {
+                el.style.animationPlayState = 'paused';
+                observer.observe(el);
             });
-        }
-    }
-
-    function editMedicine(medicineId, userId) {
-        alert('Edit medicine feature - Implementation pending');
-    }
-
-    function deleteMedicine(medicineId, userId) {
-        if (confirm('Are you sure you want to delete this medicine record?')) {
-            // Implement delete
-            alert('Delete medicine feature - Implementation pending');
-        }
-    }
-
-    function editMetric(metricId, userId) {
-        alert('Edit metric feature - Implementation pending');
-    }
-
-    function deleteMetric(metricId, userId) {
-        if (confirm('Are you sure you want to delete this metric?')) {
-            fetch(`/health/metric/${metricId}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                }
-            })
-            .then(response => {
-                if (response.ok) {
-                    alert('Metric deleted successfully');
-                    location.reload();
-                } else {
-                    alert('Error deleting metric');
-                }
-            });
-        }
-    }
-
-    function filterUsers() {
-        const search = document.getElementById('userSearch').value.toLowerCase();
-        const roleFilter = document.getElementById('roleFilter').value;
-        const rows = document.querySelectorAll('.user-row');
-
-        rows.forEach(row => {
-            const name = row.textContent.toLowerCase();
-            const role = row.getAttribute('data-role');
-            
-            const matchesSearch = name.includes(search);
-            const matchesRole = !roleFilter || role === roleFilter;
-            
-            row.style.display = (matchesSearch && matchesRole) ? '' : 'none';
         });
-    }
-
-    function filterMedical() {
-        const search = document.getElementById('medicalSearch').value.toLowerCase();
-        const typeFilter = document.getElementById('medicalTypeFilter').value;
-        
-        // Filter logic for medical data
-        console.log('Filtering medical data:', search, typeFilter);
-    }
-
-    // Search functionality
-    document.getElementById('userSearch')?.addEventListener('keyup', filterUsers);
-</script>
+    </script>
 @endpush

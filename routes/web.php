@@ -261,6 +261,7 @@ Route::get('/user/{user}', [App\Http\Controllers\UserController::class, 'show'])
 */
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::patch('/users/{user}', [App\Http\Controllers\AdminDashboardController::class, 'updateUser'])->name('users.update');
     
     // Future admin routes
     Route::get('/medical', [App\Http\Controllers\AdminDashboardController::class, 'medical'])->name('medical.index');
@@ -277,25 +278,35 @@ Route::middleware(['auth', 'admin'])->prefix('api/users')->group(function () {
     Route::get('{id}', function ($id) {
         $user = \App\Models\User::findOrFail($id);
         return response()->json($user->only([
-            'id', 'name', 'email', 'phone', 'occupation', 'blood_group', 'date_of_birth', 'picture', 'role'
+            'id', 'name', 'email', 'phone', 'occupation', 'blood_group', 'date_of_birth', 'picture', 'role', 'email_verified_at'
         ]));
     });
     
     Route::get('{id}/medical', function ($id) {
-        $user = \App\Models\User::with('medicines', 'userDiseases.disease')->findOrFail($id);
+        $user = \App\Models\User::with(['medicines.activeSchedule', 'userDiseases.disease', 'healthMetrics'])->findOrFail($id);
         return response()->json([
             'medicines' => $user->medicines->map(fn($m) => [
                 'id' => $m->id,
-                'name' => $m->name,
-                'dosage' => $m->dosage,
-                'frequency' => $m->frequency,
-                'start_date' => $m->start_date
+                'name' => $m->medicine_name,
+                'type' => $m->type,
+                'dose' => trim(collect([$m->value_per_dose, $m->unit])->filter()->join(' ')),
+                'rule' => $m->rule ? str_replace('_', ' ', $m->rule) : null,
+                'frequency' => $m->activeSchedule?->frequency_per_day,
+                'start_date' => $m->activeSchedule?->start_date?->format('Y-m-d')
             ]),
             'diseases' => $user->userDiseases->map(fn($d) => [
                 'id' => $d->id,
-                'name' => $d->disease->name,
-                'diagnosed_at' => $d->diagnosed_at
-            ])
+                'name' => $d->disease->disease_name ?? 'Unknown disease',
+                'status' => $d->status,
+                'diagnosed_at' => $d->diagnosed_at?->format('Y-m-d'),
+                'notes' => $d->notes,
+            ]),
+            'metrics' => $user->healthMetrics->map(fn($metric) => [
+                'id' => $metric->id,
+                'type' => $metric->metric_type,
+                'value' => $metric->value,
+                'recorded_at' => $metric->recorded_at?->format('Y-m-d H:i'),
+            ]),
         ]);
     });
 });

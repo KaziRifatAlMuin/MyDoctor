@@ -518,6 +518,20 @@
             flex: 1 0 auto;
         }
 
+        .main-content--wide {
+            width: min(1600px, calc(100vw - 24px));
+            max-width: min(1600px, calc(100vw - 24px));
+            padding-inline: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content--wide {
+                width: 100%;
+                max-width: 100%;
+                padding-inline: 12px;
+            }
+        }
+
         /* Chatbot Icon */
         .chatbot-icon {
             position: fixed;
@@ -2051,7 +2065,7 @@
         </div>
 
         <!-- Main Content -->
-        <main class="main-content">
+        <main class="@yield('main_content_class', 'main-content')">
             @yield('content')
         </main>
 

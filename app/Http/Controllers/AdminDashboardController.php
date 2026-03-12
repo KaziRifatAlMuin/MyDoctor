@@ -13,7 +13,9 @@ use App\Models\MedicineSchedule;
 use App\Models\HealthMetric;
 use App\Models\Symptom;
 use App\Models\Disease;
+use App\Models\UserDisease;
 use Carbon\Carbon;
+use Illuminate\Validation\Rule;
 
 class AdminDashboardController extends Controller
 {
@@ -60,6 +62,19 @@ class AdminDashboardController extends Controller
         // Get statistics for the dashboard
         $stats = $this->getDashboardStats();
         $recent_activities = $this->getRecentActivities();
+        $recentUsersList = $this->getRecentUsers(6);
+        $latestDiseaseRecords = UserDisease::with(['user', 'disease'])
+            ->latest()
+            ->take(8)
+            ->get();
+        $latestMedicines = Medicine::with(['user', 'activeSchedule'])
+            ->latest()
+            ->take(8)
+            ->get();
+        $latestMetrics = HealthMetric::with('user')
+            ->latest()
+            ->take(8)
+            ->get();
         
         // Get user statistics
         $adminCount = User::where('role', 'admin')->count();
@@ -77,8 +92,37 @@ class AdminDashboardController extends Controller
             'users',
             'adminCount',
             'memberCount',
-            'recentUsers'
+            'recentUsers',
+            'recentUsersList',
+            'latestDiseaseRecords',
+            'latestMedicines',
+            'latestMetrics'
         ));
+    }
+
+    public function updateUser(Request $request, User $user)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'phone' => 'nullable|string|max:20',
+            'occupation' => 'nullable|string|max:255',
+            'blood_group' => 'nullable|in:A+,A-,B+,B-,AB+,AB-,O+,O-',
+            'date_of_birth' => 'nullable|date|before:today',
+            'role' => 'required|in:admin,member',
+        ]);
+
+        if ($user->id === $request->user()->id && $validated['role'] !== 'admin') {
+            return back()->withErrors([
+                'role' => 'You cannot remove your own admin access.',
+            ])->withInput();
+        }
+
+        $user->update($validated);
+
+        return redirect()
+            ->route('admin.dashboard')
+            ->with('success', "{$user->name} was updated successfully.");
     }
 
     private function getDashboardStats()
