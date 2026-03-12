@@ -19,6 +19,7 @@ class UserFactory extends Factory
             'date_of_birth' => fake()->dateTimeBetween('-60 years', '-18 years')->format('Y-m-d'),
             'phone' => fake()->phoneNumber(),
             'email' => fake()->unique()->safeEmail(),
+            'role' => 'member',
             'occupation' => fake()->jobTitle(),
             'blood_group' => fake()->randomElement(['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']),
             'email_verified_at' => now(),

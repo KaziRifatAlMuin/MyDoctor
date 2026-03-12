@@ -52,6 +52,7 @@ class DatabaseSeeder extends Seeder
         for ($i = 1; $i <= 50; $i++) {
             User::factory()->create([
                 'email' => "user{$i}@gmail.com",
+                'role' => $i === 1 ? 'admin' : 'member', // Make first user admin
             ]);
         }
 
