@@ -157,6 +157,9 @@ php artisan serve
 
 # Turn On the Medicine Reminder ( Email & Push Notification )
 php artisan schedule:work
+
+# To enable media files visibility in community
+php artisan storage:link
 ```
 
 ## Documentation diagrams
