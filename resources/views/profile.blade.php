@@ -482,8 +482,8 @@
                                     <span class="input-group-text bg-white border-end-0">
                                         <i class="fas fa-user text-primary" style="color:#667eea!important;"></i>
                                     </span>
-                                    <input type="text" name="Name" class="form-control border-start-0"
-                                        value="{{ old('Name', auth()->user()->Name) }}" placeholder="Your full name"
+                                    <input type="text" name="name" class="form-control border-start-0"
+                                        value="{{ old('name', auth()->user()->name) }}" placeholder="Your full name"
                                         required>
                                 </div>
                             </div>
@@ -494,8 +494,8 @@
                                     <span class="input-group-text bg-white border-end-0">
                                         <i class="fas fa-calendar text-primary" style="color:#667eea!important;"></i>
                                     </span>
-                                    <input type="date" name="DateOfBirth" class="form-control border-start-0"
-                                        value="{{ old('DateOfBirth', auth()->user()->DateOfBirth?->format('Y-m-d')) }}">
+                                    <input type="date" name="date_of_birth" class="form-control border-start-0"
+                                        value="{{ old('date_of_birth', auth()->user()->date_of_birth?->format('Y-m-d')) }}">
                                 </div>
                             </div>
 
