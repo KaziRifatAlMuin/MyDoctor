@@ -130,7 +130,7 @@
                                         <td>
                                             <div class="action-btn-group">
                                                 <button type="button" class="btn btn-sm btn-outline-primary"
-                                                    onclick="openEditDisease({{ $ud->id }}, '{{ $ud->status }}', '{{ $ud->diagnosed_at ? $ud->diagnosed_at->format('Y-m-d') : '' }}', '{{ addslashes($ud->notes ?? '') }}')">
+                                                    onclick="openEditDisease({{ $ud->id }}, {{ $ud->disease_id }}, '{{ addslashes($ud->disease->disease_name ?? '') }}', '{{ addslashes($ud->disease->disease_name_bn ?? '') }}', '{{ $ud->status }}', '{{ $ud->diagnosed_at ? $ud->diagnosed_at->format('Y-m-d') : '' }}', '{{ addslashes($ud->notes ?? '') }}')">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
                                                 <form action="{{ route('health.disease.destroy', $ud) }}" method="POST"

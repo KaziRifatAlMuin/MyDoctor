@@ -3901,7 +3901,7 @@ window.openVideoModal = function(type, source, isReel = false) {
             }
         };
 
-        window.openEditDisease = function(id, status, diagnosedAt, notes) {
+        window.openEditDisease = function(id, diseaseId, diseaseName, diseaseBn, status, diagnosedAt, notes) {
             try {
                 const diseaseLabel = document.getElementById('diseaseModalLabel');
                 if (diseaseLabel) diseaseLabel.textContent = 'Edit Disease Record';
@@ -3917,7 +3917,12 @@ window.openVideoModal = function(type, source, isReel = false) {
                 const selectWrapper = document.getElementById('diseaseSelectWrapper');
                 if (selectWrapper) selectWrapper.style.display = 'none';
                 const idHidden = document.getElementById('diseaseIdHidden');
-                if (idHidden) idHidden.removeAttribute('required');
+                if (idHidden) {
+                    idHidden.removeAttribute('required');
+                    idHidden.value = diseaseId;
+                }
+                const searchInput = document.getElementById('diseaseSearchInput');
+                if (searchInput) searchInput.value = diseaseName + (diseaseBn ? ' (' + diseaseBn + ')' : '');
                 const statusInput = document.getElementById('diseaseStatus');
                 if (statusInput) statusInput.value = status;
                 const dateInput = document.getElementById('diseaseDiagnosedAt');

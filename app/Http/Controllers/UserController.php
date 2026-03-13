@@ -113,7 +113,8 @@ class UserController extends Controller
         $totalScheduled = $medicineLogs->where('taken_at', null)->count();
         $totalTaken = $medicineLogs->where('taken_at', '!=', null)->count();
         $totalMissed = $medicineLogs->where('status', 'missed')->count();
-        $adherenceRate = $medicines->isEmpty() ? 0 : round(($totalTaken / ($totalTaken + $totalMissed + $totalScheduled)) * 100, 1);
+        $denominator = $totalTaken + $totalMissed + $totalScheduled;
+        $adherenceRate = ($denominator > 0) ? round(($totalTaken / $denominator) * 100, 1) : 0;
 
         // User diseases
         $userDiseases = \App\Models\UserDisease::where('user_id', $user->id)
@@ -191,6 +192,7 @@ class UserController extends Controller
 
         $user->update($validated);
 
-        return back()->with('success', "{$user->name} was updated successfully.");
+        $redirectTab = request()->input('redirect_tab', 'overview');
+        return back()->with('success', "{$user->name} was updated successfully.")->withFragment($redirectTab);
     }
 }

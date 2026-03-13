@@ -775,9 +775,10 @@
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form action="{{ route('users.update', $user->id) }}" method="POST">
+                <form action="{{ route('users.update', $user->id) }}" method="POST" class="user-update-form">
                     @csrf
                     @method('PATCH')
+                    <input type="hidden" name="redirect_tab" id="redirectTab" value="overview">
                     <div class="modal-body">
                         <div class="row">
                             <div class="col-md-6 mb-3">
@@ -1398,5 +1399,46 @@
         window.metricFieldDefs = @json(collect($metricConfig)->map(fn($c) => $c['js_fields']));
         window.symptomsList = @json($symptomsList, JSON_UNESCAPED_UNICODE);
         const diseasesData = @json($allDiseases->map(fn($d) => ['id' => $d->id, 'name' => $d->disease_name, 'bn' => $d->disease_name_bn]), JSON_UNESCAPED_UNICODE);
+
+        // ── Tab Persistence ──
+        const editUserForm = document.querySelector('.user-update-form');
+        const redirectTabInput = document.getElementById('redirectTab');
+        
+        // Map between pane IDs and button IDs for all tabs
+        const tabMapping = {
+            'overview': 'overview-tab',
+            'metrics': 'metrics-tab',
+            'symptomsPane': 'symptoms-tab',
+            'diseasesPane': 'diseases-tab',
+            'prescriptions': 'prescriptions-tab',
+            'reportsPane': 'reports-tab',
+            'logs': 'logs-tab'
+        };
+        
+        // Get active tab before form submission
+        if (editUserForm) {
+            editUserForm.addEventListener('submit', function() {
+                const activeTab = document.querySelector('.health-nav-tabs .nav-link.active');
+                if (activeTab && activeTab.id) {
+                    // Extract tab name from button id (e.g., 'overview-tab' -> 'overview')
+                    const tabName = activeTab.id.replace('-tab', '');
+                    redirectTabInput.value = tabName;
+                }
+            });
+        }
+        
+        // Restore active tab from URL fragment
+        window.addEventListener('load', function() {
+            const hash = window.location.hash.replace('#', '');
+            if (hash) {
+                // First try direct mapping, then try with '-tab' suffix
+                let tabButtonId = tabMapping[hash] || hash + '-tab';
+                const tabButton = document.getElementById(tabButtonId);
+                if (tabButton) {
+                    const tabInstance = new bootstrap.Tab(tabButton);
+                    tabInstance.show();
+                }
+            }
+        });
     </script>
 @endpush
