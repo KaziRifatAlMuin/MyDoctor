@@ -875,6 +875,14 @@
                         <div class="quick-action-label">My Profile</div>
                     </a>
                 </div>
+                <div class="col-6 col-md-3 col-xl">
+                    <a href="{{ route('users.index') }}" class="quick-action-card">
+                        <div class="quick-action-icon qa-icon-blue">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="quick-action-label">Browse Members</div>
+                    </a>
+                </div>
             </div>
         </div>
 

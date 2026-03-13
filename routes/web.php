@@ -263,9 +263,11 @@ Route::prefix('medicine')->name('medicine.')->middleware('auth')->group(function
     Route::view('/prescriptions', 'medicine.prescriptions')->name('prescriptions');
 });
 
-// Public user routes
-Route::get('/users', [App\Http\Controllers\UserController::class, 'index'])->name('users.index');
-Route::get('/user/{user}', [App\Http\Controllers\UserController::class, 'show'])->name('users.show');
+// User routes (auth required)
+Route::middleware('auth')->group(function () {
+    Route::get('/users', [App\Http\Controllers\UserController::class, 'index'])->name('users.index');
+    Route::get('/user/{user}', [App\Http\Controllers\UserController::class, 'show'])->name('users.show');
+});
 
 // Admin user update route
 Route::middleware(['auth', 'admin'])->patch('/user/{user}', [App\Http\Controllers\UserController::class, 'update'])->name('users.update');

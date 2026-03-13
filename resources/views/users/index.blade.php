@@ -1,86 +1,80 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid">
-        <!-- Users Page Header -->
-        <div class="text-center mb-5">
-            <h1 class="display-4 text-primary mb-3">
-                <i class="fas fa-users me-3"></i>Community Members
-            </h1>
-            <p class="lead text-muted">Connect with fellow health enthusiasts in our community</p>
-        </div>
+    <div style="background: linear-gradient(180deg, #f0f2f8 0%, #e8ecf4 40%, #f5f7fb 100%); min-height: 100vh; padding: 2rem 0 4rem;">
+        <div class="container" style="max-width: 1280px;">
+            
+            {{-- Header Hero Section --}}
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 40%, #f093fb 80%, #667eea 100%); background-size: 300% 300%; animation: heroGradient 8s ease infinite; border-radius: 28px; padding: 3.5rem 3rem; color: white; position: relative; overflow: hidden; margin-bottom: 3rem; box-shadow: 0 20px 60px rgba(102,126,234,0.3);">
+                <div style="position: absolute; top: -60%; right: -15%; width: 500px; height: 500px; border-radius: 50%; background: rgba(255,255,255,0.06); pointer-events: none; animation: float 6s ease-in-out infinite;"></div>
+                <div style="position: absolute; bottom: -40%; left: 10%; width: 350px; height: 350px; border-radius: 50%; background: rgba(255,255,255,0.04); pointer-events: none; animation: float 8s ease-in-out infinite reverse;"></div>
+                
+                <div style="position: relative; z-index: 2;">
+                    <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1.5rem;">
+                        <div style="width: 90px; height: 90px; border-radius: 20px; background: rgba(255,255,255,0.15); border: 3px solid rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div>
+                            <h1 style="font-size: 2.8rem; font-weight: 800; margin: 0; text-shadow: 0 2px 8px rgba(0,0,0,0.15); line-height: 1.1;">Community Members Directory</h1>
+                            <p style="font-size: 1.05rem; margin: 0.5rem 0 0; opacity: 0.95;">Explore and connect with fellow health enthusiasts</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-        <!-- Statistics Cards -->
-        <div class="row mb-5">
-            <div class="col-lg-3 col-md-6 mb-3">
-                <div class="card border-0 shadow-sm text-center community-stat-card">
-                    <div class="card-body">
-                        <div class="text-primary mb-2">
-                            <i class="fas fa-users fa-2x"></i>
-                        </div>
-                        <div class="text-primary fw-bold h3 mb-1">{{ $totalUsers }}</div>
-                        <div class="text-muted">Total Members</div>
+            {{-- Statistics Grid --}}
+            <div class="row g-4 mb-4" style="margin-bottom: 3rem;">
+                <div class="col-md-3 col-sm-6">
+                    <div style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 2px 20px rgba(0,0,0,0.06); transition: all 0.3s; text-align: center; border: 1px solid rgba(0,0,0,0.05);">
+                        <div style="color: #667eea; font-size: 2.2rem; margin-bottom: 0.75rem;"><i class="fas fa-users"></i></div>
+                        <div style="font-size: 1.8rem; font-weight: 800; color: #2d3748; margin-bottom: 0.25rem;">{{ $totalUsers }}</div>
+                        <div style="font-size: 0.9rem; color: #718096;">Total Members</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 2px 20px rgba(0,0,0,0.06); transition: all 0.3s; text-align: center; border: 1px solid rgba(0,0,0,0.05);">
+                        <div style="color: #38a169; font-size: 2.2rem; margin-bottom: 0.75rem;"><i class="fas fa-user-check"></i></div>
+                        <div style="font-size: 1.8rem; font-weight: 800; color: #2d3748; margin-bottom: 0.25rem;">{{ $memberCount }}</div>
+                        <div style="font-size: 0.9rem; color: #718096;">Active Members</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 2px 20px rgba(0,0,0,0.06); transition: all 0.3s; text-align: center; border: 1px solid rgba(0,0,0,0.05);">
+                        <div style="color: #dd6b20; font-size: 2.2rem; margin-bottom: 0.75rem;"><i class="fas fa-crown"></i></div>
+                        <div style="font-size: 1.8rem; font-weight: 800; color: #2d3748; margin-bottom: 0.25rem;">{{ $adminCount }}</div>
+                        <div style="font-size: 0.9rem; color: #718096;">Community Leaders</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 2px 20px rgba(0,0,0,0.06); transition: all 0.3s; text-align: center; border: 1px solid rgba(0,0,0,0.05);">
+                        <div style="color: #3182ce; font-size: 2.2rem; margin-bottom: 0.75rem;"><i class="fas fa-user-plus"></i></div>
+                        <div style="font-size: 1.8rem; font-weight: 800; color: #2d3748; margin-bottom: 0.25rem;">{{ $recentUsers }}</div>
+                        <div style="font-size: 0.9rem; color: #718096;">New This Week</div>
                     </div>
                 </div>
             </div>
-            <div class="col-lg-3 col-md-6 mb-3">
-                <div class="card border-0 shadow-sm text-center community-stat-card">
-                    <div class="card-body">
-                        <div class="text-success mb-2">
-                            <i class="fas fa-user-check fa-2x"></i>
-                        </div>
-                        <div class="text-success fw-bold h3 mb-1">{{ $memberCount }}</div>
-                        <div class="text-muted">Active Members</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 mb-3">
-                <div class="card border-0 shadow-sm text-center community-stat-card">
-                    <div class="card-body">
-                        <div class="text-warning mb-2">
-                            <i class="fas fa-crown fa-2x"></i>
-                        </div>
-                        <div class="text-warning fw-bold h3 mb-1">{{ $adminCount }}</div>
-                        <div class="text-muted">Community Leaders</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 mb-3">
-                <div class="card border-0 shadow-sm text-center community-stat-card">
-                    <div class="card-body">
-                        <div class="text-info mb-2">
-                            <i class="fas fa-user-plus fa-2x"></i>
-                        </div>
-                        <div class="text-info fw-bold h3 mb-1">{{ $recentUsers }}</div>
-                        <div class="text-muted">New This Week</div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Search and Filter Section -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-body">
-                <div class="row">
+            {{-- Search & Filter Section --}}
+            <div style="background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 2px 20px rgba(0,0,0,0.06); margin-bottom: 3rem; border: 1px solid rgba(0,0,0,0.05);">
+                <div class="row g-3">
                     <div class="col-md-6">
-                        <div class="input-group">
-                            <span class="input-group-text bg-primary text-white">
-                                <i class="fas fa-search"></i>
-                            </span>
-                            <input type="text" class="form-control form-control-lg" id="searchInput"
-                                placeholder="Search members by name..." value="{{ request('search') }}">
+                        <label style="display: block; font-weight: 600; color: #2d3748; margin-bottom: 0.5rem; font-size: 0.9rem;">Search Members</label>
+                        <div style="position: relative;">
+                            <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #667eea; font-size: 1rem;"></i>
+                            <input type="text" id="searchInput" placeholder="Search by name..." value="{{ request('search') }}" style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.75rem; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 0.95rem; transition: all 0.3s; box-sizing: border-box;">
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <select class="form-select form-select-lg" id="roleFilter" onchange="applyFilters()">
+                        <label style="display: block; font-weight: 600; color: #2d3748; margin-bottom: 0.5rem; font-size: 0.9rem;">Member Type</label>
+                        <select id="roleFilter" onchange="applyFilters()" style="width: 100%; padding: 0.75rem 1rem; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 0.95rem; transition: all 0.3s;">
                             <option value="">All Members</option>
-                            <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>Community Leaders
-                            </option>
+                            <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>Community Leaders</option>
                             <option value="member" {{ request('role') == 'member' ? 'selected' : '' }}>Members</option>
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <select class="form-select form-select-lg" id="sortBy" onchange="applyFilters()">
+                        <label style="display: block; font-weight: 600; color: #2d3748; margin-bottom: 0.5rem; font-size: 0.9rem;">Sort By</label>
+                        <select id="sortBy" onchange="applyFilters()" style="width: 100%; padding: 0.75rem 1rem; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 0.95rem; transition: all 0.3s;">
                             <option value="latest" {{ request('sort') == 'latest' ? 'selected' : '' }}>Newest First</option>
                             <option value="oldest" {{ request('sort') == 'oldest' ? 'selected' : '' }}>Oldest First</option>
                             <option value="name" {{ request('sort') == 'name' ? 'selected' : '' }}>Name A-Z</option>
@@ -88,249 +82,146 @@
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Members Grid -->
-        <div class="row">
-            @forelse($users as $user)
-                <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
-                    <div class="card member-card border-0 shadow-sm h-100">
-                        <div class="card-body text-center">
-                            <!-- User Avatar -->
-                            <div
-                                class="avatar-lg bg-{{ $user->role === 'admin' ? 'warning' : 'primary' }} text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3">
-                                {{ strtoupper(substr($user->name, 0, 2)) }}
-                            </div>
+            {{-- Members Grid --}}
+            @if($users->count() > 0)
+                <div class="row g-4">
+                    @foreach($users as $user)
+                        <div class="col-lg-3 col-md-6 col-sm-12">
+                            <a href="{{ route('users.show', $user) }}" style="text-decoration: none; color: inherit;">
+                                <div style="background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 20px rgba(0,0,0,0.06); transition: all 0.3s; border: 1px solid rgba(0,0,0,0.05); height: 100%; display: flex; flex-direction: column;">
+                                    {{-- Header Background --}}
+                                    <div style="height: 100px; background: linear-gradient(135deg, {{ $user->role === 'admin' ? '#667eea' : '#38a169' }} 0%, {{ $user->role === 'admin' ? '#764ba2' : '#48bb78' }} 100%);"></div>
+                                    
+                                    {{-- Card Body --}}
+                                    <div style="padding: 1.5rem; text-align: center; flex: 1; display: flex; flex-direction: column;">
+                                        {{-- Avatar --}}
+                                        <div style="width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(135deg, {{ $user->role === 'admin' ? '#667eea' : '#3182ce' }} 0%, {{ $user->role === 'admin' ? '#764ba2' : '#2c5aa0' }} 100%); border: 4px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700; color: white; margin: -2.5rem auto 1rem;">
+                                            {{ strtoupper(substr($user->name, 0, 1)) }}
+                                        </div>
+                                        
+                                        {{-- Name --}}
+                                        <h5 style="font-size: 1.1rem; font-weight: 700; color: #2d3748; margin: 0.5rem 0;">{{ $user->name }}</h5>
+                                        
+                                        {{-- Role Badge --}}
+                                        <div style="margin: 0.75rem 0;">
+                                            @if ($user->role === 'admin')
+                                                <span style="display: inline-block; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 0.35rem 0.85rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">
+                                                    <i class="fas fa-crown me-1"></i>Community Leader
+                                                </span>
+                                            @else
+                                                <span style="display: inline-block; background: rgba(56, 161, 105, 0.1); color: #38a169; padding: 0.35rem 0.85rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">
+                                                    <i class="fas fa-user me-1"></i>Member
+                                                </span>
+                                            @endif
+                                        </div>
+                                        
+                                        {{-- Email Status --}}
+                                        <div style="margin: 0.75rem 0;">
+                                            @if ($user->email_verified_at)
+                                                <span style="display: inline-block; background: rgba(56, 161, 105, 0.1); color: #38a169; padding: 0.35rem 0.8rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">
+                                                    <i class="fas fa-check-circle me-1"></i>Verified
+                                                </span>
+                                            @else
+                                                <span style="display: inline-block; background: rgba(237, 137, 54, 0.1); color: #dd6b20; padding: 0.35rem 0.8rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">
+                                                    <i class="fas fa-clock me-1"></i>Pending
+                                                </span>
+                                            @endif
+                                        </div>
+                                        
+                                        {{-- Join Info --}}
+                                        <div style="font-size: 0.85rem; color: #718096; margin-top: auto; padding-top: 1rem; border-top: 1px solid #e0e0e0;">
+                                            <i class="fas fa-calendar-alt me-1"></i> Joined {{ $user->created_at->format('M d, Y') }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    @endforeach
+                </div>
 
-                            <!-- User Info -->
-                            <h5 class="card-title mb-1">{{ $user->name }}</h5>
-
-                            <!-- Role Badge -->
-                            @if ($user->role === 'admin')
-                                <span class="badge bg-warning mb-3">
-                                    <i class="fas fa-crown me-1"></i>Community Leader
+                {{-- Pagination --}}
+                @if ($users->hasPages())
+                    <div style="display: flex; justify-content: center; margin-top: 4rem;">
+                        <nav style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center;">
+                            {{-- Previous --}}
+                            @if ($users->onFirstPage())
+                                <span style="padding: 0.75rem 1rem; border-radius: 8px; color: #cbd5e0; cursor: not-allowed; background: #f7fafc;">
+                                    <i class="fas fa-chevron-left me-1"></i> Previous
                                 </span>
                             @else
-                                <span class="badge bg-primary mb-3">
-                                    <i class="fas fa-user me-1"></i>Member
-                                </span>
+                                <a href="{{ $users->appends(request()->query())->previousPageUrl() }}" style="padding: 0.75rem 1rem; border-radius: 8px; color: #667eea; font-weight: 600; background: rgba(102,126,234,0.1); text-decoration: none; transition: all 0.3s;">
+                                    <i class="fas fa-chevron-left me-1"></i> Previous
+                                </a>
                             @endif
 
-                            <!-- Member Stats -->
-                            <div class="row text-center mb-3">
-                                <div class="col-6">
-                                    <div class="text-primary fw-bold">{{ $loop->iteration }}</div>
-                                    <div class="small text-muted">Member #</div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="text-success fw-bold">{{ $user->created_at->format('M Y') }}</div>
-                                    <div class="small text-muted">Joined</div>
-                                </div>
-                            </div>
-
-                            <!-- Email Status -->
-                            <div class="mb-3">
-                                @if ($user->email_verified_at)
-                                    <span class="badge bg-success-soft text-success">
-                                        <i class="fas fa-check-circle me-1"></i>Verified Member
-                                    </span>
+                            {{-- Numbers --}}
+                            @php $start = max(1, $users->currentPage() - 2); $end = min($users->lastPage(), $users->currentPage() + 2); @endphp
+                            @if ($start > 1)
+                                <a href="{{ $users->appends(request()->query())->url(1) }}" style="padding: 0.75rem 1rem; border-radius: 8px; color: #667eea; font-weight: 600; background: rgba(102,126,234,0.1); text-decoration: none; transition: all 0.3s;">1</a>
+                                @if ($start > 2) <span style="padding: 0.75rem 1rem; color: #cbd5e0;">...</span> @endif
+                            @endif
+                            @for ($i = $start; $i <= $end; $i++)
+                                @if ($i == $users->currentPage())
+                                    <span style="padding: 0.75rem 1rem; border-radius: 8px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; font-weight: 700; box-shadow: 0 4px 8px rgba(102,126,234,0.3);">{{ $i }}</span>
                                 @else
-                                    <span class="badge bg-warning-soft text-warning">
-                                        <i class="fas fa-clock me-1"></i>Pending Verification
-                                    </span>
+                                    <a href="{{ $users->appends(request()->query())->url($i) }}" style="padding: 0.75rem 1rem; border-radius: 8px; color: #667eea; font-weight: 600; background: rgba(102,126,234,0.1); text-decoration: none; transition: all 0.3s;">{{ $i }}</a>
                                 @endif
-                            </div>
-
-                            <!-- Member Since -->
-                            <div class="text-muted small">
-                                <i class="fas fa-calendar-alt me-1"></i>
-                                Member since {{ $user->created_at->format('M d, Y') }}
-                            </div>
-                        </div>
-
-                        <!-- Card Footer -->
-                        <div class="card-footer bg-transparent border-0 pt-0">
-                            <button class="btn btn-outline-primary btn-sm w-100"
-                                onclick="connectWithUser('{{ $user->name }}')">
-                                <i class="fas fa-handshake me-1"></i>Connect
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            @empty
-                <div class="col-12">
-                    <div class="text-center py-5">
-                        <i class="fas fa-users fa-4x text-muted mb-4"></i>
-                        <h4 class="text-muted">No members found</h4>
-                        <p class="text-muted">Try adjusting your search criteria or filters</p>
-                        <button class="btn btn-primary" onclick="clearFilters()">
-                            <i class="fas fa-refresh me-1"></i>Clear Filters
-                        </button>
-                    </div>
-                </div>
-            @endforelse
-        </div>
-
-        <!-- Pagination -->
-        @if ($users->hasPages())
-            <div class="d-flex justify-content-center mt-5">
-                <nav aria-label="Members pagination">
-                    <ul class="pagination pagination-lg">
-                        {{-- Previous Page Link --}}
-                        @if ($users->onFirstPage())
-                            <li class="page-item disabled">
-                                <span class="page-link">
-                                    <i class="fas fa-chevron-left"></i> Previous
-                                </span>
-                            </li>
-                        @else
-                            <li class="page-item">
-                                <a class="page-link" href="{{ $users->appends(request()->query())->previousPageUrl() }}">
-                                    <i class="fas fa-chevron-left"></i> Previous
-                                </a>
-                            </li>
-                        @endif
-
-                        {{-- Pagination Elements --}}
-                        @php
-                            $start = max(1, $users->currentPage() - 2);
-                            $end = min($users->lastPage(), $users->currentPage() + 2);
-                        @endphp
-
-                        @if ($start > 1)
-                            <li class="page-item">
-                                <a class="page-link" href="{{ $users->appends(request()->query())->url(1) }}">1</a>
-                            </li>
-                            @if ($start > 2)
-                                <li class="page-item disabled"><span class="page-link">...</span></li>
+                            @endfor
+                            @if ($end < $users->lastPage())
+                                @if ($end < $users->lastPage() - 1) <span style="padding: 0.75rem 1rem; color: #cbd5e0;">...</span> @endif
+                                <a href="{{ $users->appends(request()->query())->url($users->lastPage()) }}" style="padding: 0.75rem 1rem; border-radius: 8px; color: #667eea; font-weight: 600; background: rgba(102,126,234,0.1); text-decoration: none; transition: all 0.3s;">{{ $users->lastPage() }}</a>
                             @endif
-                        @endif
 
-                        @for ($i = $start; $i <= $end; $i++)
-                            @if ($i == $users->currentPage())
-                                <li class="page-item active">
-                                    <span class="page-link">{{ $i }}</span>
-                                </li>
+                            {{-- Next --}}
+                            @if ($users->hasMorePages())
+                                <a href="{{ $users->appends(request()->query())->nextPageUrl() }}" style="padding: 0.75rem 1rem; border-radius: 8px; color: #667eea; font-weight: 600; background: rgba(102,126,234,0.1); text-decoration: none; transition: all 0.3s;">
+                                    Next <i class="fas fa-chevron-right ms-1"></i>
+                                </a>
                             @else
-                                <li class="page-item">
-                                    <a class="page-link"
-                                        href="{{ $users->appends(request()->query())->url($i) }}">{{ $i }}</a>
-                                </li>
-                            @endif
-                        @endfor
-
-                        @if ($end < $users->lastPage())
-                            @if ($end < $users->lastPage() - 1)
-                                <li class="page-item disabled"><span class="page-link">...</span></li>
-                            @endif
-                            <li class="page-item">
-                                <a class="page-link"
-                                    href="{{ $users->appends(request()->query())->url($users->lastPage()) }}">{{ $users->lastPage() }}</a>
-                            </li>
-                        @endif
-
-                        {{-- Next Page Link --}}
-                        @if ($users->hasMorePages())
-                            <li class="page-item">
-                                <a class="page-link" href="{{ $users->appends(request()->query())->nextPageUrl() }}">
-                                    Next <i class="fas fa-chevron-right"></i>
-                                </a>
-                            </li>
-                        @else
-                            <li class="page-item disabled">
-                                <span class="page-link">
-                                    Next <i class="fas fa-chevron-right"></i>
+                                <span style="padding: 0.75rem 1rem; border-radius: 8px; color: #cbd5e0; cursor: not-allowed; background: #f7fafc;">
+                                    Next <i class="fas fa-chevron-right ms-1"></i>
                                 </span>
-                            </li>
-                        @endif
-                    </ul>
-                </nav>
-            </div>
-
-            <!-- Pagination Info -->
-            <div class="text-center mt-3">
-                <div class="text-muted">
-                    Showing {{ $users->firstItem() }} to {{ $users->lastItem() }} of {{ $users->total() }} members
+                            @endif
+                        </nav>
+                    </div>
+                    <div style="text-align: center; margin-top: 1.5rem; color: #718096; font-size: 0.9rem;">
+                        Showing {{ $users->firstItem() }} to {{ $users->lastItem() }} of {{ $users->total() }} members
+                    </div>
+                @endif
+            @else
+                <div style="text-align: center; padding: 4rem 2rem; background: white; border-radius: 16px;">
+                    <i class="fas fa-users" style="font-size: 3rem; color: #cbd5e0; margin-bottom: 1rem; display: block;"></i>
+                    <h4 style="color: #718096; margin-bottom: 0.5rem;">No members found</h4>
+                    <p style="color: #a0aec0; margin-bottom: 1.5rem;">Try adjusting your search criteria or filters</p>
+                    <button onclick="clearFilters()" style="padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">
+                        <i class="fas fa-redo me-1"></i> Clear Filters
+                    </button>
                 </div>
-            </div>
-        @endif
+            @endif
+
+        </div>
     </div>
 
-@endsection
-
-@push('styles')
     <style>
-        .community-stat-card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        @keyframes heroGradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
         }
-
-        .community-stat-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-20px) scale(1.05); }
         }
-
-        .member-card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        [style*="border-radius: 16px"]:hover {
+            box-shadow: 0 12px 32px rgba(0,0,0,0.12) !important;
         }
-
-        .member-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
-        }
-
-        .avatar-lg {
-            width: 80px;
-            height: 80px;
-            font-size: 28px;
-            font-weight: bold;
-        }
-
-        .bg-success-soft {
-            background-color: rgba(25, 135, 84, 0.1) !important;
-        }
-
-        .bg-warning-soft {
-            background-color: rgba(255, 193, 7, 0.1) !important;
-        }
-
-        .pagination .page-link {
-            border: none;
-            color: #6c757d;
-            font-weight: 500;
-            padding: 12px 18px;
-            margin: 0 2px;
-            border-radius: 8px;
-        }
-
-        .pagination .page-item.active .page-link {
-            background-color: #0d6efd;
-            color: white;
-            box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
-        }
-
-        .pagination .page-link:hover {
-            color: #0d6efd;
-            background-color: #e9ecef;
-            transform: translateY(-2px);
-        }
-
-        .form-control:focus,
-        .form-select:focus {
-            border-color: #0d6efd;
-            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-        }
-
-        .display-4 {
-            font-weight: 300;
-        }
-
-        .lead {
-            font-size: 1.1rem;
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea !important;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1) !important;
         }
     </style>
-@endpush
 
-@push('scripts')
     <script>
         function applyFilters() {
             const search = document.getElementById('searchInput').value;
@@ -342,21 +233,11 @@
             if (sort) params.set('sort', sort);
             window.location.href = '{{ route('users.index') }}?' + params.toString();
         }
-        document.addEventListener('DOMContentLoaded', function() {
-            const searchInput = document.getElementById('searchInput');
-            if (searchInput) {
-                searchInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') applyFilters();
-                });
-            }
+        document.getElementById('searchInput')?.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') applyFilters();
         });
-
-        function connectWithUser(userName) {
-            alert(`Feature coming soon! Connect with ${userName} functionality will be available in future updates.`);
-        }
-
         function clearFilters() {
             window.location.href = '{{ route('users.index') }}';
         }
     </script>
-@endpush
+@endsection
