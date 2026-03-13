@@ -22,7 +22,7 @@ class MedicineLogFactory extends Factory
 
         return [
             'medicine_id' => Medicine::factory(),
-            'user_id' => User::inRandomOrder()->first()?->id ?? 1,
+            'user_id' => User::factory(),
             'date' => now()->subDays($dateCounter)->format('Y-m-d'),
             'total_scheduled' => $scheduled,
             'total_taken' => $taken,

@@ -13,7 +13,7 @@ class UserAddressFactory extends Factory
         $upazilas  = ['Mirpur', 'Gulshan', 'Dhanmondi', 'Uttara', 'Mohakhali', 'Wari', 'Motijheel', 'Banani'];
 
         return [
-            'user_id'  => User::inRandomOrder()->first()?->id ?? 1,
+            'user_id'  => User::factory(),
             'district' => fake()->randomElement($districts),
             'upazila'  => fake()->randomElement($upazilas),
             'street'   => fake()->streetName(),

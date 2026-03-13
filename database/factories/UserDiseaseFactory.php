@@ -11,7 +11,7 @@ class UserDiseaseFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id'       => User::inRandomOrder()->first()?->id ?? 1,
+            'user_id'       => User::factory(),
             'disease_id'    => Disease::inRandomOrder()->first()?->id ?? Disease::factory(),
             'diagnosed_at'  => fake()->dateTimeBetween('-5 years', 'now')->format('Y-m-d'),
             'status'        => fake()->randomElement(['active', 'recovered', 'chronic', 'managed']),
