@@ -766,9 +766,10 @@
             /* ═══════════════════════════════════════════════════════
              *  CONFIG DATA from PHP
              * ═══════════════════════════════════════════════════════ */
-            const metricFieldDefs = @json(collect($metricConfig)->map(fn($c) => $c['js_fields']));
-            const symptomsList    = @json($symptomsList, JSON_UNESCAPED_UNICODE);
+            window.metricFieldDefs = @json(collect($metricConfig)->map(fn($c) => $c['js_fields']));
+            window.symptomsList    = @json($symptomsList, JSON_UNESCAPED_UNICODE);
             const diseasesData    = @json($allDiseases->map(fn($d) => ['id' => $d->id, 'name' => $d->disease_name, 'bn' => $d->disease_name_bn]), JSON_UNESCAPED_UNICODE);
+
 
             /* ═══════════════════════════════════════════════════════
              *  REUSABLE: Searchable dropdown builder
@@ -777,8 +778,10 @@
                 function renderList(filter = '') {
                     const f = filter.toLowerCase();
                     const filtered = items.filter(i => {
-                        const txt = (i.label + ' ' + (i.sub || '')).toLowerCase();
-                        return txt.includes(f);
+                        // Search in both English (label) and Bangla (sub)
+                        const english = i.label.toLowerCase();
+                        const bangla = (i.sub || '').toLowerCase();
+                        return english.includes(f) || bangla.includes(f);
                     });
                     dropdownList.innerHTML = '';
                     if (filtered.length === 0) {
@@ -788,7 +791,7 @@
                             const a = document.createElement('a');
                             a.href = '#';
                             a.className = 'dropdown-item';
-                            a.style.cssText = 'font-size:0.85rem; padding:0.45rem 1rem; white-space:normal;';
+                            a.style.cssText = 'font-size:0.85rem; padding:0.45rem 1rem; white-space:normal;'
                             a.innerHTML = item.sub ? `${item.label} <span style="color:#a0aec0;">(${item.sub})</span>` : item.label;
                             a.addEventListener('click', function(e) {
                                 e.preventDefault();
@@ -802,13 +805,22 @@
                     dropdownList.style.display = 'block';
                 }
 
-                searchInput.addEventListener('focus', () => renderList(searchInput.value));
+                // Show all items by default when input gets focus
+                searchInput.addEventListener('focus', () => {
+                    renderList(searchInput.value);
+                    dropdownList.style.display = 'block';
+                });
+                // Filter as user types (searches in both English and Bangla)
                 searchInput.addEventListener('input', () => renderList(searchInput.value));
+                // Close dropdown when clicking outside
                 document.addEventListener('click', function(e) {
                     if (!searchInput.parentElement.contains(e.target)) {
                         dropdownList.style.display = 'none';
                     }
                 });
+                
+                // Initialize: Show all items by default
+                renderList('');
             }
 
             /* ═══════════════════════════════════════════════════════
@@ -887,77 +899,10 @@
             }
 
             /* ═══════════════════════════════════════════════════════
-             *  EDIT helpers — called from partials via onclick
+             *  EDIT helpers — using global functions from layout
              * ═══════════════════════════════════════════════════════ */
-            window.openEditMetric = function(id, type, values, recordedAt) {
-                document.getElementById('metricModalLabel').textContent = 'Edit Health Metric';
-                document.getElementById('metricSubmitLabel').textContent = 'Update Metric';
-                const form = document.getElementById('metricForm');
-                form.action = '/health/metric/' + id;
-                document.getElementById('metricFormMethod').value = 'PUT';
-                metricTypeSelect.value = type;
-
-                // build value map for pre-fill
-                const cfg = metricFieldDefs[type];
-                const valMap = {};
-                if (cfg) {
-                    cfg.forEach(f => {
-                        const key = f.name.replace('value_', '');
-                        if (values[key] !== undefined) valMap[f.name] = values[key];
-                    });
-                }
-                buildMetricFields(type, valMap);
-                document.getElementById('metricRecordedAt').value = recordedAt;
-                new bootstrap.Modal(document.getElementById('addMetricModal')).show();
-            };
-
-            window.openEditSymptom = function(id, name, severity, recordedAt, note) {
-                document.getElementById('symptomModalLabel').textContent = 'Edit Symptom';
-                document.getElementById('symptomSubmitLabel').textContent = 'Update Symptom';
-                const form = document.getElementById('symptomForm');
-                form.action = '/health/symptom/' + id;
-                document.getElementById('symptomFormMethod').value = 'PUT';
-                const bn = symptomsList[name] || '';
-                document.getElementById('symptomSearchInput').value = name + (bn ? ' (' + bn + ')' : '');
-                document.getElementById('symptomNameHidden').value = name;
-                document.getElementById('severityRange').value = severity;
-                document.getElementById('severityValue').textContent = severity;
-                document.getElementById('symptomRecordedAt').value = recordedAt;
-                document.getElementById('symptomNote').value = note || '';
-                new bootstrap.Modal(document.getElementById('addSymptomModal')).show();
-            };
-
-            window.openEditDisease = function(id, status, diagnosedAt, notes) {
-                document.getElementById('diseaseModalLabel').textContent = 'Edit Disease Record';
-                document.getElementById('diseaseSubmitLabel').textContent = 'Update Disease';
-                const form = document.getElementById('diseaseForm');
-                form.action = '/health/disease/' + id;
-                document.getElementById('diseaseFormMethod').value = 'PUT';
-                document.getElementById('diseaseSelectWrapper').style.display = 'none';
-                document.getElementById('diseaseIdHidden').removeAttribute('required');
-                document.getElementById('diseaseStatus').value = status;
-                document.getElementById('diseaseDiagnosedAt').value = diagnosedAt || '';
-                document.getElementById('diseaseNotes').value = notes || '';
-                new bootstrap.Modal(document.getElementById('addDiseaseModal')).show();
-            };
-
-            window.openEditUpload = function(id, title, type, doctorName, institution, docDate, notes, summary) {
-                document.getElementById('uploadModalLabel').textContent = 'Edit Document';
-                document.getElementById('uploadSubmitLabel').textContent = 'Update';
-                const form = document.getElementById('uploadForm');
-                form.action = '/health/upload/' + id;
-                document.getElementById('uploadFormMethod').value = 'PUT';
-                document.getElementById('uploadFileInput').removeAttribute('required');
-                document.getElementById('uploadFileHint').textContent = 'Leave empty to keep existing image.';
-                document.getElementById('uploadTitle').value = title;
-                document.getElementById('uploadType').value = type;
-                document.getElementById('uploadDoctorName').value = doctorName || '';
-                document.getElementById('uploadInstitution').value = institution || '';
-                document.getElementById('uploadDocumentDate').value = docDate || '';
-                document.getElementById('uploadNotes').value = notes || '';
-                document.getElementById('uploadSummary').value = summary || '';
-                new bootstrap.Modal(document.getElementById('addUploadModal')).show();
-            };
+            // window.openEditMetric, openEditSymptom, openEditDisease, openEditUpload
+            // are now defined globally in layouts/app.blade.php and use window.metricFieldDefs, window.symptomsList
 
             /* Reset modals to "Add" mode when closed */
             ['addMetricModal','addSymptomModal','addDiseaseModal','addUploadModal'].forEach(modalId => {

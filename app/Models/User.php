@@ -17,8 +17,10 @@ class User extends Authenticatable
         'date_of_birth',
         'phone',
         'email',
+        'role',
         'occupation',
         'blood_group',
+        'gender',
         'password',
         'email_notifications',
         'push_notifications',
@@ -278,8 +280,28 @@ public function sentNotifications()
     return $this->hasMany(\App\Models\Notification::class, 'from_user_id');
 }
 
+/**
+ * Check if user is admin
+ */
+public function isAdmin(): bool
+{
+    return $this->role === 'admin';
+}
 
+/**
+ * Check if user is member
+ */
+public function isMember(): bool
+{
+    return $this->role === 'member';
+}
 
-
+/**
+ * Check if user has specific role
+ */
+public function hasRole(string $role): bool
+{
+    return $this->role === $role;
+}
 
 }

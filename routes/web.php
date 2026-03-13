@@ -89,9 +89,22 @@ Route::middleware('auth')->group(function () {
     Route::post('/health/disease', [HealthController::class, 'storeDisease'])->name('health.disease.store');
     Route::post('/health/upload', [HealthController::class, 'storeUpload'])->name('health.upload.store');
     Route::put('/health/metric/{healthMetric}', [HealthController::class, 'updateMetric'])->name('health.metric.update');
+    Route::get('/health/metric/{healthMetric}', function (\App\Models\HealthMetric $healthMetric) {
+        return redirect()->route('users.show', $healthMetric->user_id);
+    })->name('health.metric.view');
     Route::put('/health/symptom/{symptom}', [HealthController::class, 'updateSymptom'])->name('health.symptom.update');
+    // Friendly GET redirect: visiting a symptom URL should return to the user's profile
+    Route::get('/health/symptom/{symptom}', function (\App\Models\Symptom $symptom) {
+        return redirect()->route('users.show', $symptom->user_id);
+    })->name('health.symptom.view');
     Route::put('/health/disease/{userDisease}', [HealthController::class, 'updateDisease'])->name('health.disease.update');
+    Route::get('/health/disease/{userDisease}', function (\App\Models\UserDisease $userDisease) {
+        return redirect()->route('users.show', $userDisease->user_id);
+    })->name('health.disease.view');
     Route::put('/health/upload/{upload}', [HealthController::class, 'updateUpload'])->name('health.upload.update');
+    Route::get('/health/upload/{upload}', function (\App\Models\Upload $upload) {
+        return redirect()->route('users.show', $upload->user_id);
+    })->name('health.upload.view');
     Route::delete('/health/metric/{healthMetric}', [HealthController::class, 'destroyMetric'])->name('health.metric.destroy');
     Route::delete('/health/symptom/{symptom}', [HealthController::class, 'destroySymptom'])->name('health.symptom.destroy');
     Route::delete('/health/disease/{userDisease}', [HealthController::class, 'destroyDisease'])->name('health.disease.destroy');
@@ -250,13 +263,68 @@ Route::prefix('medicine')->name('medicine.')->middleware('auth')->group(function
     Route::view('/prescriptions', 'medicine.prescriptions')->name('prescriptions');
 });
 
+// User routes (auth required)
+Route::middleware('auth')->group(function () {
+    Route::get('/users', [App\Http\Controllers\UserController::class, 'index'])->name('users.index');
+    Route::get('/user/{user}', [App\Http\Controllers\UserController::class, 'show'])->name('users.show');
+});
+
+// Admin user update route
+Route::middleware(['auth', 'admin'])->patch('/user/{user}', [App\Http\Controllers\UserController::class, 'update'])->name('users.update');
+
 /*
 |--------------------------------------------------------------------------
 | Admin Routes
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('admin.dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [App\Http\Controllers\AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::patch('/users/{user}', [App\Http\Controllers\AdminDashboardController::class, 'updateUser'])->name('users.update');
+    
+    // Future admin routes
+    Route::get('/medical', [App\Http\Controllers\AdminDashboardController::class, 'medical'])->name('medical.index');
+    Route::get('/analytics', [App\Http\Controllers\AdminDashboardController::class, 'analytics'])->name('analytics');
+    Route::get('/settings', [App\Http\Controllers\AdminDashboardController::class, 'settings'])->name('settings');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Admin API Routes
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'admin'])->prefix('api/users')->group(function () {
+    Route::get('{id}', function ($id) {
+        $user = \App\Models\User::findOrFail($id);
+        return response()->json($user->only([
+            'id', 'name', 'email', 'phone', 'occupation', 'blood_group', 'date_of_birth', 'picture', 'role', 'email_verified_at'
+        ]));
+    });
+    
+    Route::get('{id}/medical', function ($id) {
+        $user = \App\Models\User::with(['medicines.activeSchedule', 'userDiseases.disease', 'healthMetrics'])->findOrFail($id);
+        return response()->json([
+            'medicines' => $user->medicines->map(fn($m) => [
+                'id' => $m->id,
+                'name' => $m->medicine_name,
+                'type' => $m->type,
+                'dose' => trim(collect([$m->value_per_dose, $m->unit])->filter()->join(' ')),
+                'rule' => $m->rule ? str_replace('_', ' ', $m->rule) : null,
+                'frequency' => $m->activeSchedule?->frequency_per_day,
+                'start_date' => $m->activeSchedule?->start_date?->format('Y-m-d')
+            ]),
+            'diseases' => $user->userDiseases->map(fn($d) => [
+                'id' => $d->id,
+                'name' => $d->disease->disease_name ?? 'Unknown disease',
+                'status' => $d->status,
+                'diagnosed_at' => $d->diagnosed_at?->format('Y-m-d'),
+                'notes' => $d->notes,
+            ]),
+            'metrics' => $user->healthMetrics->map(fn($metric) => [
+                'id' => $metric->id,
+                'type' => $metric->metric_type,
+                'value' => $metric->value,
+                'recorded_at' => $metric->recorded_at?->format('Y-m-d H:i'),
+            ]),
+        ]);
+    });
 });

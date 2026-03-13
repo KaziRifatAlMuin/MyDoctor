@@ -28,61 +28,71 @@ class DatabaseSeeder extends Seeder
     /**
      * Seed the application's database.
      * FK-safe insertion order is maintained.
-     * Minimum 100+ per table, extra 50+ for user 1.
-     * All user passwords: password
+     * 50 users with associated data.
+     * All user passwords: abcd1234
      */
     public function run(): void
     {
         // 0. Translations — must be first so back-fill works on diseases
         $this->call(TranslationSeeder::class);
 
-        // 1. Users — no FK dependencies (50 sequential emails)
+        // 1. Diseases — create from config before users (to avoid duplicates)
+        $diseaseNames = array_keys(config('health.diseases'));
+        foreach ($diseaseNames as $name) {
+            Disease::firstOrCreate(
+                ['disease_name' => $name],
+                [
+                    'disease_name_bn' => config('health.diseases')[$name],
+                    'description' => fake()->paragraph(2),
+                ]
+            );
+        }
+
+        // 2. Users — no FK dependencies (50 sequential emails with random names)
         for ($i = 1; $i <= 50; $i++) {
             User::factory()->create([
                 'email' => "user{$i}@gmail.com",
-                'name'  => "User {$i}",
+                'role' => $i === 1 ? 'admin' : 'member', // Make first user admin
             ]);
         }
 
-        // 2. Diseases — no FK dependencies (120 unique diseases)
-        Disease::factory(120)->create();
 
-        // 3. UserAddresses — depends on users (120)
-        UserAddress::factory(120)->create();
+        // 3. UserAddresses — depends on users (50, one per user)
+        UserAddress::factory(50)->create();
 
-        // 4. Medicines — depends on users (120)
-        Medicine::factory(120)->create();
+        // 4. Medicines — depends on users (50)
+        Medicine::factory(50)->create();
 
-        // 5. MedicineSchedules — depends on medicines (150)
-        MedicineSchedule::factory(150)->create();
+        // 5. MedicineSchedules — depends on medicines (60)
+        MedicineSchedule::factory(60)->create();
 
-        // 6. MedicineReminders — depends on medicine_schedules (200)
-        MedicineReminder::factory(200)->create();
+        // 6. MedicineReminders — depends on medicine_schedules (80)
+        MedicineReminder::factory(80)->create();
 
-        // 7. MedicineLogs — depends on medicines + users (150)
-        MedicineLog::factory(150)->create();
+        // 7. MedicineLogs — depends on medicines + users (60)
+        MedicineLog::factory(60)->create();
 
-        // 8. Symptoms — depends on users (120)
-        Symptom::factory(120)->create();
+        // 8. Symptoms — depends on users (50)
+        Symptom::factory(50)->create();
 
-        // 9. HealthMetrics — depends on users (120)
-        HealthMetric::factory(120)->create();
+        // 9. HealthMetrics — depends on users (50)
+        HealthMetric::factory(50)->create();
 
-        // 10. Environments — depends on users (120)
-        Environment::factory(120)->create();
+        // 10. Environments — depends on users (50)
+        Environment::factory(50)->create();
 
-        // 11. EnvironmentMetrics — depends on environments (150)
-        EnvironmentMetric::factory(150)->create();
+        // 11. EnvironmentMetrics — depends on environments (60)
+        EnvironmentMetric::factory(60)->create();
 
-        // 12. Uploads — depends on users (120)
-        Upload::factory(120)->create();
+        // 12. Uploads — depends on users (50)
+        Upload::factory(50)->create();
 
-        // 13. UserDiseases — depends on users + diseases (120)
+        // 13. UserDiseases — depends on users + diseases (50)
         // Seed with unique user-disease pairs
         $userIds = User::pluck('id')->toArray();
         $diseaseIds = Disease::pluck('id')->toArray();
         $pairs = [];
-        while (count($pairs) < 120) {
+        while (count($pairs) < 50) {
             $uid = $userIds[array_rand($userIds)];
             $did = $diseaseIds[array_rand($diseaseIds)];
             $key = "$uid-$did";

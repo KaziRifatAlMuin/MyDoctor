@@ -89,7 +89,7 @@ class HealthCrudTest extends TestCase
                  'value_bpm'   => 75,
                  'recorded_at' => now()->format('Y-m-d'),
              ])
-             ->assertRedirect(route('health'))
+             ->assertRedirect(route('health') . '#metrics')
              ->assertSessionHas('success');
 
         $this->assertDatabaseHas('health_metrics', [
@@ -109,7 +109,7 @@ class HealthCrudTest extends TestCase
                  'severity_level' => 5,
                  'recorded_at'    => now()->format('Y-m-d'),
              ])
-             ->assertRedirect(route('health'))
+             ->assertRedirect(route('health') . '#symptomsPane')
              ->assertSessionHas('success');
 
         $this->assertDatabaseHas('symptoms', [
@@ -126,7 +126,7 @@ class HealthCrudTest extends TestCase
 
         $this->actingAs($user)
              ->delete(route('health.metric.destroy', $metric->id))
-             ->assertRedirect(route('health'))
+             ->assertRedirect(route('health') . '#metrics')
              ->assertSessionHas('success');
 
         $this->assertDatabaseMissing('health_metrics', ['id' => $metric->id]);
@@ -140,7 +140,7 @@ class HealthCrudTest extends TestCase
 
         $this->actingAs($user)
              ->delete(route('health.symptom.destroy', $symptom->id))
-             ->assertRedirect(route('health'))
+             ->assertRedirect(route('health') . '#symptomsPane')
              ->assertSessionHas('success');
 
         $this->assertDatabaseMissing('symptoms', ['id' => $symptom->id]);
@@ -230,7 +230,7 @@ class HealthCrudTest extends TestCase
                  'severity_level' => 10,
                  'recorded_at'    => now()->format('Y-m-d'),
              ])
-             ->assertRedirect(route('health'));
+             ->assertRedirect(route('health') . '#symptomsPane');
 
         $this->assertDatabaseHas('symptoms', ['user_id' => $user->id, 'severity_level' => 10]);
     }
@@ -246,7 +246,7 @@ class HealthCrudTest extends TestCase
                  'severity_level' => 1,
                  'recorded_at'    => now()->format('Y-m-d'),
              ])
-             ->assertRedirect(route('health'));
+             ->assertRedirect(route('health') . '#symptomsPane');
 
         $this->assertDatabaseHas('symptoms', ['user_id' => $user->id, 'severity_level' => 1]);
     }
@@ -308,6 +308,7 @@ class HealthCrudTest extends TestCase
         ]);
 
         $this->actingAs($user)
+             ->from(route('health'))
              ->post(route('health.disease.store'), [
                  'disease_id' => $disease->id,
                  'status'     => 'active',
@@ -329,7 +330,7 @@ class HealthCrudTest extends TestCase
                      'disease_id' => $diseases[$index]->id,
                      'status'     => $status,
                  ])
-                 ->assertRedirect(route('health'));
+                 ->assertRedirect(route('health') . '#diseasesPane');
         }
 
         $this->assertCount(4, UserDisease::where('user_id', $user->id)->get());
@@ -438,7 +439,7 @@ class HealthCrudTest extends TestCase
                  'value_bpm'   => 90,
                  'recorded_at' => now()->format('Y-m-d'),
              ])
-             ->assertRedirect(route('health'))
+             ->assertRedirect(route('health') . '#metrics')
              ->assertSessionHas('success');
     }
 
@@ -454,7 +455,7 @@ class HealthCrudTest extends TestCase
                  'severity_level' => 4,
                  'recorded_at'    => now()->format('Y-m-d'),
              ])
-             ->assertRedirect(route('health'))
+             ->assertRedirect(route('health') . '#symptomsPane')
              ->assertSessionHas('success');
 
         $this->assertDatabaseHas('symptoms', [

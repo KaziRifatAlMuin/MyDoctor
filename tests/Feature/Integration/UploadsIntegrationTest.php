@@ -29,7 +29,7 @@ class UploadsIntegrationTest extends TestCase
         ];
 
         $response = $this->actingAs($user)->post(route('health.upload.store'), $payload);
-        $response->assertRedirect(route('health'));
+        $response->assertRedirect(route('health') . '#prescriptions');
 
         $this->assertDatabaseHas('uploads', [
             'user_id' => $user->id,

@@ -35,6 +35,7 @@ class MedicalSeeder extends Seeder
                 'email'             => 'test@mydoctor.com',
                 'phone'             => '01700000001',
                 'date_of_birth'     => '1995-06-15',
+                'role'              => 'admin',
                 'occupation'        => 'Software Engineer',
                 'blood_group'       => 'O+',
                 'email_verified_at' => now(),

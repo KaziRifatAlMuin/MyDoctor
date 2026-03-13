@@ -30,7 +30,7 @@ class HealthMetricFactory extends Factory
         $type = fake()->randomElement(array_keys($types));
 
         return [
-            'user_id'     => User::inRandomOrder()->first()?->id ?? User::factory(),
+            'user_id'     => User::factory(),
             'metric_type' => $type,
             'recorded_at' => fake()->dateTimeBetween('-6 months', 'now'),
             'value'       => $types[$type](),

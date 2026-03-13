@@ -39,7 +39,7 @@ class EndToEndTest extends TestCase
         ];
 
         $post = $this->actingAs($user)->post(route('health.symptom.store'), $symptomData);
-        $post->assertRedirect(route('health'));
+        $post->assertRedirect(route('health') . '#symptomsPane');
 
         $this->assertDatabaseHas('symptoms', [
             'user_id' => $user->id,

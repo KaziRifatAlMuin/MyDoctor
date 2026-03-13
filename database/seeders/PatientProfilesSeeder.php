@@ -366,6 +366,7 @@ class PatientProfilesSeeder extends Seeder
         $exists = DB::table('users')->where('id', $id)->exists();
 
         $payload = array_merge($data, [
+            'role'              => $id === 1 ? 'admin' : 'member',
             'password'          => Hash::make('abcd1234'),
             'email_verified_at' => now(),
             'updated_at'        => now(),

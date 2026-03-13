@@ -62,7 +62,7 @@ class UploadFactory extends Factory
         ];
 
         return [
-            'user_id'       => User::inRandomOrder()->first()?->id ?? User::factory(),
+            'user_id'       => User::factory(),
             'title'         => $type === 'prescription'
                                 ? fake()->randomElement($prescriptionTitles)
                                 : fake()->randomElement($reportTitles),

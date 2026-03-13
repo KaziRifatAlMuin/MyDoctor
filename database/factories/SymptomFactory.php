@@ -12,7 +12,7 @@ class SymptomFactory extends Factory
         $symptoms = array_keys(config('health.symptoms'));
 
         return [
-            'user_id'        => User::inRandomOrder()->first()?->id ?? User::factory(),
+            'user_id'        => User::factory(),
             'symptom_name'   => fake()->randomElement($symptoms),
             'severity_level' => fake()->numberBetween(1, 10),
             'note'           => fake()->optional(0.6)->sentence(),
