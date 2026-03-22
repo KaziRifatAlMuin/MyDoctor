@@ -10,21 +10,18 @@
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-body p-0">
                         <div class="list-group list-group-flush">
-                            <a href="{{ route('profile') }}" class="list-group-item list-group-item-action">
-                                <i class="fas fa-user me-2"></i>Profile
-                            </a>
-                            <a href="{{ route('profile.notifications') }}" class="list-group-item list-group-item-action">
-                                <i class="fas fa-bell me-2"></i>Notifications
-                            </a>
-                            <a href="{{ route('profile.inbox') }}" class="list-group-item list-group-item-action">
-                                <i class="fas fa-inbox me-2"></i>Inbox
-                            </a>
-                            <a href="{{ route('profile.inbox.sent') }}" class="list-group-item list-group-item-action">
-                                <i class="fas fa-paper-plane me-2"></i>Sent
-                            </a>
-                            <a href="{{ route('profile.inbox.compose') }}"
+                            <a href="{{ route('profile.mailbox.compose') }}"
                                 class="list-group-item list-group-item-action active">
                                 <i class="fas fa-pen-to-square me-2"></i>Compose
+                            </a>
+                            <a href="{{ route('profile.mailbox') }}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-inbox me-2"></i>Inbox
+                            </a>
+                            <a href="{{ route('profile.mailbox.drafts') }}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-file-lines me-2"></i>Drafts
+                            </a>
+                            <a href="{{ route('profile.mailbox.sent') }}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-paper-plane me-2"></i>Sent
                             </a>
                         </div>
                     </div>
@@ -46,12 +43,16 @@
                             </div>
                         @endif
 
-                        <form action="{{ route('profile.inbox.store') }}" method="POST">
+                        <form action="{{ route('profile.mailbox.store') }}" method="POST">
                             @csrf
+
+                            @if ($draftId)
+                                <input type="hidden" name="draft_id" value="{{ $draftId }}">
+                            @endif
 
                             <div class="mb-3">
                                 <label class="form-label fw-bold">To</label>
-                                <select name="receiver_id" class="form-select" required>
+                                <select name="receiver_id" class="form-select" {{ $draftId ? '' : 'required' }}>
                                     <option value="" disabled {{ old('receiver_id', $toUserId) ? '' : 'selected' }}>
                                         Select a recipient</option>
                                     @foreach ($recipients as $recipient)
@@ -71,12 +72,15 @@
 
                             <div class="mb-3">
                                 <label class="form-label fw-bold">Message</label>
-                                <textarea name="message" class="form-control" rows="8" maxlength="10000" required>{{ old('message') }}</textarea>
+                                <textarea name="message" class="form-control" rows="8" maxlength="10000" required>{{ old('message', $message) }}</textarea>
                                 <div class="form-text">Max 10,000 characters</div>
                             </div>
 
                             <div class="d-flex justify-content-end gap-2">
-                                <a href="{{ route('profile.inbox') }}" class="btn btn-outline-secondary">Cancel</a>
+                                <a href="{{ route('profile.mailbox') }}" class="btn btn-outline-secondary">Cancel</a>
+                                <button type="submit" name="save_draft" value="1" class="btn btn-outline-secondary">
+                                    <i class="fas fa-file-lines me-2"></i>Save Draft
+                                </button>
                                 <button type="submit" class="btn btn-primary">
                                     <i class="fas fa-paper-plane me-2"></i>Send
                                 </button>

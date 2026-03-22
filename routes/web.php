@@ -82,14 +82,15 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile/notifications/toggle-email', [NotificationPreferenceController::class, 'toggleEmail'])->name('profile.notifications.toggle-email');
     Route::post('/profile/notifications/toggle-push', [NotificationPreferenceController::class, 'togglePush'])->name('profile.notifications.toggle-push');
 
-    // Inbox (internal mailings)
-    Route::get('/profile/inbox', [App\Http\Controllers\MailingController::class, 'inbox'])->name('profile.inbox');
-    Route::get('/profile/inbox/sent', [App\Http\Controllers\MailingController::class, 'sent'])->name('profile.inbox.sent');
-    Route::get('/profile/inbox/compose', [App\Http\Controllers\MailingController::class, 'create'])->name('profile.inbox.compose');
-    Route::post('/profile/inbox', [App\Http\Controllers\MailingController::class, 'store'])->name('profile.inbox.store');
-    Route::get('/profile/inbox/{mailing}', [App\Http\Controllers\MailingController::class, 'show'])->name('profile.inbox.show');
-    Route::patch('/profile/inbox/{mailing}/status', [App\Http\Controllers\MailingController::class, 'updateStatus'])->name('profile.inbox.status');
-    Route::delete('/profile/inbox/{mailing}', [App\Http\Controllers\MailingController::class, 'destroy'])->name('profile.inbox.destroy');
+    // Mailbox (internal mailings)
+    Route::get('/profile/mailbox', [App\Http\Controllers\MailingController::class, 'inbox'])->name('profile.mailbox');
+    Route::get('/profile/mailbox/sent', [App\Http\Controllers\MailingController::class, 'sent'])->name('profile.mailbox.sent');
+    Route::get('/profile/mailbox/drafts', [App\Http\Controllers\MailingController::class, 'drafts'])->name('profile.mailbox.drafts');
+    Route::get('/profile/mailbox/compose', [App\Http\Controllers\MailingController::class, 'create'])->name('profile.mailbox.compose');
+    Route::post('/profile/mailbox', [App\Http\Controllers\MailingController::class, 'store'])->name('profile.mailbox.store');
+    Route::get('/profile/mailbox/{mailing}', [App\Http\Controllers\MailingController::class, 'show'])->name('profile.mailbox.show');
+    Route::patch('/profile/mailbox/{mailing}/status', [App\Http\Controllers\MailingController::class, 'updateStatus'])->name('profile.mailbox.status');
+    Route::delete('/profile/mailbox/{mailing}', [App\Http\Controllers\MailingController::class, 'destroy'])->name('profile.mailbox.destroy');
     
     // Health
     Route::get('/health', [HealthController::class, 'index'])->name('health');

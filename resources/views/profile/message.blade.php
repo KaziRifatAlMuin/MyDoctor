@@ -10,20 +10,17 @@
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-body p-0">
                         <div class="list-group list-group-flush">
-                            <a href="{{ route('profile') }}" class="list-group-item list-group-item-action">
-                                <i class="fas fa-user me-2"></i>Profile
+                            <a href="{{ route('profile.mailbox.compose') }}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-pen-to-square me-2"></i>Compose
                             </a>
-                            <a href="{{ route('profile.notifications') }}" class="list-group-item list-group-item-action">
-                                <i class="fas fa-bell me-2"></i>Notifications
-                            </a>
-                            <a href="{{ route('profile.inbox') }}" class="list-group-item list-group-item-action active">
+                            <a href="{{ route('profile.mailbox') }}" class="list-group-item list-group-item-action active">
                                 <i class="fas fa-inbox me-2"></i>Inbox
                             </a>
-                            <a href="{{ route('profile.inbox.sent') }}" class="list-group-item list-group-item-action">
-                                <i class="fas fa-paper-plane me-2"></i>Sent
+                            <a href="{{ route('profile.mailbox.drafts') }}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-file-lines me-2"></i>Drafts
                             </a>
-                            <a href="{{ route('profile.inbox.compose') }}" class="list-group-item list-group-item-action">
-                                <i class="fas fa-pen-to-square me-2"></i>Compose
+                            <a href="{{ route('profile.mailbox.sent') }}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-paper-plane me-2"></i>Sent
                             </a>
                         </div>
                     </div>
@@ -35,7 +32,7 @@
                 <div class="card border-0 shadow-lg">
                     <div class="card-header bg-primary text-white py-3 d-flex justify-content-between align-items-center">
                         <h4 class="mb-0"><i class="fas fa-envelope-open-text me-2"></i>Message</h4>
-                        <a href="{{ route('profile.inbox') }}" class="btn btn-light btn-sm">
+                        <a href="{{ route('profile.mailbox') }}" class="btn btn-light btn-sm">
                             <i class="fas fa-arrow-left me-1"></i>Back
                         </a>
                     </div>
@@ -85,13 +82,13 @@
                                     ? $mailing->title
                                     : 'Re: ' . $mailing->title;
                             @endphp
-                            <a href="{{ route('profile.inbox.compose', ['to' => $replyTo, 'title' => $replyTitle]) }}"
+                            <a href="{{ route('profile.mailbox.compose', ['to' => $replyTo, 'title' => $replyTitle]) }}"
                                 class="btn btn-outline-primary">
                                 <i class="fas fa-reply me-2"></i>Reply
                             </a>
 
                             @if (auth()->id() === $mailing->receiver_id)
-                                <form method="POST" action="{{ route('profile.inbox.status', $mailing) }}">
+                                <form method="POST" action="{{ route('profile.mailbox.status', $mailing) }}">
                                     @csrf
                                     @method('PATCH')
                                     <input type="hidden" name="status" value="unread">
@@ -101,7 +98,7 @@
                                 </form>
 
                                 @if ($mailing->status !== 'archived')
-                                    <form method="POST" action="{{ route('profile.inbox.status', $mailing) }}">
+                                    <form method="POST" action="{{ route('profile.mailbox.status', $mailing) }}">
                                         @csrf
                                         @method('PATCH')
                                         <input type="hidden" name="status" value="archived">
@@ -112,7 +109,7 @@
                                 @endif
                             @endif
 
-                            <form method="POST" action="{{ route('profile.inbox.destroy', $mailing) }}"
+                            <form method="POST" action="{{ route('profile.mailbox.destroy', $mailing) }}"
                                 onsubmit="return confirm('Delete this message?');">
                                 @csrf
                                 @method('DELETE')

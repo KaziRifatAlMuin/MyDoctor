@@ -1923,8 +1923,8 @@
                                     <span class="notification-badge" id="notificationCountBadge" style="display: none;">0</span>
                                 </a>
 
-                                <a href="{{ route('profile.inbox') }}" class="dropdown-item-custom">
-                                    <i class="fas fa-inbox"></i> Inbox
+                                <a href="{{ route('profile.mailbox') }}" class="dropdown-item-custom">
+                                    <i class="fas fa-envelope"></i> Mailbox
                                 </a>
 
                                 <a href="{{ route('suggestions') }}" class="dropdown-item-custom">

@@ -10,21 +10,18 @@
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-body p-0">
                         <div class="list-group list-group-flush">
-                            <a href="{{ route('profile') }}" class="list-group-item list-group-item-action">
-                                <i class="fas fa-user me-2"></i>Profile
+                            <a href="{{ route('profile.mailbox.compose') }}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-pen-to-square me-2"></i>Compose
                             </a>
-                            <a href="{{ route('profile.notifications') }}" class="list-group-item list-group-item-action">
-                                <i class="fas fa-bell me-2"></i>Notifications
-                            </a>
-                            <a href="{{ route('profile.inbox') }}" class="list-group-item list-group-item-action">
+                            <a href="{{ route('profile.mailbox') }}" class="list-group-item list-group-item-action">
                                 <i class="fas fa-inbox me-2"></i>Inbox
                             </a>
-                            <a href="{{ route('profile.inbox.sent') }}"
+                            <a href="{{ route('profile.mailbox.drafts') }}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-file-lines me-2"></i>Drafts
+                            </a>
+                            <a href="{{ route('profile.mailbox.sent') }}"
                                 class="list-group-item list-group-item-action active">
                                 <i class="fas fa-paper-plane me-2"></i>Sent
-                            </a>
-                            <a href="{{ route('profile.inbox.compose') }}" class="list-group-item list-group-item-action">
-                                <i class="fas fa-pen-to-square me-2"></i>Compose
                             </a>
                         </div>
                     </div>
@@ -36,7 +33,7 @@
                 <div class="card border-0 shadow-lg">
                     <div class="card-header bg-primary text-white py-3 d-flex justify-content-between align-items-center">
                         <h4 class="mb-0"><i class="fas fa-paper-plane me-2"></i>Sent</h4>
-                        <a href="{{ route('profile.inbox.compose') }}" class="btn btn-light btn-sm">
+                        <a href="{{ route('profile.mailbox.compose') }}" class="btn btn-light btn-sm">
                             <i class="fas fa-pen-to-square me-1"></i>New Message
                         </a>
                     </div>
@@ -75,7 +72,7 @@
                                                     <div class="text-muted small">{{ $message->receiver?->email }}</div>
                                                 </td>
                                                 <td>
-                                                    <a href="{{ route('profile.inbox.show', $message) }}"
+                                                    <a href="{{ route('profile.mailbox.show', $message) }}"
                                                         class="text-decoration-none">
                                                         {{ $message->title }}
                                                     </a>
@@ -98,13 +95,13 @@
                                                 </td>
                                                 <td class="text-end">
                                                     <div class="d-flex gap-2 justify-content-end">
-                                                        <a href="{{ route('profile.inbox.show', $message) }}"
+                                                        <a href="{{ route('profile.mailbox.show', $message) }}"
                                                             class="btn btn-outline-primary btn-sm">
                                                             <i class="fas fa-eye"></i>
                                                         </a>
 
                                                         <form method="POST"
-                                                            action="{{ route('profile.inbox.destroy', $message) }}"
+                                                            action="{{ route('profile.mailbox.destroy', $message) }}"
                                                             onsubmit="return confirm('Delete this message?');">
                                                             @csrf
                                                             @method('DELETE')

@@ -15,7 +15,7 @@ class MailingInboxTest extends TestCase
     #[Test]
     public function guests_are_redirected_from_inbox(): void
     {
-        $this->get(route('profile.inbox'))
+        $this->get(route('profile.mailbox'))
             ->assertRedirect(route('login'));
     }
 
@@ -25,7 +25,7 @@ class MailingInboxTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-            ->get(route('profile.inbox'))
+            ->get(route('profile.mailbox'))
             ->assertStatus(200)
             ->assertViewIs('profile.inbox');
     }
@@ -37,22 +37,22 @@ class MailingInboxTest extends TestCase
         $receiver = User::factory()->create();
 
         $this->actingAs($sender)
-            ->post(route('profile.inbox.store'), [
+            ->post(route('profile.mailbox.store'), [
                 'receiver_id' => $receiver->id,
                 'title' => 'Hello',
                 'message' => 'Test message',
             ])
-            ->assertRedirect(route('profile.inbox.sent'));
+            ->assertRedirect(route('profile.mailbox.sent'));
 
         $this->assertDatabaseHas('mailings', [
             'sender_id' => $sender->id,
             'receiver_id' => $receiver->id,
             'title' => 'Hello',
-            'status' => 'unread',
+            'status' => 'sent',
         ]);
 
         $this->actingAs($receiver)
-            ->get(route('profile.inbox'))
+            ->get(route('profile.mailbox'))
             ->assertSee('Hello')
             ->assertSee($sender->email);
     }
@@ -72,7 +72,7 @@ class MailingInboxTest extends TestCase
         ]);
 
         $this->actingAs($receiver)
-            ->get(route('profile.inbox.show', $mailing))
+            ->get(route('profile.mailbox.show', $mailing))
             ->assertStatus(200);
 
         $this->assertDatabaseHas('mailings', [
@@ -96,11 +96,11 @@ class MailingInboxTest extends TestCase
         ]);
 
         $this->actingAs($sender)
-            ->patch(route('profile.inbox.status', $mailing), ['status' => 'archived'])
+            ->patch(route('profile.mailbox.status', $mailing), ['status' => 'archived'])
             ->assertStatus(403);
 
         $this->actingAs($receiver)
-            ->patch(route('profile.inbox.status', $mailing), ['status' => 'archived'])
+            ->patch(route('profile.mailbox.status', $mailing), ['status' => 'archived'])
             ->assertRedirect();
 
         $this->assertDatabaseHas('mailings', [

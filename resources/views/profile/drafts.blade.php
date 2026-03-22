@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Mailbox - My Doctor')
+@section('title', 'Drafts - My Doctor')
 
 @section('content')
     <div class="container py-4">
@@ -13,10 +13,11 @@
                             <a href="{{ route('profile.mailbox.compose') }}" class="list-group-item list-group-item-action">
                                 <i class="fas fa-pen-to-square me-2"></i>Compose
                             </a>
-                            <a href="{{ route('profile.mailbox') }}" class="list-group-item list-group-item-action active">
+                            <a href="{{ route('profile.mailbox') }}" class="list-group-item list-group-item-action">
                                 <i class="fas fa-inbox me-2"></i>Inbox
                             </a>
-                            <a href="{{ route('profile.mailbox.drafts') }}" class="list-group-item list-group-item-action">
+                            <a href="{{ route('profile.mailbox.drafts') }}"
+                                class="list-group-item list-group-item-action active">
                                 <i class="fas fa-file-lines me-2"></i>Drafts
                             </a>
                             <a href="{{ route('profile.mailbox.sent') }}" class="list-group-item list-group-item-action">
@@ -31,7 +32,7 @@
             <div class="col-md-9">
                 <div class="card border-0 shadow-lg">
                     <div class="card-header bg-primary text-white py-3 d-flex justify-content-between align-items-center">
-                        <h4 class="mb-0"><i class="fas fa-inbox me-2"></i>Mailbox</h4>
+                        <h4 class="mb-0"><i class="fas fa-file-lines me-2"></i>Drafts</h4>
                         <a href="{{ route('profile.mailbox.compose') }}" class="btn btn-light btn-sm">
                             <i class="fas fa-pen-to-square me-1"></i>New Message
                         </a>
@@ -47,17 +48,16 @@
 
                         @if ($messages->count() === 0)
                             <div class="text-center text-muted py-5">
-                                <i class="fas fa-inbox fa-2x mb-3"></i>
-                                <div class="fw-semibold">Your inbox is empty</div>
+                                <i class="fas fa-file-lines fa-2x mb-3"></i>
+                                <div class="fw-semibold">No draft messages yet</div>
                             </div>
                         @else
                             <div class="table-responsive">
                                 <table class="table align-middle">
                                     <thead>
                                         <tr>
-                                            <th>From</th>
+                                            <th>To</th>
                                             <th>Title</th>
-                                            <th>Status</th>
                                             <th>Date</th>
                                             <th class="text-end">Actions</th>
                                         </tr>
@@ -66,58 +66,33 @@
                                         @foreach ($messages as $message)
                                             <tr>
                                                 <td>
-                                                    <div class="fw-semibold">{{ $message->sender?->name ?? 'Unknown' }}
+                                                    <div class="fw-semibold">
+                                                        {{ $message->receiver?->name ?? 'Not selected' }}
                                                     </div>
-                                                    <div class="text-muted small">{{ $message->sender?->email }}</div>
+                                                    <div class="text-muted small">{{ $message->receiver?->email ?? '-' }}
+                                                    </div>
                                                 </td>
                                                 <td>
-                                                    <a href="{{ route('profile.mailbox.show', $message) }}"
+                                                    <a href="{{ route('profile.mailbox.compose', ['draft' => $message->id]) }}"
                                                         class="text-decoration-none">
-                                                        <span class="{{ $message->status === 'unread' ? 'fw-bold' : '' }}">
+                                                        <span class="fw-bold">
                                                             {{ $message->title }}
                                                         </span>
                                                     </a>
-                                                </td>
-                                                <td>
-                                                    @php
-                                                        $badgeClass = match ($message->status) {
-                                                            'unread' => 'bg-warning text-dark',
-                                                            'read' => 'bg-success',
-                                                            'archived' => 'bg-secondary',
-                                                            default => 'bg-light text-dark',
-                                                        };
-                                                    @endphp
-                                                    <span class="badge {{ $badgeClass }}">
-                                                        {{ ucfirst($message->status) }}
-                                                    </span>
                                                 </td>
                                                 <td class="text-muted">
                                                     {{ optional($message->created_at)->format('M d, Y') }}
                                                 </td>
                                                 <td class="text-end">
                                                     <div class="d-flex gap-2 justify-content-end">
-                                                        <a href="{{ route('profile.mailbox.show', $message) }}"
+                                                        <a href="{{ route('profile.mailbox.compose', ['draft' => $message->id]) }}"
                                                             class="btn btn-outline-primary btn-sm">
-                                                            <i class="fas fa-eye"></i>
+                                                            <i class="fas fa-edit"></i>
                                                         </a>
-
-                                                        @if ($message->status !== 'archived')
-                                                            <form method="POST"
-                                                                action="{{ route('profile.mailbox.status', $message) }}">
-                                                                @csrf
-                                                                @method('PATCH')
-                                                                <input type="hidden" name="status" value="archived">
-                                                                <button type="submit"
-                                                                    class="btn btn-outline-secondary btn-sm"
-                                                                    title="Archive">
-                                                                    <i class="fas fa-box-archive"></i>
-                                                                </button>
-                                                            </form>
-                                                        @endif
 
                                                         <form method="POST"
                                                             action="{{ route('profile.mailbox.destroy', $message) }}"
-                                                            onsubmit="return confirm('Delete this message?');">
+                                                            onsubmit="return confirm('Delete this draft?');">
                                                             @csrf
                                                             @method('DELETE')
                                                             <button type="submit" class="btn btn-outline-danger btn-sm"

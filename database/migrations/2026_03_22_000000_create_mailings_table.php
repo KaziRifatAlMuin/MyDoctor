@@ -11,14 +11,14 @@ return new class extends Migration
         Schema::create('mailings', function (Blueprint $table) {
             $table->id();
             $table->foreignId('sender_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('receiver_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('receiver_id')->nullable()->constrained('users')->cascadeOnDelete();
             $table->string('title');
             $table->longText('message');
-            $table->string('status')->default('unread');
+            $table->enum('status', ['draft', 'sent', 'unread', 'read', 'archived'])->default('draft');
             $table->timestamps();
 
             $table->index(['receiver_id', 'status']);
-            $table->index(['sender_id', 'created_at']);
+            $table->index(['sender_id', 'status']);
         });
     }
 
