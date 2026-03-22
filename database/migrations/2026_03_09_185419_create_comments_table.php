@@ -13,6 +13,10 @@ return new class extends Migration
             $table->foreignId('post_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->text('comment_details');
+            $table->string('file_path')->nullable();
+            $table->string('file_type')->nullable();
+            $table->string('file_name')->nullable();
+            $table->integer('file_size')->nullable();
             $table->integer('like_count')->default(0);
             $table->timestamps();
         });
