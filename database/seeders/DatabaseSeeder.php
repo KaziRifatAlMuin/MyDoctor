@@ -20,6 +20,7 @@ use Illuminate\Database\Seeder;
 use Database\Seeders\MedicalSeeder;
 use Database\Seeders\TranslationSeeder;
 use Database\Seeders\PatientProfilesSeeder;
+use Database\Seeders\MailingSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -110,6 +111,9 @@ class DatabaseSeeder extends Seeder
 
         // 15. Rich patient profiles for users 1–3 (100+ records each, distinct conditions)
         $this->call(PatientProfilesSeeder::class);
+
+        // 16. Internal inbox messages
+        $this->call(MailingSeeder::class);
     }
 }
 

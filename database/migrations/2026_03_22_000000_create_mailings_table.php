@@ -10,21 +10,15 @@ return new class extends Migration
     {
         Schema::create('mailings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
-            $table->string('recipient_email');
-            $table->string('subject');
-            $table->longText('body');
-            $table->string('mailable_type')->nullable(); // e.g., 'MedicineReminderMail', 'NotificationMail'
-            $table->unsignedBigInteger('mailable_id')->nullable(); // ID of the related model
-            $table->enum('status', ['pending', 'sent', 'failed', 'bounced'])->default('pending');
-            $table->text('error_message')->nullable();
-            $table->integer('retry_count')->default(0);
-            $table->timestamp('sent_at')->nullable();
+            $table->foreignId('sender_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('receiver_id')->constrained('users')->cascadeOnDelete();
+            $table->string('title');
+            $table->longText('message');
+            $table->string('status')->default('unread');
             $table->timestamps();
-            
-            $table->index('user_id');
-            $table->index('status');
-            $table->index('sent_at');
+
+            $table->index(['receiver_id', 'status']);
+            $table->index(['sender_id', 'created_at']);
         });
     }
 

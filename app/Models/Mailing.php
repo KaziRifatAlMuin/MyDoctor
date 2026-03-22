@@ -4,66 +4,32 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Mailing extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
-        'recipient_email',
-        'subject',
-        'body',
-        'mailable_type',
-        'mailable_id',
+        'sender_id',
+        'receiver_id',
+        'title',
+        'message',
         'status',
-        'error_message',
-        'retry_count',
-        'sent_at',
     ];
 
-    protected $casts = [
-        'sent_at' => 'datetime',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-    ];
-
-    /**
-     * Get the user associated with this mailing.
-     */
-    public function user()
+    public function sender(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'sender_id');
     }
 
-    /**
-     * Mark the mailing as sent.
-     */
-    public function markAsSent()
+    public function receiver(): BelongsTo
     {
-        $this->update([
-            'status' => 'sent',
-            'sent_at' => now(),
-        ]);
+        return $this->belongsTo(User::class, 'receiver_id');
     }
 
-    /**
-     * Mark the mailing as failed.
-     */
-    public function markAsFailed($errorMessage = null)
+    public function isUnread(): bool
     {
-        $this->update([
-            'status' => 'failed',
-            'error_message' => $errorMessage,
-            'retry_count' => $this->retry_count + 1,
-        ]);
-    }
-
-    /**
-     * Check if the mailing can be retried.
-     */
-    public function canRetry($maxRetries = 3)
-    {
-        return $this->status === 'failed' && $this->retry_count < $maxRetries;
+        return $this->status === 'unread';
     }
 }
