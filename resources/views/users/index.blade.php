@@ -81,6 +81,38 @@
                         </select>
                     </div>
                 </div>
+
+                <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid #e9eef6;">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div style="display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:0.6rem; flex-wrap:wrap;">
+                                <label style="display: block; font-weight: 600; color: #2d3748; margin: 0; font-size: 0.9rem;">Filter by Diseases</label>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <label style="display:flex; align-items:center; justify-content:center; gap:6px; border:1px solid #c6f6d5; border-radius:8px; padding:0.45rem 0.85rem; cursor:pointer; background: {{ ($diseaseLogic ?? 'OR') === 'OR' ? 'rgba(56,161,105,0.12)' : '#fff' }}; color:#2f855a; font-weight:600; font-size:0.82rem;">
+                                        <input type="radio" name="disease_logic" value="OR" {{ ($diseaseLogic ?? 'OR') === 'OR' ? 'checked' : '' }} onchange="applyFilters()" style="accent-color:#38a169;">
+                                        OR
+                                    </label>
+                                    <label style="display:flex; align-items:center; justify-content:center; gap:6px; border:1px solid #c6f6d5; border-radius:8px; padding:0.45rem 0.85rem; cursor:pointer; background: {{ ($diseaseLogic ?? 'OR') === 'AND' ? 'rgba(56,161,105,0.12)' : '#fff' }}; color:#2f855a; font-weight:600; font-size:0.82rem;">
+                                        <input type="radio" name="disease_logic" value="AND" {{ ($diseaseLogic ?? 'OR') === 'AND' ? 'checked' : '' }} onchange="applyFilters()" style="accent-color:#38a169;">
+                                        AND
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div style="display:flex; flex-wrap:wrap; gap:8px; border:1px solid #e2e8f0; border-radius:10px; padding:0.75rem; background:#f8fbff;">
+                                @forelse($allDiseases as $disease)
+                                    <label style="display:inline-flex; align-items:center; gap:6px; padding:0.3rem 0.55rem; border-radius:999px; background: {{ collect($selectedDiseases ?? [])->contains($disease->id) ? 'rgba(11,87,208,0.12)' : '#fff' }}; border:1px solid {{ collect($selectedDiseases ?? [])->contains($disease->id) ? '#8ab4f8' : '#d6deeb' }}; color:#2d3748; cursor:pointer; font-size:0.8rem; white-space:nowrap;">
+                                        <input type="checkbox" class="disease-checkbox" value="{{ $disease->id }}" {{ collect($selectedDiseases ?? [])->contains($disease->id) ? 'checked' : '' }} style="accent-color:#0b57d0;">
+                                        <span>{{ $disease->disease_name }}</span>
+                                        <span style="display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; border-radius:999px; background:#d2e3fc; color:#0b57d0; font-size:0.72rem; font-weight:700; padding:0 5px;">{{ $disease->users_count }}</span>
+                                    </label>
+                                @empty
+                                    <span style="font-size:0.85rem; color:#718096;">No diseases found</span>
+                                @endforelse
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {{-- Members Grid --}}
@@ -126,6 +158,33 @@
                                                 <i class="fas fa-clock me-1"></i>Pending
                                             </span>
                                         @endif
+                                    </div>
+
+                                    @php
+                                        $cardDiseases = $user->userDiseases
+                                            ->pluck('disease')
+                                            ->filter()
+                                            ->unique('id')
+                                            ->values();
+                                    @endphp
+                                    <div style="margin: 0.4rem 0 0.85rem;">
+                                        <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:6px; min-height:26px;">
+                                            @forelse($cardDiseases->take(3) as $disease)
+                                                <span style="display:inline-flex; align-items:center; gap:4px; background: rgba(11,87,208,0.1); color:#0b57d0; border:1px solid rgba(11,87,208,0.2); border-radius:999px; padding:0.22rem 0.55rem; font-size:0.72rem; font-weight:600;">
+                                                    <i class="fas fa-tag" style="font-size:0.62rem;"></i>
+                                                    {{ $disease->disease_name }}
+                                                </span>
+                                            @empty
+                                                <span style="display:inline-flex; align-items:center; background:#f1f5f9; color:#64748b; border-radius:999px; padding:0.22rem 0.55rem; font-size:0.72rem; font-weight:600;">
+                                                    No disease tag
+                                                </span>
+                                            @endforelse
+                                            @if($cardDiseases->count() > 3)
+                                                <span style="display:inline-flex; align-items:center; background:#e2e8f0; color:#475569; border-radius:999px; padding:0.22rem 0.55rem; font-size:0.72rem; font-weight:700;">
+                                                    +{{ $cardDiseases->count() - 3 }}
+                                                </span>
+                                            @endif
+                                        </div>
                                     </div>
 
                                     {{-- Join Info --}}
@@ -238,12 +297,23 @@
             const search = document.getElementById('searchInput').value;
             const role = document.getElementById('roleFilter').value;
             const sort = document.getElementById('sortBy').value;
+            const diseaseLogic = document.querySelector('input[name="disease_logic"]:checked')?.value || 'OR';
+            const selectedDiseases = Array.from(document.querySelectorAll('.disease-checkbox:checked')).map(cb => cb.value);
             const params = new URLSearchParams();
             if (search) params.set('search', search);
             if (role) params.set('role', role);
             if (sort) params.set('sort', sort);
+            params.set('disease_logic', diseaseLogic);
+            selectedDiseases.forEach(id => params.append('diseases[]', id));
             window.location.href = '{{ route('users.index') }}?' + params.toString();
         }
+
+        document.querySelectorAll('.disease-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                applyFilters();
+            });
+        });
+
         document.getElementById('searchInput')?.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') applyFilters();
         });

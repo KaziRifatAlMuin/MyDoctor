@@ -124,6 +124,26 @@
             border-color: rgba(47, 158, 114, 0.4);
         }
 
+        .hero-disease-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.45rem;
+            margin-top: 1rem;
+        }
+
+        .hero-disease-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.38rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.76rem;
+            font-weight: 700;
+            background: rgba(11, 87, 208, 0.2);
+            color: #dbeafe;
+            border: 1px solid rgba(147, 197, 253, 0.45);
+        }
+
         .hero-details {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -560,6 +580,32 @@
                                 <i class="fas fa-calendar-alt"></i>
                                 {{ $user->created_at->format('M d, Y') }}
                             </span>
+                        </div>
+
+                        @php
+                            $heroDiseases = $userDiseases
+                                ->pluck('disease')
+                                ->filter()
+                                ->unique('id')
+                                ->values();
+                        @endphp
+                        <div class="hero-disease-tags">
+                            @forelse($heroDiseases->take(6) as $disease)
+                                <span class="hero-disease-tag">
+                                    <i class="fas fa-tag"></i>
+                                    {{ $disease->disease_name }}
+                                </span>
+                            @empty
+                                <span class="hero-disease-tag" style="background: rgba(255,255,255,0.14); color: #f1f5f9; border-color: rgba(255,255,255,0.25);">
+                                    <i class="fas fa-notes-medical"></i>
+                                    No disease tags yet
+                                </span>
+                            @endforelse
+                            @if($heroDiseases->count() > 6)
+                                <span class="hero-disease-tag" style="background: rgba(255,255,255,0.14); color: #f1f5f9; border-color: rgba(255,255,255,0.25);">
+                                    +{{ $heroDiseases->count() - 6 }} more
+                                </span>
+                            @endif
                         </div>
                     </div>
 
