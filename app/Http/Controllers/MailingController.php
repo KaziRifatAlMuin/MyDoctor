@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Mailing;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -69,11 +70,6 @@ class MailingController extends Controller
     {
         $user = $request->user();
 
-        $recipients = User::query()
-            ->whereKeyNot($user->id)
-            ->orderBy('name')
-            ->get(['id', 'name', 'email']);
-
         $toUserId = $request->integer('to');
         $title = (string) $request->query('title', '');
         $message = '';
@@ -92,13 +88,41 @@ class MailingController extends Controller
             $draftId = $draft->id;
         }
 
+        $selectedRecipient = null;
+        if ($toUserId) {
+            $selectedRecipient = User::query()
+                ->whereKeyNot($user->id)
+                ->find($toUserId, ['id', 'name', 'email']);
+        }
+
         return view('profile.compose', [
-            'recipients' => $recipients,
             'toUserId' => $toUserId,
+            'selectedRecipient' => $selectedRecipient,
             'title' => $title,
             'message' => $message,
             'draftId' => $draftId,
         ]);
+    }
+
+    public function searchRecipients(Request $request): JsonResponse
+    {
+        $term = trim((string) $request->query('q', ''));
+
+        if ($term === '') {
+            return response()->json([]);
+        }
+
+        $users = User::query()
+            ->whereKeyNot($request->user()->id)
+            ->where(function ($query) use ($term) {
+                $query->where('name', 'like', '%' . $term . '%')
+                    ->orWhere('email', 'like', '%' . $term . '%');
+            })
+            ->orderBy('name')
+            ->limit(50)
+            ->get(['id', 'name', 'email']);
+
+        return response()->json($users);
     }
 
     public function store(Request $request): RedirectResponse

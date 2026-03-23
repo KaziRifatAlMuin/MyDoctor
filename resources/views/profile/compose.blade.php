@@ -395,14 +395,13 @@
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const recipientsData = @json(
-                $recipients->map(function ($user) {
-                    return ['id' => $user->id, 'name' => $user->name, 'email' => $user->email];
-                }));
-
+            const recipientSearchUrl = @json(route('profile.mailbox.recipients.search'));
+            const selectedRecipient = @json($selectedRecipient);
             let selectedRecipientId = @json(old('receiver_id', $toUserId ?? null));
             let submitAction = 'send';
             let formSubmitting = false;
+            let searchTimeout = null;
+            let activeSearchController = null;
 
             const recipientInput = document.getElementById('receiver_id_input');
             const recipientDropdown = document.getElementById('recipient_dropdown');
@@ -417,57 +416,121 @@
                 return;
             }
 
-            if (selectedRecipientId) {
-                const selected = recipientsData.find(u => u.id == selectedRecipientId);
-                if (selected) {
-                    recipientInput.value = selected.name;
-                }
+            if (selectedRecipient && selectedRecipientId && String(selectedRecipient.id) === String(selectedRecipientId)) {
+                recipientInput.value = `${selectedRecipient.name} <${selectedRecipient.email}>`;
             }
 
-            recipientInput.addEventListener('input', function() {
-                const term = this.value.toLowerCase().trim();
+            const escapeHtml = (value) => {
+                const map = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                };
 
-                if (!term) {
-                    recipientDropdown.style.display = 'none';
-                    recipientSelect.value = '';
+                return String(value).replace(/[&<>"']/g, m => map[m]);
+            };
+
+            const closeDropdown = () => {
+                recipientDropdown.style.display = 'none';
+            };
+
+            const showMessage = (text) => {
+                recipientDropdown.innerHTML =
+                    `<div style="padding: 10px 16px; color: #5f6368; font-size: 14px;">${escapeHtml(text)}</div>`;
+                recipientDropdown.style.display = 'block';
+            };
+
+            const renderOptions = (users) => {
+                if (!Array.isArray(users) || users.length === 0) {
+                    showMessage('No recipients found');
                     return;
                 }
 
-                const filtered = recipientsData.filter(user =>
-                    user.name.toLowerCase().includes(term) ||
-                    user.email.toLowerCase().includes(term)
-                );
-
-                if (filtered.length === 0) {
-                    recipientDropdown.innerHTML =
-                        '<div style="padding: 10px 16px; color: #5f6368; font-size: 14px;">No recipients found</div>';
-                    recipientDropdown.style.display = 'block';
-                    return;
-                }
-
-                recipientDropdown.innerHTML = filtered.map(user => `
-                <div class="recipient-option" data-id="${user.id}">
-                    <span class="recipient-name">${user.name}</span>
-                    <span class="recipient-email">&lt;${user.email}&gt;</span>
-                </div>
-            `).join('');
+                recipientDropdown.innerHTML = users.map(user => `
+                    <div class="recipient-option" data-id="${user.id}" data-name="${escapeHtml(user.name)}" data-email="${escapeHtml(user.email)}">
+                        <span class="recipient-name">${escapeHtml(user.name)}</span>
+                        <span class="recipient-email">&lt;${escapeHtml(user.email)}&gt;</span>
+                    </div>
+                `).join('');
                 recipientDropdown.style.display = 'block';
 
-                document.querySelectorAll('.recipient-option').forEach(option => {
+                recipientDropdown.querySelectorAll('.recipient-option').forEach(option => {
                     option.addEventListener('click', function() {
                         const id = this.dataset.id;
-                        const user = recipientsData.find(u => u.id == id);
-                        recipientInput.value = user.name;
-                        recipientSelect.value = user.id;
-                        recipientDropdown.style.display = 'none';
-                        selectedRecipientId = user.id;
+                        const name = this.dataset.name;
+                        const email = this.dataset.email;
+
+                        recipientInput.value = `${name} <${email}>`;
+                        recipientSelect.value = id;
+                        selectedRecipientId = id;
+                        closeDropdown();
                     });
                 });
+            };
+
+            const searchRecipients = async (term) => {
+                if (!term) {
+                    closeDropdown();
+                    return;
+                }
+
+                if (activeSearchController) {
+                    activeSearchController.abort();
+                }
+
+                activeSearchController = new AbortController();
+
+                try {
+                    const response = await fetch(`${recipientSearchUrl}?q=${encodeURIComponent(term)}`, {
+                        headers: {
+                            'Accept': 'application/json'
+                        },
+                        signal: activeSearchController.signal
+                    });
+
+                    if (!response.ok) {
+                        showMessage('Unable to search recipients');
+                        return;
+                    }
+
+                    const users = await response.json();
+                    renderOptions(users);
+                } catch (error) {
+                    if (error.name !== 'AbortError') {
+                        showMessage('Unable to search recipients');
+                    }
+                }
+            };
+
+            recipientInput.addEventListener('input', function() {
+                const term = this.value.trim();
+
+                recipientSelect.value = '';
+                selectedRecipientId = null;
+
+                if (!term) {
+                    closeDropdown();
+                    return;
+                }
+
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    searchRecipients(term);
+                }, 250);
+            });
+
+            recipientInput.addEventListener('focus', function() {
+                const term = this.value.trim();
+                if (term && !selectedRecipientId) {
+                    searchRecipients(term);
+                }
             });
 
             document.addEventListener('click', function(e) {
                 if (e.target !== recipientInput && !recipientDropdown.contains(e.target)) {
-                    recipientDropdown.style.display = 'none';
+                    closeDropdown();
                 }
             });
 
