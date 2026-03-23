@@ -54,7 +54,7 @@ class MailingInboxTest extends TestCase
         $this->actingAs($receiver)
             ->get(route('profile.mailbox'))
             ->assertSee('Hello')
-            ->assertSee($sender->email);
+            ->assertSee($sender->name);
     }
 
     #[Test]
