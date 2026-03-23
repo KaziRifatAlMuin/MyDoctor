@@ -609,6 +609,11 @@
                         <a href="{{ route('admin.dashboard') }}" class="btn btn-light btn-action">
                             <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
                         </a>
+                        @if (auth()->id() !== $user->id)
+                            <a href="{{ route('profile.mailbox.compose', ['to' => $user->id]) }}" class="btn btn-light btn-action">
+                                <i class="fas fa-paper-plane me-1"></i>Send Mail
+                            </a>
+                        @endif
                         <button class="btn btn-light btn-action" data-bs-toggle="modal" data-bs-target="#editUserModal">
                             <i class="fas fa-user-edit me-1"></i>Edit Profile
                         </button>

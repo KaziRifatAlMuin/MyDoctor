@@ -119,7 +119,6 @@ class MailingController extends Controller
                     ->orWhere('email', 'like', '%' . $term . '%');
             })
             ->orderBy('name')
-            ->limit(50)
             ->get(['id', 'name', 'email']);
 
         return response()->json($users);

@@ -5,7 +5,7 @@
         <div class="container" style="max-width: 1280px;">
             
             {{-- Header Hero Section --}}
-            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 40%, #f093fb 80%, #667eea 100%); background-size: 300% 300%; animation: heroGradient 8s ease infinite; border-radius: 28px; padding: 3.5rem 3rem; color: white; position: relative; overflow: hidden; margin-bottom: 3rem; box-shadow: 0 20px 60px rgba(102,126,234,0.3);">
+            <div style="background: linear-gradient(135deg, #0b57d0 0%, #1a73e8 45%, #2b7de9 100%); background-size: 220% 220%; animation: heroGradient 8s ease infinite; border-radius: 28px; padding: 3.5rem 3rem; color: white; position: relative; overflow: hidden; margin-bottom: 3rem; box-shadow: 0 20px 60px rgba(11,87,208,0.28);">
                 <div style="position: absolute; top: -60%; right: -15%; width: 500px; height: 500px; border-radius: 50%; background: rgba(255,255,255,0.06); pointer-events: none; animation: float 6s ease-in-out infinite;"></div>
                 <div style="position: absolute; bottom: -40%; left: 10%; width: 350px; height: 350px; border-radius: 50%; background: rgba(255,255,255,0.04); pointer-events: none; animation: float 8s ease-in-out infinite reverse;"></div>
                 
@@ -88,54 +88,65 @@
                 <div class="row g-4">
                     @foreach($users as $user)
                         <div class="col-lg-3 col-md-6 col-sm-12">
-                            <a href="{{ route('users.show', $user) }}" style="text-decoration: none; color: inherit;">
-                                <div style="background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 20px rgba(0,0,0,0.06); transition: all 0.3s; border: 1px solid rgba(0,0,0,0.05); height: 100%; display: flex; flex-direction: column;">
-                                    {{-- Header Background --}}
-                                    <div style="height: 100px; background: linear-gradient(135deg, {{ $user->role === 'admin' ? '#667eea' : '#38a169' }} 0%, {{ $user->role === 'admin' ? '#764ba2' : '#48bb78' }} 100%);"></div>
-                                    
-                                    {{-- Card Body --}}
-                                    <div style="padding: 1.5rem; text-align: center; flex: 1; display: flex; flex-direction: column;">
-                                        {{-- Avatar --}}
-                                        <div style="width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(135deg, {{ $user->role === 'admin' ? '#667eea' : '#3182ce' }} 0%, {{ $user->role === 'admin' ? '#764ba2' : '#2c5aa0' }} 100%); border: 4px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700; color: white; margin: -2.5rem auto 1rem;">
-                                            {{ strtoupper(substr($user->name, 0, 1)) }}
-                                        </div>
-                                        
-                                        {{-- Name --}}
-                                        <h5 style="font-size: 1.1rem; font-weight: 700; color: #2d3748; margin: 0.5rem 0;">{{ $user->name }}</h5>
-                                        
-                                        {{-- Role Badge --}}
-                                        <div style="margin: 0.75rem 0;">
-                                            @if ($user->role === 'admin')
-                                                <span style="display: inline-block; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 0.35rem 0.85rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">
-                                                    <i class="fas fa-crown me-1"></i>Community Leader
-                                                </span>
-                                            @else
-                                                <span style="display: inline-block; background: rgba(56, 161, 105, 0.1); color: #38a169; padding: 0.35rem 0.85rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">
-                                                    <i class="fas fa-user me-1"></i>Member
-                                                </span>
-                                            @endif
-                                        </div>
-                                        
-                                        {{-- Email Status --}}
-                                        <div style="margin: 0.75rem 0;">
-                                            @if ($user->email_verified_at)
-                                                <span style="display: inline-block; background: rgba(56, 161, 105, 0.1); color: #38a169; padding: 0.35rem 0.8rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">
-                                                    <i class="fas fa-check-circle me-1"></i>Verified
-                                                </span>
-                                            @else
-                                                <span style="display: inline-block; background: rgba(237, 137, 54, 0.1); color: #dd6b20; padding: 0.35rem 0.8rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">
-                                                    <i class="fas fa-clock me-1"></i>Pending
-                                                </span>
-                                            @endif
-                                        </div>
-                                        
-                                        {{-- Join Info --}}
-                                        <div style="font-size: 0.85rem; color: #718096; margin-top: auto; padding-top: 1rem; border-top: 1px solid #e0e0e0;">
-                                            <i class="fas fa-calendar-alt me-1"></i> Joined {{ $user->created_at->format('M d, Y') }}
-                                        </div>
+                            <div style="background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 20px rgba(0,0,0,0.06); transition: all 0.3s; border: 1px solid rgba(0,0,0,0.05); height: 100%; display: flex; flex-direction: column;">
+                                {{-- Header Background --}}
+                                <div style="height: 100px; background: linear-gradient(135deg, {{ $user->role === 'admin' ? '#0b57d0' : '#38a169' }} 0%, {{ $user->role === 'admin' ? '#1a73e8' : '#48bb78' }} 100%);"></div>
+
+                                {{-- Card Body --}}
+                                <div style="padding: 1.5rem; text-align: center; flex: 1; display: flex; flex-direction: column;">
+                                    {{-- Avatar --}}
+                                    <div style="width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(135deg, {{ $user->role === 'admin' ? '#0b57d0' : '#3182ce' }} 0%, {{ $user->role === 'admin' ? '#1a73e8' : '#2c5aa0' }} 100%); border: 4px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700; color: white; margin: -2.5rem auto 1rem;">
+                                        {{ strtoupper(substr($user->name, 0, 1)) }}
+                                    </div>
+
+                                    {{-- Name --}}
+                                    <h5 style="font-size: 1.1rem; font-weight: 700; color: #2d3748; margin: 0.5rem 0;">{{ $user->name }}</h5>
+
+                                    {{-- Role Badge --}}
+                                    <div style="margin: 0.75rem 0;">
+                                        @if ($user->role === 'admin')
+                                            <span style="display: inline-block; background: linear-gradient(135deg, #0b57d0, #1a73e8); color: white; padding: 0.35rem 0.85rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">
+                                                <i class="fas fa-crown me-1"></i>Community Leader
+                                            </span>
+                                        @else
+                                            <span style="display: inline-block; background: rgba(56, 161, 105, 0.1); color: #38a169; padding: 0.35rem 0.85rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">
+                                                <i class="fas fa-user me-1"></i>Member
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                    {{-- Email Status --}}
+                                    <div style="margin: 0.75rem 0;">
+                                        @if ($user->email_verified_at)
+                                            <span style="display: inline-block; background: rgba(56, 161, 105, 0.1); color: #38a169; padding: 0.35rem 0.8rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">
+                                                <i class="fas fa-check-circle me-1"></i>Verified
+                                            </span>
+                                        @else
+                                            <span style="display: inline-block; background: rgba(237, 137, 54, 0.1); color: #dd6b20; padding: 0.35rem 0.8rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">
+                                                <i class="fas fa-clock me-1"></i>Pending
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                    {{-- Join Info --}}
+                                    <div style="font-size: 0.85rem; color: #718096; margin-top: auto; padding-top: 1rem; border-top: 1px solid #e0e0e0; margin-bottom: 1rem;">
+                                        <i class="fas fa-calendar-alt me-1"></i> Joined {{ $user->created_at->format('M d, Y') }}
+                                    </div>
+
+                                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                        <a href="{{ route('users.show', $user) }}" style="width: 100%; display: inline-flex; justify-content: center; align-items: center; gap: 0.4rem; text-decoration: none; padding: 0.45rem 0.5rem; border-radius: 8px; border: 1px solid #d2e3fc; background: #edf3fe; color: #0b57d0; font-size: 0.86rem; font-weight: 700; height: 36px;">
+                                            <i class="fas fa-user"></i>
+                                            <span style="display:inline-block; margin-left:6px;">Profile</span>
+                                        </a>
+                                        @if (auth()->id() !== $user->id)
+                                            <a href="{{ route('profile.mailbox.compose', ['to' => $user->id]) }}" style="width: 100%; display: inline-flex; justify-content: center; align-items: center; gap: 0.4rem; text-decoration: none; padding: 0.45rem 0.5rem; border-radius: 8px; border: 1px solid #0b57d0; background: #0b57d0; color: #fff; font-size: 0.86rem; font-weight: 700; height: 36px;">
+                                                <i class="fas fa-paper-plane"></i>
+                                                <span style="display:inline-block; margin-left:6px;">Send Mail</span>
+                                            </a>
+                                        @endif
                                     </div>
                                 </div>
-                            </a>
+                            </div>
                         </div>
                     @endforeach
                 </div>
