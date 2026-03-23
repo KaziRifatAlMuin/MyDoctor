@@ -13,6 +13,11 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('disease_id')->constrained()->onDelete('cascade');
             $table->text('description');
+            $table->string('file_path')->nullable();
+            $table->string('file_type')->nullable();
+            $table->string('file_name')->nullable();
+            $table->integer('file_size')->nullable();
+            $table->json('files')->nullable();
             $table->integer('like_count')->default(0);
             $table->integer('comment_count')->default(0);
             $table->timestamps();

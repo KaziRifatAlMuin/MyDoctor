@@ -222,6 +222,19 @@
             gap: 4px;
         }
 
+        .profile-disease-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(11, 87, 208, 0.12);
+            color: #0b57d0;
+            border: 1px solid rgba(11, 87, 208, 0.2);
+            border-radius: 20px;
+            padding: 0.28rem 0.72rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
         .gradient-btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
@@ -289,6 +302,17 @@
 
                     {{-- Name & details --}}
                     <div class="col">
+                        @php
+                            $profileDiseases = auth()->user()->userDiseases()
+                                ->with('disease')
+                                ->latest()
+                                ->get()
+                                ->pluck('disease')
+                                ->filter()
+                                ->unique('id')
+                                ->values();
+                        @endphp
+
                         <h4 class="fw-bold mb-1" style="color:#2d3748;">
                             {{ auth()->user()->name }}
                         </h4>
@@ -315,6 +339,18 @@
                                     {{ ucfirst(auth()->user()->role) }}
                                 </span>
                             @endif
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                            @forelse($profileDiseases as $disease)
+                                <span class="profile-disease-tag">
+                                    {{ $disease->disease_name }}{{ $disease->disease_name_bn ? ' (' . $disease->disease_name_bn . ')' : '' }}
+                                </span>
+                            @empty
+                                <span class="profile-disease-tag" style="background: #f1f5f9; color: #64748b; border-color: #e2e8f0;">
+                                    No disease tags yet
+                                </span>
+                            @endforelse
                         </div>
                     </div>
 

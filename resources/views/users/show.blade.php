@@ -124,6 +124,26 @@
             border-color: rgba(47, 158, 114, 0.4);
         }
 
+        .hero-disease-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.45rem;
+            margin-top: 1rem;
+        }
+
+        .hero-disease-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.38rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.76rem;
+            font-weight: 700;
+            background: rgba(11, 87, 208, 0.2);
+            color: #dbeafe;
+            border: 1px solid rgba(147, 197, 253, 0.45);
+        }
+
         .hero-details {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -561,6 +581,25 @@
                                 {{ $user->created_at->format('M d, Y') }}
                             </span>
                         </div>
+
+                        @php
+                            $heroDiseases = $userDiseases
+                                ->pluck('disease')
+                                ->filter()
+                                ->unique('id')
+                                ->values();
+                        @endphp
+                        <div class="hero-disease-tags">
+                            @forelse($heroDiseases as $disease)
+                                <span class="hero-disease-tag">
+                                    {{ $disease->disease_name }}{{ $disease->disease_name_bn ? ' (' . $disease->disease_name_bn . ')' : '' }}
+                                </span>
+                            @empty
+                                <span class="hero-disease-tag" style="background: rgba(255,255,255,0.14); color: #f1f5f9; border-color: rgba(255,255,255,0.25);">
+                                    No disease tags yet
+                                </span>
+                            @endforelse
+                        </div>
                     </div>
 
                     {{-- Hero Details Grid --}}
@@ -609,6 +648,11 @@
                         <a href="{{ route('admin.dashboard') }}" class="btn btn-light btn-action">
                             <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
                         </a>
+                        @if (auth()->id() !== $user->id)
+                            <a href="{{ route('profile.mailbox.compose', ['to' => $user->id]) }}" class="btn btn-light btn-action">
+                                <i class="fas fa-paper-plane me-1"></i>Send Mail
+                            </a>
+                        @endif
                         <button class="btn btn-light btn-action" data-bs-toggle="modal" data-bs-target="#editUserModal">
                             <i class="fas fa-user-edit me-1"></i>Edit Profile
                         </button>
