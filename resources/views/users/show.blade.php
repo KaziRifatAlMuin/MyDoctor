@@ -590,22 +590,15 @@
                                 ->values();
                         @endphp
                         <div class="hero-disease-tags">
-                            @forelse($heroDiseases->take(6) as $disease)
+                            @forelse($heroDiseases as $disease)
                                 <span class="hero-disease-tag">
-                                    <i class="fas fa-tag"></i>
-                                    {{ $disease->disease_name }}
+                                    {{ $disease->disease_name }}{{ $disease->disease_name_bn ? ' (' . $disease->disease_name_bn . ')' : '' }}
                                 </span>
                             @empty
                                 <span class="hero-disease-tag" style="background: rgba(255,255,255,0.14); color: #f1f5f9; border-color: rgba(255,255,255,0.25);">
-                                    <i class="fas fa-notes-medical"></i>
                                     No disease tags yet
                                 </span>
                             @endforelse
-                            @if($heroDiseases->count() > 6)
-                                <span class="hero-disease-tag" style="background: rgba(255,255,255,0.14); color: #f1f5f9; border-color: rgba(255,255,255,0.25);">
-                                    +{{ $heroDiseases->count() - 6 }} more
-                                </span>
-                            @endif
                         </div>
                     </div>
 

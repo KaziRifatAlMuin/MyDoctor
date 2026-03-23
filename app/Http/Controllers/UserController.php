@@ -35,11 +35,6 @@ class UserController extends Controller
                 $q->where('name', 'like', "%{$search}%");
             });
         }
-        
-        // Apply role filter
-        if ($request->filled('role')) {
-            $query->where('role', $request->get('role'));
-        }
 
         if ($selectedDiseases->isNotEmpty()) {
             if ($diseaseLogic === 'AND') {
@@ -55,19 +50,8 @@ class UserController extends Controller
             }
         }
         
-        // Apply sorting
-        $sort = $request->get('sort', 'latest');
-        switch ($sort) {
-            case 'oldest':
-                $query->oldest();
-                break;
-            case 'name':
-                $query->orderBy('name', 'asc');
-                break;
-            default:
-                $query->latest();
-                break;
-        }
+        // Default listing order: alphabetical by member name.
+        $query->orderBy('name', 'asc');
         
         $users = $query->paginate(20);
         

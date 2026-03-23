@@ -342,22 +342,15 @@
                         </div>
 
                         <div class="d-flex flex-wrap gap-2 mt-2">
-                            @forelse($profileDiseases->take(6) as $disease)
+                            @forelse($profileDiseases as $disease)
                                 <span class="profile-disease-tag">
-                                    <i class="fas fa-tag"></i>
-                                    {{ $disease->disease_name }}
+                                    {{ $disease->disease_name }}{{ $disease->disease_name_bn ? ' (' . $disease->disease_name_bn . ')' : '' }}
                                 </span>
                             @empty
                                 <span class="profile-disease-tag" style="background: #f1f5f9; color: #64748b; border-color: #e2e8f0;">
-                                    <i class="fas fa-notes-medical"></i>
                                     No disease tags yet
                                 </span>
                             @endforelse
-                            @if($profileDiseases->count() > 6)
-                                <span class="profile-disease-tag" style="background: #e2e8f0; color: #475569; border-color: #cbd5e1;">
-                                    +{{ $profileDiseases->count() - 6 }} more
-                                </span>
-                            @endif
                         </div>
                     </div>
 
