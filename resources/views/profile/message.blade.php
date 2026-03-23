@@ -3,7 +3,7 @@
 @section('title', 'Read Message - My Doctor')
 @section('main_content_class', 'main-content main-content--wide')
 
-<!-- Gmail-like Custom Styles -->
+@push('styles')
 <style>
     .gmail-layout { min-height: 66vh; display: flex; width: 100%; background-color: #f6f8fc; }
     .gmail-sidebar { flex: 0 0 256px; background-color: #f6f8fc; padding-top: 16px; display: flex; flex-direction: column; }
@@ -32,7 +32,21 @@
     .gmail-sender-email { font-size: 12px; color: #5f6368; margin-left: 8px; font-weight: 400; }
     .gmail-date-info { font-size: 12px; color: #5f6368; display: flex; align-items: center; gap: 12px; margin-left: auto; }
     
-    .gmail-message-body { font-size: 14px; color: #1f1f1f; line-height: 1.5; padding-left: 56px; white-space: pre-wrap; font-family: Roboto, RobotoDraft, Helvetica, Arial, sans-serif; }
+    .gmail-message-body { font-size: 14px; color: #1f1f1f; line-height: 1.6; padding-left: 56px; font-family: Roboto, RobotoDraft, Helvetica, Arial, sans-serif; }
+    .gmail-message-body p { margin-bottom: 0.75rem; }
+    .gmail-message-body p:last-child { margin-bottom: 0; }
+    .gmail-message-body h1, .gmail-message-body h2, .gmail-message-body h3 { margin: 1rem 0 0.5rem 0; font-weight: 600; }
+    .gmail-message-body strong { font-weight: 600; }
+    .gmail-message-body em { font-style: italic; }
+    .gmail-message-body u { text-decoration: underline; }
+    .gmail-message-body ul, .gmail-message-body ol { padding-left: 1.5rem; margin-bottom: 0.75rem; }
+    .gmail-message-body li { margin-bottom: 0.25rem; }
+    .gmail-message-body a { color: #0b57d0; text-decoration: none; }
+    .gmail-message-body a:hover { text-decoration: underline; }
+    .gmail-message-body blockquote { border-left: 3px solid #dadce0; padding-left: 1rem; margin: 0.75rem 0; color: #5f6368; font-style: italic; }
+    .gmail-message-body code { background: #f1f3f4; padding: 2px 6px; border-radius: 3px; font-family: 'Courier New', monospace; font-size: 13px; }
+    .gmail-message-body pre { background: #f1f3f4; padding: 1rem; border-radius: 4px; overflow-x: auto; margin-bottom: 0.75rem; font-family: 'Courier New', monospace; }
+    .gmail-message-body pre code { background: none; padding: 0; }
     
     .gmail-reply-box { margin-top: 32px; margin-left: 56px; border: 1px solid #dadce0; border-radius: 24px; padding: 12px 16px; cursor: pointer; display: flex; align-items: flex-start; max-width: 600px; box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3); transition: box-shadow 0.2s; }
     .gmail-reply-box:hover { box-shadow: 0 1px 3px 0 rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15); }
@@ -47,8 +61,12 @@
     .gmail-read-container::-webkit-scrollbar { width: 8px; }
     .gmail-read-container::-webkit-scrollbar-thumb { background-color: #dadce0; border-radius: 4px; }
 </style>
+@endpush
 
 @section('content')
+@php
+    $message = $message ?? $mailing;
+@endphp
 <div class="gmail-layout">
     <!-- Sidebar -->
     <div class="gmail-sidebar">
@@ -141,7 +159,11 @@
             
             <div class="gmail-message-body">
                 @if($message->message)
-{{ $message->message }}
+                    @php
+                        $allowedTags = '<p><br><strong><b><em><i><u><span><div><ul><ol><li><blockquote><a><h1><h2><h3><h4><h5><h6><table><thead><tbody><tr><th><td><hr><img><pre><code>';
+                        $safeHtml = strip_tags($message->message, $allowedTags);
+                    @endphp
+                    {!! $safeHtml !!}
                 @else
 <em class="text-muted">No content provided.</em>
                 @endif
@@ -157,3 +179,15 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>
+    // Initialize Highlight.js for code syntax highlighting
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('pre code').forEach(el => {
+            hljs.highlightElement(el);
+        });
+    });
+</script>
+@endpush
