@@ -307,6 +307,44 @@
             animation: popIn 0.3s ease;
         }
 
+        .mailbox-bell {
+            position: relative;
+            margin-right: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mailbox-bell i {
+            font-size: 1.35rem;
+            color: #ffd700;
+            transition: all 0.3s ease;
+        }
+
+        .mailbox-bell:hover i {
+            transform: scale(1.1);
+            color: #ffc107;
+        }
+
+        .mailbox-bell .badge {
+            position: absolute;
+            top: -5px;
+            right: -8px;
+            background: #dc3545 !important;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 3px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
         @keyframes popIn {
             0% { transform: scale(0); }
             50% { transform: scale(1.2); }
@@ -1863,6 +1901,21 @@
                 <!-- Right Side Navigation (Notifications + User Menu) -->
                 <div class="nav-right">
                     @auth
+                        @php
+                            $unreadMailCount = \App\Models\Mailing::query()
+                                ->where('receiver_id', auth()->id())
+                                ->where('status', 'unread')
+                                ->count();
+                        @endphp
+
+                        <!-- Mailbox icon -->
+                        <a href="{{ route('profile.mailbox') }}" class="mailbox-bell" id="mailboxBell" title="Mailbox">
+                            <i class="fas fa-envelope"></i>
+                            <span class="badge" id="mailboxCount" style="display: {{ $unreadMailCount > 0 ? 'inline-block' : 'none' }};">
+                                {{ $unreadMailCount > 99 ? '99+' : $unreadMailCount }}
+                            </span>
+                        </a>
+
                         <!-- Notification Bell - Yellow with Green badge -->
                         <div class="notification-bell" id="notificationBell" onclick="toggleNotificationDropdown()">
                             <i class="fas fa-bell"></i>
@@ -3590,6 +3643,18 @@ window.openVideoModal = function(type, source, isReel = false) {
             }
         }
 
+        function updateMailboxCount(count) {
+            const badge = document.getElementById('mailboxCount');
+            if (!badge) return;
+
+            if (count > 0) {
+                badge.textContent = count > 99 ? '99+' : count;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
         // Escape HTML to prevent XSS
         function escapeHtml(unsafe) {
             if (!unsafe) return '';
@@ -3622,6 +3687,15 @@ window.openVideoModal = function(type, source, isReel = false) {
                     .then(res => res.json())
                     .then(data => updateNotificationCount(data.count))
                     .catch(err => console.error('Error updating count:', err));
+
+                    fetch('/profile/mailbox/unread-count', {
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(data => updateMailboxCount(data.count || 0))
+                    .catch(err => console.error('Error updating mailbox count:', err));
                 }
             }, 30000);
         }
@@ -3760,18 +3834,25 @@ window.openVideoModal = function(type, source, isReel = false) {
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             if ('{{ Auth::check() }}' === '1') {
-                // Load initial count
-                fetch('/notifications/unread-count', {
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(res => res.json())
-                .then(data => {
-                    updateNotificationCount(data.count);
+                // Load initial navbar counts
+                Promise.all([
+                    fetch('/notifications/unread-count', {
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    }).then(res => res.json()),
+                    fetch('/profile/mailbox/unread-count', {
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    }).then(res => res.json()),
+                ])
+                .then(([notificationData, mailboxData]) => {
+                    updateNotificationCount(notificationData.count || 0);
+                    updateMailboxCount(mailboxData.count || 0);
                     startNotificationUpdates();
                 })
-                .catch(err => console.error('Error loading initial count:', err));
+                .catch(err => console.error('Error loading initial counts:', err));
             }
         });
         

@@ -124,6 +124,16 @@ class MailingController extends Controller
         return response()->json($users);
     }
 
+    public function unreadCount(Request $request): JsonResponse
+    {
+        $count = Mailing::query()
+            ->where('receiver_id', $request->user()->id)
+            ->where('status', 'unread')
+            ->count();
+
+        return response()->json(['count' => $count]);
+    }
+
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -155,7 +165,7 @@ class MailingController extends Controller
                 'receiver_id' => $isSavingDraft ? null : $validated['receiver_id'],
                 'title' => $validated['title'],
                 'message' => $validated['message'],
-                'status' => $isSavingDraft ? 'draft' : 'sent',
+                'status' => $isSavingDraft ? 'draft' : 'unread',
             ]);
         } else {
             Mailing::create([
@@ -163,7 +173,7 @@ class MailingController extends Controller
                 'receiver_id' => $isSavingDraft ? null : $validated['receiver_id'],
                 'title' => $validated['title'],
                 'message' => $validated['message'],
-                'status' => $isSavingDraft ? 'draft' : 'sent',
+                'status' => $isSavingDraft ? 'draft' : 'unread',
             ]);
         }
 
@@ -217,7 +227,7 @@ class MailingController extends Controller
         $mailing->delete();
 
         return redirect()
-            ->route('profile.inbox')
+            ->route('profile.mailbox')
             ->with('success', 'Message deleted.');
     }
 

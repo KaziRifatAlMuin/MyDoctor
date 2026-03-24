@@ -48,7 +48,7 @@ class MailingInboxTest extends TestCase
             'sender_id' => $sender->id,
             'receiver_id' => $receiver->id,
             'title' => 'Hello',
-            'status' => 'sent',
+            'status' => 'unread',
         ]);
 
         $this->actingAs($receiver)
@@ -107,5 +107,43 @@ class MailingInboxTest extends TestCase
             'id' => $mailing->id,
             'status' => 'archived',
         ]);
+    }
+
+    #[Test]
+    public function mailbox_unread_count_endpoint_returns_count_for_authenticated_user(): void
+    {
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+
+        Mailing::create([
+            'sender_id' => $other->id,
+            'receiver_id' => $user->id,
+            'title' => 'Unread one',
+            'message' => 'Body',
+            'status' => 'unread',
+        ]);
+
+        Mailing::create([
+            'sender_id' => $other->id,
+            'receiver_id' => $user->id,
+            'title' => 'Read one',
+            'message' => 'Body',
+            'status' => 'read',
+        ]);
+
+        Mailing::create([
+            'sender_id' => $user->id,
+            'receiver_id' => $other->id,
+            'title' => 'Outgoing',
+            'message' => 'Body',
+            'status' => 'unread',
+        ]);
+
+        $this->actingAs($user)
+            ->getJson(route('profile.mailbox.unread-count'))
+            ->assertOk()
+            ->assertJson([
+                'count' => 1,
+            ]);
     }
 }
