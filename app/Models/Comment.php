@@ -27,6 +27,42 @@ class Comment extends Model
 
     protected $appends = ['file_url', 'file_icon', 'formatted_file_size'];
 
+    protected static function booted(): void
+    {
+        static::created(function (Comment $comment): void {
+            $comment->loadMissing(['post', 'user']);
+
+            if (!$comment->post || !$comment->user) {
+                return;
+            }
+
+            if ($comment->post->user_id === $comment->user_id) {
+                return;
+            }
+
+            $commenter = $comment->user;
+            $preview = strlen((string) $comment->comment_details) > 50
+                ? substr((string) $comment->comment_details, 0, 50) . '...'
+                : (string) $comment->comment_details;
+
+            Notification::create([
+                'user_id' => $comment->post->user_id,
+                'from_user_id' => $commenter->id,
+                'type' => 'comment',
+                'notifiable_type' => self::class,
+                'notifiable_id' => $comment->id,
+                'message' => "{$commenter->name} commented on your post",
+                'data' => [
+                    'post_id' => $comment->post->id,
+                    'comment_id' => $comment->id,
+                    'comment_preview' => $preview,
+                    'actor_name' => $commenter->name,
+                    'actor_avatar' => $commenter->picture ? asset('storage/' . $commenter->picture) : null,
+                ],
+            ]);
+        });
+    }
+
     public function post()
     {
         return $this->belongsTo(Post::class);

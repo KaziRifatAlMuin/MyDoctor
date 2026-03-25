@@ -1912,7 +1912,7 @@
                         <a href="{{ route('profile.mailbox') }}" class="mailbox-bell" id="mailboxBell" title="Mailbox">
                             <i class="fas fa-envelope"></i>
                             <span class="badge" id="mailboxCount" style="display: {{ $unreadMailCount > 0 ? 'inline-block' : 'none' }};">
-                                {{ $unreadMailCount > 99 ? '99+' : $unreadMailCount }}
+                                {{ $unreadMailCount }}
                             </span>
                         </a>
 
@@ -3648,7 +3648,7 @@ window.openVideoModal = function(type, source, isReel = false) {
             if (!badge) return;
 
             if (count > 0) {
-                badge.textContent = count > 99 ? '99+' : count;
+                badge.textContent = count;
                 badge.style.display = 'inline-block';
             } else {
                 badge.style.display = 'none';

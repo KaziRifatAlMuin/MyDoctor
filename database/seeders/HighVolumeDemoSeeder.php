@@ -38,7 +38,6 @@ class HighVolumeDemoSeeder extends Seeder
         $this->seedUserDiseases($users, $diseaseIds);
         $this->seedHealthAndMedicineData($users);
         [$posts, $comments] = $this->seedCommunityData($users, $diseaseIds);
-        $this->seedNotifications($users, $posts, $comments);
         $this->seedMailings($users);
         $this->seedPushSubscriptions($users);
     }
@@ -71,7 +70,7 @@ class HighVolumeDemoSeeder extends Seeder
         $rows = [];
         $now = now();
 
-        for ($i = 1; $i <= 60; $i++) {
+        for ($i = 1; $i <= 24; $i++) {
             $rows[] = [
                 'name' => $names[$i - 1],
                 'email' => "user{$i}@gmail.com",
@@ -153,48 +152,48 @@ class HighVolumeDemoSeeder extends Seeder
 
     private function seedHealthAndMedicineData($users): void
     {
-        $topUserIds = $users->pluck('id')->take(10)->all();
+        $topUserIds = $users->pluck('id')->take(5)->all();
 
         foreach ($users as $user) {
             $isTop = in_array($user->id, $topUserIds, true);
 
-            $addressCount = $isTop ? random_int(1, 3) : random_int(1, 2);
+            $addressCount = $isTop ? random_int(1, 2) : 1;
             UserAddress::factory()->count($addressCount)->create(['user_id' => $user->id]);
 
-            $metricCount = $isTop ? random_int(100, 200) : random_int(20, 50);
+            $metricCount = $isTop ? random_int(25, 45) : random_int(8, 20);
             HealthMetric::factory()->count($metricCount)->create(['user_id' => $user->id]);
 
-            $symptomCount = $isTop ? random_int(90, 170) : random_int(20, 50);
+            $symptomCount = $isTop ? random_int(25, 45) : random_int(8, 20);
             Symptom::factory()->count($symptomCount)->create(['user_id' => $user->id]);
 
-            $envCount = $isTop ? random_int(30, 70) : random_int(10, 30);
+            $envCount = $isTop ? random_int(8, 18) : random_int(4, 10);
             $environments = Environment::factory()->count($envCount)->create(['user_id' => $user->id]);
             foreach ($environments as $environment) {
-                EnvironmentMetric::factory()->count($isTop ? random_int(5, 10) : random_int(3, 6))->create([
+                EnvironmentMetric::factory()->count($isTop ? random_int(2, 4) : random_int(1, 3))->create([
                     'environment_id' => $environment->id,
                 ]);
             }
 
-            $uploadCount = $isTop ? random_int(40, 100) : random_int(15, 40);
+            $uploadCount = $isTop ? random_int(8, 20) : random_int(4, 10);
             Upload::factory()->count($uploadCount)->create(['user_id' => $user->id]);
 
-            $medicineCount = $isTop ? random_int(12, 22) : random_int(5, 12);
+            $medicineCount = $isTop ? random_int(4, 8) : random_int(2, 5);
             $medicines = Medicine::factory()->count($medicineCount)->create(['user_id' => $user->id]);
 
             foreach ($medicines as $medicine) {
-                $scheduleCount = $isTop ? random_int(3, 6) : random_int(2, 4);
+                $scheduleCount = $isTop ? random_int(2, 4) : random_int(1, 2);
                 $schedules = MedicineSchedule::factory()->count($scheduleCount)->create([
                     'medicine_id' => $medicine->id,
                 ]);
 
                 foreach ($schedules as $schedule) {
-                    $reminderCount = $isTop ? random_int(8, 18) : random_int(4, 10);
+                    $reminderCount = $isTop ? random_int(3, 6) : random_int(2, 4);
                     MedicineReminder::factory()->count($reminderCount)->create([
                         'schedule_id' => $schedule->id,
                     ]);
                 }
 
-                $logDays = $isTop ? random_int(35, 90) : random_int(12, 40);
+                $logDays = $isTop ? random_int(14, 28) : random_int(7, 16);
                 for ($d = 0; $d < $logDays; $d++) {
                     $date = now()->subDays($d + ($medicine->id % 10))->format('Y-m-d');
                     $scheduled = random_int(1, 6);
@@ -218,12 +217,12 @@ class HighVolumeDemoSeeder extends Seeder
 
     private function seedCommunityData($users, $diseaseIds): array
     {
-        $topUserIds = $users->pluck('id')->take(10)->all();
+        $topUserIds = $users->pluck('id')->take(5)->all();
 
         $posts = collect();
         foreach ($users as $user) {
             $isTop = in_array($user->id, $topUserIds, true);
-            $postCount = $isTop ? random_int(18, 32) : random_int(6, 16);
+            $postCount = $isTop ? random_int(5, 10) : random_int(2, 5);
 
             for ($i = 0; $i < $postCount; $i++) {
                 $post = Post::factory()->create([
@@ -238,7 +237,7 @@ class HighVolumeDemoSeeder extends Seeder
         $userIds = $users->pluck('id')->values();
 
         foreach ($posts as $post) {
-            $commentCount = random_int(2, 9);
+            $commentCount = random_int(1, 4);
             for ($i = 0; $i < $commentCount; $i++) {
                 $commenterId = $userIds->random();
                 $comment = Comment::factory()->create([
@@ -249,7 +248,7 @@ class HighVolumeDemoSeeder extends Seeder
             }
 
             $possibleLikers = $userIds->reject(fn ($id) => $id === $post->user_id)->shuffle()->values();
-            $likeCount = min($possibleLikers->count(), random_int(0, 22));
+            $likeCount = min($possibleLikers->count(), random_int(0, 8));
             $likers = $possibleLikers->take($likeCount);
             foreach ($likers as $likerId) {
                 PostLike::query()->firstOrCreate([
@@ -261,7 +260,7 @@ class HighVolumeDemoSeeder extends Seeder
 
         foreach ($comments as $comment) {
             $possibleLikers = $userIds->reject(fn ($id) => $id === $comment->user_id)->shuffle()->values();
-            $likeCount = min($possibleLikers->count(), random_int(0, 12));
+            $likeCount = min($possibleLikers->count(), random_int(0, 5));
             $likers = $possibleLikers->take($likeCount);
             foreach ($likers as $likerId) {
                 CommentLike::query()->firstOrCreate([
@@ -289,58 +288,10 @@ class HighVolumeDemoSeeder extends Seeder
         return [$posts, $comments];
     }
 
-    private function seedNotifications($users, $posts, $comments): void
-    {
-        $postIds = $posts->pluck('id')->values();
-        $commentIds = $comments->pluck('id')->values();
-        $userIds = $users->pluck('id')->values();
-
-        if ($postIds->isEmpty() || $commentIds->isEmpty()) {
-            return;
-        }
-
-        $rows = [];
-        $total = 1400;
-        for ($i = 0; $i < $total; $i++) {
-            $userId = $userIds->random();
-            $fromUserId = $userIds->reject(fn ($id) => $id === $userId)->random();
-            $isPost = random_int(0, 1) === 1;
-            $type = collect(['like', 'comment', 'reply'])->random();
-
-            $notifiableType = $isPost ? Post::class : Comment::class;
-            $notifiableId = $isPost ? $postIds->random() : $commentIds->random();
-
-            $rows[] = [
-                'user_id' => $userId,
-                'from_user_id' => $fromUserId,
-                'type' => $type,
-                'notifiable_type' => $notifiableType,
-                'notifiable_id' => $notifiableId,
-                'message' => collect([
-                    'New health interaction on your post.',
-                    'Someone responded to your health update.',
-                    'A community member engaged with your comment.',
-                ])->random(),
-                'data' => json_encode([
-                    'actor_id' => $fromUserId,
-                    'health_context' => true,
-                    'notifiable_id' => $notifiableId,
-                ]),
-                'read_at' => random_int(1, 100) <= 55 ? now()->subHours(random_int(1, 240)) : null,
-                'created_at' => now()->subDays(random_int(0, 120))->subMinutes(random_int(0, 1440)),
-                'updated_at' => now(),
-            ];
-        }
-
-        foreach (array_chunk($rows, 500) as $chunk) {
-            DB::table('notifications')->insert($chunk);
-        }
-    }
-
     private function seedMailings($users): void
     {
-        $topUserIds = $users->pluck('id')->take(10)->values();
-        $otherUserIds = $users->pluck('id')->slice(10)->values();
+        $topUserIds = $users->pluck('id')->take(5)->values();
+        $otherUserIds = $users->pluck('id')->slice(5)->values();
         $allUserIds = $users->pluck('id')->values();
 
         $healthSubjects = [
@@ -351,17 +302,17 @@ class HighVolumeDemoSeeder extends Seeder
         ];
 
         $rows = [];
-        $totalMailings = 580;
+        $totalMailings = 160;
 
         for ($i = 1; $i <= $totalMailings; $i++) {
-            $isDraft = $i > 520;
+            $isDraft = $i > 140;
 
             if ($isDraft) {
                 $senderId = $topUserIds->random();
                 $receiverId = random_int(1, 100) <= 70 ? null : $allUserIds->reject(fn ($id) => $id === $senderId)->random();
                 $status = 'draft';
             } else {
-                $senderId = $i <= 360 ? $topUserIds->random() : $otherUserIds->random();
+                $senderId = $i <= 110 ? $topUserIds->random() : $otherUserIds->random();
                 $receiverId = $allUserIds->reject(fn ($id) => $id === $senderId)->random();
                 $status = collect(['unread', 'read', 'archived', 'sent'])->random();
             }
@@ -391,7 +342,7 @@ class HighVolumeDemoSeeder extends Seeder
     private function seedPushSubscriptions($users): void
     {
         $rows = [];
-        foreach ($users->take(45) as $user) {
+        foreach ($users->take(18) as $user) {
             $rows[] = [
                 'subscribable_type' => User::class,
                 'subscribable_id' => $user->id,
