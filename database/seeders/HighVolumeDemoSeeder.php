@@ -217,12 +217,13 @@ class HighVolumeDemoSeeder extends Seeder
 
     private function seedCommunityData($users, $diseaseIds): array
     {
-        $topUserIds = $users->pluck('id')->take(5)->all();
+        $topUserIds = $users->pluck('id')->take(5)->values();
+        $otherUserIds = $users->pluck('id')->slice(5)->values();
 
         $posts = collect();
         foreach ($users as $user) {
-            $isTop = in_array($user->id, $topUserIds, true);
-            $postCount = $isTop ? random_int(5, 10) : random_int(2, 5);
+            $isTop = $topUserIds->contains($user->id);
+            $postCount = $isTop ? random_int(7, 12) : random_int(1, 3);
 
             for ($i = 0; $i < $postCount; $i++) {
                 $post = Post::factory()->create([
@@ -237,9 +238,21 @@ class HighVolumeDemoSeeder extends Seeder
         $userIds = $users->pluck('id')->values();
 
         foreach ($posts as $post) {
-            $commentCount = random_int(1, 4);
+            $isTopPostOwner = $topUserIds->contains($post->user_id);
+            $commentCount = $isTopPostOwner ? random_int(3, 7) : random_int(0, 2);
+
             for ($i = 0; $i < $commentCount; $i++) {
-                $commenterId = $userIds->random();
+                $preferTopEngagers = random_int(1, 100) <= 80;
+                $commenterPool = $preferTopEngagers && $topUserIds->isNotEmpty()
+                    ? $topUserIds
+                    : $userIds;
+
+                $commenterId = $commenterPool
+                    ->reject(fn ($id) => $id === $post->user_id)
+                    ->values()
+                    ->whenEmpty(fn ($collection) => $userIds)
+                    ->random();
+
                 $comment = Comment::factory()->create([
                     'post_id' => $post->id,
                     'user_id' => $commenterId,
@@ -247,9 +260,24 @@ class HighVolumeDemoSeeder extends Seeder
                 $comments->push($comment);
             }
 
-            $possibleLikers = $userIds->reject(fn ($id) => $id === $post->user_id)->shuffle()->values();
-            $likeCount = min($possibleLikers->count(), random_int(0, 8));
-            $likers = $possibleLikers->take($likeCount);
+            $possibleLikers = $userIds->reject(fn ($id) => $id === $post->user_id)->values();
+            $topLikers = $possibleLikers->intersect($topUserIds)->values()->shuffle();
+            $otherLikers = $possibleLikers->intersect($otherUserIds)->values()->shuffle();
+
+            $topLikeCount = min(
+                $topLikers->count(),
+                $isTopPostOwner ? random_int(2, 5) : random_int(1, 3)
+            );
+            $otherLikeCount = min(
+                $otherLikers->count(),
+                $isTopPostOwner ? random_int(0, 2) : random_int(0, 1)
+            );
+
+            $likers = $topLikers->take($topLikeCount)
+                ->merge($otherLikers->take($otherLikeCount))
+                ->shuffle()
+                ->values();
+
             foreach ($likers as $likerId) {
                 PostLike::query()->firstOrCreate([
                     'post_id' => $post->id,
@@ -259,9 +287,25 @@ class HighVolumeDemoSeeder extends Seeder
         }
 
         foreach ($comments as $comment) {
-            $possibleLikers = $userIds->reject(fn ($id) => $id === $comment->user_id)->shuffle()->values();
-            $likeCount = min($possibleLikers->count(), random_int(0, 5));
-            $likers = $possibleLikers->take($likeCount);
+            $possibleLikers = $userIds->reject(fn ($id) => $id === $comment->user_id)->values();
+            $topLikers = $possibleLikers->intersect($topUserIds)->values()->shuffle();
+            $otherLikers = $possibleLikers->intersect($otherUserIds)->values()->shuffle();
+            $isTopCommentOwner = $topUserIds->contains($comment->user_id);
+
+            $topLikeCount = min(
+                $topLikers->count(),
+                $isTopCommentOwner ? random_int(1, 4) : random_int(1, 2)
+            );
+            $otherLikeCount = min(
+                $otherLikers->count(),
+                $isTopCommentOwner ? random_int(0, 1) : random_int(0, 1)
+            );
+
+            $likers = $topLikers->take($topLikeCount)
+                ->merge($otherLikers->take($otherLikeCount))
+                ->shuffle()
+                ->values();
+
             foreach ($likers as $likerId) {
                 CommentLike::query()->firstOrCreate([
                     'comment_id' => $comment->id,
