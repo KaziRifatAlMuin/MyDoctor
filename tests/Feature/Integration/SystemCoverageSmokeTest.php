@@ -223,7 +223,7 @@ class SystemCoverageSmokeTest extends TestCase
             'sender_id' => $user->id,
             'receiver_id' => $receiver->id,
             'title' => 'Integration Message',
-            'status' => 'sent',
+            'status' => 'unread',
         ]);
 
         $this->assertSame(1, Mailing::where('sender_id', $user->id)->count());

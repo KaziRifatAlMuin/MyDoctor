@@ -16,13 +16,13 @@
                         <a href="{{ route('profile.notifications') }}" class="list-group-item list-group-item-action active">
                             <i class="fas fa-bell me-2"></i>Notifications
                         </a>
-                        <a href="{{ route('profile.inbox') }}" class="list-group-item list-group-item-action">
+                        <a href="{{ route('profile.mailbox') }}" class="list-group-item list-group-item-action">
                             <i class="fas fa-inbox me-2"></i>Inbox
                         </a>
-                        <a href="{{ route('profile.inbox.sent') }}" class="list-group-item list-group-item-action">
+                        <a href="{{ route('profile.mailbox.sent') }}" class="list-group-item list-group-item-action">
                             <i class="fas fa-paper-plane me-2"></i>Sent
                         </a>
-                        <a href="{{ route('profile.inbox.compose') }}" class="list-group-item list-group-item-action">
+                        <a href="{{ route('profile.mailbox.compose') }}" class="list-group-item list-group-item-action">
                             <i class="fas fa-pen-to-square me-2"></i>Compose
                         </a>
                     </div>

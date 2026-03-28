@@ -18,6 +18,7 @@ public/storage
 /.nova
 /.phpunit.cache
 /.vscode
+/.helper
 /.zed
 /auth.json
 /node_modules

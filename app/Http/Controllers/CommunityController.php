@@ -9,7 +9,6 @@ use App\Models\User;
 use App\Models\PostLike;
 use App\Models\CommentLike;
 use App\Models\Notification;
-use App\Services\CommunityNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -20,13 +19,6 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class CommunityController extends Controller
 {
-    protected $notificationService;
-
-    public function __construct(CommunityNotificationService $notificationService)
-    {
-        $this->notificationService = $notificationService;
-    }
-
     /**
      * Display the forum page with posts and disease filter
      */
@@ -670,11 +662,6 @@ class CommunityController extends Controller
                 $post->increment('like_count');
                 $post->refresh();
                 $liked = true;
-                
-                // Send notification for new like
-                if ($this->notificationService && $post->user_id !== $user->id) {
-                    $this->notificationService->postLiked($post, $user);
-                }
             }
 
             return response()->json([
@@ -764,11 +751,6 @@ class CommunityController extends Controller
             $comment = Comment::create($data);
             $post->increment('comment_count');
             $comment->load('user');
-
-            // Send notification for new comment
-            if ($this->notificationService && $post->user_id !== Auth::id()) {
-                $this->notificationService->commentAdded($comment, $post);
-            }
 
             $html = view('community.partials.comment', ['comment' => $comment])->render();
 
