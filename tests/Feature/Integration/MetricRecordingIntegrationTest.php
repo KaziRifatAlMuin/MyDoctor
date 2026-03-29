@@ -30,7 +30,7 @@ class MetricRecordingIntegrationTest extends TestCase
         }
 
         $response = $this->actingAs($user)->post(route('health.metric.store'), $payload);
-        $response->assertRedirect(route('health'));
+        $response->assertRedirect(route('health') . '#metrics');
 
         $this->assertDatabaseHas('health_metrics', [
             'user_id' => $user->id,

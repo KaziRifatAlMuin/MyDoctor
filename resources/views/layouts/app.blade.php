@@ -307,6 +307,44 @@
             animation: popIn 0.3s ease;
         }
 
+        .mailbox-bell {
+            position: relative;
+            margin-right: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mailbox-bell i {
+            font-size: 1.35rem;
+            color: #ffd700;
+            transition: all 0.3s ease;
+        }
+
+        .mailbox-bell:hover i {
+            transform: scale(1.1);
+            color: #ffc107;
+        }
+
+        .mailbox-bell .badge {
+            position: absolute;
+            top: -5px;
+            right: -8px;
+            background: #dc3545 !important;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 3px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
         @keyframes popIn {
             0% { transform: scale(0); }
             50% { transform: scale(1.2); }
@@ -516,6 +554,20 @@
             max-width: 1200px;
             margin: 0 auto;
             flex: 1 0 auto;
+        }
+
+        .main-content--wide {
+            width: min(1600px, calc(100vw - 24px));
+            max-width: min(1600px, calc(100vw - 24px));
+            padding-inline: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content--wide {
+                width: 100%;
+                max-width: 100%;
+                padding-inline: 12px;
+            }
         }
 
         /* Chatbot Icon */
@@ -1849,6 +1901,21 @@
                 <!-- Right Side Navigation (Notifications + User Menu) -->
                 <div class="nav-right">
                     @auth
+                        @php
+                            $unreadMailCount = \App\Models\Mailing::query()
+                                ->where('receiver_id', auth()->id())
+                                ->where('status', 'unread')
+                                ->count();
+                        @endphp
+
+                        <!-- Mailbox icon -->
+                        <a href="{{ route('profile.mailbox') }}" class="mailbox-bell" id="mailboxBell" title="Mailbox">
+                            <i class="fas fa-envelope"></i>
+                            <span class="badge" id="mailboxCount" style="display: {{ $unreadMailCount > 0 ? 'inline-block' : 'none' }};">
+                                {{ $unreadMailCount }}
+                            </span>
+                        </a>
+
                         <!-- Notification Bell - Yellow with Green badge -->
                         <div class="notification-bell" id="notificationBell" onclick="toggleNotificationDropdown()">
                             <i class="fas fa-bell"></i>
@@ -1909,6 +1976,10 @@
                                     <span class="notification-badge" id="notificationCountBadge" style="display: none;">0</span>
                                 </a>
 
+                                <a href="{{ route('profile.mailbox') }}" class="dropdown-item-custom">
+                                    <i class="fas fa-envelope"></i> Mailbox
+                                </a>
+
                                 <a href="{{ route('suggestions') }}" class="dropdown-item-custom">
                                     <i class="fas fa-lightbulb"></i> Suggestions
                                 </a>
@@ -1934,11 +2005,11 @@
                                     </div>
                                 </div>
 
-                                <!-- Check for admin by email -->
-                                @if (auth()->user()->email === 'admin@mydoctor.com')
+                                <!-- Admin Dashboard Link -->
+                                @if (auth()->user()->isAdmin())
                                     <div class="divider"></div>
                                     <a href="{{ route('admin.dashboard') }}" class="dropdown-item-custom">
-                                        <i class="fas fa-cog"></i> Admin Panel
+                                        <i class="fas fa-shield-alt"></i> Admin Dashboard
                                     </a>
                                 @endif
 
@@ -2051,7 +2122,7 @@
         </div>
 
         <!-- Main Content -->
-        <main class="main-content">
+        <main class="@yield('main_content_class', 'main-content')">
             @yield('content')
         </main>
 
@@ -3572,6 +3643,18 @@ window.openVideoModal = function(type, source, isReel = false) {
             }
         }
 
+        function updateMailboxCount(count) {
+            const badge = document.getElementById('mailboxCount');
+            if (!badge) return;
+
+            if (count > 0) {
+                badge.textContent = count;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
         // Escape HTML to prevent XSS
         function escapeHtml(unsafe) {
             if (!unsafe) return '';
@@ -3604,6 +3687,15 @@ window.openVideoModal = function(type, source, isReel = false) {
                     .then(res => res.json())
                     .then(data => updateNotificationCount(data.count))
                     .catch(err => console.error('Error updating count:', err));
+
+                    fetch('/profile/mailbox/unread-count', {
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(data => updateMailboxCount(data.count || 0))
+                    .catch(err => console.error('Error updating mailbox count:', err));
                 }
             }, 30000);
         }
@@ -3742,18 +3834,25 @@ window.openVideoModal = function(type, source, isReel = false) {
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             if ('{{ Auth::check() }}' === '1') {
-                // Load initial count
-                fetch('/notifications/unread-count', {
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(res => res.json())
-                .then(data => {
-                    updateNotificationCount(data.count);
+                // Load initial navbar counts
+                Promise.all([
+                    fetch('/notifications/unread-count', {
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    }).then(res => res.json()),
+                    fetch('/profile/mailbox/unread-count', {
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    }).then(res => res.json()),
+                ])
+                .then(([notificationData, mailboxData]) => {
+                    updateNotificationCount(notificationData.count || 0);
+                    updateMailboxCount(mailboxData.count || 0);
                     startNotificationUpdates();
                 })
-                .catch(err => console.error('Error loading initial count:', err));
+                .catch(err => console.error('Error loading initial counts:', err));
             }
         });
         
@@ -3762,6 +3861,293 @@ window.openVideoModal = function(type, source, isReel = false) {
     @auth
         <script src="{{ asset('js/push-notifications.js') }}"></script>
     @endauth
+
+    <!-- Global Edit Functions - Available on all pages -->
+    <script>
+        // Initialize data structures (will be overridden by page-specific data)
+        window.metricFieldDefs = window.metricFieldDefs || {};
+        window.symptomsList = window.symptomsList || {};
+
+        // ──────────────────────────────────────────────────────────────
+        // EDIT MODAL FUNCTIONS — global scope for health/partials
+        // ──────────────────────────────────────────────────────────────
+        window.openEditMetric = function(id, type, values, recordedAt) {
+            try {
+                const metricLabel = document.getElementById('metricModalLabel');
+                if (metricLabel) metricLabel.textContent = 'Edit Health Metric';
+                const metricSubmit = document.getElementById('metricSubmitLabel');
+                if (metricSubmit) metricSubmit.textContent = 'Update Metric';
+                const form = document.getElementById('metricForm');
+                if (form) {
+                    form.action = '/health/metric/' + id;
+                    form.method = 'POST';
+                }
+                const methodInput = document.getElementById('metricFormMethod');
+                if (methodInput) methodInput.value = 'PUT';
+                const metricTypeSelect = document.getElementById('metricTypeSelect');
+                if (metricTypeSelect) metricTypeSelect.value = type;
+
+                // build value map for pre-fill
+                const cfg = (window.metricFieldDefs || {})[type];
+                const valMap = {};
+                if (cfg) {
+                    cfg.forEach(f => {
+                        const key = f.name.replace('value_', '');
+                        if (values[key] !== undefined) valMap[f.name] = values[key];
+                    });
+                }
+
+                // Build fields with current values
+                const fieldsContainer = document.getElementById('metricFieldsContainer');
+                if (fieldsContainer) {
+                    fieldsContainer.innerHTML = '';
+                    if (cfg) {
+                        const row = document.createElement('div');
+                        row.className = 'row g-3 mb-3';
+                        cfg.forEach(f => {
+                            const col = document.createElement('div');
+                            col.className = cfg.length === 1 ? 'col-12' : 'col-6';
+                            const val = valMap[f.name] !== undefined ? valMap[f.name] : '';
+                            col.innerHTML = `
+                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">${f.label}</label>
+                                <input type="number" name="${f.name}" class="form-control" style="border-radius: 10px;"
+                                    placeholder="${f.placeholder}" min="${f.min}" max="${f.max}"
+                                    step="${f.step || '1'}" value="${val}" required>
+                            `;
+                            row.appendChild(col);
+                        });
+                        fieldsContainer.appendChild(row);
+                    }
+                }
+
+                const recordedAtInput = document.getElementById('metricRecordedAt');
+                if (recordedAtInput) recordedAtInput.value = recordedAt;
+                
+                // Open modal with retry logic
+                const modal = document.getElementById('addMetricModal');
+                if (modal) {
+                    try {
+                        const bsModal = new bootstrap.Modal(modal);
+                        bsModal.show();
+                    } catch (e) {
+                        console.error('Failed to open modal:', e);
+                        modal.style.display = 'block';
+                    }
+                } else {
+                    console.error('Metric modal not found');
+                }
+            } catch (error) {
+                console.error('Error in openEditMetric:', error);
+            }
+        };
+
+        window.openEditSymptom = function(id, name, severity, recordedAt, note) {
+            try {
+                const symptomLabel = document.getElementById('symptomModalLabel');
+                if (symptomLabel) symptomLabel.textContent = 'Edit Symptom';
+                const symptomSubmit = document.getElementById('symptomSubmitLabel');
+                if (symptomSubmit) symptomSubmit.textContent = 'Update Symptom';
+                const form = document.getElementById('symptomForm');
+                if (form) {
+                    form.action = '/health/symptom/' + id;
+                    form.method = 'POST';
+                }
+                const methodInput = document.getElementById('symptomFormMethod');
+                if (methodInput) methodInput.value = 'PUT';
+                const bn = (window.symptomsList || {})[name] || '';
+                const searchInput = document.getElementById('symptomSearchInput');
+                if (searchInput) searchInput.value = name + (bn ? ' (' + bn + ')' : '');
+                const nameHidden = document.getElementById('symptomNameHidden');
+                if (nameHidden) nameHidden.value = name;
+                const severityInput = document.getElementById('severityRange');
+                if (severityInput) severityInput.value = severity;
+                const severityValue = document.getElementById('severityValue');
+                if (severityValue) severityValue.textContent = severity;
+                const recordedAtInput = document.getElementById('symptomRecordedAt');
+                if (recordedAtInput) recordedAtInput.value = recordedAt;
+                const noteInput = document.getElementById('symptomNote');
+                if (noteInput) noteInput.value = note || '';
+                
+                // Open modal with retry logic
+                const modal = document.getElementById('addSymptomModal');
+                if (modal) {
+                    try {
+                        const bsModal = new bootstrap.Modal(modal);
+                        bsModal.show();
+                    } catch (e) {
+                        console.error('Failed to open modal:', e);
+                        modal.style.display = 'block';
+                    }
+                } else {
+                    console.error('Symptom modal not found');
+                }
+            } catch (error) {
+                console.error('Error in openEditSymptom:', error);
+            }
+        };
+
+        window.openEditDisease = function(id, diseaseId, diseaseName, diseaseBn, status, diagnosedAt, notes) {
+            try {
+                const diseaseLabel = document.getElementById('diseaseModalLabel');
+                if (diseaseLabel) diseaseLabel.textContent = 'Edit Disease Record';
+                const diseaseSubmit = document.getElementById('diseaseSubmitLabel');
+                if (diseaseSubmit) diseaseSubmit.textContent = 'Update Disease';
+                const form = document.getElementById('diseaseForm');
+                if (form) {
+                    form.action = '/health/disease/' + id;
+                    form.method = 'POST';
+                }
+                const methodInput = document.getElementById('diseaseFormMethod');
+                if (methodInput) methodInput.value = 'PUT';
+                const selectWrapper = document.getElementById('diseaseSelectWrapper');
+                if (selectWrapper) selectWrapper.style.display = 'none';
+                const idHidden = document.getElementById('diseaseIdHidden');
+                if (idHidden) {
+                    idHidden.removeAttribute('required');
+                    idHidden.value = diseaseId;
+                }
+                const searchInput = document.getElementById('diseaseSearchInput');
+                if (searchInput) searchInput.value = diseaseName + (diseaseBn ? ' (' + diseaseBn + ')' : '');
+                const statusInput = document.getElementById('diseaseStatus');
+                if (statusInput) statusInput.value = status;
+                const dateInput = document.getElementById('diseaseDiagnosedAt');
+                if (dateInput) dateInput.value = diagnosedAt || '';
+                const notesInput = document.getElementById('diseaseNotes');
+                if (notesInput) notesInput.value = notes || '';
+                
+                // Open modal with retry logic
+                const modal = document.getElementById('addDiseaseModal');
+                if (modal) {
+                    try {
+                        const bsModal = new bootstrap.Modal(modal);
+                        bsModal.show();
+                    } catch (e) {
+                        console.error('Failed to open modal:', e);
+                        modal.style.display = 'block';
+                    }
+                } else {
+                    console.error('Disease modal not found');
+                }
+            } catch (error) {
+                console.error('Error in openEditDisease:', error);
+            }
+        };
+
+        window.openEditUpload = function(id, title, type, doctorName, institution, docDate, notes, summary) {
+            try {
+                const uploadLabel = document.getElementById('uploadModalLabel');
+                if (uploadLabel) uploadLabel.textContent = 'Edit Document';
+                const uploadSubmit = document.getElementById('uploadSubmitLabel');
+                if (uploadSubmit) uploadSubmit.textContent = 'Update';
+                const form = document.getElementById('uploadForm');
+                if (form) {
+                    form.action = '/health/upload/' + id;
+                    form.method = 'POST';
+                }
+                const methodInput = document.getElementById('uploadFormMethod');
+                if (methodInput) methodInput.value = 'PUT';
+                const fileInput = document.getElementById('uploadFileInput');
+                if (fileInput) fileInput.removeAttribute('required');
+                const fileHint = document.getElementById('uploadFileHint');
+                if (fileHint) fileHint.textContent = 'Leave empty to keep existing image.';
+                const titleInput = document.getElementById('uploadTitle');
+                if (titleInput) titleInput.value = title;
+                const typeInput = document.getElementById('uploadType');
+                if (typeInput) typeInput.value = type;
+                const doctorInput = document.getElementById('uploadDoctorName');
+                if (doctorInput) doctorInput.value = doctorName || '';
+                const institutionInput = document.getElementById('uploadInstitution');
+                if (institutionInput) institutionInput.value = institution || '';
+                const dateInput = document.getElementById('uploadDocumentDate');
+                if (dateInput) dateInput.value = docDate || '';
+                const notesInput = document.getElementById('uploadNotes');
+                if (notesInput) notesInput.value = notes || '';
+                const summaryInput = document.getElementById('uploadSummary');
+                if (summaryInput) summaryInput.value = summary || '';
+                
+                // Open modal with retry logic
+                const modal = document.getElementById('addUploadModal');
+                if (modal) {
+                    try {
+                        const bsModal = new bootstrap.Modal(modal);
+                        bsModal.show();
+                    } catch (e) {
+                        console.error('Failed to open modal:', e);
+                        modal.style.display = 'block';
+                    }
+                } else {
+                    console.error('Upload modal not found');
+                }
+            } catch (error) {
+                console.error('Error in openEditUpload:', error);
+            }
+        };
+
+        // Reset modals to "Add" mode when closed
+        document.addEventListener('DOMContentLoaded', function() {
+            ['addMetricModal','addSymptomModal','addDiseaseModal','addUploadModal'].forEach(modalId => {
+                const el = document.getElementById(modalId);
+                if (!el) return;
+                el.addEventListener('hidden.bs.modal', function() {
+                    if (modalId === 'addMetricModal') {
+                        const metricLabel = document.getElementById('metricModalLabel');
+                        if (metricLabel) metricLabel.textContent = 'Record Health Metric';
+                        const metricSubmit = document.getElementById('metricSubmitLabel');
+                        if (metricSubmit) metricSubmit.textContent = 'Save Metric';
+                        const metricForm = document.getElementById('metricForm');
+                        if (metricForm) {
+                            metricForm.action = '{{ route("health.metric.store") }}';
+                            document.getElementById('metricFormMethod').value = 'POST';
+                        }
+                    } else if (modalId === 'addSymptomModal') {
+                        const symptomLabel = document.getElementById('symptomModalLabel');
+                        if (symptomLabel) symptomLabel.textContent = 'Log Symptom';
+                        const symptomSubmit = document.getElementById('symptomSubmitLabel');
+                        if (symptomSubmit) symptomSubmit.textContent = 'Save Symptom';
+                        const symptomForm = document.getElementById('symptomForm');
+                        if (symptomForm) {
+                            symptomForm.action = '{{ route("health.symptom.store") }}';
+                            document.getElementById('symptomFormMethod').value = 'POST';
+                        }
+                        const selectWrapper = document.getElementById('symptomSelectWrapper');
+                        if (selectWrapper) selectWrapper.style.display = 'block';
+                        const symptomNameHidden = document.getElementById('symptomNameHidden');
+                        if (symptomNameHidden) symptomNameHidden.value = '';
+                        const symptomInput = document.getElementById('symptomSearchInput');
+                        if (symptomInput) symptomInput.value = '';
+                    } else if (modalId === 'addDiseaseModal') {
+                        const diseaseLabel = document.getElementById('diseaseModalLabel');
+                        if (diseaseLabel) diseaseLabel.textContent = 'Add Disease Record';
+                        const diseaseSubmit = document.getElementById('diseaseSubmitLabel');
+                        if (diseaseSubmit) diseaseSubmit.textContent = 'Save Record';
+                        const diseaseForm = document.getElementById('diseaseForm');
+                        if (diseaseForm) {
+                            diseaseForm.action = '{{ route("health.disease.store") }}';
+                            document.getElementById('diseaseFormMethod').value = 'POST';
+                        }
+                        const diseaseWrapper = document.getElementById('diseaseSelectWrapper');
+                        if (diseaseWrapper) diseaseWrapper.style.display = 'block';
+                        const diseaseIdField = document.getElementById('diseaseIdHidden');
+                        if (diseaseIdField) diseaseIdField.setAttribute('required', 'required');
+                    } else if (modalId === 'addUploadModal') {
+                        const uploadLabel = document.getElementById('uploadModalLabel');
+                        if (uploadLabel) uploadLabel.textContent = 'Upload Document';
+                        const uploadSubmit = document.getElementById('uploadSubmitLabel');
+                        if (uploadSubmit) uploadSubmit.textContent = 'Upload';
+                        const uploadForm = document.getElementById('uploadForm');
+                        if (uploadForm) {
+                            uploadForm.action = '{{ route("health.upload.store") }}';
+                            document.getElementById('uploadFormMethod').value = 'POST';
+                        }
+                        const uploadFileInput = document.getElementById('uploadFileInput');
+                        if (uploadFileInput) uploadFileInput.setAttribute('required', 'required');
+                        const uploadHint = document.getElementById('uploadFileHint');
+                        if (uploadHint) uploadHint.textContent = 'Choose an image or PDF file.';
+                    }
+                });
+            });
+        });
+    </script>
 
     @stack('scripts')
 </body>

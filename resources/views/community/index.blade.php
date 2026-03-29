@@ -1374,8 +1374,8 @@ body {
                 </h1>
                 <p style="color: #65676b; margin: 0;">Connect with others, share experiences, and get support</p>
             </div>
-            <div>
-                <select id="diseaseFilter" onchange="filterByDisease(this.value)" style="padding: 10px 16px; border: 1px solid #e4e6eb; border-radius: 8px; min-width: 280px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <select id="diseaseFilter" onchange="filterByDisease(this.value)" style="padding: 10px 16px; border: 1px solid #e4e6eb; border-radius: 8px; min-width: 220px;">
                     <option value="all" {{ !request('disease') ? 'selected' : '' }}>All Diseases (সকল রোগ)</option>
                     @foreach($diseases as $disease)
                         <option value="{{ $disease->id }}" {{ request('disease') == $disease->id ? 'selected' : '' }}>
@@ -1383,6 +1383,12 @@ body {
                         </option>
                     @endforeach
                 </select>
+                <a href="{{ auth()->check() ? route('users.index') : route('login') }}" class="btn btn-sm btn-primary rounded-pill ms-2 d-none d-md-inline-flex align-items-center" style="white-space:nowrap;">
+                    <i class="fas fa-users me-2"></i> Browse Members
+                </a>
+                <a href="{{ auth()->check() ? route('users.index') : route('login') }}" class="btn btn-sm btn-primary rounded-pill ms-2 d-md-none align-items-center" style="white-space:nowrap;">
+                    <i class="fas fa-users"></i>
+                </a>
             </div>
         </div>
     </div>

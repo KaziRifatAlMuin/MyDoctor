@@ -22,6 +22,10 @@ return new class extends Migration
             $table->string('blood_group', 5)->nullable(); // A+, B-, O+, etc.
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->enum('role', ['member', 'admin'])->default('member');
+            $table->boolean('email_notifications')->default(true);
+            $table->boolean('push_notifications')->default(true);
+            $table->json('notification_settings')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

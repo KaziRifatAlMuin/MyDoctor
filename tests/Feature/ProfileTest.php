@@ -53,7 +53,7 @@ class ProfileTest extends TestCase
 
         $this->actingAs($user)
              ->patch(route('profile.password'), [
-                 'current_password' => 'password',
+                 'current_password' => 'abcd1234',
                  'password'         => 'newpassword1',
                  'password_confirmation' => 'newpassword1',
              ])
@@ -109,7 +109,7 @@ class ProfileTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-             ->delete(route('profile.destroy'), ['password' => 'password'])
+             ->delete(route('profile.destroy'), ['password' => 'abcd1234'])
              ->assertRedirect('/');
 
         $this->assertDatabaseMissing('users', ['id' => $user->id]);
