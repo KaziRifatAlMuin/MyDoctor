@@ -594,6 +594,28 @@
             box-shadow: 0 8px 35px rgba(102, 126, 234, 0.6);
         }
 
+        .chatbot-icon.glow-pulse {
+            animation: chatbotGlowPulse 1.2s ease-in-out infinite;
+            box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.65), 0 8px 35px rgba(102, 126, 234, 0.7);
+        }
+
+        @keyframes chatbotGlowPulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.55), 0 8px 30px rgba(102, 126, 234, 0.55);
+            }
+
+            60% {
+                transform: scale(1.06);
+                box-shadow: 0 0 0 14px rgba(102, 126, 234, 0), 0 10px 38px rgba(102, 126, 234, 0.75);
+            }
+
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(102, 126, 234, 0), 0 8px 30px rgba(102, 126, 234, 0.55);
+            }
+        }
+
         .chatbot-icon i {
             color: white;
             font-size: 34px;
@@ -615,6 +637,10 @@
         }
 
         .chatbot-icon:hover .chatbot-tooltip {
+            opacity: 1;
+        }
+
+        .chatbot-icon.show-tooltip .chatbot-tooltip {
             opacity: 1;
         }
 
@@ -678,6 +704,28 @@
             padding: 24px;
             overflow-y: auto;
             background: #f8fafc;
+        }
+
+        .chatbot-settings {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            color: #4a5568;
+            font-size: 0.82rem;
+        }
+
+        .chatbot-settings input[type="checkbox"] {
+            accent-color: #667eea;
+            cursor: pointer;
+        }
+
+        .chatbot-settings label {
+            cursor: pointer;
+            user-select: none;
         }
 
         .typing-bubble {
@@ -2209,7 +2257,7 @@
         </main>
 
         <!-- Chatbot Icon -->
-        <div class="chatbot-icon" onclick="toggleChatbot()">
+        <div class="chatbot-icon" id="chatbotIcon" onclick="toggleChatbot()">
             <i class="fas fa-user-md"></i>
             <span class="chatbot-tooltip">Ask me about health!</span>
         </div>
@@ -2225,6 +2273,11 @@
             <div class="bg-warning bg-opacity-10 p-2 text-center small" style="border-bottom: 1px solid #dee2e6;">
                 <i class="fas fa-exclamation-triangle text-warning me-1"></i>
                 AI-powered health information - consult a doctor for medical advice
+            </div>
+
+            <div class="chatbot-settings">
+                <input type="checkbox" id="chatbotPromptToggle" checked>
+                <label for="chatbotPromptToggle">Bubble reminders</label>
             </div>
 
             <div class="chatbot-messages" id="chatMessages">
@@ -3806,6 +3859,104 @@ window.openVideoModal = function(type, source, isReel = false) {
         // Chatbot variables
         let isTyping = false;
         let conversationHistory = [];
+        let chatbotPromptInterval;
+        let chatbotPromptTimeout;
+        const chatbotPromptStorageKey = 'chatbotPromptEnabled';
+        let chatbotPromptEnabled = true;
+        let chatbotAudioContext = null;
+
+        function initializeChatbotPromptSetting() {
+            const saved = localStorage.getItem(chatbotPromptStorageKey);
+            chatbotPromptEnabled = saved === null ? true : saved === 'true';
+
+            const toggle = document.getElementById('chatbotPromptToggle');
+            if (toggle) {
+                toggle.checked = chatbotPromptEnabled;
+                toggle.addEventListener('change', function() {
+                    chatbotPromptEnabled = this.checked;
+                    localStorage.setItem(chatbotPromptStorageKey, String(chatbotPromptEnabled));
+
+                    const chatbotIcon = document.getElementById('chatbotIcon');
+                    if (chatbotIcon && !chatbotPromptEnabled) {
+                        chatbotIcon.classList.remove('glow-pulse', 'show-tooltip');
+                    }
+
+                    startChatbotPromptCycle();
+                });
+            }
+        }
+
+        function unlockChatbotAudio() {
+            if (!chatbotAudioContext && window.AudioContext) {
+                chatbotAudioContext = new AudioContext();
+            }
+
+            if (chatbotAudioContext && chatbotAudioContext.state === 'suspended') {
+                chatbotAudioContext.resume().catch(() => {});
+            }
+        }
+
+        function playChatbotPromptSound() {
+            if (!chatbotPromptEnabled || !window.AudioContext) return;
+
+            if (!chatbotAudioContext) {
+                chatbotAudioContext = new AudioContext();
+            }
+
+            if (chatbotAudioContext.state !== 'running') {
+                return;
+            }
+
+            const oscillator = chatbotAudioContext.createOscillator();
+            const gainNode = chatbotAudioContext.createGain();
+
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(880, chatbotAudioContext.currentTime);
+            gainNode.gain.setValueAtTime(0.0001, chatbotAudioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.05, chatbotAudioContext.currentTime + 0.02);
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, chatbotAudioContext.currentTime + 0.18);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(chatbotAudioContext.destination);
+            oscillator.start();
+            oscillator.stop(chatbotAudioContext.currentTime + 0.2);
+        }
+
+        function startChatbotPromptCycle() {
+            const chatbotIcon = document.getElementById('chatbotIcon');
+            if (!chatbotIcon) return;
+
+            if (chatbotPromptInterval) {
+                clearInterval(chatbotPromptInterval);
+            }
+
+            if (chatbotPromptTimeout) {
+                clearTimeout(chatbotPromptTimeout);
+            }
+
+            if (!chatbotPromptEnabled) {
+                chatbotIcon.classList.remove('glow-pulse', 'show-tooltip');
+                return;
+            }
+
+            const showPrompt = () => {
+                chatbotIcon.classList.add('glow-pulse', 'show-tooltip');
+                playChatbotPromptSound();
+
+                if (chatbotPromptTimeout) {
+                    clearTimeout(chatbotPromptTimeout);
+                }
+
+                chatbotPromptTimeout = setTimeout(() => {
+                    chatbotIcon.classList.remove('glow-pulse', 'show-tooltip');
+                }, 10000);
+            };
+
+            // Trigger immediately on load/refresh, then continue every 20 seconds.
+            showPrompt();
+
+            chatbotPromptInterval = setInterval(showPrompt, 20000);
+        }
 
         // Send message to chatbot
         async function sendMessage() {
@@ -3944,6 +4095,13 @@ window.openVideoModal = function(type, source, isReel = false) {
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
+            initializeChatbotPromptSetting();
+
+            document.addEventListener('click', unlockChatbotAudio, { once: true });
+            document.addEventListener('keydown', unlockChatbotAudio, { once: true });
+
+            startChatbotPromptCycle();
+
             if ('{{ Auth::check() }}' === '1') {
                 // Load initial navbar counts
                 Promise.all([
