@@ -3900,7 +3900,7 @@ window.openVideoModal = function(type, source, isReel = false) {
             typingDiv.style.margin = '10px 0';
             typingDiv.innerHTML = `
                 <div class="typing-bubble">
-                    <span>MyDoctor AI is typing.</span>
+                    <span>MyDoctor AI is typing</span>
                     <span class="typing-dots" aria-hidden="true">
                         <span></span><span></span><span></span>
                     </span>

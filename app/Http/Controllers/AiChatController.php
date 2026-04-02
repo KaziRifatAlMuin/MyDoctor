@@ -35,6 +35,12 @@ class AiChatController extends Controller
             ->values()
             ->all();
 
+        if ($models === []) {
+            return response()->json([
+                'reply' => 'AI service models are not configured. Please set AI_CHAT_MODEL in your .env file.',
+            ], 503);
+        }
+
         $history = collect($validated['history'] ?? [])->map(function (array $item): array {
             return [
                 'role' => $item['role'],
@@ -55,7 +61,6 @@ class AiChatController extends Controller
         );
 
         $lastStatus = null;
-        $lastError = null;
 
         foreach ($models as $model) {
             try {
@@ -75,10 +80,10 @@ class AiChatController extends Controller
                     ]);
 
                 if ($response->successful()) {
-                    $reply = data_get($response->json(), 'choices.0.message.content');
-                    if (is_string($reply) && trim($reply) !== '') {
+                    $reply = $this->extractReplyText(data_get($response->json(), 'choices.0.message.content'));
+                    if ($reply !== null) {
                         return response()->json([
-                            'reply' => trim($reply),
+                            'reply' => $reply,
                         ]);
                     }
 
@@ -86,7 +91,6 @@ class AiChatController extends Controller
                         'model' => $model,
                     ]);
                     $lastStatus = 502;
-                    $lastError = 'empty_response';
                     continue;
                 }
 
@@ -99,7 +103,6 @@ class AiChatController extends Controller
                 ]);
 
                 $lastStatus = $status;
-                $lastError = $body;
 
                 if ($status === 401 || $status === 403) {
                     break;
@@ -110,7 +113,6 @@ class AiChatController extends Controller
                     'message' => $e->getMessage(),
                 ]);
                 $lastStatus = 500;
-                $lastError = $e->getMessage();
             }
         }
 
@@ -123,5 +125,38 @@ class AiChatController extends Controller
         return response()->json([
             'reply' => 'I could not reach the AI service right now. Please try again shortly.',
         ], 502);
+    }
+
+    private function extractReplyText(mixed $content): ?string
+    {
+        if (is_string($content)) {
+            $text = trim($content);
+            return $text !== '' ? $text : null;
+        }
+
+        if (!is_array($content)) {
+            return null;
+        }
+
+        $parts = [];
+        foreach ($content as $item) {
+            if (is_string($item) && trim($item) !== '') {
+                $parts[] = trim($item);
+                continue;
+            }
+
+            if (is_array($item)) {
+                $text = data_get($item, 'text');
+                if (is_string($text) && trim($text) !== '') {
+                    $parts[] = trim($text);
+                }
+            }
+        }
+
+        if ($parts === []) {
+            return null;
+        }
+
+        return implode("\n", $parts);
     }
 }
