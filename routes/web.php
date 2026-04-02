@@ -14,6 +14,7 @@ use App\Http\Controllers\MedicineLogController;
 use App\Http\Controllers\SuggestionsController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CommunityController;
+use App\Http\Controllers\AiChatController;
 use Illuminate\Http\Request;
 
 
@@ -141,6 +142,9 @@ Route::middleware('auth')->prefix('notifications')->name('notifications.')->grou
 
     // Suggestions
     Route::get('/suggestions', [SuggestionsController::class, 'index'])->name('suggestions');
+
+    // AI Chatbot
+    Route::post('/chatbot/message', [AiChatController::class, 'message'])->name('chatbot.message');
 
     // Email verification
     Route::post('/email/verification-notification', function (\Illuminate\Http\Request $request) {

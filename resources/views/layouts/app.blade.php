@@ -3726,7 +3726,7 @@ window.openVideoModal = function(type, source, isReel = false) {
         let conversationHistory = [];
 
         // Send message to chatbot
-        function sendMessage() {
+        async function sendMessage() {
             const input = document.getElementById('chatInput');
             const message = input.value.trim();
 
@@ -3734,19 +3734,42 @@ window.openVideoModal = function(type, source, isReel = false) {
 
             // Add user message
             addMessage(message, 'user');
+            conversationHistory.push({ role: 'user', content: message });
+            conversationHistory = conversationHistory.slice(-12);
             input.value = '';
 
             // Show typing indicator
             showTypingIndicator();
 
-            // TODO: Implement actual AI response
-            setTimeout(() => {
+            try {
+                const response = await fetch('{{ route('chatbot.message') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        message,
+                        history: conversationHistory.slice(0, -1)
+                    })
+                });
+
+                const data = await response.json();
                 removeTypingIndicator();
-                // This is where you'd integrate with your AI service
-                addMessage(
-                    "I'm here to help with your health questions! This is a demo response. In production, this would connect to your AI service.",
-                    'bot');
-            }, 1500);
+
+                const reply = typeof data.reply === 'string' && data.reply.trim() !== ''
+                    ? data.reply
+                    : 'I could not generate a reply right now. Please try again.';
+
+                addMessage(reply, 'bot');
+                conversationHistory.push({ role: 'assistant', content: reply });
+                conversationHistory = conversationHistory.slice(-12);
+            } catch (error) {
+                removeTypingIndicator();
+                addMessage('I am having trouble connecting right now. Please try again in a moment.', 'bot');
+            }
         }
 
         // Add message to chat
