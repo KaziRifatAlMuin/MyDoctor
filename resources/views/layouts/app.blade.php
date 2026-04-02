@@ -575,8 +575,8 @@
             position: fixed;
             bottom: 30px;
             right: 30px;
-            width: 70px;
-            height: 70px;
+            width: 78px;
+            height: 78px;
             border-radius: 50%;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
@@ -596,12 +596,12 @@
 
         .chatbot-icon i {
             color: white;
-            font-size: 30px;
+            font-size: 34px;
         }
 
         .chatbot-tooltip {
             position: absolute;
-            right: 80px;
+            right: 92px;
             background: white;
             color: #4a5568;
             padding: 8px 15px;
@@ -623,8 +623,8 @@
             position: fixed;
             bottom: 120px;
             right: 30px;
-            width: 350px;
-            height: 500px;
+            width: min(520px, calc(100vw - 36px));
+            height: min(760px, calc(100vh - 150px));
             background: white;
             border-radius: 20px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
@@ -675,9 +675,58 @@
 
         .chatbot-messages {
             flex: 1;
-            padding: 20px;
+            padding: 24px;
             overflow-y: auto;
             background: #f8fafc;
+        }
+
+        .typing-bubble {
+            background: #f0f2f5;
+            border-radius: 18px 18px 18px 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            color: #6b7280;
+            font-size: 0.92rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .typing-dots {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .typing-dots span {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #667eea;
+            opacity: 0.35;
+            animation: typingPulse 1s infinite ease-in-out;
+        }
+
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.18s;
+        }
+
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.36s;
+        }
+
+        @keyframes typingPulse {
+            0%,
+            80%,
+            100% {
+                transform: translateY(0);
+                opacity: 0.35;
+            }
+
+            40% {
+                transform: translateY(-4px);
+                opacity: 1;
+            }
         }
 
         .chatbot-messages::-webkit-scrollbar {
@@ -1024,8 +1073,11 @@
             }
 
             .chatbot-modal {
-                width: 300px;
+                width: calc(100vw - 24px);
+                height: calc(100vh - 120px);
                 right: 15px;
+                left: 12px;
+                bottom: 90px;
             }
 
             .notification-dropdown {
@@ -2128,14 +2180,14 @@
 
         <!-- Chatbot Icon -->
         <div class="chatbot-icon" onclick="toggleChatbot()">
-            <i class="fas fa-comment-dots"></i>
+            <i class="fas fa-user-md"></i>
             <span class="chatbot-tooltip">Ask me about health!</span>
         </div>
 
         <!-- Chatbot Modal -->
         <div class="chatbot-modal" id="chatbotModal">
             <div class="chatbot-header">
-                <h5><i class="fas fa-robot me-2"></i>Health Assistant</h5>
+                <h5><i class="fas fa-user-md me-2"></i>Health Assistant</h5>
                 <button onclick="toggleChatbot()"><i class="fas fa-times"></i></button>
             </div>
 
@@ -2147,7 +2199,7 @@
 
             <div class="chatbot-messages" id="chatMessages">
                 <div style="text-align: center; color: #718096; padding: 20px;">
-                    <i class="fas fa-robot fa-3x mb-3" style="color: #667eea;"></i>
+                    <i class="fas fa-user-md fa-3x mb-3" style="color: #667eea;"></i>
                     <p>Hello! I'm your AI health assistant.<br>How can I help you today?</p>
                     <small class="text-muted d-block mt-2">
                         <i class="fas fa-info-circle me-1"></i>
@@ -3814,8 +3866,11 @@ window.openVideoModal = function(type, source, isReel = false) {
             typingDiv.style.textAlign = 'left';
             typingDiv.style.margin = '10px 0';
             typingDiv.innerHTML = `
-                <div style="background: #f0f2f5; color: #666; padding: 12px 18px; border-radius: 18px 18px 18px 0; display: inline-block;">
-                    <i class="fas fa-circle-notch fa-spin me-2"></i>Thinking...
+                <div class="typing-bubble">
+                    <span>MyDoctor AI is typing.</span>
+                    <span class="typing-dots" aria-hidden="true">
+                        <span></span><span></span><span></span>
+                    </span>
                 </div>
             `;
             messages.appendChild(typingDiv);
