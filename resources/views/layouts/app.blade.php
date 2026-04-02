@@ -575,8 +575,8 @@
             position: fixed;
             bottom: 30px;
             right: 30px;
-            width: 70px;
-            height: 70px;
+            width: 78px;
+            height: 78px;
             border-radius: 50%;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
@@ -594,14 +594,36 @@
             box-shadow: 0 8px 35px rgba(102, 126, 234, 0.6);
         }
 
+        .chatbot-icon.glow-pulse {
+            animation: chatbotGlowPulse 1.2s ease-in-out infinite;
+            box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.65), 0 8px 35px rgba(102, 126, 234, 0.7);
+        }
+
+        @keyframes chatbotGlowPulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.55), 0 8px 30px rgba(102, 126, 234, 0.55);
+            }
+
+            60% {
+                transform: scale(1.06);
+                box-shadow: 0 0 0 14px rgba(102, 126, 234, 0), 0 10px 38px rgba(102, 126, 234, 0.75);
+            }
+
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(102, 126, 234, 0), 0 8px 30px rgba(102, 126, 234, 0.55);
+            }
+        }
+
         .chatbot-icon i {
             color: white;
-            font-size: 30px;
+            font-size: 34px;
         }
 
         .chatbot-tooltip {
             position: absolute;
-            right: 80px;
+            right: 92px;
             background: white;
             color: #4a5568;
             padding: 8px 15px;
@@ -618,13 +640,17 @@
             opacity: 1;
         }
 
+        .chatbot-icon.show-tooltip .chatbot-tooltip {
+            opacity: 1;
+        }
+
         /* Chatbot Modal */
         .chatbot-modal {
             position: fixed;
             bottom: 120px;
             right: 30px;
-            width: 350px;
-            height: 500px;
+            width: min(520px, calc(100vw - 36px));
+            height: min(760px, calc(100vh - 150px));
             background: white;
             border-radius: 20px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
@@ -675,9 +701,110 @@
 
         .chatbot-messages {
             flex: 1;
-            padding: 20px;
+            padding: 24px;
             overflow-y: auto;
             background: #f8fafc;
+        }
+
+        .chatbot-settings {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            color: #4a5568;
+            font-size: 0.82rem;
+        }
+
+        .chatbot-settings input[type="checkbox"] {
+            accent-color: #667eea;
+            cursor: pointer;
+        }
+
+        .chatbot-settings label {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .typing-bubble {
+            background: #f0f2f5;
+            border-radius: 18px 18px 18px 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            color: #6b7280;
+            font-size: 0.92rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .bot-message-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .bot-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+            font-size: 0.85rem;
+        }
+
+        .bot-message-bubble {
+            background: #f0f2f5;
+            color: #1a1a1a;
+            padding: 12px 18px;
+            border-radius: 18px 18px 18px 0;
+            display: inline-block;
+            max-width: 80%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .typing-dots {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .typing-dots span {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #667eea;
+            opacity: 0.35;
+            animation: typingPulse 1s infinite ease-in-out;
+        }
+
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.18s;
+        }
+
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.36s;
+        }
+
+        @keyframes typingPulse {
+            0%,
+            80%,
+            100% {
+                transform: translateY(0);
+                opacity: 0.35;
+            }
+
+            40% {
+                transform: translateY(-4px);
+                opacity: 1;
+            }
         }
 
         .chatbot-messages::-webkit-scrollbar {
@@ -1024,8 +1151,11 @@
             }
 
             .chatbot-modal {
-                width: 300px;
+                width: calc(100vw - 24px);
+                height: calc(100vh - 120px);
                 right: 15px;
+                left: 12px;
+                bottom: 90px;
             }
 
             .notification-dropdown {
@@ -2127,15 +2257,15 @@
         </main>
 
         <!-- Chatbot Icon -->
-        <div class="chatbot-icon" onclick="toggleChatbot()">
-            <i class="fas fa-comment-dots"></i>
+        <div class="chatbot-icon" id="chatbotIcon" onclick="toggleChatbot()">
+            <i class="fas fa-user-md"></i>
             <span class="chatbot-tooltip">Ask me about health!</span>
         </div>
 
         <!-- Chatbot Modal -->
         <div class="chatbot-modal" id="chatbotModal">
             <div class="chatbot-header">
-                <h5><i class="fas fa-robot me-2"></i>Health Assistant</h5>
+                <h5><i class="fas fa-user-md me-2"></i>Health Assistant</h5>
                 <button onclick="toggleChatbot()"><i class="fas fa-times"></i></button>
             </div>
 
@@ -2145,9 +2275,14 @@
                 AI-powered health information - consult a doctor for medical advice
             </div>
 
+            <div class="chatbot-settings">
+                <input type="checkbox" id="chatbotPromptToggle" checked>
+                <label for="chatbotPromptToggle">Bubble reminders</label>
+            </div>
+
             <div class="chatbot-messages" id="chatMessages">
                 <div style="text-align: center; color: #718096; padding: 20px;">
-                    <i class="fas fa-robot fa-3x mb-3" style="color: #667eea;"></i>
+                    <i class="fas fa-user-md fa-3x mb-3" style="color: #667eea;"></i>
                     <p>Hello! I'm your AI health assistant.<br>How can I help you today?</p>
                     <small class="text-muted d-block mt-2">
                         <i class="fas fa-info-circle me-1"></i>
@@ -3724,9 +3859,107 @@ window.openVideoModal = function(type, source, isReel = false) {
         // Chatbot variables
         let isTyping = false;
         let conversationHistory = [];
+        let chatbotPromptInterval;
+        let chatbotPromptTimeout;
+        const chatbotPromptStorageKey = 'chatbotPromptEnabled';
+        let chatbotPromptEnabled = true;
+        let chatbotAudioContext = null;
+
+        function initializeChatbotPromptSetting() {
+            const saved = localStorage.getItem(chatbotPromptStorageKey);
+            chatbotPromptEnabled = saved === null ? true : saved === 'true';
+
+            const toggle = document.getElementById('chatbotPromptToggle');
+            if (toggle) {
+                toggle.checked = chatbotPromptEnabled;
+                toggle.addEventListener('change', function() {
+                    chatbotPromptEnabled = this.checked;
+                    localStorage.setItem(chatbotPromptStorageKey, String(chatbotPromptEnabled));
+
+                    const chatbotIcon = document.getElementById('chatbotIcon');
+                    if (chatbotIcon && !chatbotPromptEnabled) {
+                        chatbotIcon.classList.remove('glow-pulse', 'show-tooltip');
+                    }
+
+                    startChatbotPromptCycle();
+                });
+            }
+        }
+
+        function unlockChatbotAudio() {
+            if (!chatbotAudioContext && window.AudioContext) {
+                chatbotAudioContext = new AudioContext();
+            }
+
+            if (chatbotAudioContext && chatbotAudioContext.state === 'suspended') {
+                chatbotAudioContext.resume().catch(() => {});
+            }
+        }
+
+        function playChatbotPromptSound() {
+            if (!chatbotPromptEnabled || !window.AudioContext) return;
+
+            if (!chatbotAudioContext) {
+                chatbotAudioContext = new AudioContext();
+            }
+
+            if (chatbotAudioContext.state !== 'running') {
+                return;
+            }
+
+            const oscillator = chatbotAudioContext.createOscillator();
+            const gainNode = chatbotAudioContext.createGain();
+
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(880, chatbotAudioContext.currentTime);
+            gainNode.gain.setValueAtTime(0.0001, chatbotAudioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.05, chatbotAudioContext.currentTime + 0.02);
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, chatbotAudioContext.currentTime + 0.18);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(chatbotAudioContext.destination);
+            oscillator.start();
+            oscillator.stop(chatbotAudioContext.currentTime + 0.2);
+        }
+
+        function startChatbotPromptCycle() {
+            const chatbotIcon = document.getElementById('chatbotIcon');
+            if (!chatbotIcon) return;
+
+            if (chatbotPromptInterval) {
+                clearInterval(chatbotPromptInterval);
+            }
+
+            if (chatbotPromptTimeout) {
+                clearTimeout(chatbotPromptTimeout);
+            }
+
+            if (!chatbotPromptEnabled) {
+                chatbotIcon.classList.remove('glow-pulse', 'show-tooltip');
+                return;
+            }
+
+            const showPrompt = () => {
+                chatbotIcon.classList.add('glow-pulse', 'show-tooltip');
+                playChatbotPromptSound();
+
+                if (chatbotPromptTimeout) {
+                    clearTimeout(chatbotPromptTimeout);
+                }
+
+                chatbotPromptTimeout = setTimeout(() => {
+                    chatbotIcon.classList.remove('glow-pulse', 'show-tooltip');
+                }, 10000);
+            };
+
+            // Trigger immediately on load/refresh, then continue every 20 seconds.
+            showPrompt();
+
+            chatbotPromptInterval = setInterval(showPrompt, 20000);
+        }
 
         // Send message to chatbot
-        function sendMessage() {
+        async function sendMessage() {
             const input = document.getElementById('chatInput');
             const message = input.value.trim();
 
@@ -3734,19 +3967,42 @@ window.openVideoModal = function(type, source, isReel = false) {
 
             // Add user message
             addMessage(message, 'user');
+            conversationHistory.push({ role: 'user', content: message });
+            conversationHistory = conversationHistory.slice(-12);
             input.value = '';
 
             // Show typing indicator
             showTypingIndicator();
 
-            // TODO: Implement actual AI response
-            setTimeout(() => {
+            try {
+                const response = await fetch('{{ route('chatbot.message') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        message,
+                        history: conversationHistory.slice(0, -1)
+                    })
+                });
+
+                const data = await response.json();
                 removeTypingIndicator();
-                // This is where you'd integrate with your AI service
-                addMessage(
-                    "I'm here to help with your health questions! This is a demo response. In production, this would connect to your AI service.",
-                    'bot');
-            }, 1500);
+
+                const reply = typeof data.reply === 'string' && data.reply.trim() !== ''
+                    ? data.reply
+                    : 'I could not generate a reply right now. Please try again.';
+
+                addMessage(reply, 'bot');
+                conversationHistory.push({ role: 'assistant', content: reply });
+                conversationHistory = conversationHistory.slice(-12);
+            } catch (error) {
+                removeTypingIndicator();
+                addMessage('I am having trouble connecting right now. Please try again in a moment.', 'bot');
+            }
         }
 
         // Add message to chat
@@ -3772,8 +4028,11 @@ window.openVideoModal = function(type, source, isReel = false) {
                 formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 
                 messageDiv.innerHTML = `
-                    <div style="background: #f0f2f5; color: #1a1a1a; padding: 12px 18px; border-radius: 18px 18px 18px 0; display: inline-block; max-width: 80%; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                        ${formattedText}
+                    <div class="bot-message-row">
+                        <span class="bot-avatar"><i class="fas fa-user-md"></i></span>
+                        <div class="bot-message-bubble">
+                            ${formattedText}
+                        </div>
                     </div>
                 `;
             }
@@ -3791,8 +4050,11 @@ window.openVideoModal = function(type, source, isReel = false) {
             typingDiv.style.textAlign = 'left';
             typingDiv.style.margin = '10px 0';
             typingDiv.innerHTML = `
-                <div style="background: #f0f2f5; color: #666; padding: 12px 18px; border-radius: 18px 18px 18px 0; display: inline-block;">
-                    <i class="fas fa-circle-notch fa-spin me-2"></i>Thinking...
+                <div class="typing-bubble">
+                    <span>MyDoctor AI is typing</span>
+                    <span class="typing-dots" aria-hidden="true">
+                        <span></span><span></span><span></span>
+                    </span>
                 </div>
             `;
             messages.appendChild(typingDiv);
@@ -3833,6 +4095,13 @@ window.openVideoModal = function(type, source, isReel = false) {
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
+            initializeChatbotPromptSetting();
+
+            document.addEventListener('click', unlockChatbotAudio, { once: true });
+            document.addEventListener('keydown', unlockChatbotAudio, { once: true });
+
+            startChatbotPromptCycle();
+
             if ('{{ Auth::check() }}' === '1') {
                 // Load initial navbar counts
                 Promise.all([
