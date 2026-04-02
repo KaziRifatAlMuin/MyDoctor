@@ -692,6 +692,36 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
         }
 
+        .bot-message-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .bot-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+            font-size: 0.85rem;
+        }
+
+        .bot-message-bubble {
+            background: #f0f2f5;
+            color: #1a1a1a;
+            padding: 12px 18px;
+            border-radius: 18px 18px 18px 0;
+            display: inline-block;
+            max-width: 80%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
         .typing-dots {
             display: inline-flex;
             align-items: center;
@@ -3847,8 +3877,11 @@ window.openVideoModal = function(type, source, isReel = false) {
                 formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 
                 messageDiv.innerHTML = `
-                    <div style="background: #f0f2f5; color: #1a1a1a; padding: 12px 18px; border-radius: 18px 18px 18px 0; display: inline-block; max-width: 80%; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                        ${formattedText}
+                    <div class="bot-message-row">
+                        <span class="bot-avatar"><i class="fas fa-user-md"></i></span>
+                        <div class="bot-message-bubble">
+                            ${formattedText}
+                        </div>
                     </div>
                 `;
             }
