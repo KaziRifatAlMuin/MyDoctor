@@ -1177,7 +1177,7 @@
                                         @endif
                                     </div>
                                     <span class="condition-badge condition-{{ $ud->status }}">
-                                        {{ ucfirst($ud->status) }}
+                                        {{ $ud->status_label }}
                                     </span>
                                 </div>
                             @endforeach

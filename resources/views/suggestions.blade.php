@@ -336,7 +336,7 @@
                                     <div>
                                         <span class="fw-semibold">{{ $cond->disease->disease_name ?? 'Unknown' }}</span>
                                         <span class="text-muted" style="font-size: 0.75rem;"> &middot;
-                                            {{ ucfirst($cond->status) }}</span>
+                                            {{ $cond->status_label }}</span>
                                     </div>
                                 </div>
                             @empty

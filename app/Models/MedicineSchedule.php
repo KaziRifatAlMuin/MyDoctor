@@ -128,16 +128,20 @@ class MedicineSchedule extends Model
      */
     public function getPeriodLabelAttribute()
     {
+        $isBn = app()->getLocale() === 'bn';
+
         if ($this->dosage_period_days == 0) {
-            return 'প্রয়োজন অনুযায়ী';
+            return $isBn ? 'প্রয়োজন অনুযায়ী' : 'As Needed';
         } elseif ($this->dosage_period_days == 1) {
-            return 'প্রতিদিন';
+            return $isBn ? 'প্রতিদিন' : 'Daily';
         } elseif ($this->dosage_period_days == 7) {
-            return 'সাপ্তাহিক';
+            return $isBn ? 'সাপ্তাহিক' : 'Weekly';
         } elseif ($this->dosage_period_days == 30) {
-            return 'মাসিক';
+            return $isBn ? 'মাসিক' : 'Monthly';
         } else {
-            return "প্রতি {$this->dosage_period_days} দিন";
+            return $isBn
+                ? "প্রতি {$this->dosage_period_days} দিন"
+                : "Every {$this->dosage_period_days} days";
         }
     }
 }

@@ -9,7 +9,13 @@
     <meta name="vapid-public-key" content="{{ env('VAPID_PUBLIC_KEY') }}">
     <link rel="icon" type="image/png" href="{{ asset('images/logos/applogo.png') }}">
     <link rel="shortcut icon" href="{{ asset('images/logos/applogo.png') }}" type="image/x-icon">
-    <title>@yield('title', 'My Doctor') - Healthcare Platform</title>
+    <title>
+        @hasSection('title')
+            @yield('title') - {{ __('ui.meta.platform') }}
+        @else
+            {{ __('ui.meta.app_name') }} - {{ __('ui.meta.platform') }}
+        @endif
+    </title>
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -295,13 +301,14 @@
             line-height: 1;
         }
 
-        .language-toggle {
+        .language-toggle-switch {
+            position: relative;
             display: inline-flex;
             align-items: center;
-            justify-content: center;
-            min-width: 44px;
+            justify-content: space-between;
+            width: 76px;
             height: 30px;
-            padding: 0 10px;
+            padding: 0 8px;
             border-radius: 8px;
             border: 1px solid #d1d5db;
             color: #374151;
@@ -309,6 +316,37 @@
             font-size: 0.78rem;
             font-weight: 700;
             text-decoration: none;
+            overflow: hidden;
+        }
+
+        .language-toggle-switch .toggle-label {
+            position: relative;
+            z-index: 2;
+            color: #6b7280;
+            transition: color 0.25s ease;
+            font-size: 0.72rem;
+            line-height: 1;
+        }
+
+        .language-toggle-switch .toggle-knob {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 34px;
+            height: 22px;
+            border-radius: 6px;
+            background: #111827;
+            transition: transform 0.25s ease;
+            z-index: 1;
+        }
+
+        .language-toggle-switch.is-bn .toggle-knob {
+            transform: translateX(36px);
+        }
+
+        .language-toggle-switch.is-en .toggle-label-en,
+        .language-toggle-switch.is-bn .toggle-label-bn {
+            color: #ffffff;
         }
 
         .notification-bell .badge {
@@ -350,10 +388,23 @@
             background: transparent;
         }
 
-        .nav-theme-admin .language-toggle {
+        .nav-theme-admin .language-toggle-switch {
             background: rgba(255, 255, 255, 0.14);
             color: #ffffff;
             border-color: rgba(255, 255, 255, 0.35);
+        }
+
+        .nav-theme-admin .language-toggle-switch .toggle-knob {
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .nav-theme-admin .language-toggle-switch .toggle-label {
+            color: rgba(255, 255, 255, 0.78);
+        }
+
+        .nav-theme-admin .language-toggle-switch.is-en .toggle-label-en,
+        .nav-theme-admin .language-toggle-switch.is-bn .toggle-label-bn {
+            color: #111827;
         }
 
         .notification-bell:hover,
@@ -362,7 +413,7 @@
             background: rgba(102, 126, 234, 0.08);
         }
 
-        .language-toggle:hover {
+        .language-toggle-switch:hover {
             transform: translateY(-1px);
         }
 
@@ -2032,44 +2083,44 @@
                     <li class="banner-nav-item">
                         <a href="{{ route('home') }}"
                             class="banner-nav-link {{ request()->routeIs('home') ? 'active' : '' }}">
-                            Home
+                            {{ __('ui.nav.home') }}
                         </a>
                     </li>
                     @auth
                         <li class="banner-nav-item">
                             <a href="{{ route('dashboard') }}"
                                 class="banner-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                                Dashboard
+                                {{ __('ui.nav.dashboard') }}
                             </a>
                         </li>
                     @endauth
                     <li class="banner-nav-item">
                         <a href="{{ route('medicine.index') }}"
                             class="banner-nav-link {{ request()->routeIs('medicine*') ? 'active' : '' }}">
-                            Medicine
+                            {{ __('ui.nav.medicine') }}
                         </a>
                     </li>
                     <li class="banner-nav-item">
                         <a href="{{ route('health') }}"
                             class="banner-nav-link {{ request()->routeIs('health*') ? 'active' : '' }}">
-                            Health
+                            {{ __('ui.nav.health') }}
                         </a>
                     </li>
                     <li class="banner-nav-item">
                         <a href="{{ route('community.landing') }}"
                             class="banner-nav-link {{ request()->routeIs('community*') ? 'active' : '' }}">
-                            Community
+                            {{ __('ui.nav.community') }}
                         </a>
                     </li>
                     <li class="banner-nav-item">
                         <a href="{{ route('suggestions') }}" class="banner-nav-link {{ request()->routeIs('suggestions') ? 'active' : '' }}">
-                            Suggestions
+                            {{ __('ui.nav.suggestions') }}
                         </a>
                     </li>
                     <li class="banner-nav-item">
                         <a href="{{ route('help') }}"
                             class="banner-nav-link {{ request()->routeIs('help*') ? 'active' : '' }}">
-                            Help
+                            {{ __('ui.nav.help') }}
                         </a>
                     </li>
                 </ul>
@@ -2084,12 +2135,17 @@
                                 ->count();
                         @endphp
 
-                        <a href="{{ route('language.switch', ['locale' => app()->getLocale() === 'en' ? 'bn' : 'en']) }}" class="language-toggle" title="Switch Language">
-                            {{ app()->getLocale() === 'en' ? 'BN' : 'EN' }}
+                        <a href="{{ route('language.switch', ['locale' => app()->getLocale() === 'en' ? 'bn' : 'en']) }}"
+                           class="language-toggle-switch {{ app()->getLocale() === 'bn' ? 'is-bn' : 'is-en' }}"
+                           title="{{ __('ui.nav.switch_language') }}"
+                           aria-label="{{ __('ui.nav.switch_language') }}">
+                            <span class="toggle-label toggle-label-en">EN</span>
+                            <span class="toggle-label toggle-label-bn">BN</span>
+                            <span class="toggle-knob" aria-hidden="true"></span>
                         </a>
 
                         <!-- Mailbox -->
-                        <a href="{{ route('profile.mailbox') }}" class="mailbox-bell" id="mailboxBell" title="Mailbox">
+                        <a href="{{ route('profile.mailbox') }}" class="mailbox-bell" id="mailboxBell" title="{{ __('ui.nav.mailbox') }}">
                             <i class="fas fa-envelope"></i>
                             <span class="badge" id="mailboxCount" style="display: {{ $unreadMailCount > 0 ? 'inline-block' : 'none' }};">
                                 {{ $unreadMailCount }}
@@ -2107,23 +2163,28 @@
                         <!-- Notification Dropdown -->
                         <div class="notification-dropdown" id="notificationDropdown">
                             <div class="notification-header">
-                                <h6>Notifications</h6>
-                                <button onclick="markAllNotificationsRead()">Mark all as read</button>
+                                <h6>{{ __('ui.nav.notifications') }}</h6>
+                                <button onclick="markAllNotificationsRead()">{{ __('ui.nav.mark_all_read') }}</button>
                             </div>
                             <div class="notification-list" id="notificationList">
                                 <div class="notification-empty">
-                                    <p>No notifications yet</p>
+                                    <p>{{ __('ui.nav.no_notifications') }}</p>
                                 </div>
                             </div>
                             <div class="notification-footer">
-                                <a href="{{ route('notifications.index') }}">View all notifications</a>
+                                <a href="{{ route('notifications.index') }}">{{ __('ui.nav.view_all_notifications') }}</a>
                             </div>
                         </div>
                     @endauth
 
                     @guest
-                        <a href="{{ route('language.switch', ['locale' => app()->getLocale() === 'en' ? 'bn' : 'en']) }}" class="language-toggle" title="Switch Language">
-                            {{ app()->getLocale() === 'en' ? 'BN' : 'EN' }}
+                        <a href="{{ route('language.switch', ['locale' => app()->getLocale() === 'en' ? 'bn' : 'en']) }}"
+                           class="language-toggle-switch {{ app()->getLocale() === 'bn' ? 'is-bn' : 'is-en' }}"
+                           title="{{ __('ui.nav.switch_language') }}"
+                           aria-label="{{ __('ui.nav.switch_language') }}">
+                            <span class="toggle-label toggle-label-en">EN</span>
+                            <span class="toggle-label toggle-label-bn">BN</span>
+                            <span class="toggle-knob" aria-hidden="true"></span>
                         </a>
                     @endguest
 
@@ -2151,32 +2212,32 @@
                                 </div>
 
                                 <a href="{{ route('dashboard') }}" class="dropdown-item-custom">
-                                    <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                                    <i class="fas fa-tachometer-alt me-2"></i>{{ __('ui.nav.dashboard') }}
                                 </a>
 
                                 <a href="{{ route('profile') }}" class="dropdown-item-custom">
-                                    <i class="fas fa-user me-2"></i>Profile
+                                    <i class="fas fa-user me-2"></i>{{ __('ui.menu.profile') }}
                                 </a>
 
                                 <a href="{{ route('notifications.index') }}" class="dropdown-item-custom" id="notification-link">
-                                    <i class="fas fa-bell me-2"></i>Notifications
+                                    <i class="fas fa-bell me-2"></i>{{ __('ui.nav.notifications') }}
                                     <span class="notification-badge" id="notificationCountBadge" style="display: none;">0</span>
                                 </a>
 
                                 <a href="{{ route('profile.mailbox') }}" class="dropdown-item-custom">
-                                    <i class="fas fa-envelope me-2"></i>Mailbox
+                                    <i class="fas fa-envelope me-2"></i>{{ __('ui.nav.mailbox') }}
                                 </a>
 
                                 <div class="divider"></div>
                                 <a href="{{ route('profile.setting') }}" class="dropdown-item-custom">
-                                    <i class="fas fa-cog me-2"></i>Settings
+                                    <i class="fas fa-cog me-2"></i>{{ __('ui.menu.settings') }}
                                 </a>
 
                                 <!-- Admin Dashboard Link -->
                                 @if (auth()->user()->isAdmin())
                                     <div class="divider"></div>
                                     <a href="{{ route('admin.dashboard') }}" class="dropdown-item-custom">
-                                        <i class="fas fa-user-shield me-2"></i>Admin Dashboard
+                                        <i class="fas fa-user-shield me-2"></i>{{ __('ui.menu.admin_dashboard') }}
                                     </a>
                                 @endif
 
@@ -2185,17 +2246,17 @@
                                     @csrf
                                     <button type="submit" class="dropdown-item-custom"
                                         style="width: 100%; border: none; background: none; cursor: pointer; color: #dc3545;">
-                                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                        <i class="fas fa-sign-out-alt me-2"></i>{{ __('ui.menu.logout') }}
                                     </button>
                                 </form>
                             @else
                                 <!-- GUEST USER MENU -->
                                 <a href="{{ route('login') }}" class="dropdown-item-custom">
-                                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                                    <i class="fas fa-sign-in-alt me-2"></i>{{ __('ui.menu.login') }}
                                 </a>
 
                                 <a href="{{ route('register') }}" class="dropdown-item-custom">
-                                    <i class="fas fa-user-plus me-2"></i>Register
+                                    <i class="fas fa-user-plus me-2"></i>{{ __('ui.menu.register') }}
                                 </a>
                             @endauth
                         </div>
@@ -4183,6 +4244,142 @@ window.openVideoModal = function(type, source, isReel = false) {
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
+            const appLocale = document.documentElement.lang?.startsWith('bn') ? 'bn' : 'en';
+            const autoTranslations = @json(app()->getLocale() === 'bn' ? __('ui.auto') : []);
+
+            const splitMixedLabel = (value) => {
+                if (!value || typeof value !== 'string') return null;
+                const match = value.match(/^(.*?)\s*\(([\u0980-\u09FF][^)]*)\)\s*$/u);
+                if (!match) return null;
+                return {
+                    en: match[1].trim(),
+                    bn: match[2].trim(),
+                };
+            };
+
+            const applyLocaleToMixedContent = (root = document.body) => {
+                const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+                    acceptNode(node) {
+                        if (!node || !node.nodeValue || !node.nodeValue.trim()) {
+                            return NodeFilter.FILTER_REJECT;
+                        }
+                        const parentTag = node.parentElement?.tagName;
+                        if (parentTag && ['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEXTAREA'].includes(parentTag)) {
+                            return NodeFilter.FILTER_REJECT;
+                        }
+                        return NodeFilter.FILTER_ACCEPT;
+                    }
+                });
+
+                const textNodes = [];
+                while (walker.nextNode()) {
+                    textNodes.push(walker.currentNode);
+                }
+
+                textNodes.forEach((node) => {
+                    const original = node.nodeValue;
+                    const parsed = splitMixedLabel(original.trim());
+                    if (!parsed) return;
+
+                    const localized = appLocale === 'bn' ? parsed.bn : parsed.en;
+                    const leading = original.match(/^\s*/)?.[0] ?? '';
+                    const trailing = original.match(/\s*$/)?.[0] ?? '';
+                    node.nodeValue = `${leading}${localized}${trailing}`;
+                });
+
+                root.querySelectorAll('input[placeholder], textarea[placeholder], [title]').forEach((element) => {
+                    if (element.hasAttribute('placeholder')) {
+                        const placeholder = element.getAttribute('placeholder') || '';
+                        const parsed = splitMixedLabel(placeholder);
+                        if (parsed) {
+                            element.setAttribute('placeholder', appLocale === 'bn' ? parsed.bn : parsed.en);
+                        }
+                    }
+
+                    if (element.hasAttribute('title')) {
+                        const title = element.getAttribute('title') || '';
+                        const parsed = splitMixedLabel(title);
+                        if (parsed) {
+                            element.setAttribute('title', appLocale === 'bn' ? parsed.bn : parsed.en);
+                        }
+                    }
+                });
+            };
+
+            const applyExactTextTranslations = (root = document.body) => {
+                if (appLocale !== 'bn' || !autoTranslations || typeof autoTranslations !== 'object') {
+                    return;
+                }
+
+                const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+                    acceptNode(node) {
+                        if (!node || !node.nodeValue || !node.nodeValue.trim()) {
+                            return NodeFilter.FILTER_REJECT;
+                        }
+                        const parentEl = node.parentElement;
+                        const parentTag = parentEl?.tagName;
+                        if (parentTag && ['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEXTAREA'].includes(parentTag)) {
+                            return NodeFilter.FILTER_REJECT;
+                        }
+
+                        // Avoid touching obvious identity content.
+                        if (parentEl && (parentEl.classList.contains('nav-user-name') || parentEl.closest('.dropdown-header'))) {
+                            return NodeFilter.FILTER_REJECT;
+                        }
+
+                        return NodeFilter.FILTER_ACCEPT;
+                    }
+                });
+
+                const textNodes = [];
+                while (walker.nextNode()) {
+                    textNodes.push(walker.currentNode);
+                }
+
+                textNodes.forEach((node) => {
+                    const original = node.nodeValue;
+                    const trimmed = original.trim();
+                    if (!trimmed) return;
+
+                    const translated = autoTranslations[trimmed];
+                    if (!translated) return;
+
+                    const leading = original.match(/^\s*/)?.[0] ?? '';
+                    const trailing = original.match(/\s*$/)?.[0] ?? '';
+                    node.nodeValue = `${leading}${translated}${trailing}`;
+                });
+
+                root.querySelectorAll('input[placeholder], textarea[placeholder], [title]').forEach((element) => {
+                    if (element.hasAttribute('placeholder')) {
+                        const placeholder = (element.getAttribute('placeholder') || '').trim();
+                        if (autoTranslations[placeholder]) {
+                            element.setAttribute('placeholder', autoTranslations[placeholder]);
+                        }
+                    }
+
+                    if (element.hasAttribute('title')) {
+                        const title = (element.getAttribute('title') || '').trim();
+                        if (autoTranslations[title]) {
+                            element.setAttribute('title', autoTranslations[title]);
+                        }
+                    }
+                });
+
+                const currentTitle = document.title || '';
+                if (currentTitle) {
+                    if (autoTranslations[currentTitle]) {
+                        document.title = autoTranslations[currentTitle];
+                    } else if (currentTitle.includes(' - ')) {
+                        const parts = currentTitle.split(' - ');
+                        const translatedParts = parts.map((part) => autoTranslations[part.trim()] || part.trim());
+                        document.title = translatedParts.join(' - ');
+                    }
+                }
+            };
+
+            applyLocaleToMixedContent();
+            applyExactTextTranslations();
+
             initializeChatbotPromptSetting();
 
             startChatbotPromptCycle();

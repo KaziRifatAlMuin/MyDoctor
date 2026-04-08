@@ -547,11 +547,11 @@
                     <input type="hidden" name="_method" id="metricFormMethod" value="POST">
                     <div class="modal-body" style="padding: 1.5rem;">
                         <div class="mb-3">
-                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Metric Type (মেট্রিক ধরন)</label>
+                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">{{ __('ui.health.metric_type') }}</label>
                             <select name="metric_type" id="metricTypeSelect" class="form-select" style="border-radius: 10px;" required>
                                 <option value="">Select metric type...</option>
                                 @foreach ($metricConfig as $key => $cfg)
-                                    <option value="{{ $key }}">{{ $cfg['en'] }} ({{ $cfg['bn'] }})</option>
+                                    <option value="{{ $key }}">{{ app()->getLocale() === 'bn' ? $cfg['bn'] : $cfg['en'] }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -589,22 +589,22 @@
                     <div class="modal-body" style="padding: 1.5rem;">
                         {{-- Searchable Symptom Dropdown --}}
                         <div class="mb-3">
-                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Symptom (লক্ষণ)</label>
+                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">{{ __('ui.health.symptom') }}</label>
                             <div class="position-relative" id="symptomDropdownWrap">
                                 <input type="text" id="symptomSearchInput" class="form-control" style="border-radius: 10px;"
-                                    placeholder="Search symptom / লক্ষণ খুঁজুন..." autocomplete="off">
+                                    placeholder="{{ __('ui.health.search_symptom') }}" autocomplete="off">
                                 <input type="hidden" name="symptom_name" id="symptomNameHidden" required>
                                 <div id="symptomDropdownList" class="dropdown-menu w-100 shadow-sm" style="max-height: 220px; overflow-y: auto; border-radius: 10px; display: none;"></div>
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Severity Level (তীব্রতা) (1-10)</label>
+                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">{{ __('ui.health.severity_level') }} (1-10)</label>
                             <input type="range" name="severity_level" id="severityRange" class="form-range" min="1" max="10" value="5"
                                 oninput="document.getElementById('severityValue').textContent=this.value">
                             <div class="d-flex justify-content-between" style="font-size: 0.78rem; color: #a0aec0;">
-                                <span>Mild (মৃদু)</span>
+                                <span>{{ __('ui.health.mild') }}</span>
                                 <span class="fw-bold" id="severityValue" style="color: #667eea; font-size: 1.1rem;">5</span>
-                                <span>Severe (তীব্র)</span>
+                                <span>{{ __('ui.health.severe') }}</span>
                             </div>
                         </div>
                         <div class="mb-3">
@@ -644,25 +644,25 @@
                     <input type="hidden" name="_method" id="diseaseFormMethod" value="POST">
                     <div class="modal-body" style="padding: 1.5rem;">
                         <div class="mb-3" id="diseaseSelectWrapper">
-                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Disease (রোগ)</label>
+                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">{{ __('ui.health.disease') }}</label>
                             <div class="position-relative" id="diseaseDropdownWrap">
                                 <input type="text" id="diseaseSearchInput" class="form-control" style="border-radius: 10px;"
-                                    placeholder="Search disease / রোগ খুঁজুন..." autocomplete="off">
+                                    placeholder="{{ __('ui.health.search_disease') }}" autocomplete="off">
                                 <input type="hidden" name="disease_id" id="diseaseIdHidden" required>
                                 <div id="diseaseDropdownList" class="dropdown-menu w-100 shadow-sm" style="max-height: 220px; overflow-y: auto; border-radius: 10px; display: none;"></div>
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Status (অবস্থা)</label>
+                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">{{ __('ui.health.status') }}</label>
                             <select name="status" id="diseaseStatus" class="form-select" style="border-radius: 10px;" required>
-                                <option value="active">Active (সক্রিয়)</option>
-                                <option value="chronic">Chronic (দীর্ঘস্থায়ী)</option>
-                                <option value="managed">Managed (নিয়ন্ত্রিত)</option>
-                                <option value="recovered">Recovered (সুস্থ)</option>
+                                <option value="active">{{ __('ui.health.active') }}</option>
+                                <option value="chronic">{{ __('ui.health.chronic') }}</option>
+                                <option value="managed">{{ __('ui.health.managed') }}</option>
+                                <option value="recovered">{{ __('ui.health.recovered') }}</option>
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Diagnosed Date (নির্ণয়ের তারিখ)</label>
+                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">{{ __('ui.health.diagnosed_date') }}</label>
                             <input type="date" name="diagnosed_at" id="diseaseDiagnosedAt" class="form-control" style="border-radius: 10px;">
                         </div>
                         <div class="mb-3">
@@ -698,15 +698,15 @@
                     <div class="modal-body" style="padding: 1.5rem;">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Title (শিরোনাম)</label>
+                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">{{ __('ui.health.title') }}</label>
                                 <input type="text" name="title" id="uploadTitle" class="form-control" style="border-radius: 10px;"
                                     placeholder="e.g., Blood Test Report" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Document Type (ধরন)</label>
+                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">{{ __('ui.health.document_type') }}</label>
                                 <select name="type" id="uploadType" class="form-select" style="border-radius: 10px;" required>
-                                    <option value="prescription">Prescription (প্রেসক্রিপশন)</option>
-                                    <option value="report">Medical Report (রিপোর্ট)</option>
+                                    <option value="prescription">{{ __('ui.health.prescription') }}</option>
+                                    <option value="report">{{ __('ui.health.medical_report') }}</option>
                                 </select>
                             </div>
                             <div class="col-12">
@@ -721,17 +721,17 @@
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Doctor Name (ডাক্তারের নাম)</label>
+                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">{{ __('ui.health.doctor_name') }}</label>
                                 <input type="text" name="doctor_name" id="uploadDoctorName" class="form-control" style="border-radius: 10px;"
                                     placeholder="Dr. ...">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Institution (প্রতিষ্ঠান)</label>
+                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">{{ __('ui.health.institution') }}</label>
                                 <input type="text" name="institution" id="uploadInstitution" class="form-control" style="border-radius: 10px;"
                                     placeholder="Hospital/Clinic name">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Document Date (তারিখ)</label>
+                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">{{ __('ui.health.document_date') }}</label>
                                 <input type="date" name="document_date" id="uploadDocumentDate" class="form-control" style="border-radius: 10px;">
                             </div>
                             <div class="col-md-6">
@@ -740,7 +740,7 @@
                                     placeholder="Quick note (optional)">
                             </div>
                             <div class="col-12">
-                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Summary (সারসংক্ষেপ)</label>
+                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">{{ __('ui.health.summary') }}</label>
                                 <textarea name="summary" id="uploadSummary" class="form-control" style="border-radius: 10px;" rows="2"
                                     placeholder="Brief summary of the document..."></textarea>
                             </div>

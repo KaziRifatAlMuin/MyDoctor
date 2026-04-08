@@ -92,7 +92,7 @@
                                                     <i class="fas fa-leaf" style="font-size:0.7rem;"></i>
                                                     {{ $item->disease->disease_name ?? 'Unknown Disease' }}
                                                     @if (!empty($item->status))
-                                                        <span style="opacity:0.85; font-weight:600;">({{ ucfirst($item->status) }})</span>
+                                                        <span style="opacity:0.85; font-weight:600;">({{ $item->status_label }})</span>
                                                     @endif
                                                 </span>
                                             @endforeach

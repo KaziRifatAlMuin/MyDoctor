@@ -13,6 +13,10 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('disease_id')->constrained()->onDelete('cascade');
             $table->text('description');
+            $table->boolean('is_anonymous')->default(false);
+            $table->boolean('is_approved')->default(false);
+            $table->boolean('is_edited')->default(false);
+            $table->boolean('is_reported')->default(false);
             $table->string('file_path')->nullable();
             $table->string('file_type')->nullable();
             $table->string('file_name')->nullable();

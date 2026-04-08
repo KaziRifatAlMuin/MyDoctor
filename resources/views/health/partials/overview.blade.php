@@ -39,7 +39,7 @@
             <div class="health-card-header">
                 <h5>
                     <i class="fas fa-tachometer-alt"></i> Health Metrics
-                    <span class="bn-label">স্বাস্থ্য মেট্রিক্স</span>
+                    <span class="bn-label">{{ __('ui.nav.health') }}</span>
                 </h5>
                 <button class="btn btn-sm text-white px-3"
                         data-bs-toggle="modal" data-bs-target="#addMetricModal"
@@ -109,7 +109,7 @@
             <div class="health-card-header">
                 <h5>
                     <i class="fas fa-check-double"></i> Adherence
-                    <span class="bn-label">অনুগত্য</span>
+                    <span class="bn-label">{{ __('ui.health.adherence') }}</span>
                 </h5>
                 <span class="health-card-badge bg-light text-muted">30 days</span>
             </div>
@@ -159,7 +159,7 @@
             <div class="health-card-header">
                 <h5>
                     <i class="fas fa-notes-medical"></i> Symptoms
-                    <span class="bn-label">লক্ষণ</span>
+                    <span class="bn-label">{{ __('ui.health.symptom') }}</span>
                 </h5>
                 <button class="btn btn-sm text-white px-2"
                         data-bs-toggle="modal" data-bs-target="#addSymptomModal"
@@ -205,7 +205,7 @@
             <div class="health-card-header">
                 <h5>
                     <i class="fas fa-virus"></i> Conditions
-                    <span class="bn-label">রোগ</span>
+                    <span class="bn-label">{{ __('ui.health.disease') }}</span>
                 </h5>
                 <button class="btn btn-sm text-white px-2"
                         data-bs-toggle="modal" data-bs-target="#addDiseaseModal"
@@ -242,7 +242,7 @@
                                     <div class="small text-muted">Since {{ $ud->diagnosed_at->format('M Y') }}</div>
                                 @endif
                             </div>
-                            <span class="severity-badge {{ $statusBadge }} text-capitalize flex-shrink-0">{{ $ud->status }}</span>
+                            <span class="severity-badge {{ $statusBadge }} text-capitalize flex-shrink-0">{{ $ud->status_label }}</span>
                         </div>
                     @endforeach
                 @endif
@@ -256,7 +256,7 @@
             <div class="health-card-header">
                 <h5>
                     <i class="fas fa-pills"></i> Medicines
-                    <span class="bn-label">ওষুধ</span>
+                    <span class="bn-label">{{ __('ui.nav.medicine') }}</span>
                 </h5>
                 <span class="health-card-badge bg-light text-muted">{{ $activeMeds->count() }} active</span>
             </div>
@@ -299,7 +299,7 @@
             <div class="health-card-header">
                 <h5>
                     <i class="fas fa-prescription"></i> Prescriptions
-                    <span class="bn-label">প্রেসক্রিপশন</span>
+                    <span class="bn-label">{{ __('ui.health.prescription') }}</span>
                 </h5>
                 <div class="d-flex align-items-center gap-2">
                     <span class="health-card-badge bg-light text-muted">{{ $prescriptionUploads->count() }}</span>
@@ -345,7 +345,7 @@
             <div class="health-card-header">
                 <h5>
                     <i class="fas fa-file-medical-alt"></i> Reports
-                    <span class="bn-label">রিপোর্ট</span>
+                    <span class="bn-label">{{ __('ui.health.medical_report') }}</span>
                 </h5>
                 <div class="d-flex align-items-center gap-2">
                     <span class="health-card-badge bg-light text-muted">{{ $reportUploads->count() }}</span>

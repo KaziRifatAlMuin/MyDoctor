@@ -1661,7 +1661,7 @@ body {
             <div class="filter-card">
                 <h5 class="filter-title">
                     <i class="fas fa-fire me-2" style="color: #ffc107;"></i>
-                    Trending Diseases (ট্রেন্ডিং রোগ)
+                    {{ __('ui.community.trending_diseases') }}
                 </h5>
                 @foreach($trendingDiseases as $disease)
                     <div class="trending-item">
