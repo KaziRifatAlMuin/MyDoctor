@@ -265,6 +265,71 @@ class MailingController extends Controller
         return back()->with('success', 'Message updated.');
     }
 
+    public function bulkUpdateStatus(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'mailing_ids' => ['required', 'array', 'min:1'],
+            'mailing_ids.*' => ['integer', 'exists:mailings,id'],
+            'status' => ['required', 'in:unread,read,archived'],
+        ]);
+
+        $userId = $request->user()->id;
+        $ids = $validated['mailing_ids'];
+
+        // Enforce ownership for all selected messages (no partial updates).
+        if (in_array($validated['status'], ['read', 'unread'], true)) {
+            $ownedCount = Mailing::query()
+                ->whereIn('id', $ids)
+                ->where('receiver_id', $userId)
+                ->count();
+
+            if ($ownedCount !== count($ids)) {
+                abort(403);
+            }
+        } else {
+            $ownedCount = Mailing::query()
+                ->whereIn('id', $ids)
+                ->where(function ($q) use ($userId) {
+                    $q->where('receiver_id', $userId)
+                      ->orWhere('sender_id', $userId);
+                })
+                ->count();
+
+            if ($ownedCount !== count($ids)) {
+                abort(403);
+            }
+        }
+
+        // If marking read/unread, only the receiver may update those states.
+        if (in_array($validated['status'], ['read', 'unread'], true)) {
+            $updated = Mailing::query()
+                ->where('receiver_id', $userId)
+                ->whereIn('id', $ids)
+                ->update([
+                    'status' => $validated['status'],
+                    'is_read' => $validated['status'] !== 'unread',
+                ]);
+        } else {
+            // For archive action, allow either the receiver or the sender to archive their view.
+            $updated = Mailing::query()
+                ->whereIn('id', $ids)
+                ->where(function ($q) use ($userId) {
+                    $q->where('receiver_id', $userId)
+                      ->orWhere('sender_id', $userId);
+                })
+                ->update([
+                    'status' => $validated['status'],
+                    'is_read' => $validated['status'] !== 'unread',
+                ]);
+        }
+
+        if ($updated === 0) {
+            return back()->with('success', 'No messages were updated.');
+        }
+
+        return back()->with('success', sprintf('%d message(s) updated.', $updated));
+    }
+
     public function toggleStar(Request $request, Mailing $mailing): RedirectResponse
     {
         $this->authorizeAccess($request, $mailing);

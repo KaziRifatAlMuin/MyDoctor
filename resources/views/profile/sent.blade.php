@@ -20,11 +20,35 @@
     .gmail-toolbar { padding: 8px 16px; display: flex; align-items: center; border-bottom: 1px solid #f1f3f4; height: 48px; }
     .gmail-icon-btn { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #444746; text-decoration: none; border: none; background: transparent; transition: background-color 0.2s; }
     .gmail-icon-btn:hover { background-color: rgba(68,71,70,0.08); color: #444746; }
+
+    .gmail-bulk-form { display: flex; align-items: center; gap: 8px; margin-left: 8px; }
+    .gmail-bulk-select { width: 16px; height: 16px; cursor: pointer; }
+    .gmail-bulk-btn { border: 1px solid #dadce0; background: #fff; color: #444746; font-size: 12px; border-radius: 999px; padding: 4px 10px; line-height: 1.2; }
+    .gmail-bulk-btn:disabled { opacity: 0.5; cursor: not-allowed; }
     
     .gmail-list { flex: 1; overflow-y: auto; }
     .gmail-row { display: flex; align-items: center; padding: 0 16px; height: 40px; border-bottom: 1px solid #f1f3f4; cursor: pointer; text-decoration: none; color: inherit; background-color: #fff; }
     .gmail-row:hover { box-shadow: inset 1px 0 0 #dadce0, inset -1px 0 0 #dadce0, 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15); border-bottom-color: transparent; z-index: 1; position: relative; }
-    .gmail-row-icons { display: flex; align-items: center; width: 60px; color: #c4c7c5; }
+    .gmail-row-icons {
+        display: flex;
+        align-items: center;
+        width: 72px;
+        gap: 8px;
+        padding-left: 8px;
+        color: #c4c7c5;
+        flex-shrink: 0;
+        box-sizing: border-box;
+        justify-content: flex-start;
+    }
+
+    .gmail-row-icons .gmail-row-select-sent {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+    }
+
+    .gmail-row-icons button { padding: 0; }
+    .gmail-row > a { min-width: 0; }
     .gmail-sender { width: 200px; font-size: 14px; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 16px; color: #1f1f1f; }
     .gmail-subject-container { flex: 1; display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 14px; }
     .gmail-subject { font-weight: 400; color: #1f1f1f; margin-right: 6px; }
@@ -83,6 +107,14 @@
             <button class="gmail-icon-btn d-none d-md-flex me-2" onclick="window.location.reload();" title="Refresh">
                 <i class="fas fa-redo-alt fs-6 text-muted"></i>
             </button>
+            <form id="bulkStatusFormSent" method="POST" action="{{ route('profile.mailbox.bulk-status') }}" class="gmail-bulk-form">
+                @csrf
+                @method('PATCH')
+                <input id="bulkSelectAllSent" type="checkbox" class="gmail-bulk-select" title="Select all on this page">
+                <input type="hidden" name="status" id="bulkStatusInputSent" value="">
+                <button type="button" class="gmail-bulk-btn bulk-action-btn-sent" data-status="archived" disabled>Archive</button>
+            </form>
+
             <div class="ms-auto d-flex align-items-center">
                 @if ($messages->hasPages())
                     <span class="text-muted small me-3">{{ $messages->firstItem() }}-{{ $messages->lastItem() }} of {{ $messages->total() }}</span>
@@ -98,10 +130,17 @@
 
         <!-- Email List -->
         <div class="gmail-list">
+            @if(session('success'))
+                <div class="alert alert-success m-3 py-2 px-3 border-0 bg-success bg-opacity-10 text-success rounded-3">
+                    {{ session('success') }}
+                </div>
+            @endif
+
             @forelse($messages as $message)
-                <a href="{{ route('profile.mailbox.show', ['mailing' => $message->id, 'folder' => 'sent']) }}" class="gmail-row">
+                <div class="gmail-row">
                     <div class="gmail-row-icons">
-                        <i class="far fa-square me-3"></i>
+                        <input type="checkbox" class="gmail-row-select-sent" name="mailing_ids[]" value="{{ $message->id }}" form="bulkStatusFormSent" title="Select message">
+
                         <form method="POST" action="{{ route('profile.mailbox.star', $message) }}" class="d-inline" onclick="event.stopPropagation();">
                             @csrf
                             @method('PATCH')
@@ -110,20 +149,22 @@
                             </button>
                         </form>
                     </div>
-                    
-                    <div class="gmail-sender">
-                        To: {{ $message->receiver?->name ?? 'Unknown user' }}
-                    </div>
-                    
-                    <div class="gmail-subject-container">
-                        <span class="gmail-subject">{{ $message->title ?: '(No subject)' }}</span>
-                        <span class="gmail-snippet">- {{ \Illuminate\Support\Str::limit($message->message, 80) }}</span>
-                    </div>
-                    
-                    <div class="gmail-date">
-                        {{ optional($message->created_at)->isToday() ? optional($message->created_at)->format('g:i A') : optional($message->created_at)->format('M j') }}
-                    </div>
-                </a>
+
+                    <a href="{{ route('profile.mailbox.show', ['mailing' => $message->id, 'folder' => 'sent']) }}" class="d-flex align-items-center flex-grow-1 text-decoration-none text-reset">
+                        <div class="gmail-sender">
+                            To: {{ $message->receiver?->name ?? 'Unknown user' }}
+                        </div>
+
+                        <div class="gmail-subject-container">
+                            <span class="gmail-subject">{{ $message->title ?: '(No subject)' }}</span>
+                            <span class="gmail-snippet">- {{ \Illuminate\Support\Str::limit($message->message, 80) }}</span>
+                        </div>
+
+                        <div class="gmail-date">
+                            {{ optional($message->created_at)->isToday() ? optional($message->created_at)->format('g:i A') : optional($message->created_at)->format('M j') }}
+                        </div>
+                    </a>
+                </div>
             @empty
                 <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted opacity-75">
                     <i class="fas fa-paper-plane mb-3" style="font-size: 3rem;"></i>
@@ -132,5 +173,42 @@
             @endforelse
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const selectAll = document.getElementById('bulkSelectAllSent');
+            const rowChecks = Array.from(document.querySelectorAll('.gmail-row-select-sent'));
+            const actionButtons = Array.from(document.querySelectorAll('.bulk-action-btn-sent'));
+            const bulkStatusInput = document.getElementById('bulkStatusInputSent');
+            const bulkForm = document.getElementById('bulkStatusFormSent');
+
+            if (!bulkForm) return;
+
+            const syncActions = () => {
+                const selectedCount = rowChecks.filter((box) => box.checked).length;
+                const hasSelection = selectedCount > 0;
+                actionButtons.forEach((btn) => btn.disabled = !hasSelection);
+                if (!hasSelection) selectAll.checked = false;
+                else selectAll.checked = rowChecks.every((box) => box.checked);
+            };
+
+            if (selectAll) {
+                selectAll.addEventListener('change', function () {
+                    rowChecks.forEach((box) => box.checked = selectAll.checked);
+                    syncActions();
+                });
+            }
+
+            rowChecks.forEach((box) => box.addEventListener('change', syncActions));
+
+            actionButtons.forEach((btn) => btn.addEventListener('click', function () {
+                if (btn.disabled) return;
+                bulkStatusInput.value = btn.dataset.status || '';
+                bulkForm.submit();
+            }));
+
+            syncActions();
+        });
+    </script>
 </div>
 @endsection
