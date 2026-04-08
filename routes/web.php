@@ -103,19 +103,31 @@ Route::middleware('auth')->group(function () {
     Route::post('/health/upload', [HealthController::class, 'storeUpload'])->name('health.upload.store');
     Route::put('/health/metric/{healthMetric}', [HealthController::class, 'updateMetric'])->name('health.metric.update');
     Route::get('/health/metric/{healthMetric}', function (\App\Models\HealthMetric $healthMetric) {
+        if (auth()->user()?->isAdmin()) {
+            return redirect()->route('admin.users.show', $healthMetric->user_id);
+        }
         return redirect()->route('users.show', $healthMetric->user_id);
     })->name('health.metric.view');
     Route::put('/health/symptom/{symptom}', [HealthController::class, 'updateSymptom'])->name('health.symptom.update');
     // Friendly GET redirect: visiting a symptom URL should return to the user's profile
     Route::get('/health/symptom/{symptom}', function (\App\Models\Symptom $symptom) {
+        if (auth()->user()?->isAdmin()) {
+            return redirect()->route('admin.users.show', $symptom->user_id);
+        }
         return redirect()->route('users.show', $symptom->user_id);
     })->name('health.symptom.view');
     Route::put('/health/disease/{userDisease}', [HealthController::class, 'updateDisease'])->name('health.disease.update');
     Route::get('/health/disease/{userDisease}', function (\App\Models\UserDisease $userDisease) {
+        if (auth()->user()?->isAdmin()) {
+            return redirect()->route('admin.users.show', $userDisease->user_id);
+        }
         return redirect()->route('users.show', $userDisease->user_id);
     })->name('health.disease.view');
     Route::put('/health/upload/{upload}', [HealthController::class, 'updateUpload'])->name('health.upload.update');
     Route::get('/health/upload/{upload}', function (\App\Models\Upload $upload) {
+        if (auth()->user()?->isAdmin()) {
+            return redirect()->route('admin.users.show', $upload->user_id);
+        }
         return redirect()->route('users.show', $upload->user_id);
     })->name('health.upload.view');
     Route::delete('/health/metric/{healthMetric}', [HealthController::class, 'destroyMetric'])->name('health.metric.destroy');
@@ -282,8 +294,10 @@ Route::prefix('medicine')->name('medicine.')->middleware('auth')->group(function
 // User routes (auth required)
 Route::middleware('auth')->group(function () {
     Route::get('/users', [App\Http\Controllers\UserController::class, 'index'])->name('users.index');
-    Route::get('/user/{user}', [App\Http\Controllers\UserController::class, 'show'])->name('users.show');
 });
+
+// Public user profile
+Route::get('/user/{user}', [App\Http\Controllers\UserController::class, 'publicShow'])->name('users.show');
 
 // Admin user update route
 Route::middleware(['auth', 'admin'])->patch('/user/{user}', [App\Http\Controllers\UserController::class, 'update'])->name('users.update');
@@ -295,6 +309,7 @@ Route::middleware(['auth', 'admin'])->patch('/user/{user}', [App\Http\Controller
 */
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/user/{user}', [App\Http\Controllers\UserController::class, 'show'])->name('users.show');
     Route::patch('/users/{user}', [App\Http\Controllers\AdminDashboardController::class, 'updateUser'])->name('users.update');
     
     // Future admin routes

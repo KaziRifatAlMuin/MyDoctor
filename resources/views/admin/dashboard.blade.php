@@ -653,7 +653,7 @@
                                                 <td>{{ optional($user->created_at)->format('M d, Y') }}</td>
                                                 <td>
                                                     <div class="table-actions">
-                                                        <a href="{{ route('users.show', $user) }}"
+                                                        <a href="{{ route('admin.users.show', $user) }}"
                                                             class="btn btn-sm btn-outline-primary">
                                                             <i class="fas fa-arrow-up-right-from-square"></i> View
                                                         </a>
