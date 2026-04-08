@@ -93,12 +93,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile/mailbox', [App\Http\Controllers\MailingController::class, 'inbox'])->name('profile.mailbox');
     Route::get('/profile/mailbox/sent', [App\Http\Controllers\MailingController::class, 'sent'])->name('profile.mailbox.sent');
     Route::get('/profile/mailbox/drafts', [App\Http\Controllers\MailingController::class, 'drafts'])->name('profile.mailbox.drafts');
+    Route::get('/profile/mailbox/starred', [App\Http\Controllers\MailingController::class, 'starred'])->name('profile.mailbox.starred');
+    Route::get('/profile/mailbox/archived', [App\Http\Controllers\MailingController::class, 'archived'])->name('profile.mailbox.archived');
     Route::get('/profile/mailbox/compose', [App\Http\Controllers\MailingController::class, 'create'])->name('profile.mailbox.compose');
     Route::get('/profile/mailbox/recipients/search', [App\Http\Controllers\MailingController::class, 'searchRecipients'])->name('profile.mailbox.recipients.search');
     Route::get('/profile/mailbox/unread-count', [App\Http\Controllers\MailingController::class, 'unreadCount'])->name('profile.mailbox.unread-count');
     Route::post('/profile/mailbox', [App\Http\Controllers\MailingController::class, 'store'])->name('profile.mailbox.store');
     Route::get('/profile/mailbox/{mailing}', [App\Http\Controllers\MailingController::class, 'show'])->name('profile.mailbox.show');
     Route::patch('/profile/mailbox/{mailing}/status', [App\Http\Controllers\MailingController::class, 'updateStatus'])->name('profile.mailbox.status');
+    Route::patch('/profile/mailbox/{mailing}/star', [App\Http\Controllers\MailingController::class, 'toggleStar'])->name('profile.mailbox.star');
     Route::delete('/profile/mailbox/{mailing}', [App\Http\Controllers\MailingController::class, 'destroy'])->name('profile.mailbox.destroy');
     
     // Health

@@ -63,6 +63,16 @@
                     <i class="fas fa-paper-plane"></i> Sent
                 </a>
             </li>
+            <li>
+                <a href="{{ route('profile.mailbox.starred') }}" class="gmail-nav-item">
+                    <i class="fas fa-star"></i> Starred
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('profile.mailbox.archived') }}" class="gmail-nav-item">
+                    <i class="fas fa-box-archive"></i> Archived
+                </a>
+            </li>
         </ul>
     </div>
 
@@ -92,7 +102,13 @@
                 <a href="{{ route('profile.mailbox.show', ['mailing' => $message->id, 'folder' => 'sent']) }}" class="gmail-row">
                     <div class="gmail-row-icons">
                         <i class="far fa-square me-3"></i>
-                        <i class="fas fa-share text-muted" style="font-size: 0.8rem;"></i>
+                        <form method="POST" action="{{ route('profile.mailbox.star', $message) }}" class="d-inline" onclick="event.stopPropagation();">
+                            @csrf
+                            @method('PATCH')
+                            <button type="submit" class="p-0 border-0 bg-transparent" title="Toggle star">
+                                <i class="{{ $message->is_starred ? 'fas text-warning' : 'far' }} fa-star"></i>
+                            </button>
+                        </form>
                     </div>
                     
                     <div class="gmail-sender">

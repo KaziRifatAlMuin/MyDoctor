@@ -22,6 +22,7 @@ class MailingController extends Controller
 
         $messages = Mailing::query()
             ->where('receiver_id', $userId)
+            ->whereIn('status', ['unread', 'read'])
             ->with('sender')
             ->latest()
             ->paginate(20)
@@ -62,6 +63,44 @@ class MailingController extends Controller
             ->withQueryString();
 
         return view('profile.drafts', [
+            'messages' => $messages,
+        ]);
+    }
+
+    public function starred(Request $request): View
+    {
+        $userId = $request->user()->id;
+
+        $messages = Mailing::query()
+            ->where(function ($query) use ($userId) {
+                $query->where('receiver_id', $userId)
+                    ->orWhere('sender_id', $userId);
+            })
+            ->where('is_starred', true)
+            ->whereIn('status', ['unread', 'read', 'sent', 'archived'])
+            ->with(['sender', 'receiver'])
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('profile.starred', [
+            'messages' => $messages,
+        ]);
+    }
+
+    public function archived(Request $request): View
+    {
+        $userId = $request->user()->id;
+
+        $messages = Mailing::query()
+            ->where('receiver_id', $userId)
+            ->where('status', 'archived')
+            ->with('sender')
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('profile.archived', [
             'messages' => $messages,
         ]);
     }
@@ -166,6 +205,7 @@ class MailingController extends Controller
                 'title' => $validated['title'],
                 'message' => $validated['message'],
                 'status' => $isSavingDraft ? 'draft' : 'unread',
+                'is_read' => false,
             ]);
         } else {
             Mailing::create([
@@ -174,6 +214,8 @@ class MailingController extends Controller
                 'title' => $validated['title'],
                 'message' => $validated['message'],
                 'status' => $isSavingDraft ? 'draft' : 'unread',
+                'is_read' => false,
+                'is_starred' => false,
             ]);
         }
 
@@ -187,7 +229,7 @@ class MailingController extends Controller
         $this->authorizeAccess($request, $mailing);
 
         if ($mailing->receiver_id === $request->user()->id && $mailing->status === 'unread') {
-            $mailing->update(['status' => 'read']);
+            $mailing->update(['status' => 'read', 'is_read' => true]);
         }
 
         $mailing->loadMissing(['sender', 'receiver']);
@@ -217,7 +259,26 @@ class MailingController extends Controller
 
         $mailing->update(['status' => $validated['status']]);
 
+        if ($validated['status'] === 'read') {
+            $mailing->update(['is_read' => true]);
+        }
+
+        if ($validated['status'] === 'unread') {
+            $mailing->update(['is_read' => false]);
+        }
+
         return back()->with('success', 'Message updated.');
+    }
+
+    public function toggleStar(Request $request, Mailing $mailing): RedirectResponse
+    {
+        $this->authorizeAccess($request, $mailing);
+
+        $mailing->update([
+            'is_starred' => !$mailing->is_starred,
+        ]);
+
+        return back()->with('success', $mailing->is_starred ? 'Message starred.' : 'Message unstarred.');
     }
 
     public function destroy(Request $request, Mailing $mailing): RedirectResponse

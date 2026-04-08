@@ -68,6 +68,16 @@
                     <i class="fas fa-paper-plane"></i> Sent
                 </a>
             </li>
+            <li>
+                <a href="{{ route('profile.mailbox.starred') }}" class="gmail-nav-item">
+                    <i class="fas fa-star"></i> Starred
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('profile.mailbox.archived') }}" class="gmail-nav-item">
+                    <i class="fas fa-box-archive"></i> Archived
+                </a>
+            </li>
         </ul>
     </div>
 
