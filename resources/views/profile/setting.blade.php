@@ -2,116 +2,216 @@
 
 @section('title', 'Profile Settings - My Doctor')
 
+@push('styles')
+    <style>
+        .settings-wrap {
+            background: radial-gradient(circle at 10% 10%, #edf5ff 0%, #f6f9ff 40%, #f9fbff 100%);
+            min-height: calc(100vh - 260px);
+            padding: 2.2rem 0 3rem;
+        }
+
+        .settings-shell {
+            max-width: 980px;
+            margin: 0 auto;
+            border-radius: 22px;
+            overflow: hidden;
+            border: 1px solid rgba(11, 87, 208, 0.15);
+            box-shadow: 0 20px 45px rgba(11, 87, 208, 0.14);
+            background: #ffffff;
+        }
+
+        .settings-top {
+            background: linear-gradient(120deg, #0b57d0 0%, #1a73e8 48%, #2b7de9 100%);
+            color: #fff;
+            padding: 1.4rem 1.6rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .settings-title {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 800;
+        }
+
+        .settings-subtitle {
+            margin: 0.3rem 0 0;
+            opacity: 0.92;
+            font-size: 0.9rem;
+        }
+
+        .settings-body {
+            padding: 1.5rem;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .settings-card {
+            border: 1px solid #e5ecf8;
+            border-radius: 14px;
+            background: #fff;
+            padding: 1rem;
+            box-shadow: 0 8px 18px rgba(10, 55, 130, 0.05);
+            height: 100%;
+        }
+
+        .settings-card h5 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #0f2f6b;
+        }
+
+        .settings-help {
+            font-size: 0.86rem;
+            color: #5f6f8b;
+            margin: 0.55rem 0 0;
+            line-height: 1.45;
+        }
+
+        .consent-panel {
+            margin-top: 1rem;
+            border-radius: 12px;
+            border: 1px solid #d8e5fb;
+            background: #f5f9ff;
+            padding: 0.9rem 1rem;
+        }
+
+        .consent-panel h6 {
+            margin: 0 0 0.35rem;
+            color: #0f2f6b;
+            font-weight: 700;
+            font-size: 0.92rem;
+        }
+
+        .consent-panel ul {
+            margin: 0;
+            padding-left: 1rem;
+            color: #495a79;
+            font-size: 0.84rem;
+        }
+
+        .form-check-input:checked {
+            background-color: #0b57d0;
+            border-color: #0b57d0;
+        }
+
+        @media (max-width: 768px) {
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+@endpush
+
 @section('content')
-    <div class="container py-4" style="max-width: 860px;">
-        <div class="card border-0 shadow-lg">
-            <div class="card-header bg-primary text-white py-3 d-flex justify-content-between align-items-center">
-                <h4 class="mb-0"><i class="fas fa-cog me-2"></i>Profile Settings</h4>
-                <a href="{{ route('profile') }}" class="btn btn-light btn-sm">
-                    <i class="fas fa-arrow-left me-1"></i>Back to Profile
-                </a>
-            </div>
-
-            <div class="card-body p-4">
-                @if (session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <div class="settings-wrap">
+        <div class="container">
+            <div class="settings-shell">
+                <div class="settings-top">
+                    <div>
+                        <h4 class="settings-title"><i class="fas fa-sliders-h me-2"></i>Profile Settings</h4>
+                        <p class="settings-subtitle">Control alerts and public visibility from one place.</p>
                     </div>
-                @endif
+                    <a href="{{ route('profile') }}" class="btn btn-light btn-sm fw-semibold">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Profile
+                    </a>
+                </div>
 
-                <form action="{{ route('profile.setting.update') }}" method="POST">
-                    @csrf
-                    @method('PUT')
-
-                    <div class="card mb-4">
-                        <div class="card-header bg-light">
-                            <h5 class="mb-0">
-                                <i class="fas fa-envelope text-primary me-2"></i>
-                                Email Alerts
-                            </h5>
+                <div class="settings-body">
+                    @if (session('success'))
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
-                        <div class="card-body">
-                            <div class="form-check form-switch mb-3">
-                                <input class="form-check-input" type="checkbox" name="email_notifications"
-                                    id="email_notifications" value="1"
-                                    {{ $user->email_notifications ? 'checked' : '' }}>
-                                <label class="form-check-label fw-bold" for="email_notifications">
-                                    Enable Email Alerts
-                                </label>
-                                <p class="text-muted small mt-1 mb-0">
-                                    Receive medicine reminders via email.
-                                </p>
-                            </div>
+                    @endif
 
-                            <div class="mt-3">
-                                <label class="form-label fw-bold">Reminder Timing</label>
-                                <select name="reminder_before_minutes" class="form-select">
-                                    <option value="5"
-                                        {{ $user->getNotificationSetting('reminder_before_minutes', 5) == 5 ? 'selected' : '' }}>
-                                        5 minutes before</option>
-                                    <option value="10"
-                                        {{ $user->getNotificationSetting('reminder_before_minutes', 5) == 10 ? 'selected' : '' }}>
-                                        10 minutes before</option>
-                                    <option value="15"
-                                        {{ $user->getNotificationSetting('reminder_before_minutes', 5) == 15 ? 'selected' : '' }}>
-                                        15 minutes before</option>
-                                    <option value="30"
-                                        {{ $user->getNotificationSetting('reminder_before_minutes', 5) == 30 ? 'selected' : '' }}>
-                                        30 minutes before</option>
+                    <form action="{{ route('profile.setting.update') }}" method="POST">
+                        @csrf
+                        @method('PUT')
+
+                        <div class="settings-grid">
+                            <div class="settings-card">
+                                <h5><i class="fas fa-envelope text-primary me-2"></i>Email Alerts</h5>
+                                <p class="settings-help">Get medicine reminder emails before scheduled time.</p>
+                                <div class="form-check form-switch mt-2 mb-2">
+                                    <input class="form-check-input" type="checkbox" name="email_notifications"
+                                        id="email_notifications" value="1"
+                                        {{ $user->email_notifications ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-semibold" for="email_notifications">Enable Email Alerts</label>
+                                </div>
+                                <label class="form-label small fw-semibold mb-1">Reminder Timing</label>
+                                <select name="reminder_before_minutes" class="form-select form-select-sm">
+                                    <option value="5" {{ $user->getNotificationSetting('reminder_before_minutes', 5) == 5 ? 'selected' : '' }}>5 minutes before</option>
+                                    <option value="10" {{ $user->getNotificationSetting('reminder_before_minutes', 5) == 10 ? 'selected' : '' }}>10 minutes before</option>
+                                    <option value="15" {{ $user->getNotificationSetting('reminder_before_minutes', 5) == 15 ? 'selected' : '' }}>15 minutes before</option>
+                                    <option value="30" {{ $user->getNotificationSetting('reminder_before_minutes', 5) == 30 ? 'selected' : '' }}>30 minutes before</option>
                                 </select>
                             </div>
-                        </div>
-                    </div>
 
-                    <div class="card mb-4">
-                        <div class="card-header bg-light">
-                            <h5 class="mb-0">
-                                <i class="fas fa-bell text-success me-2"></i>
-                                Push Alerts
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="form-check form-switch mb-0">
-                                <input class="form-check-input" type="checkbox" name="push_notifications"
-                                    id="push_notifications" value="1" {{ $user->push_notifications ? 'checked' : '' }}>
-                                <label class="form-check-label fw-bold" for="push_notifications">
-                                    Enable Push Alerts
-                                </label>
-                                <p class="text-muted small mt-1 mb-0">
-                                    Receive alerts even when the website is not open.
-                                </p>
+                            <div class="settings-card">
+                                <h5><i class="fas fa-bell text-success me-2"></i>Push Alerts</h5>
+                                <p class="settings-help">Receive instant browser push notifications.</p>
+                                <div class="form-check form-switch mt-2 mb-0">
+                                    <input class="form-check-input" type="checkbox" name="push_notifications"
+                                        id="push_notifications" value="1" {{ $user->push_notifications ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-semibold" for="push_notifications">Enable Push Alerts</label>
+                                </div>
+                            </div>
+
+                            <div class="settings-card">
+                                <h5><i class="fas fa-comments text-info me-2"></i>Chatbot Bubble</h5>
+                                <p class="settings-help">Show or hide floating AI assistant bubble with cookie-based preference.</p>
+                                <div class="form-check form-switch mt-2 mb-0">
+                                    <input class="form-check-input" type="checkbox" name="chatbot_bubble" id="chatbot_bubble"
+                                        value="1" {{ $chatbotBubbleEnabled ?? true ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-semibold" for="chatbot_bubble">Show Chatbot Bubble</label>
+                                </div>
+                            </div>
+
+                            <div class="settings-card">
+                                <h5><i class="fas fa-user-shield text-warning me-2"></i>Public Profile Permissions</h5>
+                                <p class="settings-help mb-2">Choose what visitors can see on your public profile page.</p>
+
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" name="show_personal_info"
+                                        id="show_personal_info" value="1" {{ $user->show_personal_info ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-semibold" for="show_personal_info">Show Personal Info</label>
+                                </div>
+                                <p class="settings-help mt-0 mb-2">If enabled, public visitors can see your occupation and blood group.</p>
+
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" name="show_diseases" id="show_diseases"
+                                        value="1" {{ $user->show_diseases ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-semibold" for="show_diseases">Show Disease History</label>
+                                </div>
+                                <p class="settings-help mt-0 mb-0">If enabled, public visitors can see your listed disease names and status.</p>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="card mb-4">
-                        <div class="card-header bg-light">
-                            <h5 class="mb-0">
-                                <i class="fas fa-comments text-info me-2"></i>
-                                Chatbot Bubble
-                            </h5>
+                        <div class="consent-panel">
+                            <h6><i class="fas fa-file-contract me-1"></i>Consent & Terms Acknowledgement</h6>
+                            <ul>
+                                <li>By turning ON a public permission, you agree that the selected information is visible on your public profile.</li>
+                                <li>"Show Personal Info" exposes occupation and blood group only.</li>
+                                <li>"Show Disease History" exposes your disease names and disease status only.</li>
+                                <li>You can turn these permissions OFF anytime from this settings page.</li>
+                            </ul>
                         </div>
-                        <div class="card-body">
-                            <div class="form-check form-switch mb-0">
-                                <input class="form-check-input" type="checkbox" name="chatbot_bubble" id="chatbot_bubble"
-                                    value="1" {{ $chatbotBubbleEnabled ?? true ? 'checked' : '' }}>
-                                <label class="form-check-label fw-bold" for="chatbot_bubble">
-                                    Show Chatbot Bubble
-                                </label>
-                                <p class="text-muted small mt-1 mb-0">
-                                    Hide or show the floating chatbot bubble using cookies.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="d-flex justify-content-end gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-2"></i>Save Settings
-                        </button>
-                    </div>
-                </form>
+                        <div class="d-flex justify-content-end mt-3">
+                            <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                                <i class="fas fa-save me-2"></i>Save Settings
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

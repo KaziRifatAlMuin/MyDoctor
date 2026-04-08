@@ -25,6 +25,8 @@ return new class extends Migration
             $table->enum('role', ['member', 'admin'])->default('member');
             $table->boolean('email_notifications')->default(true);
             $table->boolean('push_notifications')->default(true);
+            $table->boolean('show_personal_info')->default(false);
+            $table->boolean('show_diseases')->default(false);
             $table->json('notification_settings')->nullable();
             $table->rememberToken();
             $table->timestamps();

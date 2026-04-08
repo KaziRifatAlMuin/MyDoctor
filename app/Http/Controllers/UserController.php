@@ -49,6 +49,12 @@ class UserController extends Controller
      */
     public function publicShow(User $user)
     {
+        if ($user->show_diseases) {
+            $user->load(['userDiseases' => function ($query) {
+                $query->with('disease')->latest();
+            }]);
+        }
+
         return view('users.public-show', compact('user'));
     }
 

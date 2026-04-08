@@ -26,13 +26,17 @@ class NotificationPreferenceController extends Controller
         $validated = $request->validate([
             'email_notifications' => 'sometimes|boolean',
             'push_notifications' => 'sometimes|boolean',
+            'show_personal_info' => 'sometimes|boolean',
+            'show_diseases' => 'sometimes|boolean',
             'reminder_before_minutes' => 'nullable|integer|min:0|max:120',
         ]);
 
-        $user->email_notifications = $validated['email_notifications'] ?? $user->email_notifications;
-        $user->push_notifications = $validated['push_notifications'] ?? $user->push_notifications;
+        $user->email_notifications = $request->has('email_notifications');
+        $user->push_notifications = $request->has('push_notifications');
+        $user->show_personal_info = $request->has('show_personal_info');
+        $user->show_diseases = $request->has('show_diseases');
 
-        $settings = $user->notification_settings ?? [];
+        $settings = is_array($user->notification_settings) ? $user->notification_settings : [];
         $settings['reminder_before_minutes'] = $validated['reminder_before_minutes'] ?? 5;
         $user->notification_settings = $settings;
         
