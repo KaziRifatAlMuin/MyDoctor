@@ -42,7 +42,7 @@ class MedicinePushNotification extends Notification
 
         return (new WebPushMessage)
             ->title('💊 ' . $medicineName)
-            ->icon('/images/logos/applogo.jpg')
+            ->icon('/images/logos/applogo.png')
             ->body("Time to take your medicine at {$time}")
             ->action('✓ Mark Taken', 'mark_taken')
             ->action('⏰ Snooze 5 min', 'snooze')

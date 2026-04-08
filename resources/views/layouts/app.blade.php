@@ -7,8 +7,8 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="vapid-public-key" content="{{ env('VAPID_PUBLIC_KEY') }}">
-    <link rel="icon" type="image/png" href="{{ asset('images/logos/applogo.jpg') }}">
-    <link rel="shortcut icon" href="{{ asset('images/logos/applogo.jpg') }}" type="image/x-icon">
+    <link rel="icon" type="image/png" href="{{ asset('images/logos/applogo.png') }}">
+    <link rel="shortcut icon" href="{{ asset('images/logos/applogo.png') }}" type="image/x-icon">
     <title>@yield('title', 'My Doctor') - Healthcare Platform</title>
 
     <!-- Bootstrap CSS -->
@@ -273,8 +273,7 @@
         /* ========== UPDATED NOTIFICATION BELL STYLES ========== */
         /* Notification Bell - Yellow normally, Green badge */
         .notification-bell,
-        .mailbox-bell,
-        .language-toggle {
+        .mailbox-bell {
             position: relative;
             margin-right: 0;
             cursor: pointer;
@@ -283,14 +282,33 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 6px 10px;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            color: #374151;
+            background: transparent;
+        }
+
+        .notification-bell i,
+        .mailbox-bell i {
+            font-size: 1.15rem;
+            line-height: 1;
+        }
+
+        .language-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 44px;
+            height: 30px;
+            padding: 0 10px;
             border-radius: 8px;
             border: 1px solid #d1d5db;
             color: #374151;
             background: #ffffff;
-            font-size: 0.8rem;
-            font-weight: 600;
-            line-height: 1;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-decoration: none;
         }
 
         .notification-bell .badge {
@@ -327,7 +345,11 @@
         }
 
         .nav-theme-admin .notification-bell,
-        .nav-theme-admin .mailbox-bell,
+        .nav-theme-admin .mailbox-bell {
+            color: #ffffff;
+            background: transparent;
+        }
+
         .nav-theme-admin .language-toggle {
             background: rgba(255, 255, 255, 0.14);
             color: #ffffff;
@@ -335,7 +357,11 @@
         }
 
         .notification-bell:hover,
-        .mailbox-bell:hover,
+        .mailbox-bell:hover {
+            transform: translateY(-1px);
+            background: rgba(102, 126, 234, 0.08);
+        }
+
         .language-toggle:hover {
             transform: translateY(-1px);
         }
@@ -1998,7 +2024,7 @@
             <nav class="banner-nav">
                 <!-- Logo -->
                 <div class="banner-logo">
-                    <img src="{{ asset('images/logos/applogo.jpg') }}" alt="My Doctor Logo">
+                    <img src="{{ asset('images/logos/applogo.png') }}" alt="My Doctor Logo">
                 </div>
 
                 <!-- Navigation Menu -->
@@ -2036,6 +2062,11 @@
                         </a>
                     </li>
                     <li class="banner-nav-item">
+                        <a href="{{ route('suggestions') }}" class="banner-nav-link {{ request()->routeIs('suggestions') ? 'active' : '' }}">
+                            Suggestions
+                        </a>
+                    </li>
+                    <li class="banner-nav-item">
                         <a href="{{ route('help') }}"
                             class="banner-nav-link {{ request()->routeIs('help*') ? 'active' : '' }}">
                             Help
@@ -2053,9 +2084,13 @@
                                 ->count();
                         @endphp
 
+                        <a href="{{ route('language.switch', ['locale' => app()->getLocale() === 'en' ? 'bn' : 'en']) }}" class="language-toggle" title="Switch Language">
+                            {{ app()->getLocale() === 'en' ? 'BN' : 'EN' }}
+                        </a>
+
                         <!-- Mailbox -->
                         <a href="{{ route('profile.mailbox') }}" class="mailbox-bell" id="mailboxBell" title="Mailbox">
-                            Mailbox
+                            <i class="fas fa-envelope"></i>
                             <span class="badge" id="mailboxCount" style="display: {{ $unreadMailCount > 0 ? 'inline-block' : 'none' }};">
                                 {{ $unreadMailCount }}
                             </span>
@@ -2063,7 +2098,7 @@
 
                         <!-- Notifications -->
                         <div class="notification-bell" id="notificationBell" onclick="toggleNotificationDropdown()">
-                            Alerts
+                            <i class="fas fa-bell"></i>
                             <span class="badge" id="notificationCount" style="display: none;">0</span>
                         </div>
 
@@ -2086,9 +2121,11 @@
                         </div>
                     @endauth
 
-                    <a href="{{ route('language.switch', ['locale' => app()->getLocale() === 'en' ? 'bn' : 'en']) }}" class="language-toggle" title="Switch Language">
-                        {{ app()->getLocale() === 'en' ? 'BN' : 'EN' }}
-                    </a>
+                    @guest
+                        <a href="{{ route('language.switch', ['locale' => app()->getLocale() === 'en' ? 'bn' : 'en']) }}" class="language-toggle" title="Switch Language">
+                            {{ app()->getLocale() === 'en' ? 'BN' : 'EN' }}
+                        </a>
+                    @endguest
 
                     <!-- User Circle Menu -->
                     <div class="user-menu" id="userMenu">
@@ -2114,32 +2151,32 @@
                                 </div>
 
                                 <a href="{{ route('dashboard') }}" class="dropdown-item-custom">
-                                    Dashboard
+                                    <i class="fas fa-tachometer-alt me-2"></i>Dashboard
                                 </a>
 
                                 <a href="{{ route('profile') }}" class="dropdown-item-custom">
-                                    Profile
+                                    <i class="fas fa-user me-2"></i>Profile
                                 </a>
 
                                 <a href="{{ route('notifications.index') }}" class="dropdown-item-custom" id="notification-link">
-                                    Notifications
+                                    <i class="fas fa-bell me-2"></i>Notifications
                                     <span class="notification-badge" id="notificationCountBadge" style="display: none;">0</span>
                                 </a>
 
                                 <a href="{{ route('profile.mailbox') }}" class="dropdown-item-custom">
-                                    Mailbox
+                                    <i class="fas fa-envelope me-2"></i>Mailbox
                                 </a>
 
                                 <div class="divider"></div>
                                 <a href="{{ route('profile.setting') }}" class="dropdown-item-custom">
-                                    Settings
+                                    <i class="fas fa-cog me-2"></i>Settings
                                 </a>
 
                                 <!-- Admin Dashboard Link -->
                                 @if (auth()->user()->isAdmin())
                                     <div class="divider"></div>
                                     <a href="{{ route('admin.dashboard') }}" class="dropdown-item-custom">
-                                        Admin Dashboard
+                                        <i class="fas fa-user-shield me-2"></i>Admin Dashboard
                                     </a>
                                 @endif
 
@@ -2148,17 +2185,17 @@
                                     @csrf
                                     <button type="submit" class="dropdown-item-custom"
                                         style="width: 100%; border: none; background: none; cursor: pointer; color: #dc3545;">
-                                        Logout
+                                        <i class="fas fa-sign-out-alt me-2"></i>Logout
                                     </button>
                                 </form>
                             @else
                                 <!-- GUEST USER MENU -->
                                 <a href="{{ route('login') }}" class="dropdown-item-custom">
-                                    Login
+                                    <i class="fas fa-sign-in-alt me-2"></i>Login
                                 </a>
 
                                 <a href="{{ route('register') }}" class="dropdown-item-custom">
-                                    Register
+                                    <i class="fas fa-user-plus me-2"></i>Register
                                 </a>
                             @endauth
                         </div>
@@ -2436,7 +2473,7 @@
                 <!-- About Section -->
                 <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
                     <div class="footer-logo mb-3">
-                        <img src="{{ asset('images/logos/applogo.jpg') }}" alt="My Doctor" height="40">
+                        <img src="{{ asset('images/logos/applogo.png') }}" alt="My Doctor" height="40">
                         <span class="fw-bold text-white ms-2">My Doctor</span>
                     </div>
                     <p class="footer-text">
