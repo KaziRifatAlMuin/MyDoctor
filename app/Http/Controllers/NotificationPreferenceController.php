@@ -15,7 +15,8 @@ class NotificationPreferenceController extends Controller
     public function index()
     {
         $user = Auth::user();
-        return view('profile.notifications', compact('user'));
+        $chatbotBubbleEnabled = request()->cookie('chatbot_bubble_enabled', '1') === '1';
+        return view('profile.notifications', compact('user', 'chatbotBubbleEnabled'));
     }
 
     public function update(Request $request)
@@ -37,7 +38,13 @@ class NotificationPreferenceController extends Controller
         
         $user->save();
 
-        return redirect()->back()->with('success', 'Notification preferences updated successfully.');
+        // Persist chatbot bubble preference as a cookie (365 days)
+        $chatbotCookieValue = $request->has('chatbot_bubble') ? '1' : '0';
+        $minutes = 60 * 24 * 365; // 1 year
+
+        return redirect()->back()
+            ->with('success', 'Notification preferences updated successfully.')
+            ->withCookie(cookie('chatbot_bubble_enabled', $chatbotCookieValue, $minutes));
     }
 
     public function toggleEmail(Request $request)

@@ -2114,26 +2114,10 @@
                                     <i class="fas fa-lightbulb"></i> Suggestions
                                 </a>
 
-                                <!-- Notification Quick Toggles -->
                                 <div class="divider"></div>
-                                <div class="px-3 py-2">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <span><i class="fas fa-envelope me-2"></i>Email Alerts</span>
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" 
-                                                   onchange="toggleEmailQuick()" 
-                                                   {{ auth()->user()->email_notifications ? 'checked' : '' }}>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span><i class="fas fa-bell me-2"></i>Push Alerts</span>
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" 
-                                                   onchange="togglePushQuick()" 
-                                                   {{ auth()->user()->push_notifications ? 'checked' : '' }}>
-                                        </div>
-                                    </div>
-                                </div>
+                                <a href="{{ route('profile.notifications') }}" class="dropdown-item-custom">
+                                    <i class="fas fa-bell me-2"></i>Manage Notification Preferences
+                                </a>
 
                                 <!-- Admin Dashboard Link -->
                                 @if (auth()->user()->isAdmin())
@@ -2275,10 +2259,7 @@
                 AI-powered health information - consult a doctor for medical advice
             </div>
 
-            <div class="chatbot-settings">
-                <input type="checkbox" id="chatbotPromptToggle" checked>
-                <label for="chatbotPromptToggle">Bubble reminders</label>
-            </div>
+            <!-- Chatbot settings moved to profile page (cookie-controlled) -->
 
             <div class="chatbot-messages" id="chatMessages">
                 <div style="text-align: center; color: #718096; padding: 20px;">
@@ -3860,28 +3841,46 @@ window.openVideoModal = function(type, source, isReel = false) {
         let isTyping = false;
         let conversationHistory = [];
         let chatbotPromptTimeout;
-        const chatbotPromptStorageKey = 'chatbotPromptEnabled';
-        let chatbotPromptEnabled = true;
+
+        // Cookie helpers
+        function setCookie(name, value, days) {
+            let expires = "";
+            if (days) {
+                const date = new Date();
+                date.setTime(date.getTime() + (days*24*60*60*1000));
+                expires = "; expires=" + date.toUTCString();
+            }
+            document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+        }
+
+        function getCookie(name) {
+            const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+            return v ? v.pop() : null;
+        }
+
+        // Show or hide chatbot icon based on cookie
+        function updateChatbotVisibility(enabled) {
+            const chatbotIcon = document.getElementById('chatbotIcon');
+            if (!chatbotIcon) return;
+            if (enabled) {
+                chatbotIcon.style.display = '';
+                // trigger prompt cycle when enabled
+                startChatbotPromptCycle();
+            } else {
+                chatbotIcon.style.display = 'none';
+                chatbotIcon.classList.remove('glow-pulse', 'show-tooltip');
+                if (chatbotPromptTimeout) {
+                    clearTimeout(chatbotPromptTimeout);
+                }
+            }
+        }
 
         function initializeChatbotPromptSetting() {
-            const saved = localStorage.getItem(chatbotPromptStorageKey);
-            chatbotPromptEnabled = saved === null ? true : saved === 'true';
+            const saved = getCookie('chatbot_bubble_enabled');
+            const enabled = saved === null ? '1' : saved; // default enabled
 
-            const toggle = document.getElementById('chatbotPromptToggle');
-            if (toggle) {
-                toggle.checked = chatbotPromptEnabled;
-                toggle.addEventListener('change', function() {
-                    chatbotPromptEnabled = this.checked;
-                    localStorage.setItem(chatbotPromptStorageKey, String(chatbotPromptEnabled));
-
-                    const chatbotIcon = document.getElementById('chatbotIcon');
-                    if (chatbotIcon && !chatbotPromptEnabled) {
-                        chatbotIcon.classList.remove('glow-pulse', 'show-tooltip');
-                    }
-
-                    startChatbotPromptCycle();
-                });
-            }
+            // Ensure the floating icon visibility matches cookie
+            updateChatbotVisibility(enabled === '1');
         }
 
         function startChatbotPromptCycle() {
@@ -3892,7 +3891,10 @@ window.openVideoModal = function(type, source, isReel = false) {
                 clearTimeout(chatbotPromptTimeout);
             }
 
-            if (!chatbotPromptEnabled) {
+            // If icon is hidden via cookie, do nothing
+            const saved = getCookie('chatbot_bubble_enabled');
+            const enabled = saved === null ? '1' : saved;
+            if (enabled !== '1') {
                 chatbotIcon.classList.remove('glow-pulse', 'show-tooltip');
                 return;
             }
