@@ -3859,11 +3859,9 @@ window.openVideoModal = function(type, source, isReel = false) {
         // Chatbot variables
         let isTyping = false;
         let conversationHistory = [];
-        let chatbotPromptInterval;
         let chatbotPromptTimeout;
         const chatbotPromptStorageKey = 'chatbotPromptEnabled';
         let chatbotPromptEnabled = true;
-        let chatbotAudioContext = null;
 
         function initializeChatbotPromptSetting() {
             const saved = localStorage.getItem(chatbotPromptStorageKey);
@@ -3886,49 +3884,9 @@ window.openVideoModal = function(type, source, isReel = false) {
             }
         }
 
-        function unlockChatbotAudio() {
-            if (!chatbotAudioContext && window.AudioContext) {
-                chatbotAudioContext = new AudioContext();
-            }
-
-            if (chatbotAudioContext && chatbotAudioContext.state === 'suspended') {
-                chatbotAudioContext.resume().catch(() => {});
-            }
-        }
-
-        function playChatbotPromptSound() {
-            if (!chatbotPromptEnabled || !window.AudioContext) return;
-
-            if (!chatbotAudioContext) {
-                chatbotAudioContext = new AudioContext();
-            }
-
-            if (chatbotAudioContext.state !== 'running') {
-                return;
-            }
-
-            const oscillator = chatbotAudioContext.createOscillator();
-            const gainNode = chatbotAudioContext.createGain();
-
-            oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(880, chatbotAudioContext.currentTime);
-            gainNode.gain.setValueAtTime(0.0001, chatbotAudioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.05, chatbotAudioContext.currentTime + 0.02);
-            gainNode.gain.exponentialRampToValueAtTime(0.0001, chatbotAudioContext.currentTime + 0.18);
-
-            oscillator.connect(gainNode);
-            gainNode.connect(chatbotAudioContext.destination);
-            oscillator.start();
-            oscillator.stop(chatbotAudioContext.currentTime + 0.2);
-        }
-
         function startChatbotPromptCycle() {
             const chatbotIcon = document.getElementById('chatbotIcon');
             if (!chatbotIcon) return;
-
-            if (chatbotPromptInterval) {
-                clearInterval(chatbotPromptInterval);
-            }
 
             if (chatbotPromptTimeout) {
                 clearTimeout(chatbotPromptTimeout);
@@ -3941,7 +3899,6 @@ window.openVideoModal = function(type, source, isReel = false) {
 
             const showPrompt = () => {
                 chatbotIcon.classList.add('glow-pulse', 'show-tooltip');
-                playChatbotPromptSound();
 
                 if (chatbotPromptTimeout) {
                     clearTimeout(chatbotPromptTimeout);
@@ -3952,10 +3909,8 @@ window.openVideoModal = function(type, source, isReel = false) {
                 }, 10000);
             };
 
-            // Trigger immediately on load/refresh, then continue every 20 seconds.
+            // Trigger immediately once on page load/refresh.
             showPrompt();
-
-            chatbotPromptInterval = setInterval(showPrompt, 20000);
         }
 
         // Send message to chatbot
@@ -4096,9 +4051,6 @@ window.openVideoModal = function(type, source, isReel = false) {
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             initializeChatbotPromptSetting();
-
-            document.addEventListener('click', unlockChatbotAudio, { once: true });
-            document.addEventListener('keydown', unlockChatbotAudio, { once: true });
 
             startChatbotPromptCycle();
 
