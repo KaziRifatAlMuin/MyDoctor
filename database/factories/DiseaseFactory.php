@@ -16,13 +16,11 @@ class DiseaseFactory extends Factory
         }
 
         $name = $diseases[$index % count($diseases)];
-        $bangla = config('health.diseases')[$name] ?? null;
         $index++;
 
         return [
-            'disease_name'    => $name,
-            'disease_name_bn' => $bangla,
-            'description'     => fake()->paragraph(2),
+            'disease_name' => $name,
+            'description' => fake()->paragraph(2),
         ];
     }
 }

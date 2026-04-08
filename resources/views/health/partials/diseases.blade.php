@@ -1,5 +1,4 @@
 {{-- ── Diseases Tab ── --}}
-@php $diseasesBnMap = config('health.diseases'); @endphp
 <div class="row g-4">
 
     {{-- Disease Summary --}}
@@ -23,16 +22,13 @@
                             'managed' => '#3182ce',
                             'recovered' => '#38a169',
                         ];
-                        $statusBn = ['active' => 'সক্রিয়', 'chronic' => 'দীর্ঘস্থায়ী', 'managed' => 'নিয়ন্ত্রিত', 'recovered' => 'সুস্থ'];
                     @endphp
                     <div class="mb-3">
                         @foreach (['active', 'chronic', 'managed', 'recovered'] as $status)
                             <div class="d-flex justify-content-between align-items-center py-2 {{ !$loop->last ? 'border-bottom' : '' }}">
                                 <div class="d-flex align-items-center gap-2">
                                     <i class="fas fa-circle" style="font-size: 0.5rem; color: {{ $statusColors[$status] }};"></i>
-                                    <span class="fw-semibold text-capitalize" style="font-size: 0.88rem;">{{ $status }}
-                                        <span class="bn-label">({{ $statusBn[$status] }})</span>
-                                    </span>
+                                    <span class="fw-semibold text-capitalize" style="font-size: 0.88rem;">{{ $status }}</span>
                                 </div>
                                 <span class="fw-bold" style="color: {{ $statusColors[$status] }};">
                                     {{ $statusCounts->get($status, 0) }}
@@ -42,7 +38,7 @@
                     </div>
                     <div class="text-center mt-3">
                         <span class="fw-bold" style="font-size: 1.8rem; color: #2d3748;">{{ $userDiseases->count() }}</span>
-                        <div class="text-muted" style="font-size: 0.82rem;">Total Conditions (মোট রোগ)</div>
+                        <div class="text-muted" style="font-size: 0.82rem;">Total Conditions</div>
                     </div>
                 @endif
 
@@ -92,12 +88,6 @@
                                                 </div>
                                                 <div>
                                                     <span class="fw-semibold">{{ $ud->disease->disease_name ?? 'Unknown' }}</span>
-                                                    @php
-                                                        $bnName = $ud->disease->disease_name_bn ?? ($diseasesBnMap[$ud->disease->disease_name ?? ''] ?? '');
-                                                    @endphp
-                                                    @if ($bnName)
-                                                        <span class="bn-label d-block">({{ $bnName }})</span>
-                                                    @endif
                                                 </div>
                                             </div>
                                         </td>
@@ -110,11 +100,10 @@
                                                     'recovered' => 'severity-1',
                                                     default => 'severity-3',
                                                 };
-                                                $statusBnLabel = ['active' => 'সক্রিয়', 'chronic' => 'দীর্ঘস্থায়ী', 'managed' => 'নিয়ন্ত্রিত', 'recovered' => 'সুস্থ'];
                                             @endphp
                                             <span class="severity-badge {{ $badgeClass }} text-capitalize">
                                                 <i class="fas fa-circle" style="font-size: 0.4rem;"></i>
-                                                {{ $ud->status }} ({{ $statusBnLabel[$ud->status] ?? '' }})
+                                                {{ $ud->status }}
                                             </span>
                                         </td>
                                         <td>
@@ -130,7 +119,7 @@
                                         <td>
                                             <div class="action-btn-group">
                                                 <button type="button" class="btn btn-sm btn-outline-primary"
-                                                    onclick="openEditDisease({{ $ud->id }}, {{ $ud->disease_id }}, '{{ addslashes($ud->disease->disease_name ?? '') }}', '{{ addslashes($ud->disease->disease_name_bn ?? '') }}', '{{ $ud->status }}', '{{ $ud->diagnosed_at ? $ud->diagnosed_at->format('Y-m-d') : '' }}', '{{ addslashes($ud->notes ?? '') }}')">
+                                                    onclick="openEditDisease({{ $ud->id }}, {{ $ud->disease_id }}, '{{ addslashes($ud->disease->disease_name ?? '') }}', '{{ $ud->status }}', '{{ $ud->diagnosed_at ? $ud->diagnosed_at->format('Y-m-d') : '' }}', '{{ addslashes($ud->notes ?? '') }}')">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
                                                 <form action="{{ route('health.disease.destroy', $ud) }}" method="POST"

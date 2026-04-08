@@ -45,6 +45,16 @@ Route::view('/appointments', 'appointments')->name('appointments');
 Route::view('/pharmacy/nearby', 'pharmacy.nearby')->name('pharmacy.nearby');
 Route::view('/emergency', 'emergency')->name('emergency');
 
+Route::get('/language/{locale}', function (string $locale) {
+    if (!in_array($locale, ['en', 'bn'], true)) {
+        abort(404);
+    }
+
+    session(['locale' => $locale]);
+
+    return back();
+})->name('language.switch');
+
 /*
 |--------------------------------------------------------------------------
 | Auth Routes

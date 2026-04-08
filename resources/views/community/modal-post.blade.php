@@ -29,9 +29,6 @@
                         @if($post->disease)
                             <span style="background: #e7f3ff; color: #1877f2; padding: 4px 12px; border-radius: 4px; font-weight: 500; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">
                                 <i class="fas fa-tag me-1"></i>{{ $post->disease->disease_name }}
-                                @if(isset($post->disease->bn_name))
-                                    <span style="font-size: 10px; color: #65676b; margin-left: 4px;">({{ $post->disease->bn_name }})</span>
-                                @endif
                             </span>
                         @endif
                     </div>

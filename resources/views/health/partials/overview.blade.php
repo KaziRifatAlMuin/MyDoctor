@@ -9,7 +9,6 @@
 @php
     $metricConfig  = $metricConfig  ?? config('health.metric_types');
     $symptomsBn    = $symptomsList  ?? config('health.symptoms');
-    $diseasesBnMap = $diseasesBn    ?? config('health.diseases');
 
     $activeMeds       = $medicines->filter(fn($m) => $m->schedules->where('is_active', true)->isNotEmpty());
     $activeConditions = $userDiseases->whereIn('status', ['active', 'chronic', 'managed']);
@@ -223,7 +222,6 @@
                 @else
                     @foreach($activeConditions->take(5) as $ud)
                         @php
-                            $bnName      = $ud->disease->disease_name_bn ?? ($diseasesBnMap[$ud->disease->disease_name ?? ''] ?? '');
                             $statusBadge = match($ud->status) {
                                 'active'  => 'severity-8',
                                 'chronic' => 'severity-5',
@@ -240,9 +238,6 @@
                                 <div class="fw-semibold text-truncate" style="font-size:0.88rem;color:#2d3748;">
                                     {{ $ud->disease->disease_name ?? 'Unknown' }}
                                 </div>
-                                @if($bnName)
-                                    <div class="bn-label text-truncate">{{ $bnName }}</div>
-                                @endif
                                 @if($ud->diagnosed_at)
                                     <div class="small text-muted">Since {{ $ud->diagnosed_at->format('M Y') }}</div>
                                 @endif

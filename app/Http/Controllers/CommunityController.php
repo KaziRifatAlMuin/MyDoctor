@@ -14,7 +14,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class CommunityController extends Controller
@@ -32,9 +31,6 @@ class CommunityController extends Controller
         try {
             $diseaseId = $request->get('disease');
             
-            // Get disease translations from config/health.php
-            $diseaseTranslations = Config::get('health.diseases', []);
-            
             // Build the posts query with eager loading
             $query = Post::with(['user', 'disease', 'comments' => function($q) {
                 $q->with('user')->latest()->limit(3);
@@ -48,23 +44,10 @@ class CommunityController extends Controller
             // Get paginated posts (10 per page)
             $posts = $query->latest()->paginate(10);
             
-            // Add Bengali names to posts' diseases
-            $posts->getCollection()->transform(function($post) use ($diseaseTranslations) {
-                if ($post->disease) {
-                    $post->disease->bn_name = $diseaseTranslations[$post->disease->disease_name] ?? null;
-                }
-                return $post;
-            });
-            
             // Get all diseases with post counts for the filter sidebar
             $diseases = Disease::withCount('posts')
                               ->orderBy('disease_name')
                               ->get();
-            
-            // Add Bengali names to diseases collection
-            $diseases->each(function($disease) use ($diseaseTranslations) {
-                $disease->bn_name = $diseaseTranslations[$disease->disease_name] ?? null;
-            });
             
             // If diseases table is empty, log a warning
             if ($diseases->isEmpty()) {
@@ -85,11 +68,6 @@ class CommunityController extends Controller
                                        ->orderBy('posts_count', 'desc')
                                        ->take(5)
                                        ->get();
-            
-            // Add Bengali names to trending diseases
-            $trendingDiseases->each(function($disease) use ($diseaseTranslations) {
-                $disease->bn_name = $diseaseTranslations[$disease->disease_name] ?? null;
-            });
             
             // Log for debugging
             Log::info('Community index loaded', [
@@ -141,7 +119,6 @@ class CommunityController extends Controller
 
         try {
             $diseaseId = $request->get('disease');
-            $diseaseTranslations = Config::get('health.diseases', []);
             $userId = Auth::id();
 
             $query = Post::with(['user', 'disease', 'comments' => function($q) {
@@ -158,13 +135,6 @@ class CommunityController extends Controller
 
             $posts = $query->latest()->paginate(10)->withQueryString();
 
-            $posts->getCollection()->transform(function($post) use ($diseaseTranslations) {
-                if ($post->disease) {
-                    $post->disease->bn_name = $diseaseTranslations[$post->disease->disease_name] ?? null;
-                }
-                return $post;
-            });
-
             $diseases = Disease::withCount([
                 'posts as posts_count' => function ($q) use ($userId) {
                     $q->whereHas('likes', function ($likeQuery) use ($userId) {
@@ -173,10 +143,6 @@ class CommunityController extends Controller
                     });
                 }
             ])->orderBy('disease_name')->get();
-
-            $diseases->each(function($disease) use ($diseaseTranslations) {
-                $disease->bn_name = $diseaseTranslations[$disease->disease_name] ?? null;
-            });
 
             $totalPosts = (clone $query)->count();
             $totalUsers = User::count();
@@ -199,10 +165,6 @@ class CommunityController extends Controller
               ->sortByDesc('posts_count')
               ->take(5)
               ->values();
-
-            $trendingDiseases->each(function($disease) use ($diseaseTranslations) {
-                $disease->bn_name = $diseaseTranslations[$disease->disease_name] ?? null;
-            });
 
             return view('community.index', [
                 'posts' => $posts,
@@ -253,16 +215,9 @@ class CommunityController extends Controller
     public function showPost(Post $post)
     {
         try {
-            $diseaseTranslations = Config::get('health.diseases', []);
-            
             $post->load(['user', 'disease', 'comments' => function($q) {
                 $q->with('user')->latest();
             }])->loadCount(['likes as likes_count']);
-            
-            // Add Bengali name to post disease
-            if ($post->disease) {
-                $post->disease->bn_name = $diseaseTranslations[$post->disease->disease_name] ?? null;
-            }
             
             return view('community.show', compact('post'));
         } catch (\Exception $e) {
@@ -288,12 +243,6 @@ class CommunityController extends Controller
                 }
             ])->loadCount(['likes as likes_count']);
             
-            // Add Bengali name to disease
-            $diseaseTranslations = Config::get('health.diseases', []);
-            if ($post->disease) {
-                $post->disease->bn_name = $diseaseTranslations[$post->disease->disease_name] ?? null;
-            }
-            
             // Return the modal post view
             return view('community.modal-post', compact('post'));
         } catch (\Exception $e) {
@@ -309,7 +258,6 @@ class CommunityController extends Controller
     {
         try {
             $diseaseId = $request->get('disease');
-            $diseaseTranslations = Config::get('health.diseases', []);
             
             $query = Post::with(['user', 'disease'])
                 ->withCount(['likes as likes_count']);
@@ -320,7 +268,7 @@ class CommunityController extends Controller
 
             $posts = $query->latest()->get();
             
-            $formattedPosts = $posts->map(function($post) use ($diseaseTranslations) {
+            $formattedPosts = $posts->map(function($post) {
                 return [
                     'id' => $post->id,
                     'description' => $post->description,
@@ -340,7 +288,6 @@ class CommunityController extends Controller
                     'disease' => $post->disease ? [
                         'id' => $post->disease->id,
                         'name' => $post->disease->disease_name,
-                        'bn_name' => $diseaseTranslations[$post->disease->disease_name] ?? null,
                     ] : null,
                     'user_liked' => Auth::check() ? $post->likes()->where('user_id', Auth::id())->exists() : false,
                     'is_owner' => Auth::check() && $post->user_id === Auth::id(),
@@ -603,12 +550,6 @@ class CommunityController extends Controller
 
             $post = Post::create($data);
             $post->load(['user', 'disease']);
-            
-            // Add Bengali name to disease
-            $diseaseTranslations = Config::get('health.diseases', []);
-            if ($post->disease) {
-                $post->disease->bn_name = $diseaseTranslations[$post->disease->disease_name] ?? null;
-            }
             
             $html = view('community.partials.post', ['post' => $post])->render();
 

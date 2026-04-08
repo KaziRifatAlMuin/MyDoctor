@@ -35,6 +35,15 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow-x: hidden;
             background-color: #ffffff;
+            padding-top: 84px;
+        }
+
+        .bn-label {
+            display: none !important;
+        }
+
+        html[lang^='bn'] .bn-label {
+            display: inline !important;
         }
 
         /* Banner Styles */
@@ -53,51 +62,36 @@
         .page-nav-bar {
             position: relative;
             width: 100%;
+            background: transparent;
+            border-bottom: none;
+            box-shadow: none;
+        }
+
+        .page-nav-bar .banner-nav {
+            padding: 12px 40px;
+        }
+
+        /* Dark text links on white navbar */
+        /* Navbar Styles - Positioned absolutely on banner */
+        .banner-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 12px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 1001;
             background: #ffffff;
             border-bottom: 1px solid #e2e8f0;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         }
 
-        .page-nav-bar .banner-nav {
-            position: relative;
-            top: auto;
-            left: auto;
-            right: auto;
-            padding: 14px 40px;
-        }
-
-        /* Dark text links on white navbar */
-        .page-nav-bar .banner-nav-link {
-            color: #2d3748;
-            text-shadow: none;
-        }
-
-        .page-nav-bar .banner-nav-link:hover {
-            color: #667eea;
-            border-bottom-color: #667eea;
-        }
-
-        .page-nav-bar .banner-nav-link.active {
-            color: #667eea;
-            border-bottom-color: #667eea;
-        }
-
-        /* User circle on white bar */
-        .page-nav-bar .user-circle {
-            border-color: #667eea;
-        }
-
-        /* Navbar Styles - Positioned absolutely on banner */
-        .banner-nav {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            padding: 20px 40px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            z-index: 100;
+        .nav-theme-admin .banner-nav {
+            background: linear-gradient(135deg, #5b2b88 0%, #7b3fb4 100%);
+            border-bottom: none;
+            box-shadow: 0 2px 10px rgba(91, 43, 136, 0.35);
         }
 
         /* Logo Styles */
@@ -126,22 +120,31 @@
 
         .banner-nav-link {
             text-decoration: none;
-            color: white;
+            color: #2d3748;
             font-weight: 500;
-            font-size: 1.1rem;
+            font-size: 0.9rem;
             padding: 0.5rem 0;
             transition: all 0.3s ease;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         .banner-nav-link:hover {
-            color: #ffd700;
-            border-bottom: 2px solid #ffd700;
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
         }
 
         .banner-nav-link.active {
-            color: #ffd700;
-            border-bottom: 2px solid #ffd700;
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .nav-theme-admin .banner-nav-link {
+            color: #ffffff;
+        }
+
+        .nav-theme-admin .banner-nav-link:hover,
+        .nav-theme-admin .banner-nav-link.active {
+            color: #ffffff;
+            border-bottom-color: #ffffff;
         }
 
         /* User Circle Menu */
@@ -150,11 +153,11 @@
         }
 
         .user-circle {
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             cursor: pointer;
-            border: 3px solid white;
+            border: 2px solid #667eea;
             overflow: hidden;
             transition: transform 0.3s ease;
             background-color: #fff;
@@ -162,7 +165,7 @@
 
         .user-circle:hover {
             transform: scale(1.1);
-            border-color: #ffd700;
+            border-color: #667eea;
         }
 
         .user-circle img {
@@ -171,12 +174,14 @@
             object-fit: cover;
         }
 
-        .user-circle i {
-            font-size: 30px;
+        .user-circle span {
+            font-size: 16px;
+            font-weight: 700;
             color: #667eea;
-            line-height: 50px;
+            line-height: 40px;
             text-align: center;
             width: 100%;
+            display: block;
         }
 
         /* Dropdown Menu */
@@ -249,11 +254,6 @@
             padding-left: 25px;
         }
 
-        .dropdown-item-custom i {
-            width: 20px;
-            color: #667eea;
-        }
-
         .divider {
             height: 1px;
             background-color: #e2e8f0;
@@ -272,22 +272,25 @@
 
         /* ========== UPDATED NOTIFICATION BELL STYLES ========== */
         /* Notification Bell - Yellow normally, Green badge */
-        .notification-bell {
+        .notification-bell,
+        .mailbox-bell,
+        .language-toggle {
             position: relative;
-            margin-right: 15px;
+            margin-right: 0;
             cursor: pointer;
             transition: all 0.3s ease;
-        }
-
-        .notification-bell i {
-            font-size: 1.4rem;
-            color: #ffd700;
-            transition: all 0.3s ease;
-        }
-
-        .notification-bell:hover i {
-            transform: scale(1.1);
-            color: #ffc107;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            color: #374151;
+            background: #ffffff;
+            font-size: 0.8rem;
+            font-weight: 600;
+            line-height: 1;
         }
 
         .notification-bell .badge {
@@ -307,28 +310,6 @@
             animation: popIn 0.3s ease;
         }
 
-        .mailbox-bell {
-            position: relative;
-            margin-right: 2px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .mailbox-bell i {
-            font-size: 1.35rem;
-            color: #ffd700;
-            transition: all 0.3s ease;
-        }
-
-        .mailbox-bell:hover i {
-            transform: scale(1.1);
-            color: #ffc107;
-        }
-
         .mailbox-bell .badge {
             position: absolute;
             top: -5px;
@@ -343,6 +324,20 @@
             text-align: center;
             border: 2px solid white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .nav-theme-admin .notification-bell,
+        .nav-theme-admin .mailbox-bell,
+        .nav-theme-admin .language-toggle {
+            background: rgba(255, 255, 255, 0.14);
+            color: #ffffff;
+            border-color: rgba(255, 255, 255, 0.35);
+        }
+
+        .notification-bell:hover,
+        .mailbox-bell:hover,
+        .language-toggle:hover {
+            transform: translateY(-1px);
         }
 
         @keyframes popIn {
@@ -367,6 +362,10 @@
         }
 
         .notification-bell.shake i {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .notification-bell.shake {
             animation: shake 0.5s ease-in-out;
         }
 
@@ -513,7 +512,21 @@
         .nav-right {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 10px;
+        }
+
+        .nav-user-name {
+            font-size: 0.84rem;
+            font-weight: 600;
+            color: #1f2937;
+            max-width: 160px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .nav-theme-admin .nav-user-name {
+            color: #ffffff;
         }
 
         /* Banner Content */
@@ -1128,6 +1141,10 @@
             .banner-nav {
                 padding: 15px;
                 flex-wrap: wrap;
+            }
+
+            body {
+                padding-top: 112px;
             }
 
             .banner-nav-menu {
@@ -1972,7 +1989,11 @@
 <body>
     <div class="app-root">
         <!-- Banner / Navbar -->
-        <div class="{{ request()->routeIs('home') ? 'banner' : 'page-nav-bar' }}">
+        @php
+            $isAdminNav = auth()->check() && auth()->user()->isAdmin();
+            $navThemeClass = $isAdminNav ? 'nav-theme-admin' : 'nav-theme-regular';
+        @endphp
+        <div class="{{ request()->routeIs('home') ? 'banner' : 'page-nav-bar' }} {{ $navThemeClass }}">
             <!-- Navigation on Banner -->
             <nav class="banner-nav">
                 <!-- Logo -->
@@ -1985,45 +2006,39 @@
                     <li class="banner-nav-item">
                         <a href="{{ route('home') }}"
                             class="banner-nav-link {{ request()->routeIs('home') ? 'active' : '' }}">
-                            <i class="fas fa-home me-1"></i> Home
+                            Home
                         </a>
                     </li>
                     @auth
                         <li class="banner-nav-item">
                             <a href="{{ route('dashboard') }}"
                                 class="banner-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                                <i class="fas fa-tachometer-alt me-1"></i> Dashboard
-                            </a>
-                        </li>
-                        <li class="banner-nav-item">
-                            <a href="{{ route('suggestions') }}"
-                                class="banner-nav-link {{ request()->routeIs('suggestions*') ? 'active' : '' }}">
-                                <i class="fas fa-lightbulb me-1"></i> Suggestions
+                                Dashboard
                             </a>
                         </li>
                     @endauth
                     <li class="banner-nav-item">
                         <a href="{{ route('medicine.index') }}"
                             class="banner-nav-link {{ request()->routeIs('medicine*') ? 'active' : '' }}">
-                            <i class="fas fa-pills me-1"></i> Medicine
+                            Medicine
                         </a>
                     </li>
                     <li class="banner-nav-item">
                         <a href="{{ route('health') }}"
                             class="banner-nav-link {{ request()->routeIs('health*') ? 'active' : '' }}">
-                            <i class="fas fa-heartbeat me-1"></i> Health
+                            Health
                         </a>
                     </li>
                     <li class="banner-nav-item">
                         <a href="{{ route('community.landing') }}"
                             class="banner-nav-link {{ request()->routeIs('community*') ? 'active' : '' }}">
-                            <i class="fas fa-users me-1"></i> Community
+                            Community
                         </a>
                     </li>
                     <li class="banner-nav-item">
                         <a href="{{ route('help') }}"
                             class="banner-nav-link {{ request()->routeIs('help*') ? 'active' : '' }}">
-                            <i class="fas fa-question-circle me-1"></i> Help
+                            Help
                         </a>
                     </li>
                 </ul>
@@ -2038,19 +2053,21 @@
                                 ->count();
                         @endphp
 
-                        <!-- Mailbox icon -->
+                        <!-- Mailbox -->
                         <a href="{{ route('profile.mailbox') }}" class="mailbox-bell" id="mailboxBell" title="Mailbox">
-                            <i class="fas fa-envelope"></i>
+                            Mailbox
                             <span class="badge" id="mailboxCount" style="display: {{ $unreadMailCount > 0 ? 'inline-block' : 'none' }};">
                                 {{ $unreadMailCount }}
                             </span>
                         </a>
 
-                        <!-- Notification Bell - Yellow with Green badge -->
+                        <!-- Notifications -->
                         <div class="notification-bell" id="notificationBell" onclick="toggleNotificationDropdown()">
-                            <i class="fas fa-bell"></i>
+                            Alerts
                             <span class="badge" id="notificationCount" style="display: none;">0</span>
                         </div>
+
+                        <span class="nav-user-name">{{ auth()->user()->name }}</span>
 
                         <!-- Notification Dropdown -->
                         <div class="notification-dropdown" id="notificationDropdown">
@@ -2060,7 +2077,6 @@
                             </div>
                             <div class="notification-list" id="notificationList">
                                 <div class="notification-empty">
-                                    <i class="fas fa-bell-slash"></i>
                                     <p>No notifications yet</p>
                                 </div>
                             </div>
@@ -2070,6 +2086,10 @@
                         </div>
                     @endauth
 
+                    <a href="{{ route('language.switch', ['locale' => app()->getLocale() === 'en' ? 'bn' : 'en']) }}" class="language-toggle" title="Switch Language">
+                        {{ app()->getLocale() === 'en' ? 'BN' : 'EN' }}
+                    </a>
+
                     <!-- User Circle Menu -->
                     <div class="user-menu" id="userMenu">
                         <div class="user-circle" onclick="toggleUserDropdown()">
@@ -2078,10 +2098,10 @@
                                     <img src="{{ asset('storage/' . auth()->user()->picture) }}"
                                         alt="{{ auth()->user()->name }}">
                                 @else
-                                    <i class="fas fa-user-circle"></i>
+                                    <span>{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
                                 @endif
                             @else
-                                <i class="fas fa-user-circle"></i>
+                                <span>G</span>
                             @endauth
                         </div>
 
@@ -2094,36 +2114,32 @@
                                 </div>
 
                                 <a href="{{ route('dashboard') }}" class="dropdown-item-custom">
-                                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                                    Dashboard
                                 </a>
 
                                 <a href="{{ route('profile') }}" class="dropdown-item-custom">
-                                    <i class="fas fa-user"></i> Profile
+                                    Profile
                                 </a>
 
                                 <a href="{{ route('notifications.index') }}" class="dropdown-item-custom" id="notification-link">
-                                    <i class="fas fa-bell"></i> Notifications
+                                    Notifications
                                     <span class="notification-badge" id="notificationCountBadge" style="display: none;">0</span>
                                 </a>
 
                                 <a href="{{ route('profile.mailbox') }}" class="dropdown-item-custom">
-                                    <i class="fas fa-envelope"></i> Mailbox
-                                </a>
-
-                                <a href="{{ route('suggestions') }}" class="dropdown-item-custom">
-                                    <i class="fas fa-lightbulb"></i> Suggestions
+                                    Mailbox
                                 </a>
 
                                 <div class="divider"></div>
                                 <a href="{{ route('profile.setting') }}" class="dropdown-item-custom">
-                                    <i class="fas fa-cog me-2"></i>Settings
+                                    Settings
                                 </a>
 
                                 <!-- Admin Dashboard Link -->
                                 @if (auth()->user()->isAdmin())
                                     <div class="divider"></div>
                                     <a href="{{ route('admin.dashboard') }}" class="dropdown-item-custom">
-                                        <i class="fas fa-shield-alt"></i> Admin Dashboard
+                                        Admin Dashboard
                                     </a>
                                 @endif
 
@@ -2132,17 +2148,17 @@
                                     @csrf
                                     <button type="submit" class="dropdown-item-custom"
                                         style="width: 100%; border: none; background: none; cursor: pointer; color: #dc3545;">
-                                        <i class="fas fa-sign-out-alt"></i> Logout
+                                        Logout
                                     </button>
                                 </form>
                             @else
                                 <!-- GUEST USER MENU -->
                                 <a href="{{ route('login') }}" class="dropdown-item-custom">
-                                    <i class="fas fa-sign-in-alt"></i> Login
+                                    Login
                                 </a>
 
                                 <a href="{{ route('register') }}" class="dropdown-item-custom">
-                                    <i class="fas fa-user-plus"></i> Register
+                                    Register
                                 </a>
                             @endauth
                         </div>
@@ -4287,7 +4303,7 @@ window.openVideoModal = function(type, source, isReel = false) {
             }
         };
 
-        window.openEditDisease = function(id, diseaseId, diseaseName, diseaseBn, status, diagnosedAt, notes) {
+        window.openEditDisease = function(id, diseaseId, diseaseName, status, diagnosedAt, notes) {
             try {
                 const diseaseLabel = document.getElementById('diseaseModalLabel');
                 if (diseaseLabel) diseaseLabel.textContent = 'Edit Disease Record';
@@ -4308,7 +4324,7 @@ window.openVideoModal = function(type, source, isReel = false) {
                     idHidden.value = diseaseId;
                 }
                 const searchInput = document.getElementById('diseaseSearchInput');
-                if (searchInput) searchInput.value = diseaseName + (diseaseBn ? ' (' + diseaseBn + ')' : '');
+                if (searchInput) searchInput.value = diseaseName;
                 const statusInput = document.getElementById('diseaseStatus');
                 if (statusInput) statusInput.value = status;
                 const dateInput = document.getElementById('diseaseDiagnosedAt');

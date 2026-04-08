@@ -8,18 +8,22 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('post_comments', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('comment_id')->constrained()->onDelete('cascade');
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->timestamps();
-            
-            $table->unique(['comment_id', 'user_id']);
-        });
+        if (!Schema::hasTable('post_comments')) {
+            Schema::create('post_comments', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('comment_id')->constrained()->onDelete('cascade');
+                $table->foreignId('user_id')->constrained()->onDelete('cascade');
+                $table->timestamps();
+
+                $table->unique(['comment_id', 'user_id']);
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('post_comments');
+        if (Schema::hasTable('post_comments')) {
+            Schema::drop('post_comments');
+        }
     }
 };

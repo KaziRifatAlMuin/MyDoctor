@@ -78,15 +78,6 @@ class UserController extends Controller
         $latestMetrics = $metricsByType->map(fn($group) => $group->first());
         $metricConfig = config('health.metric_types');
 
-        // Enrich metric bn labels from DB translations
-        $metricBn = \App\Models\Translation::allOfType(\App\Models\Translation::TYPE_METRIC);
-        foreach ($metricConfig as $key => &$cfg) {
-            if (isset($metricBn[$key])) {
-                $cfg['bn'] = $metricBn[$key];
-            }
-        }
-        unset($cfg);
-
         // Symptoms
         $symptoms = \App\Models\Symptom::where('user_id', $user->id)
             ->orderByDesc('recorded_at')
@@ -122,8 +113,7 @@ class UserController extends Controller
 
         $allDiseases = \App\Models\Disease::orderBy('disease_name')->get();
 
-        // Disease translations (for dropdowns / labels)
-        $diseasesBn = \App\Models\Translation::allOfType(\App\Models\Translation::TYPE_DISEASE);
+        $diseasesBn = [];
 
         // Uploads
         $uploads = \App\Models\Upload::where('user_id', $user->id)
@@ -134,7 +124,7 @@ class UserController extends Controller
         $reportUploads = $uploads->where('type', 'report');
 
         // Symptom list
-        $symptomsList = \App\Models\Translation::allOfType(\App\Models\Translation::TYPE_SYMPTOM);
+        $symptomsList = config('health.symptoms', []);
         
         return view('users.show', compact(
             'user',

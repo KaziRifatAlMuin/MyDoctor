@@ -2,18 +2,22 @@
 
 namespace Database\Seeders;
 
-use App\Models\Disease;
 use App\Models\Translation;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 
 class TranslationSeeder extends Seeder
 {
     /**
      * Seed the translations table from config/health.php.
-     * Also back-fills disease_name_bn on the diseases table.
      */
     public function run(): void
     {
+        if (!Schema::hasTable('translations')) {
+            $this->command?->warn('TranslationSeeder skipped: translations table does not exist.');
+            return;
+        }
+
         // ─── Symptoms ────────────────────────────────────────────────────────
         foreach (config('health.symptoms', []) as $en => $bn) {
             Translation::updateOrCreate(
@@ -36,11 +40,6 @@ class TranslationSeeder extends Seeder
                 ['type' => Translation::TYPE_DISEASE, 'key' => $en],
                 ['value' => $bn]
             );
-
-            // Back-fill Bangla name on the diseases table
-            Disease::where('disease_name', $en)
-                ->whereNull('disease_name_bn')
-                ->update(['disease_name_bn' => $bn]);
         }
 
         $this->command->info('TranslationSeeder: inserted/updated ' . Translation::count() . ' translations.');

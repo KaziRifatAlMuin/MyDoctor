@@ -1382,10 +1382,10 @@ body {
             </div>
             <div style="display:flex; align-items:center; gap:10px;">
                 <select id="diseaseFilter" onchange="filterByDisease(this.value)" style="padding: 10px 16px; border: 1px solid #e4e6eb; border-radius: 8px; min-width: 220px;">
-                    <option value="all" {{ !request('disease') ? 'selected' : '' }}>All Diseases (সকল রোগ)</option>
+                    <option value="all" {{ !request('disease') ? 'selected' : '' }}>All Diseases</option>
                     @foreach($diseases as $disease)
                         <option value="{{ $disease->id }}" {{ request('disease') == $disease->id ? 'selected' : '' }}>
-                            {{ $disease->disease_name }} @if($disease->bn_name) ({{ $disease->bn_name }}) @endif - {{ $disease->posts_count }} posts
+                            {{ $disease->disease_name }} - {{ $disease->posts_count }} posts
                         </option>
                     @endforeach
                 </select>
@@ -1416,7 +1416,7 @@ body {
                 <div class="quick-filter-buttons">
                     <button class="quick-filter-btn {{ !request('disease') ? 'active' : '' }}" onclick="filterByDisease('all')">
                         <i class="fas {{ $isStarredPage ? 'fa-star' : 'fa-globe' }} me-2"></i>
-                        <span class="filter-name">{{ $isStarredPage ? 'All Starred Posts' : 'All Posts (সকল পোস্ট)' }}</span>
+                        <span class="filter-name">{{ $isStarredPage ? 'All Starred Posts' : 'All Posts' }}</span>
                         <span class="filter-count">{{ $totalPosts }}</span>
                     </button>
                     @foreach($diseases as $disease)
@@ -1424,10 +1424,7 @@ body {
                                 onclick="filterByDisease({{ $disease->id }})">
                             <i class="fas fa-heartbeat me-2"></i>
                             <span class="filter-name">
-                                {{ $disease->disease_name }}<br>
-                                @if($disease->bn_name)
-                                    <span style="font-size: 11px; color: #65676b; margin-left: 4px;">({{ $disease->bn_name }})</span>
-                                @endif
+                                {{ $disease->disease_name }}
                             </span>
                             <span class="filter-count">{{ $disease->posts_count }}</span>
                         </button>
@@ -1504,8 +1501,7 @@ body {
                                                 <option value="">Select disease</option>
                                                 @foreach($diseases as $disease)
                                                     <option value="{{ $disease->id }}">
-                                                        {{ $disease->disease_name }} 
-                                                        @if($disease->bn_name)({{ $disease->bn_name }})@endif
+                                                        {{ $disease->disease_name }}
                                                     </option>
                                                 @endforeach
                                             </select>
@@ -1672,9 +1668,6 @@ body {
                         <div>
                             <div class="trending-name">
                                 {{ $disease->disease_name }}
-                                @if($disease->bn_name)
-                                    <small>({{ $disease->bn_name }})</small>
-                                @endif
                             </div>
                         </div>
                         <span class="trending-count">{{ $disease->posts_count }}</span>

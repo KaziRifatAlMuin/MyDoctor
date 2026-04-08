@@ -768,7 +768,7 @@
              * ═══════════════════════════════════════════════════════ */
             window.metricFieldDefs = @json(collect($metricConfig)->map(fn($c) => $c['js_fields']));
             window.symptomsList    = @json($symptomsList, JSON_UNESCAPED_UNICODE);
-            const diseasesData    = @json($allDiseases->map(fn($d) => ['id' => $d->id, 'name' => $d->disease_name, 'bn' => $d->disease_name_bn]), JSON_UNESCAPED_UNICODE);
+            const diseasesData    = @json($allDiseases->map(fn($d) => ['id' => $d->id, 'name' => $d->disease_name]), JSON_UNESCAPED_UNICODE);
 
 
             /* ═══════════════════════════════════════════════════════
@@ -778,10 +778,8 @@
                 function renderList(filter = '') {
                     const f = filter.toLowerCase();
                     const filtered = items.filter(i => {
-                        // Search in both English (label) and Bangla (sub)
                         const english = i.label.toLowerCase();
-                        const bangla = (i.sub || '').toLowerCase();
-                        return english.includes(f) || bangla.includes(f);
+                        return english.includes(f);
                     });
                     dropdownList.innerHTML = '';
                     if (filtered.length === 0) {
@@ -810,7 +808,7 @@
                     renderList(searchInput.value);
                     dropdownList.style.display = 'block';
                 });
-                // Filter as user types (searches in both English and Bangla)
+                // Filter as user types
                 searchInput.addEventListener('input', () => renderList(searchInput.value));
                 // Close dropdown when clicking outside
                 document.addEventListener('click', function(e) {

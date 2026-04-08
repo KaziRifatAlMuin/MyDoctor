@@ -10,13 +10,12 @@ class DiseaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $diseases = config('health.diseases');
+        $diseases = array_keys(config('health.diseases', []));
         
-        foreach ($diseases as $english => $bangla) {
+        foreach ($diseases as $english) {
             Disease::updateOrCreate(
                 ['disease_name' => $english],
                 [
-                    'disease_name_bn' => $bangla,
                     'description' => $english . ' description',
                     'created_at' => now(),
                     'updated_at' => now(),

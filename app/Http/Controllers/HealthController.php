@@ -12,7 +12,6 @@ use App\Models\MedicineLog;
 use App\Models\Disease;
 use App\Models\UserDisease;
 use App\Models\Upload;
-use App\Models\Translation;
 
 class HealthController extends Controller
 {
@@ -23,19 +22,9 @@ class HealthController extends Controller
     {
         $user = Auth::user();
 
-        // Load translations from DB (falls back to config if table is empty)
-        $symptomsList  = Translation::allOfType(Translation::TYPE_SYMPTOM);  // ['English' => 'বাংলা', …]
-        $metricConfig  = config('health.metric_types'); // keyed array with en, bn, fields, unit
-        $diseasesBn    = Translation::allOfType(Translation::TYPE_DISEASE);   // ['English' => 'বাংলা', …]
-
-        // Enrich metric bn labels from DB translations
-        $metricBn = Translation::allOfType(Translation::TYPE_METRIC);
-        foreach ($metricConfig as $key => &$cfg) {
-            if (isset($metricBn[$key])) {
-                $cfg['bn'] = $metricBn[$key];
-            }
-        }
-        unset($cfg);
+        $symptomsList  = config('health.symptoms', []);
+        $metricConfig  = config('health.metric_types', []);
+        $diseasesBn    = [];
 
         // Health Metrics — latest 50, grouped by type
         $healthMetrics = HealthMetric::where('user_id', $user->id)

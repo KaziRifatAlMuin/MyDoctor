@@ -344,7 +344,7 @@
                         <div class="d-flex flex-wrap gap-2 mt-2">
                             @forelse($profileDiseases as $disease)
                                 <span class="profile-disease-tag">
-                                    {{ $disease->disease_name }}{{ $disease->disease_name_bn ? ' (' . $disease->disease_name_bn . ')' : '' }}
+                                    {{ $disease->disease_name }}
                                 </span>
                             @empty
                                 <span class="profile-disease-tag" style="background: #f1f5f9; color: #64748b; border-color: #e2e8f0;">
