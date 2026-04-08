@@ -57,5 +57,15 @@ return [
         'document_date' => 'Document Date',
         'summary' => 'Summary',
     ],
-    'auto' => [],
+    'medicine' => [
+        'pending' => 'Pending',
+        'taken' => 'Taken',
+        'missed' => 'Missed',
+        'snoozed' => 'Snoozed',
+        'time_to_take' => 'Time to take :medicine at :time',
+    ],
+    'auto' => [
+        'My Doctor' => 'My Doctor',
+        'Healthcare Platform' => 'Healthcare Platform',
+    ],
 ];

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard')
+@section('title', __('ui.auto.Dashboard'))
 
 @push('styles')
 <style>

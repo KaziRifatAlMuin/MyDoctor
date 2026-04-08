@@ -107,13 +107,14 @@ class MedicineReminder extends Model
      */
     public function getStatusLabelAttribute()
     {
-        $labels = [
-            'pending' => 'Pending',
-            'taken' => 'Taken',
-            'missed' => 'Missed',
-            'snoozed' => 'Snoozed'
-        ];
-        return $labels[$this->status] ?? ucfirst($this->status);
+        $key = "ui.medicine.{$this->status}";
+        $translated = __($key);
+
+        if ($translated === $key) {
+            return ucfirst($this->status);
+        }
+
+        return $translated;
     }
 
     /**
@@ -123,7 +124,11 @@ class MedicineReminder extends Model
     {
         $medicineName = $this->schedule->medicine->medicine_name;
         $time = $this->reminder_at->format('h:i A');
-        return "Time to take {$medicineName} at {$time}";
+
+        return __('ui.medicine.time_to_take', [
+            'medicine' => $medicineName,
+            'time' => $time,
+        ]);
     }
 
     /**
