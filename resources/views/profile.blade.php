@@ -475,6 +475,11 @@
                                 <i class="fas fa-chevron-right text-muted" style="font-size:0.8rem;"></i>
                             </button>
 
+                            <a href="{{ route('profile.setting') }}" class="action-btn text-start">
+                                <span><i class="fas fa-cog me-2" style="color:#667eea;"></i>Settings</span>
+                                <i class="fas fa-chevron-right text-muted" style="font-size:0.8rem;"></i>
+                            </a>
+
                             {{-- Email verification UI removed (handled elsewhere) --}}
 
                             <div class="mt-2">

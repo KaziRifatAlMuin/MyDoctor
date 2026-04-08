@@ -16,7 +16,7 @@ class NotificationPreferenceController extends Controller
     {
         $user = Auth::user();
         $chatbotBubbleEnabled = request()->cookie('chatbot_bubble_enabled', '1') === '1';
-        return view('profile.notifications', compact('user', 'chatbotBubbleEnabled'));
+        return view('profile.setting', compact('user', 'chatbotBubbleEnabled'));
     }
 
     public function update(Request $request)

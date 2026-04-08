@@ -2115,8 +2115,8 @@
                                 </a>
 
                                 <div class="divider"></div>
-                                <a href="{{ route('profile.notifications') }}" class="dropdown-item-custom">
-                                    <i class="fas fa-bell me-2"></i>Manage Notification Preferences
+                                <a href="{{ route('profile.setting') }}" class="dropdown-item-custom">
+                                    <i class="fas fa-cog me-2"></i>Settings
                                 </a>
 
                                 <!-- Admin Dashboard Link -->

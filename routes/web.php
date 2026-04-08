@@ -77,9 +77,15 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     
-    // Notification Preferences
-    Route::get('/profile/notifications', [NotificationPreferenceController::class, 'index'])->name('profile.notifications');
-    Route::put('/profile/notifications', [NotificationPreferenceController::class, 'update'])->name('profile.notifications.update');
+    // Settings (notification preferences)
+    Route::get('/profile/setting', [NotificationPreferenceController::class, 'index'])->name('profile.setting');
+    Route::put('/profile/setting', [NotificationPreferenceController::class, 'update'])->name('profile.setting.update');
+    Route::get('/profile/notifications', function () {
+        return redirect()->route('profile.setting');
+    })->name('profile.notifications');
+    Route::put('/profile/notifications', function () {
+        return redirect()->route('profile.setting');
+    })->name('profile.notifications.update');
     Route::post('/profile/notifications/toggle-email', [NotificationPreferenceController::class, 'toggleEmail'])->name('profile.notifications.toggle-email');
     Route::post('/profile/notifications/toggle-push', [NotificationPreferenceController::class, 'togglePush'])->name('profile.notifications.toggle-push');
 
