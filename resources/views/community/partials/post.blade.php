@@ -1,5 +1,10 @@
 @php
     $description = $post->description ?? '';
+    $isAuthenticated = Auth::check();
+    $userLiked = $isAuthenticated ? $post->likes()->where('user_id', Auth::id())->exists() : false;
+    $userStarred = $isAuthenticated
+        ? $post->likes()->where('user_id', Auth::id())->where('is_starred', true)->exists()
+        : false;
 @endphp
 
 <div class="post-card" id="post-{{ $post->id }}" data-post-id="{{ $post->id }}">
@@ -42,6 +47,13 @@
                     <i class="fas fa-expand" style="width:18px; color:#1877f2;"></i>
                     <span>View Full Post</span>
                 </button>
+
+                @auth
+                    <button class="dropdown-item" onclick="toggleStar({{ $post->id }}, document.getElementById('star-btn-{{ $post->id }}'))" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#1a1a1a; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb;">
+                        <i class="{{ $userStarred ? 'fas text-warning' : 'far' }} fa-star" style="width:18px;"></i>
+                        <span>{{ $userStarred ? 'Remove Star' : 'Star Post' }}</span>
+                    </button>
+                @endauth
                 
                 @auth
                     @if(Auth::id() === $post->user_id)
@@ -207,9 +219,12 @@
     <!-- Post Action Buttons -->
     <div class="post-action-buttons" style="display:flex;gap:8px;margin-top:12px;padding:0;">
         @auth
-            <button class="post-action-btn like-btn {{ $post->likes()->where('user_id',Auth::id())->exists() ? 'liked' : '' }}" onclick="toggleLike({{ $post->id }},this)" id="like-btn-{{ $post->id }}" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#1a1a1a;font-size:14px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
-                <i class="{{ $post->likes()->where('user_id',Auth::id())->exists() ? 'fas' : 'far' }} fa-heart"></i>
+            <button class="post-action-btn like-btn {{ $userLiked ? 'liked' : '' }}" onclick="toggleLike({{ $post->id }},this)" id="like-btn-{{ $post->id }}" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#1a1a1a;font-size:14px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
+                <i class="{{ $userLiked ? 'fas' : 'far' }} fa-heart"></i>
                 <span class="like-count">{{ $post->like_count }}</span>
+            </button>
+            <button class="post-action-btn star-btn {{ $userStarred ? 'starred' : '' }}" onclick="toggleStar({{ $post->id }},this)" id="star-btn-{{ $post->id }}" style="flex:0 0 auto;min-width:48px;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#1a1a1a;font-size:14px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;" title="{{ $userStarred ? 'Remove star' : 'Star this post' }}">
+                <i class="{{ $userStarred ? 'fas text-warning' : 'far' }} fa-star"></i>
             </button>
         @else
             <a href="{{ route('login') }}" class="post-action-btn" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#1a1a1a;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">

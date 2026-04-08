@@ -2980,9 +2980,87 @@ window.clearModalCommentFile = function(postId) {
                         button.classList.remove("liked");
                         icon.style.color = "inherit";
                     }
+
+                    if (!data.liked) {
+                        const starButtons = document.querySelectorAll(`[id="star-btn-${postId}"]`);
+                        starButtons.forEach((starBtn) => {
+                            const starIcon = starBtn.querySelector('i');
+                            starBtn.classList.remove('starred');
+                            if (starIcon) {
+                                starIcon.classList.remove('fas', 'text-warning');
+                                starIcon.classList.add('far');
+                            }
+                        });
+                    }
                 }
             } catch (err) {
                 console.error("Like error:", err);
+            }
+        };
+
+        window.toggleStar = async function(postId, button) {
+            if (!button) return;
+
+            try {
+                const response = await fetch(`/community/posts/${postId}/star`, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const starButtons = document.querySelectorAll(`[id="star-btn-${postId}"]`);
+                    starButtons.forEach((starButton) => {
+                        const starIcon = starButton.querySelector('i');
+                        if (data.starred) {
+                            starButton.classList.add('starred');
+                            if (starIcon) {
+                                starIcon.classList.remove('far');
+                                starIcon.classList.add('fas', 'text-warning');
+                            }
+                        } else {
+                            starButton.classList.remove('starred');
+                            if (starIcon) {
+                                starIcon.classList.remove('fas', 'text-warning');
+                                starIcon.classList.add('far');
+                            }
+                        }
+                    });
+
+                    if (data.liked) {
+                        const likeButtons = document.querySelectorAll(`[id="like-btn-${postId}"]`);
+                        likeButtons.forEach((likeBtn) => {
+                            const likeIcon = likeBtn.querySelector('i');
+                            const likeCount = likeBtn.querySelector('.like-count');
+
+                            likeBtn.classList.add('liked');
+                            if (likeIcon) {
+                                likeIcon.classList.remove('far');
+                                likeIcon.classList.add('fas');
+                                likeIcon.style.color = '#dc3545';
+                            }
+                            if (likeCount && typeof data.count !== 'undefined') {
+                                likeCount.textContent = data.count;
+                            }
+                        });
+                    }
+
+                    if (typeof window.showToast === 'function' && data.message) {
+                        window.showToast(data.message, 'success');
+                    }
+                } else if (typeof window.showToast === 'function') {
+                    window.showToast(data.message || 'Unable to star post', 'error');
+                }
+            } catch (err) {
+                console.error("Star error:", err);
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Unable to star post', 'error');
+                }
             }
         };
 

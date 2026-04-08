@@ -131,6 +131,112 @@ class CommunityController extends Controller
     }
 
     /**
+     * Display posts starred by the current user.
+     */
+    public function starredPosts(Request $request)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+
+        try {
+            $diseaseId = $request->get('disease');
+            $diseaseTranslations = Config::get('health.diseases', []);
+            $userId = Auth::id();
+
+            $query = Post::with(['user', 'disease', 'comments' => function($q) {
+                $q->with('user')->latest()->limit(3);
+            }])->withCount(['likes as likes_count'])
+              ->whereHas('likes', function ($q) use ($userId) {
+                  $q->where('user_id', $userId)
+                    ->where('is_starred', true);
+              });
+
+            if ($diseaseId && $diseaseId !== 'all') {
+                $query->where('disease_id', $diseaseId);
+            }
+
+            $posts = $query->latest()->paginate(10)->withQueryString();
+
+            $posts->getCollection()->transform(function($post) use ($diseaseTranslations) {
+                if ($post->disease) {
+                    $post->disease->bn_name = $diseaseTranslations[$post->disease->disease_name] ?? null;
+                }
+                return $post;
+            });
+
+            $diseases = Disease::withCount([
+                'posts as posts_count' => function ($q) use ($userId) {
+                    $q->whereHas('likes', function ($likeQuery) use ($userId) {
+                        $likeQuery->where('user_id', $userId)
+                                  ->where('is_starred', true);
+                    });
+                }
+            ])->orderBy('disease_name')->get();
+
+            $diseases->each(function($disease) use ($diseaseTranslations) {
+                $disease->bn_name = $diseaseTranslations[$disease->disease_name] ?? null;
+            });
+
+            $totalPosts = (clone $query)->count();
+            $totalUsers = User::count();
+            $totalComments = Comment::whereHas('post.likes', function ($q) use ($userId) {
+                $q->where('user_id', $userId)->where('is_starred', true);
+            })->count();
+            $activeToday = User::whereDate('updated_at', today())->count() ?: 0;
+
+            $trendingDiseases = Disease::withCount([
+                'posts as posts_count' => function ($q) use ($userId) {
+                    $q->whereHas('likes', function ($likeQuery) use ($userId) {
+                        $likeQuery->where('user_id', $userId)
+                                  ->where('is_starred', true);
+                    });
+                }
+            ])->get()
+              ->filter(function ($disease) {
+                  return (int) $disease->posts_count > 0;
+              })
+              ->sortByDesc('posts_count')
+              ->take(5)
+              ->values();
+
+            $trendingDiseases->each(function($disease) use ($diseaseTranslations) {
+                $disease->bn_name = $diseaseTranslations[$disease->disease_name] ?? null;
+            });
+
+            return view('community.index', [
+                'posts' => $posts,
+                'diseases' => $diseases,
+                'diseaseId' => $diseaseId,
+                'totalPosts' => $totalPosts,
+                'totalUsers' => $totalUsers,
+                'totalComments' => $totalComments,
+                'activeToday' => $activeToday,
+                'trendingDiseases' => $trendingDiseases,
+                'isStarredPage' => true,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Community Starred Posts Error: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return view('community.index', [
+                'posts' => new LengthAwarePaginator([], 0, 10),
+                'diseases' => collect([]),
+                'diseaseId' => null,
+                'totalPosts' => 0,
+                'totalUsers' => 0,
+                'totalComments' => 0,
+                'activeToday' => 0,
+                'trendingDiseases' => collect([]),
+                'isStarredPage' => true,
+                'error' => 'Error loading starred posts: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
      * Display the landing page (redirects to forum if logged in)
      */
     public function landing()
@@ -650,6 +756,7 @@ class CommunityController extends Controller
                 }
                 $post->refresh();
                 $liked = false;
+                $starred = false;
                 
                 // Remove notification when unliked
                 $this->removeNotification($post, $user, 'like');
@@ -658,15 +765,18 @@ class CommunityController extends Controller
                 PostLike::create([
                     'post_id' => $post->id,
                     'user_id' => $user->id,
+                    'is_starred' => false,
                 ]);
                 $post->increment('like_count');
                 $post->refresh();
                 $liked = true;
+                $starred = false;
             }
 
             return response()->json([
                 'success' => true,
                 'liked' => $liked,
+                'starred' => $starred,
                 'count' => max(0, $post->like_count), // Ensure non-negative
             ]);
         } catch (\Exception $e) {
@@ -674,6 +784,63 @@ class CommunityController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error liking post: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Toggle star on a post for the current user.
+     */
+    public function togglePostStar(Request $request, Post $post)
+    {
+        try {
+            if (!Auth::check()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please login to star posts'
+                ], 401);
+            }
+
+            $user = Auth::user();
+            $postLike = PostLike::where('post_id', $post->id)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if (!$postLike) {
+                $postLike = PostLike::create([
+                    'post_id' => $post->id,
+                    'user_id' => $user->id,
+                    'is_starred' => true,
+                ]);
+
+                $post->increment('like_count');
+                $post->refresh();
+
+                return response()->json([
+                    'success' => true,
+                    'starred' => true,
+                    'liked' => true,
+                    'count' => max(0, $post->like_count),
+                    'message' => 'Post starred successfully.',
+                ]);
+            }
+
+            $postLike->is_starred = !$postLike->is_starred;
+            $postLike->save();
+            $post->refresh();
+
+            return response()->json([
+                'success' => true,
+                'starred' => (bool) $postLike->is_starred,
+                'liked' => true,
+                'count' => max(0, $post->like_count),
+                'message' => $postLike->is_starred ? 'Post starred successfully.' : 'Post removed from starred.',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Toggle Post Star Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error starring post: ' . $e->getMessage()
             ], 500);
         }
     }

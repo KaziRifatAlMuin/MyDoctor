@@ -1,5 +1,10 @@
 @php
     $description = $post->description ?? '';
+    $isAuthenticated = Auth::check();
+    $userLiked = $isAuthenticated ? $post->likes()->where('user_id', Auth::id())->exists() : false;
+    $userStarred = $isAuthenticated
+        ? $post->likes()->where('user_id', Auth::id())->where('is_starred', true)->exists()
+        : false;
 @endphp
 
 <div class="modal-post-container" data-post-id="{{ $post->id }}" style="padding: 0; display: flex; position: relative; flex-direction: column; height: 100%; max-height: calc(90vh - 60px);">
@@ -161,9 +166,12 @@
         <!-- Post Action Buttons -->
         <div style="display: flex; gap: 8px; margin: 12px 16px 0 16px; padding: 0;">
             @auth
-                <button onclick="toggleLike({{ $post->id }}, this)" id="like-btn-{{ $post->id }}" style="flex: 1; padding: 10px; border: none; border-radius: 6px; background: #f0f2f5; color: #1a1a1a; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;" class="{{ $post->likes()->where('user_id',Auth::id())->exists() ? 'liked' : '' }}">
-                    <i class="{{ $post->likes()->where('user_id',Auth::id())->exists() ? 'fas' : 'far' }} fa-heart" style="{{ $post->likes()->where('user_id',Auth::id())->exists() ? 'color: #dc3545;' : '' }}"></i>
+                <button onclick="toggleLike({{ $post->id }}, this)" id="like-btn-{{ $post->id }}" style="flex: 1; padding: 10px; border: none; border-radius: 6px; background: #f0f2f5; color: #1a1a1a; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;" class="{{ $userLiked ? 'liked' : '' }}">
+                    <i class="{{ $userLiked ? 'fas' : 'far' }} fa-heart" style="{{ $userLiked ? 'color: #dc3545;' : '' }}"></i>
                     <span class="like-count">{{ $post->like_count }}</span>
+                </button>
+                <button onclick="toggleStar({{ $post->id }}, this)" id="star-btn-{{ $post->id }}" style="flex: 0 0 auto; min-width: 48px; padding: 10px; border: none; border-radius: 6px; background: #f0f2f5; color: #1a1a1a; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;" class="{{ $userStarred ? 'starred' : '' }}" title="{{ $userStarred ? 'Remove star' : 'Star this post' }}">
+                    <i class="{{ $userStarred ? 'fas text-warning' : 'far' }} fa-star"></i>
                 </button>
             @else
                 <a href="{{ route('login') }}" style="flex: 1; padding: 10px; border: none; border-radius: 6px; background: #f0f2f5; color: #1a1a1a; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;">

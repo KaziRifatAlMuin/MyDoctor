@@ -1363,16 +1363,22 @@ body {
 }
 </style>
 
+@php
+    $isStarredPage = $isStarredPage ?? false;
+@endphp
+
 <div class="community-container">
     <!-- Header -->
     <div class="community-header">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
             <div>
                 <h1 style="font-size: 28px; font-weight: 700; margin-bottom: 5px;">
-                    <i class="fas fa-users me-3" style="color: #1877f2;"></i>
-                    Community Forum
+                    <i class="fas {{ $isStarredPage ? 'fa-star' : 'fa-users' }} me-3" style="color: {{ $isStarredPage ? '#f7b500' : '#1877f2' }};"></i>
+                    {{ $isStarredPage ? 'Starred Posts' : 'Community Forum' }}
                 </h1>
-                <p style="color: #65676b; margin: 0;">Connect with others, share experiences, and get support</p>
+                <p style="color: #65676b; margin: 0;">
+                    {{ $isStarredPage ? 'Your saved posts in one focused feed' : 'Connect with others, share experiences, and get support' }}
+                </p>
             </div>
             <div style="display:flex; align-items:center; gap:10px;">
                 <select id="diseaseFilter" onchange="filterByDisease(this.value)" style="padding: 10px 16px; border: 1px solid #e4e6eb; border-radius: 8px; min-width: 220px;">
@@ -1383,6 +1389,11 @@ body {
                         </option>
                     @endforeach
                 </select>
+                @auth
+                    <a href="{{ $isStarredPage ? route('community.index') : route('community.posts.starred') }}" class="btn btn-sm {{ $isStarredPage ? 'btn-outline-primary' : 'btn-warning' }} rounded-pill ms-1 d-inline-flex align-items-center" style="white-space:nowrap;">
+                        <i class="fas fa-star me-2"></i>{{ $isStarredPage ? 'All Posts' : 'Starred Posts' }}
+                    </a>
+                @endauth
                 <a href="{{ auth()->check() ? route('users.index') : route('login') }}" class="btn btn-sm btn-primary rounded-pill ms-2 d-none d-md-inline-flex align-items-center" style="white-space:nowrap;">
                     <i class="fas fa-users me-2"></i> Browse Members
                 </a>
@@ -1404,8 +1415,8 @@ body {
                 </h5>
                 <div class="quick-filter-buttons">
                     <button class="quick-filter-btn {{ !request('disease') ? 'active' : '' }}" onclick="filterByDisease('all')">
-                        <i class="fas fa-globe me-2"></i>
-                        <span class="filter-name">All Posts (সকল পোস্ট)</span>
+                        <i class="fas {{ $isStarredPage ? 'fa-star' : 'fa-globe' }} me-2"></i>
+                        <span class="filter-name">{{ $isStarredPage ? 'All Starred Posts' : 'All Posts (সকল পোস্ট)' }}</span>
                         <span class="filter-count">{{ $totalPosts }}</span>
                     </button>
                     @foreach($diseases as $disease)
@@ -1576,8 +1587,8 @@ body {
                     @empty
                         <div style="text-align: center; padding: 60px 20px; background: white; border-radius: 12px;">
                             <i class="fas fa-comments fa-4x mb-3" style="color: #adb5bd;"></i>
-                            <h5>No discussions yet</h5>
-                            <p style="color: #65676b;">Be the first to start a conversation!</p>
+                            <h5>{{ $isStarredPage ? 'No starred posts yet' : 'No discussions yet' }}</h5>
+                            <p style="color: #65676b;">{{ $isStarredPage ? 'Star posts from the feed to collect them here.' : 'Be the first to start a conversation!' }}</p>
                         </div>
                     @endforelse
                 </div>
@@ -1898,10 +1909,11 @@ document.getElementById('createPostModal')?.addEventListener('hidden.bs.modal', 
 
 // ==================== FILTER ====================
 function filterByDisease(diseaseId) {
+    const baseRoute = @json($isStarredPage ? route('community.posts.starred') : route('community.index'));
     if (diseaseId === 'all') {
-        window.location.href = '{{ route("community.index") }}';
+        window.location.href = baseRoute;
     } else {
-        window.location.href = '{{ route("community.index") }}?disease=' + diseaseId;
+        window.location.href = baseRoute + '?disease=' + diseaseId;
     }
 }
 

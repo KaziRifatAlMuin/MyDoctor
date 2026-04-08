@@ -235,6 +235,7 @@ Route::prefix('community')->name('community.')->group(function () {
     // Page routes (return HTML)
     Route::get('/landing', [CommunityController::class, 'landing'])->name('landing');
     Route::get('/forum', [CommunityController::class, 'index'])->name('index');
+    Route::get('/posts/starred', [CommunityController::class, 'starredPosts'])->name('posts.starred');
     Route::get('/posts/{post}', [CommunityController::class, 'showPost'])->name('posts.show');
     
     // MODAL POST - CRITICAL FOR DYNAMIC RELOADS
@@ -250,6 +251,7 @@ Route::prefix('community')->name('community.')->group(function () {
     Route::post('/posts/{post}/update', [CommunityController::class, 'updatePost'])->name('posts.update');  // ← POST not PATCH
     Route::post('/posts/{post}/delete', [CommunityController::class, 'destroyPost'])->name('posts.destroy');
     Route::post('/posts/{post}/like', [CommunityController::class, 'togglePostLike'])->name('posts.like');
+    Route::post('/posts/{post}/star', [CommunityController::class, 'togglePostStar'])->name('posts.star');
     
     // User details for modals
     Route::get('/user/{userId}', [CommunityController::class, 'getUserDetails'])->name('user.details');

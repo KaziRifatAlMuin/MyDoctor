@@ -41,7 +41,7 @@ class PostInteractionTest extends TestCase
             'count' => 1
         ]);
 
-        $this->assertDatabaseHas('post_likes', [
+        $this->assertDatabaseHas('user_posts', [
             'user_id' => $this->user->id,
             'post_id' => $this->post->id
         ]);
@@ -68,7 +68,7 @@ class PostInteractionTest extends TestCase
             'count' => 0
         ]);
 
-        $this->assertDatabaseMissing('post_likes', [
+        $this->assertDatabaseMissing('user_posts', [
             'user_id' => $this->user->id,
             'post_id' => $this->post->id
         ]);
@@ -117,7 +117,7 @@ class PostInteractionTest extends TestCase
             'count' => 1
         ]);
 
-        $this->assertDatabaseHas('comment_likes', [
+        $this->assertDatabaseHas('post_comments', [
             'user_id' => $this->user->id,
             'comment_id' => $comment->id
         ]);
@@ -146,9 +146,51 @@ class PostInteractionTest extends TestCase
             'count' => 0
         ]);
 
-        $this->assertDatabaseMissing('comment_likes', [
+        $this->assertDatabaseMissing('post_comments', [
             'user_id' => $this->user->id,
             'comment_id' => $comment->id
         ]);
+    }
+
+    /** @test */
+    public function user_can_star_a_post(): void
+    {
+        $this->actingAs($this->user);
+
+        $response = $this->post("/community/posts/{$this->post->id}/star");
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'starred' => true,
+            'liked' => true,
+            'count' => 1,
+        ]);
+
+        $this->assertDatabaseHas('user_posts', [
+            'user_id' => $this->user->id,
+            'post_id' => $this->post->id,
+            'is_starred' => true,
+        ]);
+    }
+
+    /** @test */
+    public function starred_posts_page_is_accessible_and_contains_starred_post(): void
+    {
+        $this->actingAs($this->user);
+
+        PostLike::create([
+            'user_id' => $this->user->id,
+            'post_id' => $this->post->id,
+            'is_starred' => true,
+        ]);
+
+        $response = $this->get('/community/posts/starred');
+
+        $response->assertStatus(200);
+        $response->assertSee('Starred Posts');
+        $response->assertViewHas('posts', function ($posts) {
+            return $posts->getCollection()->contains('id', $this->post->id);
+        });
     }
 }

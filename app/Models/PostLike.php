@@ -9,7 +9,14 @@ class PostLike extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['post_id', 'user_id'];
+    protected $table = 'user_posts';
+
+    protected $fillable = ['post_id', 'user_id', 'is_starred'];
+
+    protected $casts = [
+        'is_starred' => 'boolean',
+    ];
+
     public $timestamps = false; // No timestamps needed
 
     protected static function booted(): void
