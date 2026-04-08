@@ -1,6 +1,10 @@
 @php
     $description = $post->description ?? '';
     $isAuthenticated = Auth::check();
+    $isOwner = $isAuthenticated && Auth::id() === $post->user_id;
+    $isAdmin = $isAuthenticated && Auth::user()->isAdmin();
+    $isAnonymous = (bool) $post->is_anonymous;
+    $displayName = $isAnonymous ? 'Anonymous Member' : $post->user->name;
     $userLiked = $isAuthenticated ? $post->likes()->where('user_id', Auth::id())->exists() : false;
     $userStarred = $isAuthenticated
         ? $post->likes()->where('user_id', Auth::id())->where('is_starred', true)->exists()
@@ -10,16 +14,16 @@
 <div class="post-card" id="post-{{ $post->id }}" data-post-id="{{ $post->id }}">
     <!-- Post Header -->
     <div class="post-header" style="padding:0 0 12px 0;margin:0;">
-        <div class="post-user" onclick="showUserModal({{ $post->user->id }})" style="display:flex;gap:12px;cursor:pointer;">
+        <div class="post-user" @if(!$isAnonymous) onclick="showUserModal({{ $post->user->id }})" @endif style="display:flex;gap:12px;cursor:{{ $isAnonymous ? 'default' : 'pointer' }};">
             <div class="user-avatar" style="width:48px;height:48px;border-radius:50%;overflow:hidden;flex-shrink:0;">
-                @if($post->user->picture)
+                @if(!$isAnonymous && $post->user->picture)
                     <img src="{{ asset('storage/' . $post->user->picture) }}" alt="{{ $post->user->name }}" style="width:100%;height:100%;object-fit:cover;">
                 @else
-                    <div class="avatar-placeholder" style="width:100%;height:100%;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;">{{ strtoupper(substr($post->user->name,0,1)) }}</div>
+                    <div class="avatar-placeholder" style="width:100%;height:100%;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;">{{ $isAnonymous ? 'A' : strtoupper(substr($post->user->name,0,1)) }}</div>
                 @endif
             </div>
             <div class="user-info">
-                <h6 class="user-name" style="font-size:15px;font-weight:600;margin:0;padding:0;color:#1a1a1a;">{{ $post->user->name }}</h6>
+                <h6 class="user-name" style="font-size:15px;font-weight:600;margin:0;padding:0;color:#1a1a1a;">{{ $displayName }}</h6>
                 <div class="post-meta" style="display:flex;align-items:center;gap:12px;font-size:12px;color:#65676b;margin:0;padding:0;">
                     <span class="post-time"><i class="far fa-clock me-1"></i>{{ $post->created_at->diffForHumans() }}</span>
                     @if($post->disease)
@@ -32,7 +36,10 @@
         </div>
         
         <!-- Three Dots Dropdown Menu -->
-        <div class="post-actions-menu" style="position:relative; display:flex; align-items:center;">
+        <div class="post-actions-menu" style="position:relative; display:flex; align-items:center; gap:8px;">
+            @if($post->is_edited)
+                <span style="font-size:11px; font-weight:600; color:#65676b; background:#f0f2f5; border-radius:12px; padding:4px 8px;">Edited</span>
+            @endif
             <button class="post-menu-btn" onclick="togglePostMenu({{ $post->id }})" title="More options" style="width:34px;height:34px;border:none;border-radius:50%;background:#f0f2f5;color:#65676b;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;">
                 <i class="fas fa-ellipsis-v"></i>
             </button>
@@ -53,7 +60,7 @@
                 @endauth
                 
                 @auth
-                    @if(Auth::id() === $post->user_id)
+                    @if($isOwner)
                         <!-- Edit Post (only for owner) -->
                         <button class="dropdown-item" onclick="editPost({{ $post->id }})" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#1a1a1a; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb;">
                             <i class="fas fa-edit" style="width:18px; color:#1877f2;"></i>
@@ -64,6 +71,18 @@
                         <button class="dropdown-item text-danger" onclick="confirmDelete({{ $post->id }},'post')" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#dc3545; cursor:pointer; transition:background 0.2s; text-align:left;">
                             <i class="fas fa-trash" style="width:18px; color:#dc3545;"></i>
                             <span>Delete Post</span>
+                        </button>
+                    @endif
+
+                    <button class="dropdown-item" onclick="reportPost({{ $post->id }})" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#dc3545; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb;">
+                        <i class="fas fa-flag" style="width:18px; color:#dc3545;"></i>
+                        <span>{{ $post->is_reported ? 'Reported' : 'Report Post' }}</span>
+                    </button>
+
+                    @if($isAdmin && !$post->is_approved)
+                        <button class="dropdown-item" onclick="approvePost({{ $post->id }})" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#198754; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb;">
+                            <i class="fas fa-check-circle" style="width:18px; color:#198754;"></i>
+                            <span>Approve Post</span>
                         </button>
                     @endif
                 @endauth

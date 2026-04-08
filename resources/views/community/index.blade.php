@@ -1365,6 +1365,7 @@ body {
 
 @php
     $isStarredPage = $isStarredPage ?? false;
+    $isPendingPage = $isPendingPage ?? false;
 @endphp
 
 <div class="community-container">
@@ -1373,11 +1374,11 @@ body {
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
             <div>
                 <h1 style="font-size: 28px; font-weight: 700; margin-bottom: 5px;">
-                    <i class="fas {{ $isStarredPage ? 'fa-star' : 'fa-users' }} me-3" style="color: {{ $isStarredPage ? '#f7b500' : '#1877f2' }};"></i>
-                    {{ $isStarredPage ? 'Starred Posts' : 'Community Forum' }}
+                    <i class="fas {{ $isPendingPage ? 'fa-hourglass-half' : ($isStarredPage ? 'fa-star' : 'fa-users') }} me-3" style="color: {{ $isPendingPage ? '#ff9800' : ($isStarredPage ? '#f7b500' : '#1877f2') }};"></i>
+                    {{ $isPendingPage ? 'Pending Posts' : ($isStarredPage ? 'Starred Posts' : 'Community Forum') }}
                 </h1>
                 <p style="color: #65676b; margin: 0;">
-                    {{ $isStarredPage ? 'Your saved posts in one focused feed' : 'Connect with others, share experiences, and get support' }}
+                    {{ $isPendingPage ? 'Your posts waiting for admin approval' : ($isStarredPage ? 'Your saved posts in one focused feed' : 'Connect with others, share experiences, and get support') }}
                 </p>
             </div>
             <div style="display:flex; align-items:center; gap:10px;">
@@ -1392,6 +1393,9 @@ body {
                 @auth
                     <a href="{{ $isStarredPage ? route('community.index') : route('community.posts.starred') }}" class="btn btn-sm {{ $isStarredPage ? 'btn-outline-primary' : 'btn-warning' }} rounded-pill ms-1 d-inline-flex align-items-center" style="white-space:nowrap;">
                         <i class="fas fa-star me-2"></i>{{ $isStarredPage ? 'All Posts' : 'Starred Posts' }}
+                    </a>
+                    <a href="{{ $isPendingPage ? route('community.index') : route('community.posts.pending') }}" class="btn btn-sm {{ $isPendingPage ? 'btn-outline-primary' : 'btn-outline-warning' }} rounded-pill ms-1 d-inline-flex align-items-center" style="white-space:nowrap;">
+                        <i class="fas fa-hourglass-half me-2"></i>{{ $isPendingPage ? 'All Posts' : 'Pending Posts' }}
                     </a>
                 @endauth
                 <a href="{{ auth()->check() ? route('users.index') : route('login') }}" class="btn btn-sm btn-primary rounded-pill ms-2 d-none d-md-inline-flex align-items-center" style="white-space:nowrap;">
@@ -1415,8 +1419,8 @@ body {
                 </h5>
                 <div class="quick-filter-buttons">
                     <button class="quick-filter-btn {{ !request('disease') ? 'active' : '' }}" onclick="filterByDisease('all')">
-                        <i class="fas {{ $isStarredPage ? 'fa-star' : 'fa-globe' }} me-2"></i>
-                        <span class="filter-name">{{ $isStarredPage ? 'All Starred Posts' : 'All Posts' }}</span>
+                        <i class="fas {{ $isPendingPage ? 'fa-hourglass-half' : ($isStarredPage ? 'fa-star' : 'fa-globe') }} me-2"></i>
+                        <span class="filter-name">{{ $isPendingPage ? 'All Pending Posts' : ($isStarredPage ? 'All Starred Posts' : 'All Posts') }}</span>
                         <span class="filter-count">{{ $totalPosts }}</span>
                     </button>
                     @foreach($diseases as $disease)
@@ -1521,6 +1525,13 @@ body {
                                         </div>
                                     </div>
 
+                                    <div style="margin-bottom: 12px;">
+                                        <label style="display:flex; align-items:center; gap:8px; font-size:13px; color:#65676b; cursor:pointer;">
+                                            <input type="checkbox" id="createPostAnonymous" style="cursor:pointer;">
+                                            Post anonymously
+                                        </label>
+                                    </div>
+
                                     <!-- File Upload Info -->
                                     <div class="file-upload-info">
                                         <i class="fas fa-info-circle"></i>
@@ -1583,8 +1594,8 @@ body {
                     @empty
                         <div style="text-align: center; padding: 60px 20px; background: white; border-radius: 12px;">
                             <i class="fas fa-comments fa-4x mb-3" style="color: #adb5bd;"></i>
-                            <h5>{{ $isStarredPage ? 'No starred posts yet' : 'No discussions yet' }}</h5>
-                            <p style="color: #65676b;">{{ $isStarredPage ? 'Star posts from the feed to collect them here.' : 'Be the first to start a conversation!' }}</p>
+                            <h5>{{ $isPendingPage ? 'No pending posts' : ($isStarredPage ? 'No starred posts yet' : 'No discussions yet') }}</h5>
+                            <p style="color: #65676b;">{{ $isPendingPage ? 'New posts will appear here until approved by an admin.' : ($isStarredPage ? 'Star posts from the feed to collect them here.' : 'Be the first to start a conversation!') }}</p>
                         </div>
                     @endforelse
                 </div>
@@ -1831,6 +1842,7 @@ function clearCreatePostFile() {
 function submitCreatePost() {
     const content = document.getElementById('createPostContent').value.trim();
     const diseaseId = document.getElementById('createPostDiseaseId').value;
+    const isAnonymous = document.getElementById('createPostAnonymous')?.checked ? '1' : '0';
 
     if (!content && createPostFiles.length === 0) {
         showToast('Please write something or add a file', 'warning');
@@ -1845,6 +1857,7 @@ function submitCreatePost() {
     const formData = new FormData();
     formData.append('disease_id', diseaseId);
     formData.append('description', content);
+    formData.append('is_anonymous', isAnonymous);
 
     createPostFiles.forEach((file, index) => {
         formData.append(`files[${index}]`, file);
@@ -1872,13 +1885,17 @@ function submitCreatePost() {
             updateCreatePostCharCounter();
             clearCreatePostFile();
             document.getElementById('createPostDiseaseId').value = '';
+            const anonymousCheckbox = document.getElementById('createPostAnonymous');
+            if (anonymousCheckbox) anonymousCheckbox.checked = false;
             createPostModal.hide();
-            
-            const postsFeed = document.getElementById('postsFeed');
-            postsFeed.insertAdjacentHTML('afterbegin', data.html);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            
-            showToast('✅ Post created successfully!', 'success');
+
+            if (data.html) {
+                const postsFeed = document.getElementById('postsFeed');
+                postsFeed.insertAdjacentHTML('afterbegin', data.html);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            showToast(`✅ ${data.message || 'Post submitted successfully.'}`, 'success');
         } else {
             showToast('❌ ' + (data.message || 'Error creating post'), 'error');
         }
@@ -1898,16 +1915,64 @@ document.getElementById('createPostModal')?.addEventListener('hidden.bs.modal', 
     document.getElementById('createPostContent').value = '';
     clearCreatePostFile();
     document.getElementById('createPostDiseaseId').value = '';
+    const anonymousCheckbox = document.getElementById('createPostAnonymous');
+    if (anonymousCheckbox) anonymousCheckbox.checked = false;
 });
 
 // ==================== FILTER ====================
 function filterByDisease(diseaseId) {
-    const baseRoute = @json($isStarredPage ? route('community.posts.starred') : route('community.index'));
+    const baseRoute = @json($isPendingPage ? route('community.posts.pending') : ($isStarredPage ? route('community.posts.starred') : route('community.index')));
     if (diseaseId === 'all') {
         window.location.href = baseRoute;
     } else {
         window.location.href = baseRoute + '?disease=' + diseaseId;
     }
+}
+
+function reportPost(postId) {
+    fetch(`/community/posts/${postId}/report`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(`✅ ${data.message || 'Post reported successfully.'}`, 'success');
+        } else {
+            showToast('❌ ' + (data.message || 'Unable to report this post'), 'error');
+        }
+    })
+    .catch(error => {
+        showToast('❌ ' + error.message, 'error');
+    });
+}
+
+function approvePost(postId) {
+    fetch(`/community/posts/${postId}/approve`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(`✅ ${data.message || 'Post approved successfully.'}`, 'success');
+            const postElement = document.getElementById(`post-${postId}`);
+            if (postElement && @json($isPendingPage)) {
+                postElement.remove();
+            }
+        } else {
+            showToast('❌ ' + (data.message || 'Unable to approve this post'), 'error');
+        }
+    })
+    .catch(error => {
+        showToast('❌ ' + error.message, 'error');
+    });
 }
 
 // ==================== TOGGLE COMMENTS (Community specific) ====================

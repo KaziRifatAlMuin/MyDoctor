@@ -37,13 +37,15 @@ class PostCreationTest extends TestCase
         $response->assertStatus(200);
         $response->assertJson([
             'success' => true,
-            'message' => 'Post created successfully!'
+            'requires_approval' => true,
+            'message' => 'Post submitted for admin approval.'
         ]);
 
         $this->assertDatabaseHas('posts', [
             'user_id' => $this->user->id,
             'disease_id' => $this->disease->id,
             'description' => 'This is a test post description',
+            'is_approved' => false,
         ]);
     }
 

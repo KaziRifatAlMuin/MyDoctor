@@ -34,7 +34,8 @@ class CommunityController extends Controller
             // Build the posts query with eager loading
             $query = Post::with(['user', 'disease', 'comments' => function($q) {
                 $q->with('user')->latest()->limit(3);
-            }])->withCount(['likes as likes_count']);
+                        }])->withCount(['likes as likes_count'])
+                            ->where('is_approved', true);
 
             // Apply disease filter if selected
             if ($diseaseId && $diseaseId !== 'all') {
@@ -45,7 +46,11 @@ class CommunityController extends Controller
             $posts = $query->latest()->paginate(10);
             
             // Get all diseases with post counts for the filter sidebar
-            $diseases = Disease::withCount('posts')
+                        $diseases = Disease::withCount([
+                                                                'posts as posts_count' => function ($q) {
+                                                                        $q->where('is_approved', true);
+                                                                }
+                                                            ])
                               ->orderBy('disease_name')
                               ->get();
             
@@ -55,7 +60,7 @@ class CommunityController extends Controller
             }
             
             // Additional stats for right sidebar
-            $totalPosts = Post::count();
+            $totalPosts = Post::where('is_approved', true)->count();
             $totalUsers = User::count();
             $totalComments = Comment::count();
             
@@ -63,11 +68,17 @@ class CommunityController extends Controller
             $activeToday = User::whereDate('updated_at', today())->count() ?: 0;
             
             // Get trending diseases (with at least one post)
-            $trendingDiseases = Disease::withCount('posts')
-                                       ->having('posts_count', '>', 0)
-                                       ->orderBy('posts_count', 'desc')
+            $trendingDiseases = Disease::withCount([
+                                        'posts as posts_count' => function ($q) {
+                                            $q->where('is_approved', true);
+                                        }
+                                    ])->get()
+                                       ->filter(function ($disease) {
+                                           return (int) $disease->posts_count > 0;
+                                       })
+                                       ->sortByDesc('posts_count')
                                        ->take(5)
-                                       ->get();
+                                       ->values();
             
             // Log for debugging
             Log::info('Community index loaded', [
@@ -124,6 +135,7 @@ class CommunityController extends Controller
             $query = Post::with(['user', 'disease', 'comments' => function($q) {
                 $q->with('user')->latest()->limit(3);
             }])->withCount(['likes as likes_count'])
+                            ->where('is_approved', true)
               ->whereHas('likes', function ($q) use ($userId) {
                   $q->where('user_id', $userId)
                     ->where('is_starred', true);
@@ -137,7 +149,8 @@ class CommunityController extends Controller
 
             $diseases = Disease::withCount([
                 'posts as posts_count' => function ($q) use ($userId) {
-                    $q->whereHas('likes', function ($likeQuery) use ($userId) {
+                    $q->where('is_approved', true)
+                      ->whereHas('likes', function ($likeQuery) use ($userId) {
                         $likeQuery->where('user_id', $userId)
                                   ->where('is_starred', true);
                     });
@@ -146,14 +159,17 @@ class CommunityController extends Controller
 
             $totalPosts = (clone $query)->count();
             $totalUsers = User::count();
-            $totalComments = Comment::whereHas('post.likes', function ($q) use ($userId) {
+            $totalComments = Comment::whereHas('post', function ($postQuery) {
+                $postQuery->where('is_approved', true);
+            })->whereHas('post.likes', function ($q) use ($userId) {
                 $q->where('user_id', $userId)->where('is_starred', true);
             })->count();
             $activeToday = User::whereDate('updated_at', today())->count() ?: 0;
 
             $trendingDiseases = Disease::withCount([
                 'posts as posts_count' => function ($q) use ($userId) {
-                    $q->whereHas('likes', function ($likeQuery) use ($userId) {
+                    $q->where('is_approved', true)
+                      ->whereHas('likes', function ($likeQuery) use ($userId) {
                         $likeQuery->where('user_id', $userId)
                                   ->where('is_starred', true);
                     });
@@ -199,6 +215,88 @@ class CommunityController extends Controller
     }
 
     /**
+     * Display posts waiting for approval created by the current user.
+     */
+    public function pendingPosts(Request $request)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+
+        try {
+            $diseaseId = $request->get('disease');
+            $userId = Auth::id();
+
+            $query = Post::with(['user', 'disease', 'comments' => function ($q) {
+                $q->with('user')->latest()->limit(3);
+            }])->withCount(['likes as likes_count'])
+              ->where('user_id', $userId)
+              ->where('is_approved', false);
+
+            if ($diseaseId && $diseaseId !== 'all') {
+                $query->where('disease_id', $diseaseId);
+            }
+
+            $posts = $query->latest()->paginate(10)->withQueryString();
+
+            $diseases = Disease::withCount([
+                'posts as posts_count' => function ($q) use ($userId) {
+                    $q->where('user_id', $userId)->where('is_approved', false);
+                }
+            ])->orderBy('disease_name')->get();
+
+            $totalPosts = (clone $query)->count();
+            $totalUsers = User::count();
+            $totalComments = Comment::whereHas('post', function ($postQuery) use ($userId) {
+                $postQuery->where('user_id', $userId)->where('is_approved', false);
+            })->count();
+            $activeToday = User::whereDate('updated_at', today())->count() ?: 0;
+
+            $trendingDiseases = Disease::withCount([
+                'posts as posts_count' => function ($q) use ($userId) {
+                    $q->where('user_id', $userId)->where('is_approved', false);
+                }
+            ])->get()
+              ->filter(function ($disease) {
+                  return (int) $disease->posts_count > 0;
+              })
+              ->sortByDesc('posts_count')
+              ->take(5)
+              ->values();
+
+            return view('community.index', [
+                'posts' => $posts,
+                'diseases' => $diseases,
+                'diseaseId' => $diseaseId,
+                'totalPosts' => $totalPosts,
+                'totalUsers' => $totalUsers,
+                'totalComments' => $totalComments,
+                'activeToday' => $activeToday,
+                'trendingDiseases' => $trendingDiseases,
+                'isPendingPage' => true,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Community Pending Posts Error: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return view('community.index', [
+                'posts' => new LengthAwarePaginator([], 0, 10),
+                'diseases' => collect([]),
+                'diseaseId' => null,
+                'totalPosts' => 0,
+                'totalUsers' => 0,
+                'totalComments' => 0,
+                'activeToday' => 0,
+                'trendingDiseases' => collect([]),
+                'isPendingPage' => true,
+                'error' => 'Error loading pending posts: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
      * Display the landing page (redirects to forum if logged in)
      */
     public function landing()
@@ -215,6 +313,10 @@ class CommunityController extends Controller
     public function showPost(Post $post)
     {
         try {
+            if (!$post->is_approved && !$this->canAccessUnapprovedPost($post)) {
+                abort(403, 'This post is pending approval.');
+            }
+
             $post->load(['user', 'disease', 'comments' => function($q) {
                 $q->with('user')->latest();
             }])->loadCount(['likes as likes_count']);
@@ -232,6 +334,10 @@ class CommunityController extends Controller
     public function modalPost(Post $post)
     {
         try {
+            if (!$post->is_approved && !$this->canAccessUnapprovedPost($post)) {
+                return response()->json(['error' => 'This post is pending approval.'], 403);
+            }
+
             // Load the post with all comments and necessary relationships
             $post->load([
                 'user', 
@@ -260,7 +366,8 @@ class CommunityController extends Controller
             $diseaseId = $request->get('disease');
             
             $query = Post::with(['user', 'disease'])
-                ->withCount(['likes as likes_count']);
+                ->withCount(['likes as likes_count'])
+                ->where('is_approved', true);
 
             if ($diseaseId && $diseaseId !== 'all') {
                 $query->where('disease_id', $diseaseId);
@@ -272,6 +379,10 @@ class CommunityController extends Controller
                 return [
                     'id' => $post->id,
                     'description' => $post->description,
+                    'is_anonymous' => (bool) $post->is_anonymous,
+                    'is_approved' => (bool) $post->is_approved,
+                    'is_edited' => (bool) $post->is_edited,
+                    'is_reported' => (bool) $post->is_reported,
                     'files' => $post->all_files,
                     'file_count' => $post->file_count,
                     'total_size' => $post->formatted_total_size,
@@ -280,7 +391,7 @@ class CommunityController extends Controller
                     'created_at' => $post->created_at,
                     'user' => [
                         'id' => $post->user->id,
-                        'name' => $post->user->name,
+                        'name' => $post->is_anonymous ? 'Anonymous Member' : $post->user->name,
                         'email' => $post->user->email,
                         'avatar' => $post->user->picture ? Storage::url($post->user->picture) : null,
                         'created_at' => $post->user->created_at,
@@ -480,6 +591,7 @@ class CommunityController extends Controller
             $request->validate([
                 'disease_id' => 'required|exists:diseases,id',
                 'description' => 'nullable|string|max:5000',
+                'is_anonymous' => 'nullable|boolean',
                 'files.*' => 'nullable|file|max:10240|mimes:jpg,jpeg,png,gif,mp4,mp3,pdf,doc,docx,xls,xlsx,ppt,pptx,txt',
             ]);
 
@@ -495,6 +607,10 @@ class CommunityController extends Controller
                 'user_id' => Auth::id(),
                 'disease_id' => $request->disease_id,
                 'description' => $request->description ?? '',
+                'is_anonymous' => $request->boolean('is_anonymous'),
+                'is_approved' => false,
+                'is_edited' => false,
+                'is_reported' => false,
                 'like_count' => 0,
                 'comment_count' => 0,
             ];
@@ -550,14 +666,13 @@ class CommunityController extends Controller
 
             $post = Post::create($data);
             $post->load(['user', 'disease']);
-            
-            $html = view('community.partials.post', ['post' => $post])->render();
 
             return response()->json([
                 'success' => true,
                 'post' => $post,
-                'html' => $html,
-                'message' => 'Post created successfully!'
+                'html' => null,
+                'requires_approval' => true,
+                'message' => 'Post submitted for admin approval.'
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
@@ -600,6 +715,7 @@ class CommunityController extends Controller
 
             $post->update([
                 'description' => $request->input('description'),
+                'is_edited' => true,
             ]);
 
             return response()->json([
@@ -607,6 +723,7 @@ class CommunityController extends Controller
                 'post' => [
                     'id' => $post->id,
                     'description' => $post->description,
+                    'is_edited' => (bool) $post->is_edited,
                 ],
                 'message' => 'Post updated successfully!'
             ]);
@@ -784,6 +901,91 @@ class CommunityController extends Controller
                 'message' => 'Error starring post: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Report a post for moderation.
+     */
+    public function reportPost(Request $request, Post $post)
+    {
+        try {
+            if (!Auth::check()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please login to report posts'
+                ], 401);
+            }
+
+            if ($post->is_reported) {
+                return response()->json([
+                    'success' => true,
+                    'reported' => true,
+                    'message' => 'This post is already reported.'
+                ]);
+            }
+
+            $post->update(['is_reported' => true]);
+
+            return response()->json([
+                'success' => true,
+                'reported' => true,
+                'message' => 'Post reported successfully. Our team will review it.'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Report Post Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error reporting post: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Approve a pending post (admin only).
+     */
+    public function approvePost(Request $request, Post $post)
+    {
+        try {
+            if (!Auth::check()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please login'
+                ], 401);
+            }
+
+            if (!Auth::user()->isAdmin()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only admins can approve posts'
+                ], 403);
+            }
+
+            $post->update(['is_approved' => true]);
+
+            return response()->json([
+                'success' => true,
+                'approved' => true,
+                'message' => 'Post approved successfully.'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Approve Post Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error approving post: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Allow owners and admins to access unapproved posts.
+     */
+    protected function canAccessUnapprovedPost(Post $post): bool
+    {
+        if (!Auth::check()) {
+            return false;
+        }
+
+        return Auth::id() === $post->user_id || Auth::user()->isAdmin();
     }
 
     /**

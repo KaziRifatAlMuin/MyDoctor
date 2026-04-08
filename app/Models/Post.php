@@ -14,6 +14,10 @@ class Post extends Model
         'user_id',
         'disease_id',
         'description',
+        'is_anonymous',
+        'is_approved',
+        'is_edited',
+        'is_reported',
         'file_path',
         'file_type',
         'file_name',
@@ -24,6 +28,10 @@ class Post extends Model
     ];
 
     protected $casts = [
+        'is_anonymous' => 'boolean',
+        'is_approved' => 'boolean',
+        'is_edited' => 'boolean',
+        'is_reported' => 'boolean',
         'like_count' => 'integer',
         'comment_count' => 'integer',
         'file_size' => 'integer',
