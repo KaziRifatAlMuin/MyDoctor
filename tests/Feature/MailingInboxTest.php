@@ -110,6 +110,57 @@ class MailingInboxTest extends TestCase
     }
 
     #[Test]
+    public function receiver_can_mark_read_and_unread_and_badge_count_changes(): void
+    {
+        $sender = User::factory()->create();
+        $receiver = User::factory()->create();
+
+        $mailing = Mailing::create([
+            'sender_id' => $sender->id,
+            'receiver_id' => $receiver->id,
+            'title' => 'Toggle state',
+            'message' => 'Body',
+            'status' => 'unread',
+            'is_read' => false,
+        ]);
+
+        $this->actingAs($receiver)
+            ->getJson(route('profile.mailbox.unread-count'))
+            ->assertOk()
+            ->assertJson(['count' => 1]);
+
+        $this->actingAs($receiver)
+            ->patch(route('profile.mailbox.status', $mailing), ['status' => 'read'])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('mailings', [
+            'id' => $mailing->id,
+            'status' => 'read',
+            'is_read' => true,
+        ]);
+
+        $this->actingAs($receiver)
+            ->getJson(route('profile.mailbox.unread-count'))
+            ->assertOk()
+            ->assertJson(['count' => 0]);
+
+        $this->actingAs($receiver)
+            ->patch(route('profile.mailbox.status', $mailing), ['status' => 'unread'])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('mailings', [
+            'id' => $mailing->id,
+            'status' => 'unread',
+            'is_read' => false,
+        ]);
+
+        $this->actingAs($receiver)
+            ->getJson(route('profile.mailbox.unread-count'))
+            ->assertOk()
+            ->assertJson(['count' => 1]);
+    }
+
+    #[Test]
     public function mailbox_unread_count_endpoint_returns_count_for_authenticated_user(): void
     {
         $user = User::factory()->create();

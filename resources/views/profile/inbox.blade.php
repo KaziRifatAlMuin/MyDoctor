@@ -160,8 +160,17 @@
     .gmail-row-icons {
         display: flex;
         align-items: center;
-        width: 60px;
+        width: 72px; /* space for checkbox + star */
+        gap: 8px;
+        padding-left: 8px;
         color: #c4c7c5;
+        flex-shrink: 0;
+        box-sizing: border-box;
+        justify-content: flex-start;
+    }
+
+    .gmail-row > a {
+        min-width: 0; /* allow proper truncation and prevent overlap */
     }
     
     .gmail-sender {
@@ -295,10 +304,11 @@
             @endif
 
             @forelse($messages as $message)
-                <a href="{{ route('profile.mailbox.show', $message) }}" class="gmail-row {{ $message->status === 'read' ? 'read' : '' }}">
+                <div class="gmail-row {{ $message->status === 'read' ? 'read' : '' }}">
                     <div class="gmail-row-icons">
-                        <i class="far fa-square me-3"></i>
-                        <form method="POST" action="{{ route('profile.mailbox.star', $message) }}" class="d-inline" onclick="event.stopPropagation();">
+                        <i class="far fa-square" aria-hidden="true"></i>
+
+                        <form method="POST" action="{{ route('profile.mailbox.star', $message) }}" class="d-inline">
                             @csrf
                             @method('PATCH')
                             <button type="submit" class="p-0 border-0 bg-transparent" title="Toggle star">
@@ -306,20 +316,22 @@
                             </button>
                         </form>
                     </div>
-                    
-                    <div class="gmail-sender">
-                        {{ $message->sender?->name ?? 'System User' }}
-                    </div>
-                    
-                    <div class="gmail-subject-container">
-                        <span class="gmail-subject">{{ $message->title ?: '(No subject)' }}</span>
-                        <span class="gmail-snippet">- {{ \Illuminate\Support\Str::limit($message->message, 80) }}</span>
-                    </div>
-                    
-                    <div class="gmail-date">
-                        {{ optional($message->created_at)->isToday() ? optional($message->created_at)->format('g:i A') : optional($message->created_at)->format('M j') }}
-                    </div>
-                </a>
+
+                    <a href="{{ route('profile.mailbox.show', $message) }}" class="d-flex align-items-center flex-grow-1 text-decoration-none text-reset">
+                        <div class="gmail-sender">
+                            {{ $message->sender?->name ?? 'System User' }}
+                        </div>
+
+                        <div class="gmail-subject-container">
+                            <span class="gmail-subject">{{ $message->title ?: '(No subject)' }}</span>
+                            <span class="gmail-snippet">- {{ \Illuminate\Support\Str::limit($message->message, 80) }}</span>
+                        </div>
+
+                        <div class="gmail-date">
+                            {{ optional($message->created_at)->isToday() ? optional($message->created_at)->format('g:i A') : optional($message->created_at)->format('M j') }}
+                        </div>
+                    </a>
+                </div>
             @empty
                 <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted opacity-75">
                     <i class="fas fa-inbox mb-3" style="font-size: 3rem;"></i>

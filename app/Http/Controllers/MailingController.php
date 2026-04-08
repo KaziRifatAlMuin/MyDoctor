@@ -244,7 +244,7 @@ class MailingController extends Controller
         $this->authorizeAccess($request, $mailing);
 
         $validated = $request->validate([
-            'status' => ['required', 'in:draft,unread,read,archived,sent'],
+            'status' => ['required', 'in:unread,read,archived'],
         ]);
 
         // Only the receiver can change unread/read/archive state
@@ -257,15 +257,10 @@ class MailingController extends Controller
             abort(403);
         }
 
-        $mailing->update(['status' => $validated['status']]);
-
-        if ($validated['status'] === 'read') {
-            $mailing->update(['is_read' => true]);
-        }
-
-        if ($validated['status'] === 'unread') {
-            $mailing->update(['is_read' => false]);
-        }
+        $mailing->update([
+            'status' => $validated['status'],
+            'is_read' => $validated['status'] !== 'unread',
+        ]);
 
         return back()->with('success', 'Message updated.');
     }
