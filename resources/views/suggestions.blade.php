@@ -334,7 +334,13 @@
                                         class="summary-dot {{ $cond->status === 'active' ? 'red' : ($cond->status === 'chronic' ? 'orange' : 'green') }}">
                                     </div>
                                     <div>
-                                        <span class="fw-semibold">{{ $cond->disease->disease_name ?? 'Unknown' }}</span>
+                                        @if($cond->disease)
+                                            <a href="{{ route('public.diseases.show', $cond->disease) }}" class="fw-semibold text-decoration-none">
+                                                {{ $cond->disease->disease_name }}
+                                            </a>
+                                        @else
+                                            <span class="fw-semibold">Unknown</span>
+                                        @endif
                                         <span class="text-muted" style="font-size: 0.75rem;"> &middot;
                                             {{ $cond->status_label }}</span>
                                     </div>
@@ -357,7 +363,13 @@
                                         class="summary-dot {{ $sym->severity_level >= 7 ? 'red' : ($sym->severity_level >= 4 ? 'orange' : 'green') }}">
                                     </div>
                                     <div class="flex-grow-1">
-                                        <span>{{ $sym->symptom_name }}</span>
+                                        @if($sym->symptom)
+                                            <a href="{{ route('public.symptoms.show', $sym->symptom) }}" class="text-decoration-none">
+                                                {{ $sym->symptom_name }}
+                                            </a>
+                                        @else
+                                            <span>{{ $sym->symptom_name }}</span>
+                                        @endif
                                     </div>
                                     <span class="text-muted"
                                         style="font-size: 0.75rem;">{{ $sym->severity_level }}/10</span>

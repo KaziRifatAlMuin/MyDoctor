@@ -206,7 +206,7 @@ class User extends Authenticatable
 
     public function symptoms()
     {
-        return $this->hasMany(Symptom::class);
+        return $this->hasMany(UserSymptom::class);
     }
 
     public function medicines()

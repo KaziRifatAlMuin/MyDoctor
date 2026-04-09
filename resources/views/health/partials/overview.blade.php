@@ -181,9 +181,15 @@
                                 {{ $sym->severity_level ?? '—' }}
                             </span>
                             <div class="flex-grow-1" style="min-width:0;">
-                                <div class="fw-semibold text-truncate" style="font-size:0.88rem;color:#2d3748;">
-                                    {{ $sym->symptom_name }}
-                                </div>
+                                @if($sym->symptom)
+                                    <a href="{{ route('public.symptoms.show', $sym->symptom) }}" class="fw-semibold text-truncate text-decoration-none d-inline-block" style="font-size:0.88rem;color:#2d3748; max-width: 100%;">
+                                        {{ $sym->symptom_name }}
+                                    </a>
+                                @else
+                                    <div class="fw-semibold text-truncate" style="font-size:0.88rem;color:#2d3748;">
+                                        {{ $sym->symptom_name }}
+                                    </div>
+                                @endif
                                 @if(!empty($symptomsBn[$sym->symptom_name]))
                                     <div class="bn-label text-truncate">{{ $symptomsBn[$sym->symptom_name] }}</div>
                                 @endif
@@ -235,9 +241,15 @@
                                 <i class="fas fa-virus"></i>
                             </div>
                             <div class="flex-grow-1" style="min-width:0;">
-                                <div class="fw-semibold text-truncate" style="font-size:0.88rem;color:#2d3748;">
-                                    {{ $ud->disease->disease_name ?? 'Unknown' }}
-                                </div>
+                                @if($ud->disease)
+                                    <a href="{{ route('public.diseases.show', $ud->disease) }}" class="fw-semibold text-truncate text-decoration-none d-inline-block" style="font-size:0.88rem;color:#2d3748; max-width: 100%;">
+                                        {{ $ud->disease->disease_name }}
+                                    </a>
+                                @else
+                                    <div class="fw-semibold text-truncate" style="font-size:0.88rem;color:#2d3748;">
+                                        Unknown
+                                    </div>
+                                @endif
                                 @if($ud->diagnosed_at)
                                     <div class="small text-muted">Since {{ $ud->diagnosed_at->format('M Y') }}</div>
                                 @endif

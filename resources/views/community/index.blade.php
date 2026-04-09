@@ -1678,7 +1678,9 @@ body {
                     <div class="trending-item">
                         <div>
                             <div class="trending-name">
-                                {{ $disease->disease_name }}
+                                <a href="{{ route('public.diseases.show', $disease) }}" class="text-decoration-none">
+                                    {{ $disease->disease_name }}
+                                </a>
                             </div>
                         </div>
                         <span class="trending-count">{{ $disease->posts_count }}</span>

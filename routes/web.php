@@ -15,6 +15,7 @@ use App\Http\Controllers\SuggestionsController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CommunityController;
 use App\Http\Controllers\AiChatController;
+use App\Http\Controllers\PublicHealthController;
 use Illuminate\Http\Request;
 
 
@@ -54,6 +55,9 @@ Route::get('/language/{locale}', function (string $locale) {
 
     return back();
 })->name('language.switch');
+
+Route::get('/diseases/{disease}', [PublicHealthController::class, 'showDisease'])->name('public.diseases.show');
+Route::get('/symptoms/{symptom}', [PublicHealthController::class, 'showSymptom'])->name('public.symptoms.show');
 
 /*
 |--------------------------------------------------------------------------
@@ -130,7 +134,7 @@ Route::middleware('auth')->group(function () {
     })->name('health.metric.view');
     Route::put('/health/symptom/{symptom}', [HealthController::class, 'updateSymptom'])->name('health.symptom.update');
     // Friendly GET redirect: visiting a symptom URL should return to the user's profile
-    Route::get('/health/symptom/{symptom}', function (\App\Models\Symptom $symptom) {
+    Route::get('/health/symptom/{symptom}', function (\App\Models\UserSymptom $symptom) {
         if (auth()->user()?->isAdmin()) {
             return redirect()->route('admin.users.show', $symptom->user_id);
         }

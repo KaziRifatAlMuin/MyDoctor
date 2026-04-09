@@ -87,7 +87,13 @@
                                                     <i class="fas fa-virus"></i>
                                                 </div>
                                                 <div>
-                                                    <span class="fw-semibold">{{ $ud->disease->disease_name ?? 'Unknown' }}</span>
+                                                    @if($ud->disease)
+                                                        <a href="{{ route('public.diseases.show', $ud->disease) }}" class="fw-semibold text-decoration-none">
+                                                            {{ $ud->disease->disease_name }}
+                                                        </a>
+                                                    @else
+                                                        <span class="fw-semibold">Unknown</span>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </td>

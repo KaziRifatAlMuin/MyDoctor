@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Models\HealthMetric;
 use App\Models\Symptom;
+use App\Models\UserSymptom;
 use App\Models\Medicine;
 use App\Models\MedicineSchedule;
 use App\Models\MedicineReminder;
@@ -54,7 +55,7 @@ class MedicalSeeder extends Seeder
         HealthMetric::factory()->count(60)->create(['user_id' => 1]);
 
         // Symptoms — 55 records for user 1
-        Symptom::factory()->count(55)->create(['user_id' => 1]);
+        UserSymptom::factory()->count(55)->create(['user_id' => 1]);
 
         // User Addresses — 3 for user 1
         UserAddress::factory()->count(3)->create(['user_id' => 1]);

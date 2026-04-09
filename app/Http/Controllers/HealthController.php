@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Models\HealthMetric;
 use App\Models\Symptom;
+use App\Models\UserSymptom;
 use App\Models\Medicine;
 use App\Models\MedicineLog;
 use App\Models\Disease;
@@ -38,7 +39,8 @@ class HealthController extends Controller
         $latestMetrics = $healthMetrics->groupBy('metric_type')->map(fn($group) => $group->first());
 
         // Symptoms — latest 30
-        $symptoms = Symptom::where('user_id', $user->id)
+        $symptoms = UserSymptom::where('user_id', $user->id)
+            ->with('symptom')
             ->orderByDesc('recorded_at')
             ->limit(30)
             ->get();
@@ -173,13 +175,19 @@ class HealthController extends Controller
             'note'           => 'nullable|string|max:1000',
         ]);
 
-        Symptom::create([
+        $symptom = Symptom::firstOrCreate([
+            'name' => trim((string) $request->symptom_name),
+        ]);
+
+        UserSymptom::create([
             'user_id'        => $userId,
-            'symptom_name'   => $request->symptom_name,
+            'symptom_id'     => $symptom->id,
             'severity_level' => $request->severity_level,
             'recorded_at'    => $request->recorded_at,
             'note'           => $request->note,
         ]);
+
+        $this->syncSymptomDiseaseLinks($userId, $symptom);
 
         // Redirect with fragment - to user show if admin is viewing a user, otherwise to health dashboard
         if ($request->input('user_id')) {
@@ -317,7 +325,7 @@ class HealthController extends Controller
         return redirect(route('health') . '#metrics')->with('success', 'Health metric updated successfully.');
     }
 
-    public function updateSymptom(Request $request, Symptom $symptom)
+    public function updateSymptom(Request $request, UserSymptom $symptom)
     {
         $user = Auth::user();
         if (!$user || ($symptom->user_id !== $user->id && $user->role !== 'admin')) abort(403);
@@ -329,7 +337,18 @@ class HealthController extends Controller
             'note'           => 'nullable|string|max:1000',
         ]);
 
-        $symptom->update($request->only('symptom_name', 'severity_level', 'recorded_at', 'note'));
+        $catalogSymptom = Symptom::firstOrCreate([
+            'name' => trim((string) $request->symptom_name),
+        ]);
+
+        $symptom->update([
+            'symptom_id' => $catalogSymptom->id,
+            'severity_level' => $request->severity_level,
+            'recorded_at' => $request->recorded_at,
+            'note' => $request->note,
+        ]);
+
+        $this->syncSymptomDiseaseLinks($symptom->user_id, $catalogSymptom);
 
         $referer = $request->header('referer');
         if ($referer && str_contains($referer, '/user/')) {
@@ -416,7 +435,7 @@ class HealthController extends Controller
         return redirect(route('health') . '#metrics')->with('success', 'Health metric deleted.');
     }
 
-    public function destroySymptom(Symptom $symptom)
+    public function destroySymptom(UserSymptom $symptom)
     {
         $user = Auth::user();
         if (!$user || ($symptom->user_id !== $user->id && $user->role !== 'admin')) abort(403);
@@ -459,5 +478,18 @@ class HealthController extends Controller
             return redirect(route('admin.users.show', $userId) . $fragment)->with('success', 'Upload deleted successfully.');
         }
         return redirect(route('health') . ($upload->type === 'prescription' ? '#prescriptions' : '#reportsPane'))->with('success', 'Upload deleted successfully.');
+    }
+
+    private function syncSymptomDiseaseLinks(int $userId, Symptom $symptom): void
+    {
+        $diseaseIds = UserDisease::where('user_id', $userId)
+            ->pluck('disease_id')
+            ->all();
+
+        if (empty($diseaseIds)) {
+            return;
+        }
+
+        $symptom->diseases()->syncWithoutDetaching($diseaseIds);
     }
 }

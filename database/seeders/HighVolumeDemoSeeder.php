@@ -15,6 +15,7 @@ use App\Models\MedicineSchedule;
 use App\Models\Post;
 use App\Models\PostLike;
 use App\Models\Symptom;
+use App\Models\UserSymptom;
 use App\Models\Upload;
 use App\Models\User;
 use App\Models\UserAddress;
@@ -164,7 +165,7 @@ class HighVolumeDemoSeeder extends Seeder
             HealthMetric::factory()->count($metricCount)->create(['user_id' => $user->id]);
 
             $symptomCount = $isTop ? random_int(25, 45) : random_int(8, 20);
-            Symptom::factory()->count($symptomCount)->create(['user_id' => $user->id]);
+            UserSymptom::factory()->count($symptomCount)->create(['user_id' => $user->id]);
 
             $envCount = $isTop ? random_int(8, 18) : random_int(4, 10);
             $environments = Environment::factory()->count($envCount)->create(['user_id' => $user->id]);

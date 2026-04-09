@@ -34,9 +34,9 @@
                             <span style="font-size:11px; font-weight:600; color:#65676b; background:#f0f2f5; border-radius:12px; padding:4px 8px;">Edited</span>
                         @endif
                         @if($post->disease)
-                            <span style="background: #e7f3ff; color: #1877f2; padding: 4px 12px; border-radius: 4px; font-weight: 500; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">
+                            <a href="{{ route('public.diseases.show', $post->disease) }}" style="background: #e7f3ff; color: #1877f2; padding: 4px 12px; border-radius: 4px; font-weight: 500; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; text-decoration: none;">
                                 <i class="fas fa-tag me-1"></i>{{ $post->disease->disease_name }}
-                            </span>
+                            </a>
                         @endif
                     </div>
                 </div>

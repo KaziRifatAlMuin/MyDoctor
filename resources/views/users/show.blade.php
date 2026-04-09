@@ -591,9 +591,9 @@
                         @endphp
                         <div class="hero-disease-tags">
                             @forelse($heroDiseases as $disease)
-                                <span class="hero-disease-tag">
+                                <a href="{{ route('public.diseases.show', $disease) }}" class="hero-disease-tag text-decoration-none">
                                     {{ $disease->disease_name }}
-                                </span>
+                                </a>
                             @empty
                                 <span class="hero-disease-tag" style="background: rgba(255,255,255,0.14); color: #f1f5f9; border-color: rgba(255,255,255,0.25);">
                                     No disease tags yet

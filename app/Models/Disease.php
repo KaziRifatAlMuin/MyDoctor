@@ -39,4 +39,10 @@ class Disease extends Model
     {
         return $this->hasMany(UserDisease::class);
     }
+
+    public function symptoms()
+    {
+        return $this->belongsToMany(Symptom::class, 'disease_symptoms')
+            ->withTimestamps();
+    }
 }

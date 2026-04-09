@@ -79,7 +79,8 @@ class UserController extends Controller
         $metricConfig = config('health.metric_types');
 
         // Symptoms
-        $symptoms = \App\Models\Symptom::where('user_id', $user->id)
+        $symptoms = \App\Models\UserSymptom::where('user_id', $user->id)
+            ->with('symptom')
             ->orderByDesc('recorded_at')
             ->limit(30)
             ->get();
