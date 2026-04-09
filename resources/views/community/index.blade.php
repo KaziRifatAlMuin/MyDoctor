@@ -1390,11 +1390,14 @@ body {
                         </option>
                     @endforeach
                 </select>
+                <a href="{{ route('community.home') }}" class="btn btn-sm btn-outline-primary rounded-pill ms-1 d-inline-flex align-items-center" style="white-space:nowrap;">
+                    <i class="fas fa-th-large me-2"></i>Disease Cards
+                </a>
                 @auth
-                    <a href="{{ $isStarredPage ? route('community.index') : route('community.posts.starred') }}" class="btn btn-sm {{ $isStarredPage ? 'btn-outline-primary' : 'btn-warning' }} rounded-pill ms-1 d-inline-flex align-items-center" style="white-space:nowrap;">
+                    <a href="{{ $isStarredPage ? route('community.posts.index') : route('community.posts.starred') }}" class="btn btn-sm {{ $isStarredPage ? 'btn-outline-primary' : 'btn-warning' }} rounded-pill ms-1 d-inline-flex align-items-center" style="white-space:nowrap;">
                         <i class="fas fa-star me-2"></i>{{ $isStarredPage ? 'All Posts' : 'Starred Posts' }}
                     </a>
-                    <a href="{{ $isPendingPage ? route('community.index') : route('community.posts.pending') }}" class="btn btn-sm {{ $isPendingPage ? 'btn-outline-primary' : 'btn-outline-warning' }} rounded-pill ms-1 d-inline-flex align-items-center" style="white-space:nowrap;">
+                    <a href="{{ $isPendingPage ? route('community.posts.index') : route('community.posts.pending') }}" class="btn btn-sm {{ $isPendingPage ? 'btn-outline-primary' : 'btn-outline-warning' }} rounded-pill ms-1 d-inline-flex align-items-center" style="white-space:nowrap;">
                         <i class="fas fa-hourglass-half me-2"></i>{{ $isPendingPage ? 'All Posts' : 'Pending Posts' }}
                     </a>
                 @endauth
@@ -1923,10 +1926,14 @@ document.getElementById('createPostModal')?.addEventListener('hidden.bs.modal', 
 
 // ==================== FILTER ====================
 function filterByDisease(diseaseId) {
-    const baseRoute = @json($isPendingPage ? route('community.posts.pending') : ($isStarredPage ? route('community.posts.starred') : route('community.index')));
+    const baseRoute = @json($isPendingPage ? route('community.posts.pending') : ($isStarredPage ? route('community.posts.starred') : route('community.posts.index')));
     if (diseaseId === 'all') {
         window.location.href = baseRoute;
     } else {
+        if (!@json($isPendingPage || $isStarredPage)) {
+            window.location.href = '/community/disease/' + diseaseId + '/posts';
+            return;
+        }
         window.location.href = baseRoute + '?disease=' + diseaseId;
     }
 }

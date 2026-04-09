@@ -19,15 +19,48 @@ use Illuminate\Pagination\LengthAwarePaginator;
 class CommunityController extends Controller
 {
     /**
+     * Community landing page with disease cards.
+     */
+    public function home()
+    {
+        $diseases = Disease::withCount([
+            'posts as posts_count' => function ($q) {
+                $q->where('is_approved', true);
+            }
+        ])
+            ->orderByDesc('posts_count')
+            ->orderBy('disease_name')
+            ->get();
+
+        $totalPosts = Post::where('is_approved', true)->count();
+        $totalDiseases = $diseases->count();
+
+        return view('community.home', compact('diseases', 'totalPosts', 'totalDiseases'));
+    }
+
+    /**
+     * Canonical posts feed route.
+     */
+    public function postsIndex(Request $request)
+    {
+        return $this->index($request);
+    }
+
+    /**
+     * Disease-specific posts feed route.
+     */
+    public function diseasePosts(Request $request, Disease $disease)
+    {
+        $request->merge(['disease' => $disease->id]);
+
+        return $this->index($request);
+    }
+
+    /**
      * Display the forum page with posts and disease filter
      */
     public function index(Request $request)
     {
-        // Redirect non-authenticated users to landing page
-        if (!Auth::check()) {
-            return redirect()->route('community.landing');
-        }
-        
         try {
             $diseaseId = $request->get('disease');
             
@@ -302,7 +335,7 @@ class CommunityController extends Controller
     public function landing()
     {
         if (Auth::check()) {
-            return redirect()->route('community.index');
+            return redirect()->route('community.posts.index');
         }
         return view('community.landing');
     }

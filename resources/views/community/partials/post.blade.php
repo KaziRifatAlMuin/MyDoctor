@@ -26,6 +26,9 @@
                 <h6 class="user-name" style="font-size:15px;font-weight:600;margin:0;padding:0;color:#1a1a1a;">{{ $displayName }}</h6>
                 <div class="post-meta" style="display:flex;align-items:center;gap:12px;font-size:12px;color:#65676b;margin:0;padding:0;">
                     <span class="post-time"><i class="far fa-clock me-1"></i>{{ $post->created_at->diffForHumans() }}</span>
+                    <a href="{{ route('community.post.show', $post) }}" class="text-decoration-none" style="font-weight:600; color:#1877f2;">
+                        Open Post
+                    </a>
                     @if($post->disease)
                         <a href="{{ route('public.disease.show', $post->disease) }}" class="post-disease-badge text-decoration-none" title="{{ $post->disease->disease_name }}" style="background:#e7f3ff;color:#1877f2;padding:4px 12px;border-radius:4px;font-weight:500;font-size:12px;display:inline-flex;align-items:center;gap:4px;">
                             <i class="fas fa-tag me-1"></i>{{ $post->disease->disease_name }}
@@ -46,11 +49,11 @@
             
             <!-- Dropdown Menu -->
             <div class="post-dropdown-menu" id="post-menu-{{ $post->id }}" style="display:none; position:absolute; top:40px; right:0; background:white; border-radius:8px; box-shadow:0 2px 12px rgba(0,0,0,0.15); min-width:180px; z-index:1000; overflow:hidden;">
-                <!-- View Full Post in Modal -->
-                <button class="dropdown-item" onclick="openPostModal({{ $post->id }})" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#1a1a1a; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb;">
+                <!-- View Full Post Page -->
+                <a class="dropdown-item" href="{{ route('community.post.show', $post) }}" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#1a1a1a; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb; text-decoration:none;">
                     <i class="fas fa-expand" style="width:18px; color:#1877f2;"></i>
                     <span>View Full Post</span>
-                </button>
+                </a>
 
                 @auth
                     <button class="dropdown-item" onclick="toggleStar({{ $post->id }}, document.getElementById('star-btn-{{ $post->id }}'))" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#1a1a1a; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb;">

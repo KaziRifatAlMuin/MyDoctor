@@ -253,11 +253,20 @@ Route::prefix('health')->name('health.')->group(function () {
 */
 Route::prefix('community')->name('community.')->group(function () {
     // Page routes (return HTML)
+    Route::get('/', [CommunityController::class, 'home'])->name('home');
+    Route::get('/posts', [CommunityController::class, 'postsIndex'])->name('posts.index');
+    Route::get('/post/{post}', [CommunityController::class, 'showPost'])->name('post.show');
+    Route::get('/disease/{disease}/posts', [CommunityController::class, 'diseasePosts'])->name('disease.posts');
+
     Route::get('/landing', [CommunityController::class, 'landing'])->name('landing');
-    Route::get('/forum', [CommunityController::class, 'index'])->name('index');
+    Route::get('/forum', function () {
+        return redirect()->route('community.posts.index');
+    })->name('index');
     Route::get('/posts/starred', [CommunityController::class, 'starredPosts'])->name('posts.starred');
     Route::get('/posts/pending', [CommunityController::class, 'pendingPosts'])->name('posts.pending');
-    Route::get('/posts/{post}', [CommunityController::class, 'showPost'])->name('posts.show');
+    Route::get('/posts/{post}', function (\App\Models\Post $post) {
+        return redirect()->route('community.post.show', $post);
+    })->name('posts.show');
     
     // MODAL POST - CRITICAL FOR DYNAMIC RELOADS
     Route::get('/modal-post/{post}', [CommunityController::class, 'modalPost'])->name('modal.post');
