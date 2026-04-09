@@ -516,8 +516,10 @@
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>
-        const AI_SUMMERY_CACHE_KEY = 'mydoctor.ai_summery_cache.v1';
-        const AI_SUMMERY_PROMPT = 'For my current authenticated user only, give me a health summary focused mostly on my diseases and symptoms. First 2-3 lines must focus on diseases, then next lines focus on symptoms and condition trends. Then provide what to do and what not to do. Output format: first paragraph 3-4 lines, second paragraph 3-4 lines, to do 4-6 bullets, not to do 3-5 bullets, and overall health condition in exactly 2 lines at the end. Use bold emphasis heavily, especially disease and symptom terms.';
+        const AI_SUMMERY_USER_ID = {{ (int) $user->id }};
+        const AI_SUMMERY_USER_EMAIL = @json((string) $user->email);
+        const AI_SUMMERY_CACHE_KEY = `mydoctor.ai_summery_cache.v1.user.${AI_SUMMERY_USER_ID}`;
+        const AI_SUMMERY_LAST_ACTIVE_KEY = 'mydoctor.ai_last_active_user';
 
         document.addEventListener('DOMContentLoaded', function() {
             // Adherence Donut
@@ -560,7 +562,31 @@
                 });
             }
 
-            loadAiSummery(false);
+            // If the last active user seen in this browser tab is different,
+            // treat this as a login change and force regeneration.
+            try {
+                const lastActive = sessionStorage.getItem(AI_SUMMERY_LAST_ACTIVE_KEY);
+                if (lastActive === null || String(lastActive) !== String(AI_SUMMERY_USER_ID)) {
+                    // Different user (or first time) — generate fresh summary.
+                    loadAiSummery(true);
+                } else {
+                    loadAiSummery(false);
+                }
+            } catch (e) {
+                loadAiSummery(false);
+            }
+
+            // Clear cached AI summary on logout forms so next login always regenerates.
+            try {
+                document.querySelectorAll('form[action="/logout"]').forEach(f => {
+                    f.addEventListener('submit', () => {
+                        try {
+                            sessionStorage.removeItem(AI_SUMMERY_CACHE_KEY);
+                            sessionStorage.removeItem(AI_SUMMERY_LAST_ACTIVE_KEY);
+                        } catch (e) {}
+                    }, { once: true });
+                });
+            } catch (e) {}
         });
 
         function filterSuggestions(category, btn) {
@@ -591,7 +617,7 @@
             target.innerHTML = '<span class="ai-summary-loading"><i class="fas fa-circle-notch fa-spin"></i>Preparing your personalized AI summery...</span>';
 
             try {
-                const response = await fetch('{{ route('chatbot.message') }}', {
+                const response = await fetch('{{ route('chatbot.about_me') }}', {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -599,10 +625,7 @@
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'
                     },
-                    body: JSON.stringify({
-                        message: AI_SUMMERY_PROMPT,
-                        history: []
-                    })
+                    body: JSON.stringify({})
                 });
 
                 const data = await response.json();
@@ -612,6 +635,11 @@
 
                 if (response.ok) {
                     cacheAiSummery(reply);
+                    try {
+                        // Mark this user as the last active so subsequent page loads
+                        // in the same tab will reuse the cached summary until logout.
+                        sessionStorage.setItem(AI_SUMMERY_LAST_ACTIVE_KEY, String(AI_SUMMERY_USER_ID));
+                    } catch (e) {}
                 }
 
                 target.innerHTML = renderChatbotMarkup(reply);
@@ -626,6 +654,7 @@
                 if (!raw) return null;
                 const parsed = JSON.parse(raw);
                 if (!parsed || typeof parsed.reply !== 'string') return null;
+                if ((parsed.userId ?? null) !== AI_SUMMERY_USER_ID) return null;
                 return parsed.reply;
             } catch (e) {
                 return null;
@@ -636,6 +665,8 @@
             try {
                 sessionStorage.setItem(AI_SUMMERY_CACHE_KEY, JSON.stringify({
                     reply,
+                    userId: AI_SUMMERY_USER_ID,
+                    userEmail: AI_SUMMERY_USER_EMAIL,
                     savedAt: Date.now(),
                 }));
             } catch (e) {
@@ -696,11 +727,24 @@
         function emphasizeLine(input) {
             let line = input.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 
-            line = line.replace(/\b(Tip\s*\d+\s*:)/gi, '<strong>$1</strong>');
-            line = line.replace(/\b(To\s*Do\s*:|Not\s*To\s*Do\s*:|Overview\s*:|Summary\s*:|Diseases?\s*:|Symptoms?\s*:)/gi, '<strong>$1</strong>');
+            // Make the full leading label before the first colon bold.
+            line = line.replace(/^\s*([^:<>]{2,120})\s*:\s*(.*)$/i, (m, label, rest) => {
+                return `<strong>${label.trim()}:</strong> ${rest}`;
+            });
 
-            const keywordPattern = /\b(summary|details|suggestions|tips|overview|condition|health|symptom|symptoms|disease|diseases|medicine|metric|adherence|warning|urgent|improve|monitor|doctor|exercise|sleep|hydration|stress|chronic|active|managed|severity|diagnosed)\b/gi;
-            line = line.replace(keywordPattern, '<strong>$1</strong>');
+            const keywordPattern = /\b(summary|details|suggestions|tips|overview|condition|health|symptom|symptoms|disease|diseases|medicine|medicines|metric|metrics|adherence|warning|urgent|improve|monitor|doctor|exercise|sleep|hydration|stress|chronic|active|managed|severity|diagnosed|risk|risks|trend|blood\s+pressure|glucose|heart\s+rate|bmi|eczema|conjunctivitis|tachycardia)\b/gi;
+            const valuePattern = /\b(\d+\/?\d*\s*(?:mg\/dL|mmhg|bpm|%)?)\b/gi;
+
+            const firstColon = line.indexOf(':');
+            if (firstColon !== -1) {
+                const head = line.slice(0, firstColon + 1);
+                let tail = line.slice(firstColon + 1);
+                tail = tail.replace(keywordPattern, '<strong>$1</strong>');
+                tail = tail.replace(valuePattern, '<strong>$1</strong>');
+                line = head + tail;
+            } else {
+                line = line.replace(keywordPattern, '<strong>$1</strong>');
+            }
 
             if (!/<strong>/.test(line)) {
                 line = line.replace(/^((?:\w+\s+){1,3}\w+)/, '<strong>$1</strong>');

@@ -113,8 +113,13 @@ class AiChatController extends Controller
                                 ->all();
 
                             if ($models !== []) {
+                                $questionForModel = $validated['message'];
+                                if ($this->isRiskIntent($validated['message'])) {
+                                    $questionForModel .= "\n\nPlease include a concise assessment of risks related to the user's diseases and symptoms, and provide 2-3 actionable suggestions.";
+                                }
+
                                 $final = $this->askModelToSummarizeResults(
-                                    $validated['message'],
+                                    $questionForModel,
                                     'PERSONAL_HEALTH_SNAPSHOT',
                                     $snapshot,
                                     $apiKey,
@@ -228,8 +233,13 @@ class AiChatController extends Controller
                         } else {
                             $results = $this->executeSelectSql($sql);
                             if ($results !== null) {
+                                $questionForModel = $validated['message'];
+                                if ($this->isRiskIntent($validated['message'])) {
+                                    $questionForModel .= "\n\nPlease include a concise assessment of risks related to the user's diseases and symptoms, and provide 2-3 actionable suggestions.";
+                                }
+
                                 $final = $this->askModelToSummarizeResults(
-                                    $validated['message'],
+                                    $questionForModel,
                                     $sql,
                                     $results,
                                     $apiKey,
@@ -374,6 +384,19 @@ class AiChatController extends Controller
             '/\b(my\s+health|health\s+condition|my\s+condition|health\s+status|my\s+symptoms?|my\s+diseases?|my\s+medicines?|my\s+metrics?|tell\s+me\s+about\s+my|what\s+(are|is)\s+my)\b/i',
             $message
         );
+    }
+
+    private function isRiskIntent(string $message): bool
+    {
+        if (trim($message) === '') {
+            return false;
+        }
+
+        $m = strtolower($message);
+        $hasRisk = (bool) preg_match('/\b(risk|risks|probability|chance|likely|severity|complication|complications)\b/i', $m);
+        $hasHealthTerm = (bool) preg_match('/\b(disease|diseases|symptom|symptoms|condition|health|status)\b/i', $m);
+
+        return $hasRisk && $hasHealthTerm;
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -825,6 +848,7 @@ class AiChatController extends Controller
                 . 'Use ONLY the provided JSON data to answer. Do not ask clarifying questions — the data is already here. '
             . 'Do not reveal or infer data about any other users. '
             . 'Format output with a short title, bold labels, and bullet points when appropriate. '
+                . 'Provide personalized suggestions and tips based on the data, and vary phrasing/points between requests so responses are not identical each time. '
                 . 'If the JSON is empty, say no matching records were found. '
                 . 'Be concise (2–6 sentences), friendly, and remind the user this is not a medical diagnosis.';
         $user   = "Question: {$question}\n\nData source: {$sql}\n\nData:\n{$json}\n\nAnswer:";
@@ -871,6 +895,135 @@ class AiChatController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * Gather a broad set of current user's records and ask the LLM to produce
+     * an "About me" summary strictly from those records.
+     */
+    public function aboutMe(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if ($user === null) {
+            return response()->json(['reply' => $this->formatStructuredReply('Authentication required.')], 401);
+        }
+
+        $userId = $user->id;
+        $userEmail = $user->email ?? '';
+        // Use the existing schema-aware snapshot function to collect personal records.
+        $snapshot = $this->getPersonalHealthSnapshot($userId);
+        if ($snapshot === null) {
+            return response()->json(['reply' => $this->formatStructuredReply('I could not access your records right now. Please try again later.')], 502);
+        }
+
+        // Describe the representative queries used to fetch the snapshot so the LLM knows the data provenance.
+        $queries = [
+            "SELECT d.disease_name as disease, ud.status, ud.diagnosed_at, ud.notes FROM user_diseases ud LEFT JOIN diseases d ON d.id = ud.disease_id WHERE ud.user_id = {$userId} ORDER BY ud.id DESC LIMIT 20",
+            "SELECT s.name as symptom, us.severity_level, us.note, us.recorded_at FROM user_symptoms us LEFT JOIN symptoms s ON s.id = us.symptom_id WHERE us.user_id = {$userId} ORDER BY us.recorded_at DESC LIMIT 20",
+            "SELECT metric_type, value, recorded_at FROM health_metrics WHERE user_id = {$userId} ORDER BY recorded_at DESC LIMIT 20",
+            "SELECT medicine_name, type, rule, unit FROM medicines WHERE user_id = {$userId} ORDER BY id DESC LIMIT 10",
+        ];
+
+        $sqlSource = implode("\n", $queries);
+
+        $question = "Risk about my disease and symptoms and my current health condition suggestions should be there along with 2-3 points.\n"
+            . "Use ONLY my current authenticated records and no other users.\n"
+            . "Current user id: {$userId}\n"
+            . "Current user email: {$userEmail}\n"
+            . "First focus on my diseases (2-3 lines), then my symptoms and trend (3-4 lines).\n"
+            . "Then give:\nTo Do: 4-6 bullet points\nNot To Do: 3-5 bullet points\n"
+            . "End with exactly 2 lines overall condition.";
+
+        // Enforce strict output formatting instructions for the LLM to follow.
+        $formatInstruction = "\n\nStrict format required: Provide a short title, then a 'Diseases' section (2-3 lines), then a 'Symptoms and trend' section (3-4 lines), then 'To Do' with 4-6 bullet points, then 'Not To Do' with 3-5 bullet points, and finish with exactly 2 lines labeled 'Overall condition'. Use bold labels and bullet points where appropriate. Keep the narrative concise (total 2-6 sentences for summary sections). Do not include other users' data.";
+
+        $question = $question . $formatInstruction;
+
+        $apiKey    = (string) config('services.openrouter.api_key', '');
+        $googleKey = (string) (env('GOOGLE_API_KEY', '') ?: config('services.google.api_key', ''));
+        if ($apiKey === '' && $googleKey === '') {
+            return response()->json([ 'reply' => $this->formatStructuredReply('AI service is not configured yet. Please set OPENROUTER_API_KEY or GOOGLE_API_KEY in your .env file.') ], 503);
+        }
+
+        $baseUrl      = rtrim((string) config('services.openrouter.base_url', 'https://openrouter.ai/api/v1'), '/');
+        $primaryModel = (string) config('services.openrouter.model', 'qwen/qwen3-6b-instruct:free');
+        $fallbackModels = array_filter(array_merge(
+            (array) config('services.openrouter.fallback_models', []),
+            [
+                config('services.openrouter.fallback_model_1'),
+                config('services.openrouter.fallback_model_2'),
+                config('services.openrouter.fallback_model_3'),
+            ]
+        ));
+
+        $models = collect(array_merge([$primaryModel], $fallbackModels))
+            ->filter(fn($m) => is_string($m) && trim($m) !== '')
+            ->map(fn($m) => trim($m))
+            ->unique()
+            ->values()
+            ->all();
+
+        $final = $this->askModelToSummarizeResults(
+            $question,
+            $sqlSource,
+            $snapshot,
+            $apiKey,
+            $primaryModel,
+            $baseUrl,
+            $models,
+            $googleKey
+        );
+
+        if ($final !== null) {
+            // For Suggestions page summary, return the model output directly so
+            // the requested sections (Diseases, Symptoms and trend, To Do,
+            // Not To Do, Overall condition) are shown without generic wrappers.
+            return response()->json(['reply' => $this->cleanAboutMeResponse($final)]);
+        }
+
+        // If LLM summarization fails, provide deterministic local fallback.
+        $fallback = $this->buildPersonalHealthReply($snapshot, true);
+        return response()->json(['reply' => $this->formatStructuredReply($fallback)]);
+    }
+
+    /**
+     * Remove prompt/instruction echoes from model output so UI shows only the
+     * generated health response content.
+     */
+    private function cleanAboutMeResponse(string $text): string
+    {
+        $lines = preg_split('/\r?\n/', trim($text)) ?: [];
+        $filtered = [];
+
+        foreach ($lines as $line) {
+            $t = trim($line);
+            if ($t === '') {
+                $filtered[] = $line;
+                continue;
+            }
+
+            $lower = strtolower($t);
+            if (str_starts_with($lower, 'we need to produce answer')) {
+                continue;
+            }
+            if (str_contains($lower, 'strict format required')) {
+                continue;
+            }
+            if (str_contains($lower, 'use only my current authenticated records')) {
+                continue;
+            }
+            if (str_contains($lower, 'current user id:')) {
+                continue;
+            }
+            if (str_contains($lower, 'current user email:')) {
+                continue;
+            }
+
+            $filtered[] = $line;
+        }
+
+        $clean = trim(implode("\n", $filtered));
+        return $clean !== '' ? $clean : trim($text);
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -979,6 +1132,17 @@ class AiChatController extends Controller
         $text = trim($reply);
         if ($text === '') {
             $text = 'I could not generate a response right now.';
+        }
+
+        // If the LLM already provided structured sections for Suggestions or Tips,
+        // prefer the LLM output intact so suggestions/tips come from the model.
+        $lower = strtolower($text);
+        if (str_contains($lower, 'to do:') || str_contains($lower, 'not to do:') || str_contains($lower, '**suggestions**') || str_contains($lower, '**tips**') || str_contains($lower, 'overall condition')) {
+            // Ensure there's a top-level heading for consistency
+            if (!preg_match('/^##\s+MyDoctor\s+AI\s+Response/i', $text)) {
+                return "## MyDoctor AI Response\n\n" . $text;
+            }
+            return $text;
         }
 
         $sentences = array_values(array_filter(array_map('trim', preg_split('/(?<=[.!?])\s+/', $text) ?: [])));
