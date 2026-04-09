@@ -25,6 +25,9 @@ return new class extends Migration
             $table->integer('like_count')->default(0);
             $table->integer('comment_count')->default(0);
             $table->timestamps();
+
+            $table->index(['is_approved', 'created_at']);
+            $table->index(['disease_id', 'is_approved', 'created_at']);
         });
     }
 
