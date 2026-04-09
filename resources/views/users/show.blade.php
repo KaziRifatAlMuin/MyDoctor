@@ -591,7 +591,7 @@
                         @endphp
                         <div class="hero-disease-tags">
                             @forelse($heroDiseases as $disease)
-                                <a href="{{ route('public.diseases.show', $disease) }}" class="hero-disease-tag text-decoration-none">
+                                <a href="{{ route('public.disease.show', $disease) }}" class="hero-disease-tag text-decoration-none">
                                     {{ $disease->disease_name }}
                                 </a>
                             @empty
@@ -1485,3 +1485,4 @@
         });
     </script>
 @endpush
+

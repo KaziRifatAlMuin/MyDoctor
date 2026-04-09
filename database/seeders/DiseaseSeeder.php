@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Disease;
-use Illuminate\Support\Facades\DB;
 
 class DiseaseSeeder extends Seeder
 {
@@ -23,14 +22,8 @@ class DiseaseSeeder extends Seeder
             );
         }
 
-        Disease::updateOrCreate(
-            ['disease_name' => 'হাম'],
-            [
-                'description' => 'Measles (Bangla name)',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]
-        );
+        // Measles must be stored in English in DB; remove legacy Bangla row if it exists.
+        Disease::where('disease_name', 'হাম')->delete();
         
         $this->command->info('Diseases seeded successfully from config!');
     }

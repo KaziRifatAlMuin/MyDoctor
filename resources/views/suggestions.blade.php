@@ -335,7 +335,7 @@
                                     </div>
                                     <div>
                                         @if($cond->disease)
-                                            <a href="{{ route('public.diseases.show', $cond->disease) }}" class="fw-semibold text-decoration-none">
+                                            <a href="{{ route('public.disease.show', $cond->disease) }}" class="fw-semibold text-decoration-none">
                                                 {{ $cond->disease->disease_name }}
                                             </a>
                                         @else
@@ -462,3 +462,4 @@
         }
     </script>
 @endpush
+

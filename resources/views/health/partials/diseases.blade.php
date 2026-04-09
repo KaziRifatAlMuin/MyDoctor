@@ -88,7 +88,7 @@
                                                 </div>
                                                 <div>
                                                     @if($ud->disease)
-                                                        <a href="{{ route('public.diseases.show', $ud->disease) }}" class="fw-semibold text-decoration-none">
+                                                        <a href="{{ route('public.disease.show', $ud->disease) }}" class="fw-semibold text-decoration-none">
                                                             {{ $ud->disease->disease_name }}
                                                         </a>
                                                     @else
@@ -147,3 +147,4 @@
         </div>
     </div>
 </div>
+

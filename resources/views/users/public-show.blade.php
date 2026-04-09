@@ -13,9 +13,8 @@
                                 <img src="{{ asset('storage/' . $user->picture) }}" alt="{{ $user->name }}"
                                     style="width: 96px; height: 96px; border-radius: 50%; object-fit: cover; border: 4px solid rgba(255,255,255,0.9); box-shadow: 0 8px 24px rgba(0,0,0,0.2);">
                             @else
-                                <div style="width: 96px; height: 96px; border-radius: 50%; background: rgba(255,255,255,0.16); color: #fff; font-size: 1.9rem; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 4px solid rgba(255,255,255,0.9); box-shadow: 0 8px 24px rgba(0,0,0,0.2);">
-                                    {{ strtoupper(substr($user->name, 0, 1)) }}
-                                </div>
+                                <img src="{{ asset('images/default-avatar.svg') }}" alt="Default avatar"
+                                    style="width: 96px; height: 96px; border-radius: 50%; object-fit: cover; border: 4px solid rgba(255,255,255,0.9); box-shadow: 0 8px 24px rgba(0,0,0,0.2);">
                             @endif
 
                             <div>
@@ -88,7 +87,7 @@
                                     @if ($publicDiseases->count())
                                         <div style="margin-top:0.85rem; display:flex; flex-wrap:wrap; gap:0.45rem;">
                                             @foreach ($publicDiseases as $item)
-                                                <a href="{{ $item->disease ? route('public.diseases.show', $item->disease) : '#' }}" style="display:inline-flex; align-items:center; gap:0.35rem; background:#eef8f2; color:#1f6f45; border:1px solid #cfe9da; border-radius:999px; padding:0.35rem 0.68rem; font-size:0.8rem; font-weight:700; text-decoration:none;">
+                                                <a href="{{ $item->disease ? route('public.disease.show', $item->disease) : '#' }}" style="display:inline-flex; align-items:center; gap:0.35rem; background:#eef8f2; color:#1f6f45; border:1px solid #cfe9da; border-radius:999px; padding:0.35rem 0.68rem; font-size:0.8rem; font-weight:700; text-decoration:none;">
                                                     <i class="fas fa-leaf" style="font-size:0.7rem;"></i>
                                                     {{ $item->disease->disease_name ?? 'Unknown Disease' }}
                                                     @if (!empty($item->status))
@@ -120,3 +119,4 @@
         </div>
     </div>
 @endsection
+

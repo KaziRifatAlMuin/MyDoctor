@@ -343,7 +343,7 @@
 
                         <div class="d-flex flex-wrap gap-2 mt-2">
                             @forelse($profileDiseases as $disease)
-                                <a href="{{ route('public.diseases.show', $disease) }}" class="profile-disease-tag text-decoration-none">
+                                <a href="{{ route('public.disease.show', $disease) }}" class="profile-disease-tag text-decoration-none">
                                     {{ $disease->disease_name }}
                                 </a>
                             @empty
@@ -768,3 +768,4 @@
         @endif
     </script>
 @endpush
+

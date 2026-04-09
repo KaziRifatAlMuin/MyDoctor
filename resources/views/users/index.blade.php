@@ -78,7 +78,11 @@
                                 <div style="padding: 1.5rem; text-align: center; flex: 1; display: flex; flex-direction: column;">
                                     {{-- Avatar --}}
                                     <div style="width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(135deg, {{ $user->role === 'admin' ? '#0b57d0' : '#3182ce' }} 0%, {{ $user->role === 'admin' ? '#1a73e8' : '#2c5aa0' }} 100%); border: 4px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700; color: white; margin: -2.5rem auto 1rem;">
-                                        {{ strtoupper(substr($user->name, 0, 1)) }}
+                                        @if($user->picture)
+                                            <img src="{{ asset('storage/' . $user->picture) }}" alt="{{ $user->name }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                                        @else
+                                            <img src="{{ asset('images/default-avatar.svg') }}" alt="Default avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                                        @endif
                                     </div>
 
                                     {{-- Name --}}

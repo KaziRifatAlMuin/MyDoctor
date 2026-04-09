@@ -1678,7 +1678,7 @@ body {
                     <div class="trending-item">
                         <div>
                             <div class="trending-name">
-                                <a href="{{ route('public.diseases.show', $disease) }}" class="text-decoration-none">
+                                <a href="{{ route('public.disease.show', $disease) }}" class="text-decoration-none">
                                     {{ $disease->disease_name }}
                                 </a>
                             </div>

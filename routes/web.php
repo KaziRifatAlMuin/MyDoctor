@@ -16,6 +16,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CommunityController;
 use App\Http\Controllers\AiChatController;
 use App\Http\Controllers\PublicHealthController;
+use App\Models\Disease;
 use Illuminate\Http\Request;
 
 
@@ -56,8 +57,12 @@ Route::get('/language/{locale}', function (string $locale) {
     return back();
 })->name('language.switch');
 
-Route::get('/diseases/{disease}', [PublicHealthController::class, 'showDisease'])->name('public.diseases.show');
+Route::get('/diseases', [PublicHealthController::class, 'indexDiseases'])->name('public.diseases.index');
+Route::get('/symptoms', [PublicHealthController::class, 'indexSymptoms'])->name('public.symptoms.index');
 Route::get('/disease/{disease}', [PublicHealthController::class, 'showDisease'])->name('public.disease.show');
+Route::get('/diseases/{disease}', function (Disease $disease) {
+    return redirect()->route('public.disease.show', $disease);
+});
 Route::get('/symptoms/{symptom}', [PublicHealthController::class, 'showSymptom'])->name('public.symptoms.show');
 
 /*

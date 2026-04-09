@@ -242,7 +242,7 @@
                             </div>
                             <div class="flex-grow-1" style="min-width:0;">
                                 @if($ud->disease)
-                                    <a href="{{ route('public.diseases.show', $ud->disease) }}" class="fw-semibold text-truncate text-decoration-none d-inline-block" style="font-size:0.88rem;color:#2d3748; max-width: 100%;">
+                                    <a href="{{ route('public.disease.show', $ud->disease) }}" class="fw-semibold text-truncate text-decoration-none d-inline-block" style="font-size:0.88rem;color:#2d3748; max-width: 100%;">
                                         {{ $ud->disease->disease_name }}
                                     </a>
                                 @else
@@ -397,4 +397,5 @@
         </div>
     </div>
 </div>
+
 

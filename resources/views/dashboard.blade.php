@@ -1168,7 +1168,7 @@
                                 <div class="d-flex align-items-center justify-content-between py-2 {{ !$loop->last ? 'border-bottom' : '' }}" style="border-color:#f0f0f0 !important;">
                                     <div>
                                         @if($ud->disease)
-                                            <a href="{{ route('public.diseases.show', $ud->disease) }}" class="fw-semibold text-decoration-none" style="font-size:0.88rem;color:#2d3748;">
+                                            <a href="{{ route('public.disease.show', $ud->disease) }}" class="fw-semibold text-decoration-none" style="font-size:0.88rem;color:#2d3748;">
                                                 {{ $ud->disease->disease_name }}
                                             </a>
                                         @else
@@ -1546,3 +1546,4 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endpush
+
