@@ -6,6 +6,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class AiChatController extends Controller
 {
@@ -59,6 +60,31 @@ class AiChatController extends Controller
                 'content' => $validated['message'],
             ]]
         );
+
+        $enableTextToSql = (bool) config('services.openrouter.enable_text_to_sql', true);
+        if ($enableTextToSql) {
+            // Try text->SQL flow: generate SQL, run, then ask the LLM to craft final answer using results.
+            try {
+                $schemaDesc = $this->getDatabaseSchemaDescription();
+                $sql = $this->generateSqlFromMessage($validated['message'], $schemaDesc, $apiKey, $primaryModel, $baseUrl);
+
+                if ($sql !== null) {
+                    $sql = $this->sanitizeSql($sql);
+                    if ($sql !== null) {
+                        $results = $this->executeSelectSql($sql);
+                        if ($results !== null) {
+                            $final = $this->askModelToSummarizeResults($validated['message'], $sql, $results, $apiKey, $primaryModel, $baseUrl);
+                            if ($final !== null) {
+                                return response()->json(['reply' => $final]);
+                            }
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Text-to-SQL pipeline failed', ['message' => $e->getMessage()]);
+                // fallthrough to normal chat flow
+            }
+        }
 
         $lastStatus = null;
 
@@ -158,5 +184,267 @@ class AiChatController extends Controller
         }
 
         return implode("\n", $parts);
+    }
+
+    private function getDatabaseSchemaDescription(): string
+    {
+        try {
+            $database = config('database.connections.' . config('database.default') . '.database');
+            $rows = DB::select("SELECT TABLE_NAME, COLUMN_NAME, COLUMN_TYPE
+                FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = ?
+                ORDER BY TABLE_NAME, ORDINAL_POSITION",
+                [$database]
+            );
+
+            $tables = [];
+            foreach ($rows as $r) {
+                $t = $r->TABLE_NAME;
+                $c = $r->COLUMN_NAME . ' (' . $r->COLUMN_TYPE . ')';
+                $tables[$t][] = $c;
+            }
+
+            $parts = [];
+            foreach ($tables as $table => $cols) {
+                $parts[] = "Table: $table => " . implode(', ', $cols);
+            }
+
+            $schema = implode("\n", $parts);
+            // keep schema reasonably sized
+            return mb_strimwidth($schema, 0, 1800, '...');
+        } catch (\Throwable $e) {
+            Log::warning('Failed to build DB schema description', ['message' => $e->getMessage()]);
+            return '';
+        }
+    }
+
+    private function generateSqlFromMessage(string $message, string $schemaDesc, string $apiKey, string $model, string $baseUrl): ?string
+    {
+        if ($schemaDesc === '') {
+            return null;
+        }
+
+        $system = 'You are a SQL generator. Based on the provided database schema, return a single-line valid SQL SELECT query (MySQL dialect) that answers the user question. Do NOT return any explanation or text. Return only the SQL. Only SELECT queries are allowed.';
+        $user = "Schema:\n" . $schemaDesc . "\n\nQuestion: " . $message . "\n\nSQL Query:";
+
+        try {
+            // If a Google API key is provided in env/config, call Google Generative API directly
+            $googleKey = env('GOOGLE_API_KEY') ?: config('services.google.api_key');
+            $googleModel = env('GOOGLE_MODEL') ?: config('services.google.model', 'chat-bison-001');
+            if (!empty($googleKey)) {
+                $resp = $this->googleChatRequest($system, $user, $googleKey, $googleModel, 0.0, 300);
+                if ($resp !== null) {
+                    $text = trim(preg_replace('/^```\w*|```$/', '', $resp));
+                    return $text !== '' ? $text : null;
+                }
+            }
+
+            // Fallback to configured OpenRouter-like provider
+            $response = Http::timeout(30)
+                ->withToken($apiKey)
+                ->withHeaders(['Content-Type' => 'application/json', 'Accept' => 'application/json'])
+                ->post($baseUrl . '/chat/completions', [
+                    'model' => $model,
+                    'messages' => [
+                        ['role' => 'system', 'content' => $system],
+                        ['role' => 'user', 'content' => $user],
+                    ],
+                    'temperature' => 0.0,
+                    'max_tokens' => 300,
+                ]);
+
+            if ($response->successful()) {
+                $text = $this->extractReplyText(data_get($response->json(), 'choices.0.message.content'));
+                if ($text !== null) {
+                    $text = preg_replace('/^```\w*|```$/', '', trim($text));
+                    return trim($text);
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('SQL generation failed', ['message' => $e->getMessage()]);
+        }
+
+        return null;
+    }
+
+    private function sanitizeSql(string $sql): ?string
+    {
+        // Basic safety: allow only a single SELECT statement, no semicolons, no dangerous keywords.
+        $s = trim($sql);
+        $s = preg_replace('/;+/','', $s);
+
+        // Disallow multiple statements or non-select
+        if (!preg_match('/^\s*select\b/i', $s)) {
+            return null;
+        }
+
+        $bad = ['insert', 'update', 'delete', 'drop', 'alter', 'create', 'truncate', 'replace', 'merge', 'call', 'grant'];
+        foreach ($bad as $k) {
+            if (preg_match('/\b' . preg_quote($k, '/') . '\b/i', $s)) {
+                return null;
+            }
+        }
+
+        // Enforce a row cap: if no LIMIT present, append a safe limit
+        if (!preg_match('/\blimit\b/i', $s)) {
+            $s = rtrim($s, '\\s') . ' LIMIT 200';
+        }
+
+        return $s;
+    }
+
+    private function executeSelectSql(string $sql): ?array
+    {
+        try {
+            $conn = config('chatbot.read_connection', 'mysql_chatbot');
+            $rows = DB::connection($conn)->select(DB::raw($sql));
+            // convert stdClass rows to arrays and limit payload
+            $arr = array_map(function ($r) {
+                return (array) $r;
+            }, $rows);
+
+            return $arr;
+        } catch (\Throwable $e) {
+            Log::warning('SQL execution failed', ['sql' => $sql, 'message' => $e->getMessage()]);
+            return null;
+        }
+    }
+
+    private function askModelToSummarizeResults(string $question, string $sql, array $results, string $apiKey, string $model, string $baseUrl): ?string
+    {
+        // build a concise results string (json truncated)
+        $json = json_encode(array_slice($results, 0, 50), JSON_UNESCAPED_UNICODE);
+        $system = 'You are MyDoctor AI assistant. Use the provided SQL and query results to produce a concise, helpful answer to the user question. Do not hallucinate — only use the results. If the results are empty, say that no matching records were found.';
+        $user = "Question: $question\n\nSQL used: $sql\n\nResults (JSON): $json\n\nNow provide a short natural language answer (2-6 sentences).";
+
+        try {
+            $googleKey = env('GOOGLE_API_KEY') ?: config('services.google.api_key');
+            $googleModel = env('GOOGLE_MODEL') ?: config('services.google.model', 'chat-bison-001');
+            if (!empty($googleKey)) {
+                $resp = $this->googleChatRequest($system, $user, $googleKey, $googleModel, 0.2, 400);
+                if ($resp !== null) {
+                    return $this->extractReplyText($resp);
+                }
+            }
+
+            $response = Http::timeout(30)
+                ->withToken($apiKey)
+                ->withHeaders(['Content-Type' => 'application/json', 'Accept' => 'application/json'])
+                ->post($baseUrl . '/chat/completions', [
+                    'model' => $model,
+                    'messages' => [
+                        ['role' => 'system', 'content' => $system],
+                        ['role' => 'user', 'content' => $user],
+                    ],
+                    'temperature' => 0.2,
+                    'max_tokens' => 400,
+                ]);
+
+            if ($response->successful()) {
+                return $this->extractReplyText(data_get($response->json(), 'choices.0.message.content'));
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Summarize results failed', ['message' => $e->getMessage()]);
+        }
+
+        return null;
+    }
+
+    private function isAllowedSql(string $sql): bool
+    {
+        if (config('chatbot.allow_all_tables', false)) {
+            return true;
+        }
+
+        $allowed = array_map('strtolower', (array) config('chatbot.allowed_tables', []));
+        if ($allowed === []) {
+            return false; // deny if no allowed tables configured
+        }
+
+        $tables = $this->extractTablesFromSql($sql);
+        if ($tables === []) {
+            return false; // if we can't detect tables, be conservative
+        }
+
+        foreach ($tables as $t) {
+            if (!in_array(strtolower($t), $allowed, true)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function extractTablesFromSql(string $sql): array
+    {
+        $sql = strtolower($sql);
+        $tables = [];
+
+        // match FROM and JOIN occurrences
+        if (preg_match_all('/\bfrom\s+`?([a-z0-9_]+)`?/i', $sql, $m)) {
+            foreach ($m[1] as $t) $tables[] = $t;
+        }
+        if (preg_match_all('/\bjoin\s+`?([a-z0-9_]+)`?/i', $sql, $m)) {
+            foreach ($m[1] as $t) $tables[] = $t;
+        }
+
+        // also try simple SELECT ... table syntax (older SQL)
+        if (preg_match_all('/\bselect\b[\s\S]*?\bfrom\b\s*([a-z0-9_`]+)/i', $sql, $m)) {
+            foreach ($m[1] as $raw) {
+                $raw = preg_replace('/[^a-z0-9_]/i', '', $raw);
+                if ($raw !== '') $tables[] = $raw;
+            }
+        }
+
+        return array_values(array_unique($tables));
+    }
+
+    /**
+     * Call Google Generative API chat-style (generateMessage) using API key.
+     * Returns plain text content or null.
+     */
+    private function googleChatRequest(string $system, string $user, string $apiKey, string $model, float $temperature = 0.2, int $maxTokens = 400): ?string
+    {
+        try {
+            $url = "https://generativelanguage.googleapis.com/v1beta2/models/{$model}:generateMessage?key={$apiKey}";
+
+            $body = [
+                'messages' => [
+                    ['author' => 'system', 'content' => [['type' => 'text', 'text' => $system]]],
+                    ['author' => 'user', 'content' => [['type' => 'text', 'text' => $user]]],
+                ],
+                'temperature' => $temperature,
+                'maxOutputTokens' => $maxTokens,
+            ];
+
+            $resp = Http::timeout(30)
+                ->withHeaders(['Content-Type' => 'application/json', 'Accept' => 'application/json'])
+                ->post($url, $body);
+
+            if (!$resp->successful()) {
+                Log::warning('Google Generative API returned non-success', ['status' => $resp->status(), 'body' => $resp->body()]);
+                return null;
+            }
+
+            $json = $resp->json();
+            // Try known response shapes
+            $text = data_get($json, 'candidates.0.content.0.text')
+                ?? data_get($json, 'candidates.0.content.0')
+                ?? data_get($json, 'candidates.0.text')
+                ?? data_get($json, 'candidates.0.message.content.0.text')
+                ?? data_get($json, 'candidates.0.message.content');
+
+            if (is_array($text)) {
+                // join pieces
+                $parts = [];
+                array_walk_recursive($text, function ($v) use (&$parts) { if (is_string($v)) $parts[] = $v; });
+                $text = implode('\n', $parts);
+            }
+
+            return is_string($text) ? trim($text) : null;
+        } catch (\Throwable $e) {
+            Log::warning('Google chat request failed', ['message' => $e->getMessage()]);
+            return null;
+        }
     }
 }
