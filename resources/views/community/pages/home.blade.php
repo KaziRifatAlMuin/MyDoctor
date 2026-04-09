@@ -28,20 +28,33 @@
             <div class="row g-3 g-md-4">
                 @forelse($diseases as $disease)
                     <div class="col-md-6 col-lg-4">
-                        <a href="{{ route('community.disease.posts', $disease) }}" class="text-decoration-none">
-                            <div class="card border-0 h-100"
-                                style="border-radius: 16px; box-shadow: 0 10px 25px rgba(2,32,71,0.08); transition: transform .2s ease, box-shadow .2s ease;">
-                                <div class="card-body p-4">
-                                    <div class="d-flex justify-content-between align-items-start gap-2">
-                                        <h2 class="h6 mb-0" style="font-weight: 800; color: #0f2f6b;">
-                                            {{ $disease->disease_name }}</h2>
-                                        <span class="badge text-bg-light border">{{ $disease->posts_count }}</span>
-                                    </div>
-                                    <p class="text-muted mb-0 mt-3" style="font-size: .9rem;">Open disease-specific posts
-                                        feed.</p>
+                        <div class="card border-0 h-100"
+                            style="border-radius: 16px; box-shadow: 0 10px 25px rgba(2,32,71,0.08); transition: transform .2s ease, box-shadow .2s ease;">
+                            <div class="card-body p-4 d-flex flex-column">
+                                <div class="d-flex justify-content-between align-items-start gap-2">
+                                    <h2 class="h6 mb-0" style="font-weight: 800; color: #0f2f6b;">
+                                        <a href="{{ route('public.disease.show', $disease) }}" class="text-decoration-none"
+                                            style="color: #0f2f6b;">
+                                            {{ $disease->disease_name }}
+                                        </a>
+                                    </h2>
+                                    <span class="badge text-bg-light border">{{ $disease->posts_count }}</span>
+                                </div>
+                                <p class="text-muted mt-3 mb-3" style="font-size: .9rem;">Open disease-specific posts feed.
+                                </p>
+                                <div class="d-flex gap-2 mt-auto">
+                                    <a href="{{ route('community.disease.posts', $disease) }}"
+                                        class="btn btn-sm btn-primary" style="border-radius: 10px; font-weight: 700;">
+                                        View Posts
+                                    </a>
+                                    <a href="{{ route('public.disease.show', $disease) }}"
+                                        class="btn btn-sm btn-outline-primary"
+                                        style="border-radius: 10px; font-weight: 700;">
+                                        Disease View
+                                    </a>
                                 </div>
                             </div>
-                        </a>
+                        </div>
                     </div>
                 @empty
                     <div class="col-12">

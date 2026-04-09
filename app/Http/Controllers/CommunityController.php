@@ -23,19 +23,32 @@ class CommunityController extends Controller
      */
     public function home()
     {
+        $userDiseaseIds = Auth::check()
+            ? Auth::user()->userDiseases()->pluck('disease_id')->all()
+            : [];
+
         $diseases = Disease::withCount([
             'posts as posts_count' => function ($q) {
                 $q->where('is_approved', true);
             }
         ])
-            ->orderByDesc('posts_count')
+            ->withMax([
+                'posts as latest_post_at' => function ($q) {
+                    $q->where('is_approved', true);
+                }
+            ], 'created_at')
+            ->when(!empty($userDiseaseIds), function ($q) use ($userDiseaseIds) {
+                $ids = implode(',', array_map('intval', $userDiseaseIds));
+                $q->orderByRaw("CASE WHEN id IN ({$ids}) THEN 0 ELSE 1 END");
+            })
+            ->orderByDesc('latest_post_at')
             ->orderBy('disease_name')
             ->get();
 
         $totalPosts = Post::where('is_approved', true)->count();
         $totalDiseases = $diseases->count();
 
-        return view('community.home', compact('diseases', 'totalPosts', 'totalDiseases'));
+        return view('community.pages.home', compact('diseases', 'totalPosts', 'totalDiseases'));
     }
 
     /**
@@ -63,6 +76,9 @@ class CommunityController extends Controller
     {
         try {
             $diseaseId = $request->get('disease');
+            $userDiseaseIds = Auth::check()
+                ? Auth::user()->userDiseases()->pluck('disease_id')->all()
+                : [];
             
             // Build the posts query with eager loading
             $query = Post::with(['user', 'disease', 'comments' => function($q) {
@@ -75,8 +91,14 @@ class CommunityController extends Controller
                 $query->where('disease_id', $diseaseId);
             }
 
+            // Prioritize posts matching the current user's diseases, then newest.
+            if (!empty($userDiseaseIds)) {
+                $ids = implode(',', array_map('intval', $userDiseaseIds));
+                $query->orderByRaw("CASE WHEN disease_id IN ({$ids}) THEN 0 ELSE 1 END");
+            }
+
             // Get paginated posts (10 per page)
-            $posts = $query->latest()->paginate(10);
+            $posts = $query->orderByDesc('created_at')->paginate(10);
             
             // Get all diseases with post counts for the filter sidebar
                         $diseases = Disease::withCount([
@@ -120,7 +142,7 @@ class CommunityController extends Controller
                 'diseaseId' => $diseaseId
             ]);
             
-            return view('community.index', compact(
+            return view('community.pages.index', compact(
                 'posts', 
                 'diseases', 
                 'diseaseId', 
@@ -138,7 +160,7 @@ class CommunityController extends Controller
             ]);
             
             // Return with empty paginator
-            return view('community.index', [
+            return view('community.pages.index', [
                 'posts' => new LengthAwarePaginator([], 0, 10),
                 'diseases' => collect([]),
                 'diseaseId' => null,
@@ -215,7 +237,7 @@ class CommunityController extends Controller
               ->take(5)
               ->values();
 
-            return view('community.index', [
+            return view('community.pages.index', [
                 'posts' => $posts,
                 'diseases' => $diseases,
                 'diseaseId' => $diseaseId,
@@ -232,7 +254,7 @@ class CommunityController extends Controller
                 'line' => $e->getLine(),
             ]);
 
-            return view('community.index', [
+            return view('community.pages.index', [
                 'posts' => new LengthAwarePaginator([], 0, 10),
                 'diseases' => collect([]),
                 'diseaseId' => null,
@@ -297,7 +319,7 @@ class CommunityController extends Controller
               ->take(5)
               ->values();
 
-            return view('community.index', [
+            return view('community.pages.index', [
                 'posts' => $posts,
                 'diseases' => $diseases,
                 'diseaseId' => $diseaseId,
@@ -314,7 +336,7 @@ class CommunityController extends Controller
                 'line' => $e->getLine(),
             ]);
 
-            return view('community.index', [
+            return view('community.pages.index', [
                 'posts' => new LengthAwarePaginator([], 0, 10),
                 'diseases' => collect([]),
                 'diseaseId' => null,
@@ -337,7 +359,7 @@ class CommunityController extends Controller
         if (Auth::check()) {
             return redirect()->route('community.posts.index');
         }
-        return view('community.landing');
+        return view('community.pages.landing');
     }
 
     /**
@@ -354,7 +376,7 @@ class CommunityController extends Controller
                 $q->with('user')->latest();
             }])->loadCount(['likes as likes_count']);
             
-            return view('community.show', compact('post'));
+            return view('community.pages.show', compact('post'));
         } catch (\Exception $e) {
             Log::error('Show Post Error: ' . $e->getMessage());
             return back()->with('error', 'Error loading post');
@@ -383,7 +405,7 @@ class CommunityController extends Controller
             ])->loadCount(['likes as likes_count']);
             
             // Return the modal post view
-            return view('community.modal-post', compact('post'));
+            return view('community.pages.modal-post', compact('post'));
         } catch (\Exception $e) {
             Log::error('Modal Post Error: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to load post'], 500);
