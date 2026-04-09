@@ -10,80 +10,163 @@ use Illuminate\Support\Facades\DB;
 
 class AiChatController extends Controller
 {
+    /**
+     * Allowed tables for text-to-SQL queries.
+     * Sensitive tables (push_subscriptions, mailings) are excluded.
+     * 'users' is included but only non-sensitive columns are exposed via schema description.
+     */
+    private const ALLOWED_TABLES = [
+        'users',
+        'medicines',
+        'medicine_schedules',
+        'medicine_reminders',
+        'medicine_logs',
+        'health_metrics',
+        'environments',
+        'environment_metrics',
+        'symptoms',
+        'user_symptoms',
+        'diseases',
+        'disease_symptoms',
+        'user_diseases',
+        'uploads',
+        'posts',
+        'comments',
+        'notifications',
+    ];
+
+    /**
+     * Columns stripped from schema hints sent to the LLM to prevent leaking sensitive fields.
+     */
+    private const SCHEMA_BLOCKED_COLUMNS = [
+        'password', 'remember_token', 'auth_token', 'public_key',
+        'endpoint', 'email', 'phone', 'notification_settings',
+    ];
+
     public function message(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'message' => ['required', 'string', 'max:1000'],
-            'history' => ['nullable', 'array', 'max:12'],
-            'history.*.role' => ['required_with:history', 'in:user,assistant'],
+            'message'           => ['required', 'string', 'max:1000'],
+            'history'           => ['nullable', 'array', 'max:12'],
+            'history.*.role'    => ['required_with:history', 'in:user,assistant'],
             'history.*.content' => ['required_with:history', 'string', 'max:1000'],
         ]);
 
-        $apiKey = (string) config('services.openrouter.api_key');
-        $googleKey = (string) (env('GOOGLE_API_KEY') ?: config('services.google.api_key', ''));
+        $authUserId = $request->user()?->id;
+
+        $apiKey    = (string) config('services.openrouter.api_key', '');
+        $googleKey = (string) (env('GOOGLE_API_KEY', '') ?: config('services.google.api_key', ''));
+
+        // Personal health queries must still work from DB even when external AI is down.
+        if ((bool) config('chatbot.enable_text_to_sql', true)) {
+            try {
+                if ($authUserId !== null && $this->isPersonalHealthIntent($validated['message'])) {
+                    $snapshot = $this->getPersonalHealthSnapshot($authUserId);
+                    if ($snapshot !== null) {
+                        $directReply = $this->buildPersonalHealthReply($snapshot);
+                        if ($directReply !== null) {
+                            return response()->json(['reply' => $directReply]);
+                        }
+
+                        // Rich data: try LLM summary if possible, otherwise always fall back to local summary.
+                        if ($apiKey !== '' || $googleKey !== '') {
+                            $baseUrl = rtrim((string) config('services.openrouter.base_url', 'https://openrouter.ai/api/v1'), '/');
+                            $primaryModel = (string) config('services.openrouter.model', 'qwen/qwen3-6b-instruct:free');
+                            $fallbackModels = array_filter(array_merge(
+                                (array) config('services.openrouter.fallback_models', []),
+                                [
+                                config('services.openrouter.fallback_model_1'),
+                                config('services.openrouter.fallback_model_2'),
+                                config('services.openrouter.fallback_model_3'),
+                                ]
+                            ));
+                            $models = collect(array_merge([$primaryModel], $fallbackModels))
+                                ->filter(fn($m) => is_string($m) && trim($m) !== '')
+                                ->map(fn($m) => trim($m))
+                                ->unique()
+                                ->values()
+                                ->all();
+
+                            if ($models !== []) {
+                                $final = $this->askModelToSummarizeResults(
+                                    $validated['message'],
+                                    'PERSONAL_HEALTH_SNAPSHOT',
+                                    $snapshot,
+                                    $apiKey,
+                                    $primaryModel,
+                                    $baseUrl,
+                                    $models,
+                                    $googleKey
+                                );
+                                if ($final !== null) {
+                                    return response()->json(['reply' => $final]);
+                                }
+                            }
+                        }
+
+                        return response()->json(['reply' => $this->buildPersonalHealthReply($snapshot, true)]);
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Personal health fast-path failed', [
+                    'message' => $e->getMessage(),
+                    'trace'   => $e->getTraceAsString(),
+                ]);
+            }
+        }
+
         if ($apiKey === '' && $googleKey === '') {
             return response()->json([
                 'reply' => 'AI service is not configured yet. Please set OPENROUTER_API_KEY or GOOGLE_API_KEY in your .env file.',
             ], 503);
         }
 
-        $baseUrl = rtrim((string) config('services.openrouter.base_url', 'https://openrouter.ai/api/v1'), '/');
-        $primaryModel = (string) config('services.openrouter.model', 'openai/gpt-oss-20b:free');
-        $fallbackModels = (array) config('services.openrouter.fallback_models', []);
+        $baseUrl      = rtrim((string) config('services.openrouter.base_url', 'https://openrouter.ai/api/v1'), '/');
+        $primaryModel = (string) config('services.openrouter.model', 'qwen/qwen3-6b-instruct:free');
+        $fallbackModels = array_filter(array_merge(
+            (array) config('services.openrouter.fallback_models', []),
+            [
+            config('services.openrouter.fallback_model_1'),
+            config('services.openrouter.fallback_model_2'),
+            config('services.openrouter.fallback_model_3'),
+            ]
+        ));
+
         $models = collect(array_merge([$primaryModel], $fallbackModels))
-            ->filter(fn ($m) => is_string($m) && trim($m) !== '')
-            ->map(fn ($m) => trim($m))
+            ->filter(fn($m) => is_string($m) && trim($m) !== '')
+            ->map(fn($m) => trim($m))
             ->unique()
             ->values()
             ->all();
 
         if ($models === []) {
             return response()->json([
-                'reply' => 'AI service models are not configured. Please set AI_CHAT_MODEL in your .env file.',
+                'reply' => 'AI service models are not configured.',
             ], 503);
         }
 
-        $history = collect($validated['history'] ?? [])->map(function (array $item): array {
-            return [
-                'role' => $item['role'],
-                'content' => $item['content'],
-            ];
-        })->values()->all();
-
-        $messages = array_merge(
-            [[
-                'role' => 'system',
-                'content' => 'You are MyDoctor AI health assistant. Be concise and practical. Do not provide diagnosis. Encourage consulting a licensed doctor for urgent or severe symptoms. For emergencies, advise immediate local emergency services.',
-            ]],
-            $history,
-            [[
-                'role' => 'user',
-                'content' => $validated['message'],
-            ]]
-        );
-
-        $enableTextToSql = (bool) config('chatbot.enable_text_to_sql', true);
-        if ($enableTextToSql) {
-            // Try text->SQL flow: generate SQL, run, then ask the LLM to craft final answer using results.
+        // ── Text-to-SQL / RAG pipeline ────────────────────────────────────────
+        if ((bool) config('chatbot.enable_text_to_sql', true)) {
             try {
-                $authUserId = $request->user()?->id;
-
-                // Deterministic personal snapshot for common requests like "my health condition".
-                if ($this->isPersonalHealthIntent($validated['message']) && $authUserId !== null) {
-                    $personalSnapshot = $this->getPersonalHealthSnapshot($authUserId);
-                    if ($personalSnapshot !== null) {
-                        $directReply = $this->buildPersonalHealthReply($personalSnapshot);
+                // Fast-path: deterministic personal health snapshot
+                if ($authUserId !== null && $this->isPersonalHealthIntent($validated['message'])) {
+                    $snapshot = $this->getPersonalHealthSnapshot($authUserId);
+                    if ($snapshot !== null) {
+                        // If data is simple enough, reply directly without LLM
+                        $directReply = $this->buildPersonalHealthReply($snapshot);
                         if ($directReply !== null) {
                             return response()->json(['reply' => $directReply]);
                         }
-
+                        // Rich data: let LLM summarise from the snapshot
                         $final = $this->askModelToSummarizeResults(
                             $validated['message'],
                             'PERSONAL_HEALTH_SNAPSHOT',
-                            $personalSnapshot,
+                            $snapshot,
                             $apiKey,
                             $primaryModel,
-                            $baseUrl
+                            $baseUrl,
+                            $models,
+                            $googleKey
                         );
                         if ($final !== null) {
                             return response()->json(['reply' => $final]);
@@ -91,19 +174,37 @@ class AiChatController extends Controller
                     }
                 }
 
+                // General text-to-SQL path
                 $schemaDesc = $this->getDatabaseSchemaDescription();
-                $sql = $this->generateSqlFromMessage($validated['message'], $schemaDesc, $apiKey, $primaryModel, $baseUrl, $authUserId);
+                $sql = $this->generateSqlFromMessage(
+                    $validated['message'],
+                    $schemaDesc,
+                    $apiKey,
+                    $primaryModel,
+                    $baseUrl,
+                    $models,
+                    $googleKey,
+                    $authUserId
+                );
 
                 if ($sql !== null) {
                     $sql = $this->sanitizeSql($sql);
                     if ($sql !== null) {
-                        // enforce allowed tables before executing
                         if (!$this->isAllowedSql($sql)) {
-                            Log::warning('Generated SQL references disallowed tables or none detected', ['sql' => $sql]);
+                            Log::warning('Generated SQL references disallowed tables', ['sql' => $sql]);
                         } else {
                             $results = $this->executeSelectSql($sql);
                             if ($results !== null) {
-                                $final = $this->askModelToSummarizeResults($validated['message'], $sql, $results, $apiKey, $primaryModel, $baseUrl);
+                                $final = $this->askModelToSummarizeResults(
+                                    $validated['message'],
+                                    $sql,
+                                    $results,
+                                    $apiKey,
+                                    $primaryModel,
+                                    $baseUrl,
+                                    $models,
+                                    $googleKey
+                                );
                                 if ($final !== null) {
                                     return response()->json(['reply' => $final]);
                                 }
@@ -112,92 +213,148 @@ class AiChatController extends Controller
                     }
                 }
             } catch (\Throwable $e) {
-                Log::warning('Text-to-SQL pipeline failed', ['message' => $e->getMessage()]);
-                // fallthrough to normal chat flow
+                Log::warning('Text-to-SQL pipeline failed, falling through to normal chat', [
+                    'message' => $e->getMessage(),
+                    'trace'   => $e->getTraceAsString(),
+                ]);
             }
         }
 
-        $lastStatus = null;
+        // ── Normal LLM chat flow ──────────────────────────────────────────────
+        $history = collect($validated['history'] ?? [])->map(fn(array $item): array => [
+            'role'    => $item['role'],
+            'content' => $item['content'],
+        ])->values()->all();
 
+        // Build context-aware system prompt
+        $systemPrompt = $this->buildSystemPrompt($authUserId);
+
+        $messages = array_merge(
+            [['role' => 'system', 'content' => $systemPrompt]],
+            $history,
+            [['role' => 'user', 'content' => $validated['message']]]
+        );
+
+        // Try Google Gemini first if key is present
+        if ($googleKey !== '') {
+            $googleModel = (string) (env('GOOGLE_MODEL', '') ?: config('services.google.model', 'gemini-1.5-flash'));
+            $resp = $this->googleChatRequest(
+                $systemPrompt,
+                $validated['message'],
+                $googleKey,
+                $googleModel,
+                0.5,
+                500
+            );
+            if ($resp !== null) {
+                return response()->json(['reply' => $resp]);
+            }
+        }
+
+        // Try OpenRouter models in order
+        $lastStatus = null;
         foreach ($models as $model) {
             try {
                 $response = Http::timeout(35)
                     ->withToken($apiKey)
                     ->withHeaders([
                         'HTTP-Referer' => (string) config('services.openrouter.site_url', config('app.url')),
-                        'X-Title' => (string) config('services.openrouter.app_name', config('app.name')),
+                        'X-Title'      => (string) config('services.openrouter.app_name', config('app.name')),
                         'Content-Type' => 'application/json',
-                        'Accept' => 'application/json',
+                        'Accept'       => 'application/json',
                     ])
                     ->post($baseUrl . '/chat/completions', [
-                        'model' => $model,
-                        'messages' => $messages,
+                        'model'       => $model,
+                        'messages'    => $messages,
                         'temperature' => 0.5,
-                        'max_tokens' => 500,
+                        'max_tokens'  => 500,
                     ]);
 
                 if ($response->successful()) {
                     $reply = $this->extractReplyText(data_get($response->json(), 'choices.0.message.content'));
                     if ($reply !== null) {
-                        return response()->json([
-                            'reply' => $reply,
-                        ]);
+                        return response()->json(['reply' => $reply]);
                     }
-
-                    Log::warning('OpenRouter returned empty response', [
-                        'model' => $model,
-                    ]);
+                    Log::warning('OpenRouter returned empty content', ['model' => $model]);
                     $lastStatus = 502;
                     continue;
                 }
 
-                $status = $response->status();
-                $body = $response->body();
-                Log::warning('OpenRouter chat request failed', [
-                    'model' => $model,
-                    'status' => $status,
-                    'body' => $body,
+                $lastStatus = $response->status();
+                Log::warning('OpenRouter request failed', [
+                    'model'  => $model,
+                    'status' => $lastStatus,
+                    'body'   => $response->body(),
                 ]);
 
-                $lastStatus = $status;
-
-                if ($status === 401 || $status === 403) {
+                if ($lastStatus === 401 || $lastStatus === 403) {
                     break;
                 }
             } catch (\Throwable $e) {
-                Log::error('AI chat exception', [
-                    'model' => $model,
-                    'message' => $e->getMessage(),
-                ]);
+                Log::error('AI chat exception', ['model' => $model, 'message' => $e->getMessage()]);
                 $lastStatus = 500;
             }
         }
 
         if (in_array($lastStatus, [401, 403], true)) {
-            return response()->json([
-                'reply' => 'AI service authentication failed. Please verify your API key.',
-            ], 502);
+            return response()->json(['reply' => 'AI service authentication failed. Please verify your API key.'], 502);
         }
 
-        return response()->json([
-            'reply' => 'I could not reach the AI service right now. Please try again shortly.',
-        ], 502);
+        return response()->json(['reply' => 'I could not reach the AI service right now. Please try again shortly.'], 502);
     }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // System prompt builder
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Build a context-aware system prompt.
+     * When a user is authenticated, the prompt tells the LLM it has access to
+     * their real health records — preventing it from asking clarifying questions
+     * that the DB already answers.
+     */
+    private function buildSystemPrompt(?int $authUserId): string
+    {
+        $base = 'You are MyDoctor AI, a personal health assistant embedded in the MyDoctor app. '
+              . 'The user is already logged in and their health records (diseases, symptoms, medicines, metrics) are stored in the database. '
+              . 'When the user asks about their health, diseases, symptoms, or medicines, answer using the data retrieved from their records — do NOT ask them to repeat information the system already has. '
+              . 'Be concise, friendly, and practical. '
+              . 'Never provide a clinical diagnosis. '
+              . 'For emergencies or severe symptoms, advise contacting local emergency services immediately.';
+
+        if ($authUserId !== null) {
+            $base .= ' The authenticated user ID is ' . $authUserId . '.';
+        }
+
+        return $base;
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Intent detection
+    // ──────────────────────────────────────────────────────────────────────────
 
     private function isPersonalHealthIntent(string $message): bool
     {
-        return (bool) preg_match('/\b(my\s+health|health\s+condition|my\s+condition|health\s+status|my\s+symptoms|my\s+diseases)\b/i', $message);
+        return (bool) preg_match(
+            '/\b(my\s+health|health\s+condition|my\s+condition|health\s+status|my\s+symptoms?|my\s+diseases?|my\s+medicines?|my\s+metrics?|tell\s+me\s+about\s+my|what\s+(are|is)\s+my)\b/i',
+            $message
+        );
     }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Personal health snapshot
+    // ──────────────────────────────────────────────────────────────────────────
 
     private function getPersonalHealthSnapshot(int $userId): ?array
     {
-        $connections = [
+        $connections = array_unique([
             (string) config('chatbot.read_connection', 'mysql_chatbot'),
             (string) config('database.default', 'mysql'),
-        ];
+        ]);
 
-        foreach (array_unique($connections) as $conn) {
+        foreach ($connections as $conn) {
             try {
+                // diseases — correct column is `disease_name`
                 $diseases = DB::connection($conn)
                     ->table('user_diseases as ud')
                     ->leftJoin('diseases as d', 'd.id', '=', 'ud.disease_id')
@@ -205,14 +362,15 @@ class AiChatController extends Controller
                     ->orderByDesc('ud.id')
                     ->limit(20)
                     ->get([
-                        'd.name as disease',
+                        'd.disease_name as disease',
                         'ud.status',
                         'ud.diagnosed_at',
                         'ud.notes',
                     ])
-                    ->map(fn ($r) => (array) $r)
+                    ->map(fn($r) => (array) $r)
                     ->all();
 
+                // symptoms
                 $symptoms = DB::connection($conn)
                     ->table('user_symptoms as us')
                     ->leftJoin('symptoms as s', 's.id', '=', 'us.symptom_id')
@@ -225,41 +383,57 @@ class AiChatController extends Controller
                         'us.note',
                         'us.recorded_at',
                     ])
-                    ->map(fn ($r) => (array) $r)
+                    ->map(fn($r) => (array) $r)
                     ->all();
 
+                // health_metrics — value is a JSON column, decode it
                 $metrics = DB::connection($conn)
                     ->table('health_metrics')
                     ->where('user_id', $userId)
                     ->orderByDesc('recorded_at')
                     ->limit(20)
-                    ->get([
-                        'metric_type',
-                        'value',
-                        'recorded_at',
-                    ])
-                    ->map(fn ($r) => (array) $r)
+                    ->get(['metric_type', 'value', 'recorded_at'])
+                    ->map(function ($r): array {
+                        $row = (array) $r;
+                        if (is_string($row['value'])) {
+                            $decoded = json_decode($row['value'], true);
+                            $row['value'] = $decoded ?? $row['value'];
+                        }
+                        return $row;
+                    })
+                    ->all();
+
+                // recent medicines
+                $medicines = DB::connection($conn)
+                    ->table('medicines')
+                    ->where('user_id', $userId)
+                    ->orderByDesc('id')
+                    ->limit(10)
+                    ->get(['medicine_name', 'type', 'rule', 'unit'])
+                    ->map(fn($r) => (array) $r)
                     ->all();
 
                 Log::info('Personal health snapshot fetched', [
-                    'connection' => $conn,
-                    'user_id' => $userId,
-                    'diseases_count' => count($diseases),
-                    'symptoms_count' => count($symptoms),
-                    'metrics_count' => count($metrics),
+                    'connection'     => $conn,
+                    'user_id'        => $userId,
+                    'diseases'       => count($diseases),
+                    'symptoms'       => count($symptoms),
+                    'metrics'        => count($metrics),
+                    'medicines'      => count($medicines),
                 ]);
 
                 return [
-                    'user_id' => $userId,
-                    'diseases' => $diseases,
-                    'symptoms' => $symptoms,
+                    'user_id'        => $userId,
+                    'diseases'       => $diseases,
+                    'symptoms'       => $symptoms,
                     'health_metrics' => $metrics,
+                    'medicines'      => $medicines,
                 ];
             } catch (\Throwable $e) {
                 Log::warning('Personal health snapshot query failed', [
                     'connection' => $conn,
-                    'user_id' => $userId,
-                    'message' => $e->getMessage(),
+                    'user_id'    => $userId,
+                    'message'    => $e->getMessage(),
                 ]);
             }
         }
@@ -267,55 +441,444 @@ class AiChatController extends Controller
         return null;
     }
 
-    private function buildPersonalHealthReply(array $snapshot): ?string
+    /**
+     * Build a direct reply when data is simple (≤6 entries total).
+     * Returns null to hand off to LLM when data is richer.
+     */
+    private function buildPersonalHealthReply(array $snapshot, bool $forceDetailed = false): ?string
     {
-        $diseases = (array) ($snapshot['diseases'] ?? []);
-        $symptoms = (array) ($snapshot['symptoms'] ?? []);
-        $metrics = (array) ($snapshot['health_metrics'] ?? []);
+        $diseases  = (array) ($snapshot['diseases'] ?? []);
+        $symptoms  = (array) ($snapshot['symptoms'] ?? []);
+        $metrics   = (array) ($snapshot['health_metrics'] ?? []);
+        $medicines = (array) ($snapshot['medicines'] ?? []);
 
-        if ($diseases === [] && $symptoms === [] && $metrics === []) {
-            return 'I checked your records and could not find any saved diseases, symptoms, or health metrics yet. Please add health entries first, then ask again.';
+        $total = count($diseases) + count($symptoms) + count($metrics) + count($medicines);
+
+        if ($total === 0) {
+            return 'I checked your records and could not find any saved diseases, symptoms, health metrics, or medicines yet. Please add health entries in the app first, then ask again.';
+        }
+
+        // For rich data, let the LLM compose a better narrative unless deterministic fallback is requested.
+        if ($total > 6 && !$forceDetailed) {
+            return null;
         }
 
         $parts = [];
 
         if ($diseases !== []) {
-            $top = array_slice($diseases, 0, 3);
             $labels = array_map(function (array $d): string {
-                $name = (string) ($d['disease'] ?? 'Unknown disease');
+                $name   = (string) ($d['disease'] ?? 'Unknown disease');
                 $status = (string) ($d['status'] ?? 'unknown');
-                return $name . ' (' . $status . ')';
-            }, $top);
-            $parts[] = 'Diseases: ' . implode(', ', $labels) . '.';
+                $date   = !empty($d['diagnosed_at']) ? ', diagnosed ' . $d['diagnosed_at'] : '';
+                return "{$name} ({$status}{$date})";
+            }, array_slice($diseases, 0, 3));
+            $parts[] = '**Diseases:** ' . implode(', ', $labels) . '.';
         }
 
         if ($symptoms !== []) {
-            $top = array_slice($symptoms, 0, 5);
             $labels = array_map(function (array $s): string {
                 $name = (string) ($s['symptom'] ?? 'Unknown symptom');
-                $sev = $s['severity_level'] ?? null;
-                return $sev !== null ? ($name . ' (severity ' . $sev . ')') : $name;
-            }, $top);
-            $parts[] = 'Recent symptoms: ' . implode(', ', $labels) . '.';
+                $sev  = $s['severity_level'] ?? null;
+                return $sev !== null ? "{$name} (severity {$sev}/10)" : $name;
+            }, array_slice($symptoms, 0, 5));
+            $parts[] = '**Recent symptoms:** ' . implode(', ', $labels) . '.';
+        }
+
+        if ($medicines !== []) {
+            $labels = array_map(fn(array $m): string => (string) ($m['medicine_name'] ?? 'Unknown'), array_slice($medicines, 0, 5));
+            $parts[] = '**Medicines:** ' . implode(', ', $labels) . '.';
         }
 
         if ($metrics !== []) {
-            $top = array_slice($metrics, 0, 5);
             $labels = array_map(function (array $m): string {
-                $type = (string) ($m['metric_type'] ?? 'metric');
+                $type  = (string) ($m['metric_type'] ?? 'metric');
                 $value = $m['value'] ?? null;
                 if (is_array($value)) {
                     $value = json_encode($value, JSON_UNESCAPED_UNICODE);
                 }
-                return $type . ': ' . (is_string($value) || is_numeric($value) ? (string) $value : 'recorded');
-            }, $top);
-            $parts[] = 'Recent metrics: ' . implode('; ', $labels) . '.';
+                $display = (is_string($value) || is_numeric($value)) ? (string) $value : 'recorded';
+                return "{$type}: {$display}";
+            }, array_slice($metrics, 0, 5));
+            $parts[] = '**Health metrics:** ' . implode('; ', $labels) . '.';
         }
 
-        $parts[] = 'This is based on your saved records and is not a medical diagnosis. Please consult a licensed doctor for clinical advice.';
+        if ($forceDetailed) {
+            $parts[] = sprintf(
+                '**Summary:** %d disease record(s), %d symptom record(s), %d medicine record(s), and %d health metric record(s) found.',
+                count($diseases),
+                count($symptoms),
+                count($medicines),
+                count($metrics)
+            );
+        }
 
-        return implode(' ', $parts);
+        $parts[] = "\n*This is based on your saved records and is not a medical diagnosis. Please consult a licensed doctor for clinical advice.*";
+
+        return implode("\n", $parts);
     }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Schema description — scoped to ALLOWED_TABLES, blocks sensitive columns
+    // ──────────────────────────────────────────────────────────────────────────
+
+    private function getDatabaseSchemaDescription(): string
+    {
+        try {
+            $database = config('database.connections.' . config('database.default') . '.database');
+            $tableList = implode("','", self::ALLOWED_TABLES);
+
+            $rows = DB::select(
+                "SELECT TABLE_NAME, COLUMN_NAME, COLUMN_TYPE
+                 FROM INFORMATION_SCHEMA.COLUMNS
+                 WHERE TABLE_SCHEMA = ?
+                   AND TABLE_NAME IN ('{$tableList}')
+                 ORDER BY TABLE_NAME, ORDINAL_POSITION",
+                [$database]
+            );
+
+            $blocked = self::SCHEMA_BLOCKED_COLUMNS;
+            $tables  = [];
+            foreach ($rows as $r) {
+                if (in_array(strtolower($r->COLUMN_NAME), $blocked, true)) {
+                    continue;
+                }
+                $tables[$r->TABLE_NAME][] = $r->COLUMN_NAME . ' (' . $r->COLUMN_TYPE . ')';
+            }
+
+            $parts = [];
+            foreach ($tables as $table => $cols) {
+                $parts[] = "Table: {$table} => " . implode(', ', $cols);
+            }
+
+            return mb_strimwidth(implode("\n", $parts), 0, 3500, '...');
+        } catch (\Throwable $e) {
+            Log::warning('Failed to build DB schema description', ['message' => $e->getMessage()]);
+            return '';
+        }
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // SQL generation
+    // ──────────────────────────────────────────────────────────────────────────
+
+    private function generateSqlFromMessage(
+        string  $message,
+        string  $schemaDesc,
+        string  $apiKey,
+        string  $primaryModel,
+        string  $baseUrl,
+        array   $models,
+        string  $googleKey,
+        ?int    $authUserId = null
+    ): ?string {
+        if ($schemaDesc === '') {
+            return null;
+        }
+
+        $authContext = $authUserId !== null
+            ? "Authenticated user id: {$authUserId}. Always filter personal queries using this user_id (e.g. WHERE user_id = {$authUserId})."
+            : 'No authenticated user. Do not expose any user-specific data without a WHERE clause.';
+
+        $system = 'You are a SQL generator for MySQL. Return ONLY a single valid SQL SELECT query with no explanation, no markdown, no backticks. '
+                . 'Only SELECT is allowed — never INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE. '
+                . 'Always add LIMIT 50 unless the question is an aggregate (COUNT, SUM, AVG, etc.).';
+
+        $user = "Schema:\n{$schemaDesc}\n\n{$authContext}\n\nQuestion: {$message}\n\nSQL Query:";
+
+        // Try Google Gemini first
+        if ($googleKey !== '') {
+            $googleModel = (string) (env('GOOGLE_MODEL', '') ?: config('services.google.model', 'gemini-1.5-flash'));
+            $resp = $this->googleChatRequest($system, $user, $googleKey, $googleModel, 0.0, 300);
+            if ($resp !== null) {
+                $text = trim(preg_replace('/^```\w*\s*|```\s*$/m', '', $resp));
+                return $text !== '' ? $text : null;
+            }
+        }
+
+        // Try OpenRouter models
+        foreach ($models as $model) {
+            try {
+                $response = Http::timeout(30)
+                    ->withToken($apiKey)
+                    ->withHeaders([
+                        'HTTP-Referer' => (string) config('services.openrouter.site_url', config('app.url')),
+                        'X-Title'      => (string) config('services.openrouter.app_name', config('app.name')),
+                        'Content-Type' => 'application/json',
+                        'Accept'       => 'application/json',
+                    ])
+                    ->post($baseUrl . '/chat/completions', [
+                        'model'       => $model,
+                        'messages'    => [
+                            ['role' => 'system', 'content' => $system],
+                            ['role' => 'user',   'content' => $user],
+                        ],
+                        'temperature' => 0.0,
+                        'max_tokens'  => 300,
+                    ]);
+
+                if ($response->successful()) {
+                    $text = $this->extractReplyText(data_get($response->json(), 'choices.0.message.content'));
+                    if ($text !== null) {
+                        $text = trim(preg_replace('/^```\w*\s*|```\s*$/m', '', $text));
+                        return $text !== '' ? $text : null;
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::warning('SQL generation failed', ['model' => $model, 'message' => $e->getMessage()]);
+            }
+        }
+
+        return null;
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // SQL sanitizer
+    // ──────────────────────────────────────────────────────────────────────────
+
+    private function sanitizeSql(string $sql): ?string
+    {
+        // Strip markdown fences
+        $s = trim(preg_replace('/^```\w*\s*|```\s*$/m', '', $sql));
+        $s = rtrim(trim($s), ';'); // fix: was rtrim($s, '\\s') — a literal bug
+
+        if ($s === '') {
+            return null;
+        }
+
+        // Must be a SELECT
+        if (!preg_match('/^\s*SELECT\b/i', $s)) {
+            return null;
+        }
+
+        // Block write/DDL keywords
+        $forbidden = [
+            'insert', 'update', 'delete', 'drop', 'alter', 'create',
+            'truncate', 'replace', 'merge', 'call', 'grant', 'revoke',
+            'exec', 'execute', 'load_file', 'into outfile', 'into dumpfile',
+        ];
+        foreach ($forbidden as $kw) {
+            if (preg_match('/\b' . preg_quote($kw, '/') . '\b/i', $s)) {
+                Log::warning('SQL sanitizer blocked forbidden keyword', ['keyword' => $kw]);
+                return null;
+            }
+        }
+
+        // Block direct references to sensitive tables
+        foreach (['push_subscriptions', 'mailings'] as $t) {
+            if (preg_match('/\b' . preg_quote($t, '/') . '\b/i', $s)) {
+                Log::warning('SQL sanitizer blocked sensitive table reference', ['table' => $t]);
+                return null;
+            }
+        }
+
+        // Enforce row cap
+        if (!preg_match('/\bLIMIT\b/i', $s)) {
+            $s .= ' LIMIT 200';
+        }
+
+        return $s;
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // SQL allow-list check
+    // ──────────────────────────────────────────────────────────────────────────
+
+    private function isAllowedSql(string $sql): bool
+    {
+        // Config can override; fall back to class constant
+        $configured = (array) config('chatbot.allowed_tables', []);
+        $allowed    = array_map('strtolower',
+            $configured !== [] ? $configured : self::ALLOWED_TABLES
+        );
+
+        $tables = $this->extractTablesFromSql($sql);
+        if ($tables === []) {
+            return false;
+        }
+
+        foreach ($tables as $t) {
+            if (!in_array(strtolower($t), $allowed, true)) {
+                Log::warning('isAllowedSql: table not in allow-list', ['table' => $t]);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function extractTablesFromSql(string $sql): array
+    {
+        $sql    = strtolower($sql);
+        $tables = [];
+
+        if (preg_match_all('/\bfrom\s+`?([a-z0-9_]+)`?/i', $sql, $m)) {
+            foreach ($m[1] as $t) {
+                $tables[] = $t;
+            }
+        }
+        if (preg_match_all('/\bjoin\s+`?([a-z0-9_]+)`?/i', $sql, $m)) {
+            foreach ($m[1] as $t) {
+                $tables[] = $t;
+            }
+        }
+
+        return array_values(array_unique($tables));
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // SQL execution — tries read-only connection then falls back to default
+    // ──────────────────────────────────────────────────────────────────────────
+
+    private function executeSelectSql(string $sql): ?array
+    {
+        $preferred = (string) config('chatbot.read_connection', 'mysql_chatbot');
+        $fallback  = (string) config('database.default', 'mysql');
+
+        foreach (array_unique([$preferred, $fallback]) as $conn) {
+            try {
+                $rows = DB::connection($conn)->select(DB::raw($sql));
+                return array_map(static fn($r) => (array) $r, $rows);
+            } catch (\Throwable $e) {
+                Log::warning('SQL execution failed', [
+                    'connection' => $conn,
+                    'sql'        => $sql,
+                    'message'    => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return null;
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // LLM result summarisation
+    // ──────────────────────────────────────────────────────────────────────────
+
+    private function askModelToSummarizeResults(
+        string $question,
+        string $sql,
+        array  $results,
+        string $apiKey,
+        string $primaryModel,
+        string $baseUrl,
+        array  $models,
+        string $googleKey = ''
+    ): ?string {
+        $json   = json_encode(array_slice($results, 0, 50), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        $system = 'You are MyDoctor AI assistant. The user has asked about their own health data. '
+                . 'Use ONLY the provided JSON data to answer. Do not ask clarifying questions — the data is already here. '
+                . 'If the JSON is empty, say no matching records were found. '
+                . 'Be concise (2–6 sentences), friendly, and remind the user this is not a medical diagnosis.';
+        $user   = "Question: {$question}\n\nData source: {$sql}\n\nData:\n{$json}\n\nAnswer:";
+
+        // Try Google Gemini first
+        if ($googleKey !== '') {
+            $googleModel = (string) (env('GOOGLE_MODEL', '') ?: config('services.google.model', 'gemini-1.5-flash'));
+            $resp = $this->googleChatRequest($system, $user, $googleKey, $googleModel, 0.2, 500);
+            if ($resp !== null) {
+                return $this->extractReplyText($resp);
+            }
+        }
+
+        // Try OpenRouter models
+        foreach ($models as $model) {
+            try {
+                $response = Http::timeout(30)
+                    ->withToken($apiKey)
+                    ->withHeaders([
+                        'HTTP-Referer' => (string) config('services.openrouter.site_url', config('app.url')),
+                        'X-Title'      => (string) config('services.openrouter.app_name', config('app.name')),
+                        'Content-Type' => 'application/json',
+                        'Accept'       => 'application/json',
+                    ])
+                    ->post($baseUrl . '/chat/completions', [
+                        'model'       => $model,
+                        'messages'    => [
+                            ['role' => 'system', 'content' => $system],
+                            ['role' => 'user',   'content' => $user],
+                        ],
+                        'temperature' => 0.2,
+                        'max_tokens'  => 500,
+                    ]);
+
+                if ($response->successful()) {
+                    $reply = $this->extractReplyText(data_get($response->json(), 'choices.0.message.content'));
+                    if ($reply !== null) {
+                        return $reply;
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Summarize results failed', ['model' => $model, 'message' => $e->getMessage()]);
+            }
+        }
+
+        return null;
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Google Gemini v1beta REST API
+    // ──────────────────────────────────────────────────────────────────────────
+
+    private function googleChatRequest(
+        string $system,
+        string $user,
+        string $apiKey,
+        string $model = 'gemini-1.5-flash',
+        float  $temperature = 0.2,
+        int    $maxTokens = 500
+    ): ?string {
+        try {
+            $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
+
+            $body = [
+                'system_instruction' => [
+                    'parts' => [['text' => $system]],
+                ],
+                'contents' => [
+                    [
+                        'role'  => 'user',
+                        'parts' => [['text' => $user]],
+                    ],
+                ],
+                'generationConfig' => [
+                    'temperature'     => $temperature,
+                    'maxOutputTokens' => $maxTokens,
+                ],
+            ];
+
+            $resp = Http::timeout(30)
+                ->withHeaders(['Content-Type' => 'application/json', 'Accept' => 'application/json'])
+                ->post($url, $body);
+
+            if (!$resp->successful()) {
+                Log::warning('Google Gemini API error', [
+                    'status' => $resp->status(),
+                    'body'   => mb_strimwidth($resp->body(), 0, 500),
+                ]);
+                return null;
+            }
+
+            $json = $resp->json();
+            $text = data_get($json, 'candidates.0.content.parts.0.text');
+
+            if (!is_string($text) || trim($text) === '') {
+                if (data_get($json, 'candidates.0.finishReason') === 'SAFETY') {
+                    return 'I cannot answer that due to safety guidelines.';
+                }
+                Log::warning('Gemini returned empty text', ['response' => $json]);
+                return null;
+            }
+
+            return trim($text);
+        } catch (\Throwable $e) {
+            Log::warning('Google Gemini request failed', ['message' => $e->getMessage()]);
+            return null;
+        }
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Utility
+    // ──────────────────────────────────────────────────────────────────────────
 
     private function extractReplyText(mixed $content): ?string
     {
@@ -334,7 +897,6 @@ class AiChatController extends Controller
                 $parts[] = trim($item);
                 continue;
             }
-
             if (is_array($item)) {
                 $text = data_get($item, 'text');
                 if (is_string($text) && trim($text) !== '') {
@@ -343,287 +905,6 @@ class AiChatController extends Controller
             }
         }
 
-        if ($parts === []) {
-            return null;
-        }
-
-        return implode("\n", $parts);
-    }
-
-    private function getDatabaseSchemaDescription(): string
-    {
-        try {
-            $database = config('database.connections.' . config('database.default') . '.database');
-            $rows = DB::select("SELECT TABLE_NAME, COLUMN_NAME, COLUMN_TYPE
-                FROM INFORMATION_SCHEMA.COLUMNS
-                WHERE TABLE_SCHEMA = ?
-                ORDER BY TABLE_NAME, ORDINAL_POSITION",
-                [$database]
-            );
-
-            $tables = [];
-            foreach ($rows as $r) {
-                $t = $r->TABLE_NAME;
-                $c = $r->COLUMN_NAME . ' (' . $r->COLUMN_TYPE . ')';
-                $tables[$t][] = $c;
-            }
-
-            $parts = [];
-            foreach ($tables as $table => $cols) {
-                $parts[] = "Table: $table => " . implode(', ', $cols);
-            }
-
-            $schema = implode("\n", $parts);
-            // keep schema reasonably sized
-            return mb_strimwidth($schema, 0, 1800, '...');
-        } catch (\Throwable $e) {
-            Log::warning('Failed to build DB schema description', ['message' => $e->getMessage()]);
-            return '';
-        }
-    }
-
-    private function generateSqlFromMessage(string $message, string $schemaDesc, string $apiKey, string $model, string $baseUrl, ?int $authUserId = null): ?string
-    {
-        if ($schemaDesc === '') {
-            return null;
-        }
-
-        $system = 'You are a SQL generator. Based on the provided database schema, return a single-line valid SQL SELECT query (MySQL dialect) that answers the user question. Do NOT return any explanation or text. Return only the SQL. Only SELECT queries are allowed.';
-        $authContext = $authUserId !== null
-            ? "Authenticated user id: {$authUserId}. Prefer filtering personal-health queries by this user id when relevant (e.g., user_diseases.user_id, user_symptoms.user_id, health_metrics.user_id, medicine_logs.user_id)."
-            : 'No authenticated user id available.';
-        $user = "Schema:\n" . $schemaDesc . "\n\n" . $authContext . "\n\nQuestion: " . $message . "\n\nSQL Query:";
-
-        try {
-            // If a Google API key is provided in env/config, call Google Generative API directly
-            $googleKey = env('GOOGLE_API_KEY') ?: config('services.google.api_key');
-            $googleModel = env('GOOGLE_MODEL') ?: config('services.google.model', 'chat-bison-001');
-            if (!empty($googleKey)) {
-                $resp = $this->googleChatRequest($system, $user, $googleKey, $googleModel, 0.0, 300);
-                if ($resp !== null) {
-                    $text = trim(preg_replace('/^```\w*|```$/', '', $resp));
-                    return $text !== '' ? $text : null;
-                }
-            }
-
-            // Fallback to configured OpenRouter-like provider
-            $response = Http::timeout(30)
-                ->withToken($apiKey)
-                ->withHeaders(['Content-Type' => 'application/json', 'Accept' => 'application/json'])
-                ->post($baseUrl . '/chat/completions', [
-                    'model' => $model,
-                    'messages' => [
-                        ['role' => 'system', 'content' => $system],
-                        ['role' => 'user', 'content' => $user],
-                    ],
-                    'temperature' => 0.0,
-                    'max_tokens' => 300,
-                ]);
-
-            if ($response->successful()) {
-                $text = $this->extractReplyText(data_get($response->json(), 'choices.0.message.content'));
-                if ($text !== null) {
-                    $text = preg_replace('/^```\w*|```$/', '', trim($text));
-                    return trim($text);
-                }
-            }
-        } catch (\Throwable $e) {
-            Log::warning('SQL generation failed', ['message' => $e->getMessage()]);
-        }
-
-        return null;
-    }
-
-    private function sanitizeSql(string $sql): ?string
-    {
-        // Basic safety: allow only a single SELECT statement, no semicolons, no dangerous keywords.
-        $s = trim($sql);
-        $s = preg_replace('/;+/','', $s);
-
-        // Disallow multiple statements or non-select
-        if (!preg_match('/^\s*select\b/i', $s)) {
-            return null;
-        }
-
-        $bad = ['insert', 'update', 'delete', 'drop', 'alter', 'create', 'truncate', 'replace', 'merge', 'call', 'grant'];
-        foreach ($bad as $k) {
-            if (preg_match('/\b' . preg_quote($k, '/') . '\b/i', $s)) {
-                return null;
-            }
-        }
-
-        // Enforce a row cap: if no LIMIT present, append a safe limit
-        if (!preg_match('/\blimit\b/i', $s)) {
-            $s = rtrim($s, '\\s') . ' LIMIT 200';
-        }
-
-        return $s;
-    }
-
-    private function executeSelectSql(string $sql): ?array
-    {
-        $preferred = (string) config('chatbot.read_connection', 'mysql_chatbot');
-        $fallback = (string) config('database.default', 'mysql');
-
-        try {
-            $rows = DB::connection($preferred)->select(DB::raw($sql));
-            return array_map(static fn ($r) => (array) $r, $rows);
-        } catch (\Throwable $e) {
-            Log::warning('SQL execution failed on read connection; trying default connection', [
-                'connection' => $preferred,
-                'sql' => $sql,
-                'message' => $e->getMessage(),
-            ]);
-        }
-
-        try {
-            $rows = DB::connection($fallback)->select(DB::raw($sql));
-            return array_map(static fn ($r) => (array) $r, $rows);
-        } catch (\Throwable $e) {
-            Log::warning('SQL execution failed on fallback connection', [
-                'connection' => $fallback,
-                'sql' => $sql,
-                'message' => $e->getMessage(),
-            ]);
-            return null;
-        }
-    }
-
-    private function askModelToSummarizeResults(string $question, string $sql, array $results, string $apiKey, string $model, string $baseUrl): ?string
-    {
-        // build a concise results string (json truncated)
-        $json = json_encode(array_slice($results, 0, 50), JSON_UNESCAPED_UNICODE);
-        $system = 'You are MyDoctor AI assistant. Use the provided SQL and query results to produce a concise, helpful answer to the user question. Do not hallucinate — only use the results. If the results are empty, say that no matching records were found.';
-        $user = "Question: $question\n\nSQL used: $sql\n\nResults (JSON): $json\n\nNow provide a short natural language answer (2-6 sentences).";
-
-        try {
-            $googleKey = env('GOOGLE_API_KEY') ?: config('services.google.api_key');
-            $googleModel = env('GOOGLE_MODEL') ?: config('services.google.model', 'chat-bison-001');
-            if (!empty($googleKey)) {
-                $resp = $this->googleChatRequest($system, $user, $googleKey, $googleModel, 0.2, 400);
-                if ($resp !== null) {
-                    return $this->extractReplyText($resp);
-                }
-            }
-
-            $response = Http::timeout(30)
-                ->withToken($apiKey)
-                ->withHeaders(['Content-Type' => 'application/json', 'Accept' => 'application/json'])
-                ->post($baseUrl . '/chat/completions', [
-                    'model' => $model,
-                    'messages' => [
-                        ['role' => 'system', 'content' => $system],
-                        ['role' => 'user', 'content' => $user],
-                    ],
-                    'temperature' => 0.2,
-                    'max_tokens' => 400,
-                ]);
-
-            if ($response->successful()) {
-                return $this->extractReplyText(data_get($response->json(), 'choices.0.message.content'));
-            }
-        } catch (\Throwable $e) {
-            Log::warning('Summarize results failed', ['message' => $e->getMessage()]);
-        }
-
-        return null;
-    }
-
-    private function isAllowedSql(string $sql): bool
-    {
-        if (config('chatbot.allow_all_tables', false)) {
-            return true;
-        }
-
-        $allowed = array_map('strtolower', (array) config('chatbot.allowed_tables', []));
-        if ($allowed === []) {
-            return false; // deny if no allowed tables configured
-        }
-
-        $tables = $this->extractTablesFromSql($sql);
-        if ($tables === []) {
-            return false; // if we can't detect tables, be conservative
-        }
-
-        foreach ($tables as $t) {
-            if (!in_array(strtolower($t), $allowed, true)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private function extractTablesFromSql(string $sql): array
-    {
-        $sql = strtolower($sql);
-        $tables = [];
-
-        // match FROM and JOIN occurrences
-        if (preg_match_all('/\bfrom\s+`?([a-z0-9_]+)`?/i', $sql, $m)) {
-            foreach ($m[1] as $t) $tables[] = $t;
-        }
-        if (preg_match_all('/\bjoin\s+`?([a-z0-9_]+)`?/i', $sql, $m)) {
-            foreach ($m[1] as $t) $tables[] = $t;
-        }
-
-        // also try simple SELECT ... table syntax (older SQL)
-        if (preg_match_all('/\bselect\b[\s\S]*?\bfrom\b\s*([a-z0-9_`]+)/i', $sql, $m)) {
-            foreach ($m[1] as $raw) {
-                $raw = preg_replace('/[^a-z0-9_]/i', '', $raw);
-                if ($raw !== '') $tables[] = $raw;
-            }
-        }
-
-        return array_values(array_unique($tables));
-    }
-
-    /**
-     * Call Google Generative API chat-style (generateMessage) using API key.
-     * Returns plain text content or null.
-     */
-    private function googleChatRequest(string $system, string $user, string $apiKey, string $model, float $temperature = 0.2, int $maxTokens = 400): ?string
-    {
-        try {
-            $url = "https://generativelanguage.googleapis.com/v1beta2/models/{$model}:generateMessage?key={$apiKey}";
-
-            $body = [
-                'messages' => [
-                    ['author' => 'system', 'content' => [['type' => 'text', 'text' => $system]]],
-                    ['author' => 'user', 'content' => [['type' => 'text', 'text' => $user]]],
-                ],
-                'temperature' => $temperature,
-                'maxOutputTokens' => $maxTokens,
-            ];
-
-            $resp = Http::timeout(30)
-                ->withHeaders(['Content-Type' => 'application/json', 'Accept' => 'application/json'])
-                ->post($url, $body);
-
-            if (!$resp->successful()) {
-                Log::warning('Google Generative API returned non-success', ['status' => $resp->status(), 'body' => $resp->body()]);
-                return null;
-            }
-
-            $json = $resp->json();
-            // Try known response shapes
-            $text = data_get($json, 'candidates.0.content.0.text')
-                ?? data_get($json, 'candidates.0.content.0')
-                ?? data_get($json, 'candidates.0.text')
-                ?? data_get($json, 'candidates.0.message.content.0.text')
-                ?? data_get($json, 'candidates.0.message.content');
-
-            if (is_array($text)) {
-                // join pieces
-                $parts = [];
-                array_walk_recursive($text, function ($v) use (&$parts) { if (is_string($v)) $parts[] = $v; });
-                $text = implode('\n', $parts);
-            }
-
-            return is_string($text) ? trim($text) : null;
-        } catch (\Throwable $e) {
-            Log::warning('Google chat request failed', ['message' => $e->getMessage()]);
-            return null;
-        }
+        return $parts !== [] ? implode("\n", $parts) : null;
     }
 }

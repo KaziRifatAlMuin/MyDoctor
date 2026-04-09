@@ -1,28 +1,55 @@
 <?php
 
 return [
-    // connection name to use for read-only SQL execution
+    /*
+    |--------------------------------------------------------------------------
+    | Read-only DB connection for chatbot SQL queries
+    |--------------------------------------------------------------------------
+    | Create a read-only MySQL user and point this to it.
+    | Falls back to the default connection if the read-only one fails.
+    */
     'read_connection' => env('DB_CHATBOT_CONNECTION', 'mysql_chatbot'),
 
-    // whether to allow the Text->SQL pipeline. Toggle via env or config.
+    /*
+    |--------------------------------------------------------------------------
+    | Enable / disable the Text→SQL RAG pipeline
+    |--------------------------------------------------------------------------
+    */
     'enable_text_to_sql' => env('CHATBOT_ENABLE_TEXT_TO_SQL', true),
 
-    // If true, generated SQL may reference any table. Set to false in production.
+    /*
+    |--------------------------------------------------------------------------
+    | Allow ALL tables (dangerous — leave false in production)
+    |--------------------------------------------------------------------------
+    */
     'allow_all_tables' => env('CHATBOT_ALLOW_ALL_TABLES', false),
 
-    // Whitelisted tables that the chatbot is allowed to query (lowercase).
-    // Adjust to your privacy needs. Only used when allow_all_tables is false.
+    /*
+    |--------------------------------------------------------------------------
+    | Whitelisted tables the chatbot may query (lowercase)
+    |--------------------------------------------------------------------------
+    | Sensitive tables (push_subscriptions, mailings) are intentionally omitted.
+    | The 'users' table is included so the chatbot can look up basic profile
+    | info, but sensitive columns (password, email, phone, etc.) are stripped
+    | from the schema description sent to the LLM.
+    */
     'allowed_tables' => array_map('strtolower', [
         'users',
+        'medicines',
+        'medicine_schedules',
+        'medicine_reminders',
+        'medicine_logs',
+        'health_metrics',
+        'environments',
+        'environment_metrics',
+        'symptoms',
+        'user_symptoms',
+        'diseases',
+        'disease_symptoms',
+        'user_diseases',
+        'uploads',
         'posts',
         'comments',
-        'diseases',
-        'symptoms',
-        'user_diseases',
-        'user_symptoms',
-        'disease_symptoms',
-        'medicine_logs',
-        'medicine_reminders',
-        'health_metrics',
+        'notifications',
     ]),
 ];

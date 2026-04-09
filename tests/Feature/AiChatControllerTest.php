@@ -2,7 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\Disease;
+use App\Models\Symptom;
 use App\Models\User;
+use App\Models\UserDisease;
+use App\Models\UserSymptom;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request as HttpClientRequest;
 use Illuminate\Support\Facades\Http;
@@ -35,8 +39,57 @@ class AiChatControllerTest extends TestCase
                 'message' => 'Can you help me sleep better?',
             ])
             ->assertStatus(503)
-            ->assertJsonPath('reply', 'AI service is not configured yet. Please set OPENROUTER_API_KEY in your .env file.');
+            ->assertJsonPath('reply', 'AI service is not configured yet. Please set OPENROUTER_API_KEY or GOOGLE_API_KEY in your .env file.');
 
+        Http::assertNothingSent();
+    }
+
+    #[Test]
+    public function personal_health_queries_fall_back_to_database_when_ai_is_unavailable(): void
+    {
+        $user = User::factory()->create();
+
+        $disease = Disease::factory()->create([
+            'disease_name' => 'Hypertension',
+        ]);
+
+        $symptom = Symptom::factory()->create([
+            'name' => 'Headache',
+        ]);
+
+        UserDisease::factory()->create([
+            'user_id' => $user->id,
+            'disease_id' => $disease->id,
+            'status' => 'active',
+            'diagnosed_at' => now()->toDateString(),
+        ]);
+
+        UserSymptom::factory()->create([
+            'user_id' => $user->id,
+            'symptom_id' => $symptom->id,
+            'severity_level' => 7,
+            'recorded_at' => now(),
+        ]);
+
+        config([
+            'services.openrouter.api_key' => '',
+            'services.google.api_key' => '',
+            'chatbot.enable_text_to_sql' => true,
+            'chatbot.read_connection' => config('database.default'),
+        ]);
+
+        Http::fake();
+
+        $response = $this->actingAs($user)
+            ->postJson(route('chatbot.message'), [
+                'message' => 'Tell me about my diseases and symptoms',
+            ])
+            ->assertOk();
+
+        $reply = (string) $response->json('reply');
+
+        $this->assertStringContainsString('Hypertension', $reply);
+        $this->assertStringContainsString('Headache', $reply);
         Http::assertNothingSent();
     }
 
