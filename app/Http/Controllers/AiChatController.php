@@ -20,9 +20,10 @@ class AiChatController extends Controller
         ]);
 
         $apiKey = (string) config('services.openrouter.api_key');
-        if ($apiKey === '') {
+        $googleKey = (string) (env('GOOGLE_API_KEY') ?: config('services.google.api_key', ''));
+        if ($apiKey === '' && $googleKey === '') {
             return response()->json([
-                'reply' => 'AI service is not configured yet. Please set OPENROUTER_API_KEY in your .env file.',
+                'reply' => 'AI service is not configured yet. Please set OPENROUTER_API_KEY or GOOGLE_API_KEY in your .env file.',
             ], 503);
         }
 
@@ -61,21 +62,51 @@ class AiChatController extends Controller
             ]]
         );
 
-        $enableTextToSql = (bool) config('services.openrouter.enable_text_to_sql', true);
+        $enableTextToSql = (bool) config('chatbot.enable_text_to_sql', true);
         if ($enableTextToSql) {
             // Try text->SQL flow: generate SQL, run, then ask the LLM to craft final answer using results.
             try {
+                $authUserId = $request->user()?->id;
+
+                // Deterministic personal snapshot for common requests like "my health condition".
+                if ($this->isPersonalHealthIntent($validated['message']) && $authUserId !== null) {
+                    $personalSnapshot = $this->getPersonalHealthSnapshot($authUserId);
+                    if ($personalSnapshot !== null) {
+                        $directReply = $this->buildPersonalHealthReply($personalSnapshot);
+                        if ($directReply !== null) {
+                            return response()->json(['reply' => $directReply]);
+                        }
+
+                        $final = $this->askModelToSummarizeResults(
+                            $validated['message'],
+                            'PERSONAL_HEALTH_SNAPSHOT',
+                            $personalSnapshot,
+                            $apiKey,
+                            $primaryModel,
+                            $baseUrl
+                        );
+                        if ($final !== null) {
+                            return response()->json(['reply' => $final]);
+                        }
+                    }
+                }
+
                 $schemaDesc = $this->getDatabaseSchemaDescription();
-                $sql = $this->generateSqlFromMessage($validated['message'], $schemaDesc, $apiKey, $primaryModel, $baseUrl);
+                $sql = $this->generateSqlFromMessage($validated['message'], $schemaDesc, $apiKey, $primaryModel, $baseUrl, $authUserId);
 
                 if ($sql !== null) {
                     $sql = $this->sanitizeSql($sql);
                     if ($sql !== null) {
-                        $results = $this->executeSelectSql($sql);
-                        if ($results !== null) {
-                            $final = $this->askModelToSummarizeResults($validated['message'], $sql, $results, $apiKey, $primaryModel, $baseUrl);
-                            if ($final !== null) {
-                                return response()->json(['reply' => $final]);
+                        // enforce allowed tables before executing
+                        if (!$this->isAllowedSql($sql)) {
+                            Log::warning('Generated SQL references disallowed tables or none detected', ['sql' => $sql]);
+                        } else {
+                            $results = $this->executeSelectSql($sql);
+                            if ($results !== null) {
+                                $final = $this->askModelToSummarizeResults($validated['message'], $sql, $results, $apiKey, $primaryModel, $baseUrl);
+                                if ($final !== null) {
+                                    return response()->json(['reply' => $final]);
+                                }
                             }
                         }
                     }
@@ -153,6 +184,139 @@ class AiChatController extends Controller
         ], 502);
     }
 
+    private function isPersonalHealthIntent(string $message): bool
+    {
+        return (bool) preg_match('/\b(my\s+health|health\s+condition|my\s+condition|health\s+status|my\s+symptoms|my\s+diseases)\b/i', $message);
+    }
+
+    private function getPersonalHealthSnapshot(int $userId): ?array
+    {
+        $connections = [
+            (string) config('chatbot.read_connection', 'mysql_chatbot'),
+            (string) config('database.default', 'mysql'),
+        ];
+
+        foreach (array_unique($connections) as $conn) {
+            try {
+                $diseases = DB::connection($conn)
+                    ->table('user_diseases as ud')
+                    ->leftJoin('diseases as d', 'd.id', '=', 'ud.disease_id')
+                    ->where('ud.user_id', $userId)
+                    ->orderByDesc('ud.id')
+                    ->limit(20)
+                    ->get([
+                        'd.name as disease',
+                        'ud.status',
+                        'ud.diagnosed_at',
+                        'ud.notes',
+                    ])
+                    ->map(fn ($r) => (array) $r)
+                    ->all();
+
+                $symptoms = DB::connection($conn)
+                    ->table('user_symptoms as us')
+                    ->leftJoin('symptoms as s', 's.id', '=', 'us.symptom_id')
+                    ->where('us.user_id', $userId)
+                    ->orderByDesc('us.recorded_at')
+                    ->limit(20)
+                    ->get([
+                        's.name as symptom',
+                        'us.severity_level',
+                        'us.note',
+                        'us.recorded_at',
+                    ])
+                    ->map(fn ($r) => (array) $r)
+                    ->all();
+
+                $metrics = DB::connection($conn)
+                    ->table('health_metrics')
+                    ->where('user_id', $userId)
+                    ->orderByDesc('recorded_at')
+                    ->limit(20)
+                    ->get([
+                        'metric_type',
+                        'value',
+                        'recorded_at',
+                    ])
+                    ->map(fn ($r) => (array) $r)
+                    ->all();
+
+                Log::info('Personal health snapshot fetched', [
+                    'connection' => $conn,
+                    'user_id' => $userId,
+                    'diseases_count' => count($diseases),
+                    'symptoms_count' => count($symptoms),
+                    'metrics_count' => count($metrics),
+                ]);
+
+                return [
+                    'user_id' => $userId,
+                    'diseases' => $diseases,
+                    'symptoms' => $symptoms,
+                    'health_metrics' => $metrics,
+                ];
+            } catch (\Throwable $e) {
+                Log::warning('Personal health snapshot query failed', [
+                    'connection' => $conn,
+                    'user_id' => $userId,
+                    'message' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return null;
+    }
+
+    private function buildPersonalHealthReply(array $snapshot): ?string
+    {
+        $diseases = (array) ($snapshot['diseases'] ?? []);
+        $symptoms = (array) ($snapshot['symptoms'] ?? []);
+        $metrics = (array) ($snapshot['health_metrics'] ?? []);
+
+        if ($diseases === [] && $symptoms === [] && $metrics === []) {
+            return 'I checked your records and could not find any saved diseases, symptoms, or health metrics yet. Please add health entries first, then ask again.';
+        }
+
+        $parts = [];
+
+        if ($diseases !== []) {
+            $top = array_slice($diseases, 0, 3);
+            $labels = array_map(function (array $d): string {
+                $name = (string) ($d['disease'] ?? 'Unknown disease');
+                $status = (string) ($d['status'] ?? 'unknown');
+                return $name . ' (' . $status . ')';
+            }, $top);
+            $parts[] = 'Diseases: ' . implode(', ', $labels) . '.';
+        }
+
+        if ($symptoms !== []) {
+            $top = array_slice($symptoms, 0, 5);
+            $labels = array_map(function (array $s): string {
+                $name = (string) ($s['symptom'] ?? 'Unknown symptom');
+                $sev = $s['severity_level'] ?? null;
+                return $sev !== null ? ($name . ' (severity ' . $sev . ')') : $name;
+            }, $top);
+            $parts[] = 'Recent symptoms: ' . implode(', ', $labels) . '.';
+        }
+
+        if ($metrics !== []) {
+            $top = array_slice($metrics, 0, 5);
+            $labels = array_map(function (array $m): string {
+                $type = (string) ($m['metric_type'] ?? 'metric');
+                $value = $m['value'] ?? null;
+                if (is_array($value)) {
+                    $value = json_encode($value, JSON_UNESCAPED_UNICODE);
+                }
+                return $type . ': ' . (is_string($value) || is_numeric($value) ? (string) $value : 'recorded');
+            }, $top);
+            $parts[] = 'Recent metrics: ' . implode('; ', $labels) . '.';
+        }
+
+        $parts[] = 'This is based on your saved records and is not a medical diagnosis. Please consult a licensed doctor for clinical advice.';
+
+        return implode(' ', $parts);
+    }
+
     private function extractReplyText(mixed $content): ?string
     {
         if (is_string($content)) {
@@ -218,14 +382,17 @@ class AiChatController extends Controller
         }
     }
 
-    private function generateSqlFromMessage(string $message, string $schemaDesc, string $apiKey, string $model, string $baseUrl): ?string
+    private function generateSqlFromMessage(string $message, string $schemaDesc, string $apiKey, string $model, string $baseUrl, ?int $authUserId = null): ?string
     {
         if ($schemaDesc === '') {
             return null;
         }
 
         $system = 'You are a SQL generator. Based on the provided database schema, return a single-line valid SQL SELECT query (MySQL dialect) that answers the user question. Do NOT return any explanation or text. Return only the SQL. Only SELECT queries are allowed.';
-        $user = "Schema:\n" . $schemaDesc . "\n\nQuestion: " . $message . "\n\nSQL Query:";
+        $authContext = $authUserId !== null
+            ? "Authenticated user id: {$authUserId}. Prefer filtering personal-health queries by this user id when relevant (e.g., user_diseases.user_id, user_symptoms.user_id, health_metrics.user_id, medicine_logs.user_id)."
+            : 'No authenticated user id available.';
+        $user = "Schema:\n" . $schemaDesc . "\n\n" . $authContext . "\n\nQuestion: " . $message . "\n\nSQL Query:";
 
         try {
             // If a Google API key is provided in env/config, call Google Generative API directly
@@ -295,17 +462,29 @@ class AiChatController extends Controller
 
     private function executeSelectSql(string $sql): ?array
     {
-        try {
-            $conn = config('chatbot.read_connection', 'mysql_chatbot');
-            $rows = DB::connection($conn)->select(DB::raw($sql));
-            // convert stdClass rows to arrays and limit payload
-            $arr = array_map(function ($r) {
-                return (array) $r;
-            }, $rows);
+        $preferred = (string) config('chatbot.read_connection', 'mysql_chatbot');
+        $fallback = (string) config('database.default', 'mysql');
 
-            return $arr;
+        try {
+            $rows = DB::connection($preferred)->select(DB::raw($sql));
+            return array_map(static fn ($r) => (array) $r, $rows);
         } catch (\Throwable $e) {
-            Log::warning('SQL execution failed', ['sql' => $sql, 'message' => $e->getMessage()]);
+            Log::warning('SQL execution failed on read connection; trying default connection', [
+                'connection' => $preferred,
+                'sql' => $sql,
+                'message' => $e->getMessage(),
+            ]);
+        }
+
+        try {
+            $rows = DB::connection($fallback)->select(DB::raw($sql));
+            return array_map(static fn ($r) => (array) $r, $rows);
+        } catch (\Throwable $e) {
+            Log::warning('SQL execution failed on fallback connection', [
+                'connection' => $fallback,
+                'sql' => $sql,
+                'message' => $e->getMessage(),
+            ]);
             return null;
         }
     }
