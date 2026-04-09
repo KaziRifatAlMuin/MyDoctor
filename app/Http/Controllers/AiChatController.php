@@ -43,6 +43,23 @@ class AiChatController extends Controller
         'endpoint', 'email', 'phone', 'notification_settings',
     ];
 
+    /**
+     * Tables that must always be filtered by the authenticated user's user_id.
+     */
+    private const USER_SCOPED_TABLES = [
+        'medicines',
+        'medicine_logs',
+        'medicine_reminders',
+        'medicine_schedules',
+        'health_metrics',
+        'environments',
+        'environment_metrics',
+        'user_symptoms',
+        'user_diseases',
+        'uploads',
+        'notifications',
+    ];
+
     public function message(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -53,6 +70,14 @@ class AiChatController extends Controller
         ]);
 
         $authUserId = $request->user()?->id;
+
+        if ($this->isUnauthorizedDataRequest($validated['message'])) {
+            return response()->json([
+                'reply' => $this->formatStructuredReply(
+                    "I can't share other users' information or sensitive account data. I can only discuss your own records."
+                ),
+            ], 403);
+        }
 
         $apiKey    = (string) config('services.openrouter.api_key', '');
         $googleKey = (string) (env('GOOGLE_API_KEY', '') ?: config('services.google.api_key', ''));
@@ -65,7 +90,7 @@ class AiChatController extends Controller
                     if ($snapshot !== null) {
                         $directReply = $this->buildPersonalHealthReply($snapshot);
                         if ($directReply !== null) {
-                            return response()->json(['reply' => $directReply]);
+                            return response()->json(['reply' => $this->formatStructuredReply($directReply)]);
                         }
 
                         // Rich data: try LLM summary if possible, otherwise always fall back to local summary.
@@ -99,12 +124,12 @@ class AiChatController extends Controller
                                     $googleKey
                                 );
                                 if ($final !== null) {
-                                    return response()->json(['reply' => $final]);
+                                    return response()->json(['reply' => $this->formatStructuredReply($final)]);
                                 }
                             }
                         }
 
-                        return response()->json(['reply' => $this->buildPersonalHealthReply($snapshot, true)]);
+                        return response()->json(['reply' => $this->formatStructuredReply($this->buildPersonalHealthReply($snapshot, true))]);
                     }
                 }
             } catch (\Throwable $e) {
@@ -117,7 +142,7 @@ class AiChatController extends Controller
 
         if ($apiKey === '' && $googleKey === '') {
             return response()->json([
-                'reply' => 'AI service is not configured yet. Please set OPENROUTER_API_KEY or GOOGLE_API_KEY in your .env file.',
+                'reply' => $this->formatStructuredReply('AI service is not configured yet. Please set OPENROUTER_API_KEY or GOOGLE_API_KEY in your .env file.'),
             ], 503);
         }
 
@@ -141,7 +166,7 @@ class AiChatController extends Controller
 
         if ($models === []) {
             return response()->json([
-                'reply' => 'AI service models are not configured.',
+                'reply' => $this->formatStructuredReply('AI service models are not configured.'),
             ], 503);
         }
 
@@ -192,6 +217,14 @@ class AiChatController extends Controller
                     if ($sql !== null) {
                         if (!$this->isAllowedSql($sql)) {
                             Log::warning('Generated SQL references disallowed tables', ['sql' => $sql]);
+                            } elseif (!$this->isSqlAuthorizedForUser($sql, $authUserId)) {
+                                Log::warning('Generated SQL failed user scope authorization', [
+                                    'sql'         => $sql,
+                                    'auth_user_id'=> $authUserId,
+                                ]);
+                                return response()->json([
+                                    'reply' => $this->formatStructuredReply("I can't share other users' information or sensitive account data. I can only discuss your own records."),
+                                ], 403);
                         } else {
                             $results = $this->executeSelectSql($sql);
                             if ($results !== null) {
@@ -206,7 +239,7 @@ class AiChatController extends Controller
                                     $googleKey
                                 );
                                 if ($final !== null) {
-                                    return response()->json(['reply' => $final]);
+                                    return response()->json(['reply' => $this->formatStructuredReply($final)]);
                                 }
                             }
                         }
@@ -247,7 +280,7 @@ class AiChatController extends Controller
                 500
             );
             if ($resp !== null) {
-                return response()->json(['reply' => $resp]);
+                return response()->json(['reply' => $this->formatStructuredReply($resp)]);
             }
         }
 
@@ -273,7 +306,7 @@ class AiChatController extends Controller
                 if ($response->successful()) {
                     $reply = $this->extractReplyText(data_get($response->json(), 'choices.0.message.content'));
                     if ($reply !== null) {
-                        return response()->json(['reply' => $reply]);
+                        return response()->json(['reply' => $this->formatStructuredReply($reply)]);
                     }
                     Log::warning('OpenRouter returned empty content', ['model' => $model]);
                     $lastStatus = 502;
@@ -297,10 +330,10 @@ class AiChatController extends Controller
         }
 
         if (in_array($lastStatus, [401, 403], true)) {
-            return response()->json(['reply' => 'AI service authentication failed. Please verify your API key.'], 502);
+            return response()->json(['reply' => $this->formatStructuredReply('AI service authentication failed. Please verify your API key.')], 502);
         }
 
-        return response()->json(['reply' => 'I could not reach the AI service right now. Please try again shortly.'], 502);
+        return response()->json(['reply' => $this->formatStructuredReply('I could not reach the AI service right now. Please try again shortly.')], 502);
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -318,6 +351,8 @@ class AiChatController extends Controller
         $base = 'You are MyDoctor AI, a personal health assistant embedded in the MyDoctor app. '
               . 'The user is already logged in and their health records (diseases, symptoms, medicines, metrics) are stored in the database. '
               . 'When the user asks about their health, diseases, symptoms, or medicines, answer using the data retrieved from their records — do NOT ask them to repeat information the system already has. '
+              . 'Never disclose other users\' data, sensitive credentials, tokens, passwords, phone numbers, or emails. If asked, refuse briefly. '
+              . 'Always format responses with a short title, bold section labels, and bullet points where useful. '
               . 'Be concise, friendly, and practical. '
               . 'Never provide a clinical diagnosis. '
               . 'For emergencies or severe symptoms, advise contacting local emergency services immediately.';
@@ -706,6 +741,27 @@ class AiChatController extends Controller
         return true;
     }
 
+    private function isSqlAuthorizedForUser(string $sql, ?int $authUserId): bool
+    {
+        $tables = $this->extractTablesFromSql($sql);
+        $needsUserScope = collect($tables)
+            ->map(fn(string $t) => strtolower($t))
+            ->contains(fn(string $t) => in_array($t, self::USER_SCOPED_TABLES, true));
+
+        if (!$needsUserScope) {
+            return true;
+        }
+
+        if ($authUserId === null) {
+            return false;
+        }
+
+        return (bool) preg_match(
+            '/(?:\\b[a-z_][a-z0-9_]*\\.)?`?user_id`?\\s*=\\s*' . preg_quote((string) $authUserId, '/') . '\\b/i',
+            $sql
+        );
+    }
+
     private function extractTablesFromSql(string $sql): array
     {
         $sql    = strtolower($sql);
@@ -767,6 +823,8 @@ class AiChatController extends Controller
         $json   = json_encode(array_slice($results, 0, 50), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
         $system = 'You are MyDoctor AI assistant. The user has asked about their own health data. '
                 . 'Use ONLY the provided JSON data to answer. Do not ask clarifying questions — the data is already here. '
+            . 'Do not reveal or infer data about any other users. '
+            . 'Format output with a short title, bold labels, and bullet points when appropriate. '
                 . 'If the JSON is empty, say no matching records were found. '
                 . 'Be concise (2–6 sentences), friendly, and remind the user this is not a medical diagnosis.';
         $user   = "Question: {$question}\n\nData source: {$sql}\n\nData:\n{$json}\n\nAnswer:";
@@ -906,5 +964,92 @@ class AiChatController extends Controller
         }
 
         return $parts !== [] ? implode("\n", $parts) : null;
+    }
+
+    private function isUnauthorizedDataRequest(string $message): bool
+    {
+        return (bool) preg_match(
+            '/\b(other users?|another user|all users?|everyone|all accounts?|passwords?|tokens?|api keys?|secret|private key|auth token|emails?|phone numbers?|addresses?)\b/i',
+            $message
+        );
+    }
+
+    private function formatStructuredReply(string $reply): string
+    {
+        $text = trim($reply);
+        if ($text === '') {
+            $text = 'I could not generate a response right now.';
+        }
+
+        $sentences = array_values(array_filter(array_map('trim', preg_split('/(?<=[.!?])\s+/', $text) ?: [])));
+        if ($sentences === []) {
+            $sentences = [$text];
+        }
+
+        $summary = array_shift($sentences) ?? $text;
+        $detailItems = array_slice($sentences, 0, 4);
+        $suggestions = $this->buildDefaultSuggestions($text);
+        $tips = $this->buildDefaultTips($text);
+
+        $output = [
+            '## MyDoctor AI Response',
+            '',
+            '**Summary**',
+            '- ' . $summary,
+        ];
+
+        if ($detailItems !== []) {
+            $output[] = '';
+            $output[] = '**Details**';
+            foreach ($detailItems as $item) {
+                $output[] = '- ' . $item;
+            }
+        }
+
+        $output[] = '';
+        $output[] = '**Suggestions**';
+        foreach ($suggestions as $suggestion) {
+            $output[] = '- ' . $suggestion;
+        }
+
+        $output[] = '';
+        $output[] = '**Tips**';
+        foreach ($tips as $tip) {
+            $output[] = '- ' . $tip;
+        }
+
+        return implode("\n", $output);
+    }
+
+    private function buildDefaultSuggestions(string $context): array
+    {
+        $suggestions = [
+            'Review your latest health entries and keep them updated so recommendations stay accurate.',
+            'Share persistent or worsening symptoms with a licensed doctor for proper evaluation.',
+            'Use your medicine reminders consistently to improve treatment adherence and routine tracking.',
+            'Ask follow-up questions about trends in your records so you can monitor changes over time.',
+        ];
+
+        if (preg_match('/\b(emergency|chest pain|shortness of breath|severe|faint|stroke)\b/i', $context)) {
+            $suggestions[0] = 'Seek urgent medical care immediately if severe or emergency symptoms are present.';
+        }
+
+        return array_slice($suggestions, 0, 4);
+    }
+
+    private function buildDefaultTips(string $context): array
+    {
+        $tips = [
+            'Tip 1: Stay hydrated and aim for regular sleep to support recovery and overall health.',
+            'Tip 2: Record symptoms with time and severity so changes can be tracked accurately.',
+            'Tip 3: Follow prescribed medicines exactly and avoid skipping doses without medical advice.',
+            'Tip 4: Seek immediate emergency help if you develop severe or rapidly worsening symptoms.',
+        ];
+
+        if (!preg_match('/\b(emergency|severe|worsening)\b/i', $context)) {
+            $tips[3] = 'Tip 4: Schedule routine check-ups to review progress and adjust plans safely.';
+        }
+
+        return array_slice($tips, 0, 4);
     }
 }
