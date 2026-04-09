@@ -22,6 +22,15 @@ class DiseaseSeeder extends Seeder
                 ]
             );
         }
+
+        Disease::updateOrCreate(
+            ['disease_name' => 'হাম'],
+            [
+                'description' => 'Measles (Bangla name)',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
         
         $this->command->info('Diseases seeded successfully from config!');
     }

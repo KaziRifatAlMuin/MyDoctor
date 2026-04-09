@@ -57,6 +57,7 @@ Route::get('/language/{locale}', function (string $locale) {
 })->name('language.switch');
 
 Route::get('/diseases/{disease}', [PublicHealthController::class, 'showDisease'])->name('public.diseases.show');
+Route::get('/disease/{disease}', [PublicHealthController::class, 'showDisease'])->name('public.disease.show');
 Route::get('/symptoms/{symptom}', [PublicHealthController::class, 'showSymptom'])->name('public.symptoms.show');
 
 /*

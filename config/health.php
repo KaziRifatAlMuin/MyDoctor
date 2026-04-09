@@ -320,6 +320,7 @@ return [
         'Dengue Fever' => 'ডেঙ্গু জ্বর',
         'Malaria' => 'ম্যালেরিয়া',
         'Typhoid' => 'টাইফয়েড',
+        'Measles' => 'হাম',
         'Chickenpox' => 'জলবসন্ত',
         'Psoriasis' => 'সোরিয়াসিস',
         'Eczema' => 'একজিমা',
