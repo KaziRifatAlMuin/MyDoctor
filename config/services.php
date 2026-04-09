@@ -44,4 +44,17 @@ return [
         ],
     ],
 
+    'openrouter' => [
+        'api_key' => env('OPENROUTER_API_KEY'),
+        'base_url' => env('OPENROUTER_BASE_URL', 'https://openrouter.ai/api/v1'),
+        'model' => env('AI_CHAT_MODEL', 'qwen/qwen3.6-plus:free'),
+        'fallback_models' => array_values(array_filter([
+            env('AI_CHAT_FALLBACK_MODEL_1', 'qwen/qwen3-coder:free'),
+            env('AI_CHAT_FALLBACK_MODEL_2', 'nvidia/nemotron-3-super-120b-a12b:free'),
+            env('AI_CHAT_FALLBACK_MODEL_3', 'google/gemma-3n-e4b-it:free'),
+        ])),
+        'site_url' => env('OPENROUTER_SITE_URL', env('APP_URL', 'http://localhost')),
+        'app_name' => env('OPENROUTER_APP_NAME', env('APP_NAME', 'MyDoctor')),
+    ],
+
 ];
