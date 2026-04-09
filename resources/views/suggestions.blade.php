@@ -214,6 +214,87 @@
             color: white;
         }
 
+        .ai-summary-card {
+            background: linear-gradient(150deg, #ffffff 0%, #f6f8ff 100%);
+            border-radius: 16px;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e5e9ff;
+            padding: 1.1rem 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .ai-summary-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #4450a8;
+            margin-bottom: 0.45rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .ai-summary-title-left {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .ai-summary-regenerate {
+            border: none;
+            background: #eef2ff;
+            color: #4756b3;
+            font-size: 0.76rem;
+            font-weight: 700;
+            border-radius: 999px;
+            padding: 0.28rem 0.65rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .ai-summary-regenerate:hover {
+            background: #dfe7ff;
+            transform: translateY(-1px);
+        }
+
+        .ai-summary-title i {
+            color: #667eea;
+        }
+
+        .ai-summary-note {
+            font-size: 0.78rem;
+            color: #6b7280;
+            margin-bottom: 0.75rem;
+        }
+
+        .ai-summary-body {
+            font-size: 0.9rem;
+            color: #334155;
+            line-height: 1.65;
+        }
+
+        .ai-summary-body h2,
+        .ai-summary-body h3,
+        .ai-summary-body h4 {
+            font-size: 0.93rem;
+            margin: 0.45rem 0;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .ai-summary-body ul {
+            margin: 0.35rem 0 0.55rem 1rem;
+            padding-left: 0.5rem;
+        }
+
+        .ai-summary-loading {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            color: #64748b;
+            font-size: 0.85rem;
+        }
+
         .empty-state {
             text-align: center;
             padding: 3rem 1rem;
@@ -246,6 +327,28 @@
                     style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px;">
                     <i class="fas fa-heartbeat me-1"></i> Health Dashboard
                 </a>
+            </div>
+
+            {{-- AI Summery (top section) --}}
+            <div class="ai-summary-card" id="aiSummaryCard">
+                <div class="ai-summary-title">
+                    <span class="ai-summary-title-left">
+                        <i class="fas fa-robot"></i>
+                        <span>Health Summery of You</span>
+                    </span>
+                    <button type="button" class="ai-summary-regenerate" id="aiSummaryRegenerateBtn">
+                        <i class="fas fa-sync-alt me-1"></i>Regenerate
+                    </button>
+                </div>
+                <div class="ai-summary-note">
+                    Generated from AI chatbot using your latest health data.
+                </div>
+                <div class="ai-summary-body" id="aiSummaryBody">
+                    <span class="ai-summary-loading">
+                        <i class="fas fa-circle-notch fa-spin"></i>
+                        Preparing your personalized AI summery...
+                    </span>
+                </div>
             </div>
 
             {{-- Filter Buttons --}}
@@ -413,6 +516,9 @@
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>
+        const AI_SUMMERY_CACHE_KEY = 'mydoctor.ai_summery_cache.v1';
+        const AI_SUMMERY_PROMPT = 'For my current authenticated user only, give me a health summary focused mostly on my diseases and symptoms. First 2-3 lines must focus on diseases, then next lines focus on symptoms and condition trends. Then provide what to do and what not to do. Output format: first paragraph 3-4 lines, second paragraph 3-4 lines, to do 4-6 bullets, not to do 3-5 bullets, and overall health condition in exactly 2 lines at the end. Use bold emphasis heavily, especially disease and symptom terms.';
+
         document.addEventListener('DOMContentLoaded', function() {
             // Adherence Donut
             const canvas = document.getElementById('adherenceDonut');
@@ -446,6 +552,15 @@
                     }
                 });
             }
+
+            const regenerateBtn = document.getElementById('aiSummaryRegenerateBtn');
+            if (regenerateBtn) {
+                regenerateBtn.addEventListener('click', function() {
+                    loadAiSummery(true);
+                });
+            }
+
+            loadAiSummery(false);
         });
 
         function filterSuggestions(category, btn) {
@@ -459,6 +574,145 @@
                     card.style.display = 'none';
                 }
             });
+        }
+
+        async function loadAiSummery(forceRefresh = false) {
+            const target = document.getElementById('aiSummaryBody');
+            if (!target) return;
+
+            if (!forceRefresh) {
+                const cached = getCachedAiSummery();
+                if (cached) {
+                    target.innerHTML = renderChatbotMarkup(cached);
+                    return;
+                }
+            }
+
+            target.innerHTML = '<span class="ai-summary-loading"><i class="fas fa-circle-notch fa-spin"></i>Preparing your personalized AI summery...</span>';
+
+            try {
+                const response = await fetch('{{ route('chatbot.message') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        message: AI_SUMMERY_PROMPT,
+                        history: []
+                    })
+                });
+
+                const data = await response.json();
+                const reply = typeof data.reply === 'string' && data.reply.trim() !== ''
+                    ? data.reply
+                    : 'Unable to generate AI summery right now. Please try again in a moment.';
+
+                if (response.ok) {
+                    cacheAiSummery(reply);
+                }
+
+                target.innerHTML = renderChatbotMarkup(reply);
+            } catch (error) {
+                target.innerHTML = '<p class="mb-0">Unable to generate AI summery right now. Please try again in a moment.</p>';
+            }
+        }
+
+        function getCachedAiSummery() {
+            try {
+                const raw = sessionStorage.getItem(AI_SUMMERY_CACHE_KEY);
+                if (!raw) return null;
+                const parsed = JSON.parse(raw);
+                if (!parsed || typeof parsed.reply !== 'string') return null;
+                return parsed.reply;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function cacheAiSummery(reply) {
+            try {
+                sessionStorage.setItem(AI_SUMMERY_CACHE_KEY, JSON.stringify({
+                    reply,
+                    savedAt: Date.now(),
+                }));
+            } catch (e) {
+                // Ignore cache failures silently.
+            }
+        }
+
+        function renderChatbotMarkup(text) {
+            const escaped = escapeHtml(text);
+            const lines = escaped.split(/\r?\n/);
+            let html = '';
+            let inList = false;
+
+            for (const rawLine of lines) {
+                const line = rawLine.trim();
+
+                if (line === '') {
+                    if (inList) {
+                        html += '</ul>';
+                        inList = false;
+                    }
+                    continue;
+                }
+
+                if (line.startsWith('## ')) {
+                    if (inList) {
+                        html += '</ul>';
+                        inList = false;
+                    }
+                    html += `<h3>${emphasizeLine(line.substring(3))}</h3>`;
+                    continue;
+                }
+
+                if (line.startsWith('- ')) {
+                    if (!inList) {
+                        html += '<ul>';
+                        inList = true;
+                    }
+                    html += `<li>${emphasizeLine(line.substring(2))}</li>`;
+                    continue;
+                }
+
+                if (inList) {
+                    html += '</ul>';
+                    inList = false;
+                }
+
+                html += `<p>${emphasizeLine(line)}</p>`;
+            }
+
+            if (inList) {
+                html += '</ul>';
+            }
+
+            return html || '<p class="mb-0">No AI summery available.</p>';
+        }
+
+        function emphasizeLine(input) {
+            let line = input.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+            line = line.replace(/\b(Tip\s*\d+\s*:)/gi, '<strong>$1</strong>');
+            line = line.replace(/\b(To\s*Do\s*:|Not\s*To\s*Do\s*:|Overview\s*:|Summary\s*:|Diseases?\s*:|Symptoms?\s*:)/gi, '<strong>$1</strong>');
+
+            const keywordPattern = /\b(summary|details|suggestions|tips|overview|condition|health|symptom|symptoms|disease|diseases|medicine|metric|adherence|warning|urgent|improve|monitor|doctor|exercise|sleep|hydration|stress|chronic|active|managed|severity|diagnosed)\b/gi;
+            line = line.replace(keywordPattern, '<strong>$1</strong>');
+
+            if (!/<strong>/.test(line)) {
+                line = line.replace(/^((?:\w+\s+){1,3}\w+)/, '<strong>$1</strong>');
+            }
+
+            return line;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
     </script>
 @endpush
