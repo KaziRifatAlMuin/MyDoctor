@@ -4174,9 +4174,27 @@ window.openVideoModal = function(type, source, isReel = false) {
                 const data = await response.json();
                 removeTypingIndicator();
 
-                const reply = typeof data.reply === 'string' && data.reply.trim() !== ''
-                    ? data.reply
-                    : 'I could not generate a reply right now. Please try again.';
+                let reply = null;
+                if (response.ok && typeof data.reply === 'string' && data.reply.trim() !== '') {
+                    reply = data.reply;
+                } else {
+                    if (typeof data.reply === 'string' && data.reply.trim() !== '') {
+                        reply = data.reply;
+                    } else if (typeof data.message === 'string' && data.message.trim() !== '') {
+                        reply = data.message;
+                    } else if (data.errors && typeof data.errors === 'object') {
+                        const first = Object.values(data.errors)[0];
+                        if (Array.isArray(first) && first.length) {
+                            reply = first[0];
+                        } else if (typeof first === 'string') {
+                            reply = first;
+                        }
+                    }
+                }
+
+                if (!reply) {
+                    reply = 'I could not generate a reply right now. Please try again.';
+                }
 
                 addMessage(reply, 'bot');
                 conversationHistory.push({ role: 'assistant', content: reply });

@@ -63,10 +63,10 @@ class AiChatController extends Controller
     public function message(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'message'           => ['required', 'string', 'max:1000'],
+            'message'           => ['required', 'string', 'max:5000'],
             'history'           => ['nullable', 'array', 'max:12'],
             'history.*.role'    => ['required_with:history', 'in:user,assistant'],
-            'history.*.content' => ['required_with:history', 'string', 'max:1000'],
+            'history.*.content' => ['required_with:history', 'string', 'max:5000'],
         ]);
 
         $authUserId = $request->user()?->id;
@@ -86,76 +86,13 @@ class AiChatController extends Controller
         }
 
         $apiKey    = (string) config('services.openrouter.api_key', '');
-        $googleKey = (string) (env('GOOGLE_API_KEY', '') ?: config('services.google.api_key', ''));
+        $googleKey = (string) config('services.google.api_key', '');
 
         Log::info('aboutMe called', [
-            'user_id' => $userId,
+            'user_id' => $authUserId,
             'api_key_present' => $apiKey !== '',
             'google_key_present' => $googleKey !== '',
         ]);
-
-        // Personal health queries must still work from DB even when external AI is down.
-        if ((bool) config('chatbot.enable_text_to_sql', true)) {
-            try {
-                if ($authUserId !== null && $this->isPersonalHealthIntent($validated['message'])) {
-                    $snapshot = $this->getPersonalHealthSnapshot($authUserId);
-                    if ($snapshot !== null) {
-                        $directReply = $this->buildPersonalHealthReply($snapshot);
-                        if ($directReply !== null && $apiKey === '' && $googleKey === '') {
-                            return response()->json(['reply' => $this->formatStructuredReply($directReply)]);
-                        }
-
-                        // Rich data: try LLM summary if possible, otherwise always fall back to local summary.
-                        if ($apiKey !== '' || $googleKey !== '') {
-                            $baseUrl = rtrim((string) config('services.openrouter.base_url', 'https://openrouter.ai/api/v1'), '/');
-                            $primaryModel = (string) config('services.openrouter.model', 'qwen/qwen3-6b-instruct:free');
-                            $fallbackModels = array_filter(array_merge(
-                                (array) config('services.openrouter.fallback_models', []),
-                                [
-                                config('services.openrouter.fallback_model_1'),
-                                config('services.openrouter.fallback_model_2'),
-                                config('services.openrouter.fallback_model_3'),
-                                ]
-                            ));
-                            $models = collect(array_merge([$primaryModel], $fallbackModels))
-                                ->filter(fn($m) => is_string($m) && trim($m) !== '')
-                                ->map(fn($m) => trim($m))
-                                ->unique()
-                                ->values()
-                                ->all();
-
-                            if ($models !== []) {
-                                $questionForModel = $validated['message'];
-                                if ($this->isRiskIntent($validated['message'])) {
-                                    $questionForModel .= "\n\nPlease include a concise assessment of risks related to the user's diseases and symptoms, and provide 2-3 actionable suggestions.";
-                                }
-
-                                $final = $this->askModelToSummarizeResults(
-                                    $questionForModel,
-                                    'PERSONAL_HEALTH_SNAPSHOT',
-                                    $snapshot,
-                                    $apiKey,
-                                    $primaryModel,
-                                    $baseUrl,
-                                    $models,
-                                    $googleKey
-                                );
-                                if ($final !== null) {
-                                    return response()->json(['reply' => $this->formatStructuredReply($final)]);
-                                }
-                            }
-                        }
-
-                        return response()->json(['reply' => $this->formatStructuredReply($this->buildPersonalHealthReply($snapshot, true))]);
-                    }
-                }
-            } catch (\Throwable $e) {
-                Log::warning('Personal health fast-path failed', [
-                    'message' => $e->getMessage(),
-                    'trace'   => $e->getTraceAsString(),
-                ]);
-            }
-        }
 
         if ($apiKey === '' && $googleKey === '') {
             return response()->json([
@@ -164,7 +101,7 @@ class AiChatController extends Controller
         }
 
         $baseUrl      = rtrim((string) config('services.openrouter.base_url', 'https://openrouter.ai/api/v1'), '/');
-        $primaryModel = (string) config('services.openrouter.model', 'qwen/qwen3-6b-instruct:free');
+        $primaryModel = (string) config('services.openrouter.model', 'google/gemini-2.0-flash-001');
         $fallbackModels = array_filter(array_merge(
             (array) config('services.openrouter.fallback_models', []),
             [
@@ -180,6 +117,7 @@ class AiChatController extends Controller
             ->unique()
             ->values()
             ->all();
+        $models = $this->sanitizeOpenRouterModels($models);
 
         if ($models === []) {
             return response()->json([
@@ -188,7 +126,14 @@ class AiChatController extends Controller
         }
 
         // ── Text-to-SQL / RAG pipeline ────────────────────────────────────────
-        if ((bool) config('chatbot.enable_text_to_sql', true)) {
+        // Skip the heavy text-to-SQL/RAG flow for short conversational or
+        // emotional messages so they are handled by the normal LLM chat flow.
+        $skipTextToSql = $this->isShortChatIntent($validated['message'])
+            || $this->isEmotionalDistressIntent($validated['message'])
+            || $this->isDietIntent($validated['message'])
+            || $this->isGeneralWellnessIntent($validated['message']);
+
+        if ((bool) config('chatbot.enable_text_to_sql', true) && !$skipTextToSql) {
             try {
                 // Fast-path: deterministic personal health snapshot
                 if ($authUserId !== null && $this->isPersonalHealthIntent($validated['message'])) {
@@ -290,14 +235,12 @@ class AiChatController extends Controller
             [['role' => 'user', 'content' => $validated['message']]]
         );
 
-        // Try Google Gemini first if key is present
+        // Try Google Gemini first (with model fallback) if key is present
         if ($googleKey !== '') {
-            $googleModel = (string) (env('GOOGLE_MODEL', '') ?: config('services.google.model', 'gemini-1.5-flash'));
-            $resp = $this->googleChatRequest(
+            $resp = $this->googleChatWithFallback(
                 $systemPrompt,
                 $validated['message'],
                 $googleKey,
-                $googleModel,
                 0.5,
                 500
             );
@@ -394,9 +337,150 @@ class AiChatController extends Controller
     private function isPersonalHealthIntent(string $message): bool
     {
         return (bool) preg_match(
-            '/\b(my\s+health|health\s+condition|my\s+condition|health\s+status|my\s+symptoms?|my\s+diseases?|my\s+medicines?|my\s+metrics?|tell\s+me\s+about\s+my|what\s+(are|is)\s+my)\b/i',
+            '/\b(my\s+health|health\s+condition|my\s+condition|health\s+status|my\s+symptoms?|my\s+diseases?|my\s+medicines?|my\s+metrics?|tell\s+me\s+about\s+my|what\s+(are|is)\s+my|how\s+is\s+my\s+health|am\s+i\s+fit|amr\s+health|amar\s+health|amar\s+shorir|shorir\s+kemon|health\s+kmn|kemon\s+achi)\b/i',
             $message
         );
+    }
+
+    /**
+     * Detect simple emotional/distress expressions (English and common Banglish phrases).
+     * Provides a lightweight local fallback when the AI service is unavailable.
+     */
+    private function isEmotionalDistressIntent(string $message): bool
+    {
+        return (bool) preg_match(
+            '/\b(sad|depress(ed)?|i feel (bad|sad|lonely|down)|unhappy|suicid(e|al)|amr kharap|amar kharap|khara?p|dukhi|mon kharap|amar mon kharap)\b/i',
+            $message
+        );
+    }
+
+    /**
+     * Detect short, conversational messages that don't request DB access
+     * (e.g., greetings, small talk, brief Banglish phrases).
+     */
+    private function isShortChatIntent(string $message): bool
+    {
+        $trim = trim($message);
+        if ($trim === '') {
+            return false;
+        }
+
+        // Avoid classifying explicit personal-health intents as short chat
+        if ($this->isPersonalHealthIntent($message)) {
+            return false;
+        }
+
+        // Short messages under 120 chars and not containing question words
+        if (mb_strlen($trim) <= 120 && !preg_match('/\b(what|why|how|when|where|who|which|do you|should i|tell me|can you|could you)\b/i', $trim)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Detect generic fitness/wellness prompts that should be answered as
+     * normal LLM conversation rather than DB-centric text-to-SQL.
+     */
+    private function isGeneralWellnessIntent(string $message): bool
+    {
+        return (bool) preg_match(
+            '/\b(how\s+to\s+be\s+fit|how\s+can\s+i\s+be\s+fit|be\s+fit|stay\s+fit|fit\s+hobo|fit\s+thakbo|kivabe\s+fit\s+hobo|ki\s+vabe\s+fit\s+hobo|healthy\s+lifestyle|fitness\s+tips)\b/i',
+            trim($message)
+        );
+    }
+
+    private function isDietIntent(string $message): bool
+    {
+        return (bool) preg_match(
+            '/\b(diet\s+chart|diet\s+plan|meal\s+plan|food\s+plan|nutrition\s+plan|diet\s+dao|diet\s+chart\s+dao|khabar\s+chart|khabar\s+plan)\b/i',
+            trim($message)
+        );
+    }
+
+    /**
+     * Local fallback text for wellness prompts when external LLM is down.
+     */
+    private function buildWellnessFallbackReply(string $message): string
+    {
+        $tips = [
+            'Build a simple daily routine: 30 minutes of walking, consistent sleep, and regular hydration.',
+            'Keep your meals balanced with vegetables, protein, and fewer sugary drinks or processed snacks.',
+            'Track 1-2 weekly goals (for example, steps and sleep hours) so progress is measurable and realistic.',
+        ];
+
+        if (preg_match('/\b(kivabe|ki\s+vabe|hobo|thakbo|fit)\b/i', $message)) {
+            $tips[] = 'If you want, share your current routine and I can help make a personalized 7-day fitness plan.';
+        } else {
+            $tips[] = 'Share your age, activity level, and current routine, and I can suggest a personalized fitness plan.';
+        }
+
+        return implode(' ', $tips);
+    }
+
+    private function buildDietFallbackReply(string $message): string
+    {
+        $isBanglish = (bool) preg_match('/\b(dao|khabar|chart|plan|amar|amr|kivabe|ki\s+vabe)\b/i', $message);
+
+        $core = [
+            '**Morning:** 1 glass water, oats or whole-grain bread with egg/lean protein, plus one fruit.',
+            '**Lunch:** half plate vegetables, quarter plate protein (fish/chicken/lentils), quarter plate brown rice/roti.',
+            '**Evening snack:** nuts or yogurt; avoid sugary drinks and deep-fried snacks.',
+            '**Dinner:** lighter than lunch, include vegetables and protein; finish 2-3 hours before sleep.',
+            '**Hydration:** 2-3 liters water daily and keep a fixed meal schedule.',
+        ];
+
+        if ($isBanglish) {
+            $core[] = 'Chaile apnar weight, activity level, ar health condition dile ami personalized 7-day diet chart baniye dite pari.';
+        } else {
+            $core[] = 'Share your age, weight, activity level, and health conditions for a personalized 7-day diet chart.';
+        }
+
+        return implode(' ', $core);
+    }
+
+    /**
+     * Lightweight local reply generator for short conversational messages.
+     * Used as a graceful fallback when external AI is unavailable.
+     */
+    private function localChatFallback(string $message): string
+    {
+        $lower = strtolower($message);
+
+        if ($this->isEmotionalDistressIntent($message)) {
+            return "I'm sorry you're feeling this way. I'm here to listen. If you want, tell me what happened and I will try to support you step by step.";
+        }
+
+        if ($this->isDietIntent($message)) {
+            return $this->buildDietFallbackReply($message);
+        }
+
+        if ($this->isGeneralWellnessIntent($message)) {
+            return $this->buildWellnessFallbackReply($message);
+        }
+
+        // Simple Banglish/Bengali-friendly replies
+        if (preg_match('/\b(amr|amar|amake|amar\s+mon|mon\s+kharap|dukhi|khara?p|amr\s+khara?p)\b/i', $lower)) {
+            return "Ami dukkhito je apni eivabe feel korchen. Ami shuntey asi — bolte chan keno? If this is urgent, please contact local emergency services or a trusted person.";
+        }
+
+        if (preg_match('/\b(tips?\s*dao|tip\s*dao|tips?|advice|suggestion|ki\s*holo|what\s*happened)\b/i', $lower)) {
+            return 'Here are quick tips: stay hydrated, sleep at a fixed time, do 20-30 minutes of daily movement, and keep meals balanced. If you want, I can make a personalized 7-day plan for you.';
+        }
+
+        if (preg_match('/\b(hi|hello|hey|thanks|thank you|bye)\b/i', $lower)) {
+            if (preg_match('/\b(thanks|thank you)\b/i', $lower)) {
+                return 'You\'re welcome — glad I could help.';
+            }
+            return 'Hello! How can I help you today?';
+        }
+
+        // Default: echo with an offer to help
+        if (mb_strlen($message) < 60) {
+            return 'I hear you. Tell me a bit more, and I\'ll do my best to help.';
+        }
+
+        return 'Thanks for sharing that. Could you say a little more about what you mean?';
     }
 
     private function isRiskIntent(string $message): bool
@@ -656,10 +740,9 @@ class AiChatController extends Controller
 
         $user = "Schema:\n{$schemaDesc}\n\n{$authContext}\n\nQuestion: {$message}\n\nSQL Query:";
 
-        // Try Google Gemini first
+        // Try Google Gemini first (with model fallback)
         if ($googleKey !== '') {
-            $googleModel = (string) (env('GOOGLE_MODEL', '') ?: config('services.google.model', 'gemini-1.5-flash'));
-            $resp = $this->googleChatRequest($system, $user, $googleKey, $googleModel, 0.0, 300);
+            $resp = $this->googleChatWithFallback($system, $user, $googleKey, 0.0, 300);
             if ($resp !== null) {
                 $text = trim(preg_replace('/^```\w*\s*|```\s*$/m', '', $resp));
                 return $text !== '' ? $text : null;
@@ -872,10 +955,9 @@ class AiChatController extends Controller
                 . 'Be concise, friendly, and remind the user this is not a medical diagnosis.';
         $user   = "Question: {$question}\n\nData source: {$sql}\n\nData:\n{$json}\n\nAnswer:";
 
-        // Try Google Gemini first
+        // Try Google Gemini first (with model fallback)
         if ($googleKey !== '') {
-            $googleModel = (string) (env('GOOGLE_MODEL', '') ?: config('services.google.model', 'gemini-1.5-flash'));
-            $resp = $this->googleChatRequest($system, $user, $googleKey, $googleModel, 0.2, 500);
+            $resp = $this->googleChatWithFallback($system, $user, $googleKey, 0.2, 500);
             if ($resp !== null) {
                 return $this->extractReplyText($resp);
             }
@@ -936,14 +1018,14 @@ class AiChatController extends Controller
         }
 
         $apiKey    = (string) config('services.openrouter.api_key', '');
-        $googleKey = (string) (env('GOOGLE_API_KEY', '') ?: config('services.google.api_key', ''));
+        $googleKey = (string) config('services.google.api_key', '');
 
         if ($apiKey === '' && $googleKey === '') {
             return response()->json(['message' => 'AI service is not configured yet.'], 503);
         }
 
         $baseUrl      = rtrim((string) config('services.openrouter.base_url', 'https://openrouter.ai/api/v1'), '/');
-        $primaryModel = (string) config('services.openrouter.model', 'qwen/qwen3-6b-instruct:free');
+        $primaryModel = (string) config('services.openrouter.model', 'google/gemini-2.0-flash-001');
         $fallbackModels = array_filter(array_merge(
             (array) config('services.openrouter.fallback_models', []),
             [
@@ -959,6 +1041,7 @@ class AiChatController extends Controller
             ->unique()
             ->values()
             ->all();
+        $models = $this->sanitizeOpenRouterModels($models);
 
         $parsed = $this->generateLlmSmartSuggestions($snapshot, $apiKey, $googleKey, $baseUrl, $models);
         if ($parsed === []) {
@@ -1026,7 +1109,7 @@ class AiChatController extends Controller
         $question = $question . $formatInstruction;
 
         $apiKey    = (string) config('services.openrouter.api_key', '');
-        $googleKey = (string) (env('GOOGLE_API_KEY', '') ?: config('services.google.api_key', ''));
+        $googleKey = (string) config('services.google.api_key', '');
 
         // If AI keys are not configured, return a deterministic local summary
         // built from the user's snapshot and include fallback suggestions so
@@ -1047,7 +1130,7 @@ class AiChatController extends Controller
         }
 
         $baseUrl      = rtrim((string) config('services.openrouter.base_url', 'https://openrouter.ai/api/v1'), '/');
-        $primaryModel = (string) config('services.openrouter.model', 'qwen/qwen3-6b-instruct:free');
+        $primaryModel = (string) config('services.openrouter.model', 'google/gemini-2.0-flash-001');
         $fallbackModels = array_filter(array_merge(
             (array) config('services.openrouter.fallback_models', []),
             [
@@ -1063,6 +1146,7 @@ class AiChatController extends Controller
             ->unique()
             ->values()
             ->all();
+        $models = $this->sanitizeOpenRouterModels($models);
 
         $final = $this->askModelToSummarizeResults(
             $question,
@@ -1241,8 +1325,7 @@ class AiChatController extends Controller
         $modelRaw = null;
 
         if ($googleKey !== '') {
-            $googleModel = (string) (env('GOOGLE_MODEL', '') ?: config('services.google.model', 'gemini-1.5-flash'));
-            $resp = $this->googleChatRequest($system, $userPrompt, $googleKey, $googleModel, 0.3, 700);
+            $resp = $this->googleChatWithFallback($system, $userPrompt, $googleKey, 0.3, 700);
             if ($resp !== null) {
                 $modelRaw = $resp;
             }
@@ -1453,6 +1536,63 @@ class AiChatController extends Controller
             Log::warning('Google Gemini request failed', ['message' => $e->getMessage()]);
             return null;
         }
+    }
+
+    private function googleChatWithFallback(
+        string $system,
+        string $user,
+        string $apiKey,
+        float $temperature = 0.2,
+        int $maxTokens = 500
+    ): ?string {
+        $primary = (string) config('services.google.model', 'gemini-1.5-flash');
+        $fallbacks = (array) config('services.google.fallback_models', []);
+
+        $models = collect(array_merge([$primary], $fallbacks))
+            ->filter(fn($m) => is_string($m) && trim($m) !== '')
+            ->map(fn($m) => trim($m))
+            ->unique()
+            ->values()
+            ->all();
+
+        foreach ($models as $model) {
+            $resp = $this->googleChatRequest($system, $user, $apiKey, $model, $temperature, $maxTokens);
+            if ($resp !== null) {
+                return $resp;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Remove known invalid/deprecated OpenRouter model IDs and ensure a safe fallback set.
+     */
+    private function sanitizeOpenRouterModels(array $models): array
+    {
+        $blocked = [
+            'qwen/qwen3-6b-instruct:free',
+            'qwen/qwen3.6-plus:free',
+        ];
+
+        $clean = collect($models)
+            ->filter(fn($m) => is_string($m) && trim($m) !== '')
+            ->map(fn($m) => trim($m))
+            ->reject(fn($m) => in_array(strtolower($m), $blocked, true))
+            ->reject(fn($m) => str_ends_with(strtolower($m), ':free'))
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($clean !== []) {
+            return $clean;
+        }
+
+        return [
+            'google/gemini-2.0-flash-001',
+            'openai/gpt-4o-mini',
+            'anthropic/claude-3.5-haiku',
+        ];
     }
 
     // ──────────────────────────────────────────────────────────────────────────
