@@ -5,24 +5,20 @@ namespace Tests\Feature;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\User;
-use App\Models\Translation;
+use PHPUnit\Framework\Attributes\Test;
 
 class HealthOverviewTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_health_index_shows_translations_from_db()
+    #[Test]
+    public function health_index_loads_with_configured_symptom_labels(): void
     {
-        // Create a user and a translation for a symptom
         $user = User::factory()->create();
-
-        Translation::create(['type' => Translation::TYPE_SYMPTOM, 'key' => 'Cough', 'value' => 'কাশি-টেস্ট']);
 
         $response = $this->actingAs($user)->get(route('health'));
 
         $response->assertStatus(200);
-
-        // The Bangla translation should appear somewhere in the rendered page
-        $response->assertSee('কাশি-টেস্ট');
+        $response->assertViewHas('symptomsList', config('health.symptoms', []));
     }
 }

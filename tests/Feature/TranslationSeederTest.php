@@ -11,12 +11,11 @@ class TranslationSeederTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_translation_seeder_inserts_and_backfills_diseases()
+    public function test_translation_seeder_inserts_disease_translations(): void
     {
-        // Insert a disease that exists in config to verify backfill
+        // Insert a disease that exists in config.
         DB::table('diseases')->insert([
             'disease_name' => 'Asthma',
-            'disease_name_bn' => null,
             'description' => 'Test disease',
             'created_at' => now(),
             'updated_at' => now(),
@@ -25,10 +24,7 @@ class TranslationSeederTest extends TestCase
         // Run the seeder
         Artisan::call('db:seed', ['--class' => 'Database\\Seeders\\TranslationSeeder']);
 
-        // translations table should now contain many rows
+        // translations table should now contain rows for disease keys.
         $this->assertDatabaseHas('translations', ['type' => 'disease', 'key' => 'Asthma']);
-
-        // disease row should have been backfilled with bn name from config
-        $this->assertDatabaseMissing('diseases', ['disease_name' => 'Asthma', 'disease_name_bn' => null]);
     }
 }

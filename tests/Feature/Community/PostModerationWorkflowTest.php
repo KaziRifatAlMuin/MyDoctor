@@ -7,12 +7,13 @@ use App\Models\Post;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 
 class PostModerationWorkflowTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+#[Test]
     public function unapproved_posts_are_hidden_from_public_feed(): void
     {
         $owner = User::factory()->create();
@@ -33,7 +34,7 @@ class PostModerationWorkflowTest extends TestCase
             'is_approved' => true,
         ]);
 
-        $response = $this->actingAs($viewer)->get('/community/forum');
+        $response = $this->actingAs($viewer)->get('/community/posts');
 
         $response->assertStatus(200);
         $response->assertViewHas('posts', function ($posts) use ($approvedPost, $pendingPost) {
@@ -43,7 +44,7 @@ class PostModerationWorkflowTest extends TestCase
         });
     }
 
-    /** @test */
+#[Test]
     public function user_can_view_own_pending_posts_page(): void
     {
         $owner = User::factory()->create();
@@ -74,7 +75,7 @@ class PostModerationWorkflowTest extends TestCase
         });
     }
 
-    /** @test */
+#[Test]
     public function admin_can_approve_pending_post(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
@@ -94,7 +95,7 @@ class PostModerationWorkflowTest extends TestCase
         ]);
     }
 
-    /** @test */
+#[Test]
     public function any_authenticated_user_can_report_a_post(): void
     {
         $reporter = User::factory()->create();
@@ -114,7 +115,7 @@ class PostModerationWorkflowTest extends TestCase
         ]);
     }
 
-    /** @test */
+#[Test]
     public function editing_a_post_sets_is_edited_to_true(): void
     {
         $owner = User::factory()->create();

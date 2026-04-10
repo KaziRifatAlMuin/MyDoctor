@@ -8,6 +8,7 @@ use App\Models\Post;
 use App\Models\Disease;
 use App\Models\Comment;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 
 class PostListingTest extends TestCase
 {
@@ -21,7 +22,7 @@ class PostListingTest extends TestCase
         $this->user = User::factory()->create();
     }
 
-    /** @test */
+#[Test]
     public function anyone_can_view_posts()
     {
         $this->actingAs($this->user);
@@ -35,11 +36,11 @@ class PostListingTest extends TestCase
             'disease_id' => $disease->id
         ]);
 
-        $response = $this->get('/community/forum');
+        $response = $this->get('/community/posts');
         $response->assertStatus(200);
     }
 
-    /** @test */
+#[Test]
     public function posts_can_be_filtered_by_disease()
     {
         $this->actingAs($this->user);
@@ -60,11 +61,11 @@ class PostListingTest extends TestCase
             'user_id' => $this->user->id
         ]);
 
-        $response = $this->get('/community/forum?disease=' . $disease1->id);
+        $response = $this->get('/community/posts?disease=' . $disease1->id);
         $response->assertStatus(200);
     }
 
-    /** @test */
+#[Test]
     public function posts_are_paginated()
     {
         $this->actingAs($this->user);
@@ -78,11 +79,11 @@ class PostListingTest extends TestCase
             'disease_id' => $disease->id
         ]);
 
-        $response = $this->get('/community/forum');
+        $response = $this->get('/community/posts');
         $response->assertStatus(200);
     }
 
-    /** @test */
+#[Test]
     public function comments_can_be_loaded_for_a_post()
     {
         $this->actingAs($this->user);
@@ -106,7 +107,7 @@ class PostListingTest extends TestCase
         $response->assertJsonCount(5, 'comments');
     }
 
-    /** @test */
+#[Test]
     public function disease_filter_sidebar_shows_all_diseases()
     {
         $this->actingAs($this->user);
@@ -115,11 +116,11 @@ class PostListingTest extends TestCase
         Disease::factory()->create(['disease_name' => 'Arthritis Test']);
         Disease::factory()->create(['disease_name' => 'Cancer Test']);
 
-        $response = $this->get('/community/forum');
+        $response = $this->get('/community/posts');
         $response->assertStatus(200);
     }
 
-    /** @test */
+#[Test]
     public function trending_diseases_are_shown()
     {
         $this->actingAs($this->user);
@@ -140,7 +141,7 @@ class PostListingTest extends TestCase
             'user_id' => $this->user->id
         ]);
 
-        $response = $this->get('/community/forum');
+        $response = $this->get('/community/posts');
         $response->assertStatus(200);
     }
 }

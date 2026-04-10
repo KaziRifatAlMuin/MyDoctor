@@ -63,12 +63,12 @@ class MedicineTest extends TestCase
     public function test_medicine_type_label_attribute()
     {
         $medicine = new Medicine(['type' => 'tablet']);
-        $this->assertEquals('ট্যাবলেট', $medicine->type_label);
+        $this->assertEquals('Tablet', $medicine->type_label);
     }
 
     public function test_medicine_rule_label_attribute()
     {
         $medicine = new Medicine(['rule' => 'after_food']);
-        $this->assertEquals('খাবারের পরে', $medicine->rule_label);
+        $this->assertEquals('After Food', $medicine->rule_label);
     }
 }

@@ -9,6 +9,7 @@ use App\Models\MedicineLog;
 use App\Models\Symptom;
 use App\Models\User;
 use App\Models\UserDisease;
+use App\Models\UserSymptom;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -119,14 +120,23 @@ class SuggestionsPageTest extends TestCase
         $userA = User::factory()->create();
         $userB = User::factory()->create();
 
-        Symptom::factory()->count(2)->create([
-            'user_id'     => $userA->id,
-            'recorded_at' => now()->subDays(3),
-        ]);
-        Symptom::factory()->count(5)->create([
-            'user_id'     => $userB->id,
-            'recorded_at' => now()->subDays(3),
-        ]);
+        $symptomsA = Symptom::factory()->count(2)->create();
+        foreach ($symptomsA as $symptom) {
+            UserSymptom::factory()->create([
+                'user_id' => $userA->id,
+                'symptom_id' => $symptom->id,
+                'recorded_at' => now()->subDays(3),
+            ]);
+        }
+
+        $symptomsB = Symptom::factory()->count(5)->create();
+        foreach ($symptomsB as $symptom) {
+            UserSymptom::factory()->create([
+                'user_id' => $userB->id,
+                'symptom_id' => $symptom->id,
+                'recorded_at' => now()->subDays(3),
+            ]);
+        }
 
         $response = $this->actingAs($userA)
                          ->get(route('suggestions'));
@@ -309,12 +319,17 @@ class SuggestionsPageTest extends TestCase
     {
         $user = User::factory()->create();
 
-        Symptom::factory()->create([
+        $symptomWithin = Symptom::factory()->create();
+        $symptomOutside = Symptom::factory()->create();
+
+        UserSymptom::factory()->create([
             'user_id'     => $user->id,
+            'symptom_id'  => $symptomWithin->id,
             'recorded_at' => now()->subDays(5),           // within window
         ]);
-        Symptom::factory()->create([
+        UserSymptom::factory()->create([
             'user_id'     => $user->id,
+            'symptom_id'  => $symptomOutside->id,
             'recorded_at' => now()->subDays(20),          // outside window
         ]);
 

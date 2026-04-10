@@ -10,6 +10,7 @@ use App\Models\Disease;
 use App\Models\PostLike;
 use App\Models\CommentLike;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 
 class PostInteractionTest extends TestCase
 {
@@ -27,7 +28,7 @@ class PostInteractionTest extends TestCase
         ]);
     }
 
-    /** @test */
+#[Test]
     public function user_can_like_a_post()
     {
         $this->actingAs($this->user);
@@ -47,7 +48,7 @@ class PostInteractionTest extends TestCase
         ]);
     }
 
-    /** @test */
+#[Test]
     public function user_can_unlike_a_post()
     {
         $this->actingAs($this->user);
@@ -74,7 +75,7 @@ class PostInteractionTest extends TestCase
         ]);
     }
 
-    /** @test */
+#[Test]
     public function user_can_add_comment_to_post()
     {
         $this->actingAs($this->user);
@@ -99,7 +100,7 @@ class PostInteractionTest extends TestCase
         $this->assertEquals(1, $this->post->fresh()->comment_count);
     }
 
-    /** @test */
+#[Test]
     public function user_can_like_a_comment()
     {
         $this->actingAs($this->user);
@@ -123,7 +124,7 @@ class PostInteractionTest extends TestCase
         ]);
     }
 
-    /** @test */
+#[Test]
     public function user_can_unlike_a_comment()
     {
         $this->actingAs($this->user);
@@ -152,7 +153,7 @@ class PostInteractionTest extends TestCase
         ]);
     }
 
-    /** @test */
+#[Test]
     public function user_can_star_a_post(): void
     {
         $this->actingAs($this->user);
@@ -174,7 +175,7 @@ class PostInteractionTest extends TestCase
         ]);
     }
 
-    /** @test */
+#[Test]
     public function starred_posts_page_is_accessible_and_contains_starred_post(): void
     {
         $this->actingAs($this->user);

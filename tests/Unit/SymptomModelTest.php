@@ -2,8 +2,9 @@
 
 namespace Tests\Unit;
 
+use App\Models\Disease;
 use App\Models\Symptom;
-use App\Models\User;
+use App\Models\UserSymptom;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -15,65 +16,53 @@ class SymptomModelTest extends TestCase
     #[Test]
     public function symptom_has_correct_fillable_attributes(): void
     {
-        $expected = ['user_id', 'symptom_name', 'severity_level', 'note', 'recorded_at'];
+        $expected = ['name'];
         $this->assertEquals($expected, (new Symptom())->getFillable());
     }
 
     #[Test]
-    public function symptom_casts_recorded_at_to_datetime(): void
+    public function symptom_has_timestamps_disabled(): void
     {
-        $casts = (new Symptom())->getCasts();
-        $this->assertArrayHasKey('recorded_at', $casts);
-        $this->assertEquals('datetime', $casts['recorded_at']);
+        $this->assertFalse((new Symptom())->timestamps);
     }
 
     #[Test]
-    public function symptom_belongs_to_user(): void
+    public function symptom_has_many_user_symptom_logs(): void
     {
-        $user = User::factory()->create();
-        $symptom = Symptom::factory()->create(['user_id' => $user->id]);
+        $symptom = Symptom::factory()->create();
+        UserSymptom::factory()->create(['symptom_id' => $symptom->id]);
 
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\BelongsTo::class, $symptom->user());
-        $this->assertEquals($user->id, $symptom->user->id);
+        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\HasMany::class, $symptom->userSymptoms());
+        $this->assertCount(1, $symptom->userSymptoms);
     }
 
     #[Test]
-    public function symptom_can_have_null_severity(): void
+    public function symptom_belongs_to_many_diseases_via_pivot(): void
     {
-        $user = User::factory()->create();
-        $symptom = Symptom::factory()->create([
-            'user_id'        => $user->id,
-            'symptom_name'   => 'Headache',
-            'severity_level' => null,
-            'recorded_at'    => now(),
-        ]);
+        $symptom = Symptom::factory()->create();
+        $disease = Disease::factory()->create();
 
-        $this->assertNull($symptom->severity_level);
+        $symptom->diseases()->attach($disease->id);
+
+        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\BelongsToMany::class, $symptom->diseases());
+        $this->assertTrue($symptom->diseases->contains($disease));
     }
 
     #[Test]
-    public function symptom_severity_is_within_valid_range(): void
+    public function symptom_name_is_unique(): void
     {
-        $user = User::factory()->create();
-        $symptom = Symptom::factory()->create([
-            'user_id'        => $user->id,
-            'severity_level' => 7,
-            'recorded_at'    => now(),
-        ]);
+        $symptom = Symptom::factory()->create(['name' => 'migraine_unique']);
 
-        $this->assertGreaterThanOrEqual(1, $symptom->severity_level);
-        $this->assertLessThanOrEqual(10, $symptom->severity_level);
+        $this->expectException(\Illuminate\Database\QueryException::class);
+        Symptom::factory()->create(['name' => $symptom->name]);
     }
 
     #[Test]
-    public function symptoms_can_be_queried_by_user(): void
+    public function symptoms_can_be_queried_by_name(): void
     {
-        $userA = User::factory()->create();
-        $userB = User::factory()->create();
+        Symptom::factory()->create(['name' => 'headache_query']);
+        Symptom::factory()->create(['name' => 'fever_query']);
 
-        Symptom::factory()->count(4)->create(['user_id' => $userA->id]);
-        Symptom::factory()->count(2)->create(['user_id' => $userB->id]);
-
-        $this->assertEquals(4, Symptom::where('user_id', $userA->id)->count());
+        $this->assertEquals(1, Symptom::where('name', 'headache_query')->count());
     }
 }

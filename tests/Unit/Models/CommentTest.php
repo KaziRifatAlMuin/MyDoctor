@@ -8,12 +8,13 @@ use App\Models\User;
 use App\Models\Post;
 use App\Models\CommentLike;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 
 class CommentTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+#[Test]
     public function a_comment_belongs_to_a_user()
     {
         $user = User::factory()->create();
@@ -23,7 +24,7 @@ class CommentTest extends TestCase
         $this->assertEquals($user->id, $comment->user->id);
     }
 
-    /** @test */
+#[Test]
     public function a_comment_belongs_to_a_post()
     {
         $post = Post::factory()->create();
@@ -33,7 +34,7 @@ class CommentTest extends TestCase
         $this->assertEquals($post->id, $comment->post->id);
     }
 
-    /** @test */
+#[Test]
     public function a_comment_has_many_likes()
     {
         $comment = Comment::factory()->create();
@@ -43,7 +44,7 @@ class CommentTest extends TestCase
         $this->assertInstanceOf(CommentLike::class, $comment->likes->first());
     }
 
-    /** @test */
+#[Test]
     public function it_can_check_if_a_comment_is_liked_by_a_user()
     {
         $user = User::factory()->create();

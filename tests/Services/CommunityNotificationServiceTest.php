@@ -11,6 +11,7 @@ use App\Notifications\CommunityPushNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 
 class CommunityNotificationServiceTest extends TestCase
 {
@@ -43,7 +44,7 @@ class CommunityNotificationServiceTest extends TestCase
         ]);
     }
 
-    /** @test */
+#[Test]
     public function it_creates_notification_when_post_is_liked()
     {
         NotificationFacade::fake();
@@ -72,7 +73,7 @@ class CommunityNotificationServiceTest extends TestCase
         $this->assertEquals($expectedPreview, $notification->data['post_preview']);
     }
 
-    /** @test */
+#[Test]
     public function it_does_not_create_notification_when_user_likes_own_post()
     {
         $this->service->postLiked($this->post, $this->postOwner);
@@ -84,7 +85,7 @@ class CommunityNotificationServiceTest extends TestCase
         ]);
     }
 
-    /** @test */
+#[Test]
     public function it_creates_notification_when_comment_is_added()
     {
         NotificationFacade::fake();
@@ -114,7 +115,7 @@ class CommunityNotificationServiceTest extends TestCase
         $this->assertEquals($expectedPreview, $notification->data['comment_preview']);
     }
 
-    /** @test */
+#[Test]
     public function it_does_not_create_notification_when_user_comments_on_own_post()
     {
         $comment = Comment::factory()->create([
@@ -131,7 +132,7 @@ class CommunityNotificationServiceTest extends TestCase
         ]);
     }
 
-    /** @test */
+#[Test]
     public function it_truncates_long_post_preview_correctly()
     {
         $longPost = Post::factory()->create([
@@ -149,7 +150,7 @@ class CommunityNotificationServiceTest extends TestCase
         $this->assertEquals($expectedPreview, $notification->data['post_preview']);
     }
 
-    /** @test */
+#[Test]
     public function it_truncates_long_comment_preview_correctly()
     {
         $longComment = Comment::factory()->create([
@@ -168,7 +169,7 @@ class CommunityNotificationServiceTest extends TestCase
         $this->assertEquals($expectedPreview, $notification->data['comment_preview']);
     }
 
-    /** @test */
+#[Test]
     public function it_sends_push_notification_when_user_has_push_enabled()
     {
         NotificationFacade::fake();
@@ -192,7 +193,7 @@ class CommunityNotificationServiceTest extends TestCase
         );
     }
 
-    /** @test */
+#[Test]
     public function it_does_not_send_push_notification_when_user_has_push_disabled()
     {
         NotificationFacade::fake();
