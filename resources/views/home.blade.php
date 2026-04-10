@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Home - My Doctor')
+@section('title', __('ui.auto.Home'))
 
 @section('content')
 

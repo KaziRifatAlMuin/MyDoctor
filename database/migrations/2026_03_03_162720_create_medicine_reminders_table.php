@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('schedule_id')->constrained('medicine_schedules')->cascadeOnDelete();
             $table->dateTime('reminder_at');
-            $table->string('status')->default('pending');
+            $table->enum('status', ['pending', 'taken', 'missed'])->default('pending');
             $table->dateTime('taken_at')->nullable();
             $table->timestamps();
 

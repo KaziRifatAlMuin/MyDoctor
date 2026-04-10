@@ -7,12 +7,12 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Models\HealthMetric;
 use App\Models\Symptom;
+use App\Models\UserSymptom;
 use App\Models\Medicine;
 use App\Models\MedicineLog;
 use App\Models\Disease;
 use App\Models\UserDisease;
 use App\Models\Upload;
-use App\Models\Translation;
 
 class HealthController extends Controller
 {
@@ -23,19 +23,9 @@ class HealthController extends Controller
     {
         $user = Auth::user();
 
-        // Load translations from DB (falls back to config if table is empty)
-        $symptomsList  = Translation::allOfType(Translation::TYPE_SYMPTOM);  // ['English' => 'বাংলা', …]
-        $metricConfig  = config('health.metric_types'); // keyed array with en, bn, fields, unit
-        $diseasesBn    = Translation::allOfType(Translation::TYPE_DISEASE);   // ['English' => 'বাংলা', …]
-
-        // Enrich metric bn labels from DB translations
-        $metricBn = Translation::allOfType(Translation::TYPE_METRIC);
-        foreach ($metricConfig as $key => &$cfg) {
-            if (isset($metricBn[$key])) {
-                $cfg['bn'] = $metricBn[$key];
-            }
-        }
-        unset($cfg);
+        $symptomsList  = config('health.symptoms', []);
+        $metricConfig  = config('health.metric_types', []);
+        $diseasesBn    = [];
 
         // Health Metrics — latest 50, grouped by type
         $healthMetrics = HealthMetric::where('user_id', $user->id)
@@ -49,7 +39,8 @@ class HealthController extends Controller
         $latestMetrics = $healthMetrics->groupBy('metric_type')->map(fn($group) => $group->first());
 
         // Symptoms — latest 30
-        $symptoms = Symptom::where('user_id', $user->id)
+        $symptoms = UserSymptom::where('user_id', $user->id)
+            ->with('symptom')
             ->orderByDesc('recorded_at')
             ->limit(30)
             ->get();
@@ -159,7 +150,7 @@ class HealthController extends Controller
         // Redirect with fragment - to user show if admin is viewing a user, otherwise to health dashboard
         if ($request->input('user_id')) {
             // Admin is adding for a user
-            return redirect(route('users.show', $userId) . '#metrics')->with('success', 'Health metric recorded successfully.');
+            return redirect(route('admin.users.show', $userId) . '#metrics')->with('success', 'Health metric recorded successfully.');
         }
         return redirect(route('health') . '#metrics')->with('success', 'Health metric recorded successfully.');
     }
@@ -184,18 +175,24 @@ class HealthController extends Controller
             'note'           => 'nullable|string|max:1000',
         ]);
 
-        Symptom::create([
+        $symptom = Symptom::firstOrCreate([
+            'name' => trim((string) $request->symptom_name),
+        ]);
+
+        UserSymptom::create([
             'user_id'        => $userId,
-            'symptom_name'   => $request->symptom_name,
+            'symptom_id'     => $symptom->id,
             'severity_level' => $request->severity_level,
             'recorded_at'    => $request->recorded_at,
             'note'           => $request->note,
         ]);
 
+        $this->syncSymptomDiseaseLinks($userId, $symptom);
+
         // Redirect with fragment - to user show if admin is viewing a user, otherwise to health dashboard
         if ($request->input('user_id')) {
             // Admin is adding for a user
-            return redirect(route('users.show', $userId) . '#symptomsPane')->with('success', 'Symptom recorded successfully.');
+            return redirect(route('admin.users.show', $userId) . '#symptomsPane')->with('success', 'Symptom recorded successfully.');
         }
         return redirect(route('health') . '#symptomsPane')->with('success', 'Symptom recorded successfully.');
     }
@@ -235,7 +232,7 @@ class HealthController extends Controller
         // Redirect with fragment - to user show if admin is viewing a user, otherwise to health dashboard
         if ($request->input('user_id')) {
             // Admin is adding for a user
-            return redirect(route('users.show', $userId) . '#diseasesPane')->with('success', 'Disease record added successfully.');
+            return redirect(route('admin.users.show', $userId) . '#diseasesPane')->with('success', 'Disease record added successfully.');
         }
         return redirect(route('health') . '#diseasesPane')->with('success', 'Disease record added successfully.');
     }
@@ -282,7 +279,7 @@ class HealthController extends Controller
         if ($request->input('user_id')) {
             // Admin is adding for a user
             $fragment = $request->type === 'prescription' ? '#prescriptions' : '#reportsPane';
-            return redirect(route('users.show', $userId) . $fragment)->with('success', ucfirst($request->type) . ' uploaded successfully.');
+            return redirect(route('admin.users.show', $userId) . $fragment)->with('success', ucfirst($request->type) . ' uploaded successfully.');
         }
         $fragment = $request->type === 'prescription' ? '#prescriptions' : '#reportsPane';
         return redirect(route('health') . $fragment)->with('success', ucfirst($request->type) . ' uploaded successfully.');
@@ -322,13 +319,13 @@ class HealthController extends Controller
         $referer = $request->header('referer');
         if ($referer && str_contains($referer, '/user/')) {
             $userId = $request->input('user_id') ? (int)$request->input('user_id') : $healthMetric->user_id;
-            return redirect(route('users.show', $userId) . '#metrics')->with('success', 'Health metric updated successfully.');
+            return redirect(route('admin.users.show', $userId) . '#metrics')->with('success', 'Health metric updated successfully.');
         }
 
         return redirect(route('health') . '#metrics')->with('success', 'Health metric updated successfully.');
     }
 
-    public function updateSymptom(Request $request, Symptom $symptom)
+    public function updateSymptom(Request $request, UserSymptom $symptom)
     {
         $user = Auth::user();
         if (!$user || ($symptom->user_id !== $user->id && $user->role !== 'admin')) abort(403);
@@ -340,12 +337,23 @@ class HealthController extends Controller
             'note'           => 'nullable|string|max:1000',
         ]);
 
-        $symptom->update($request->only('symptom_name', 'severity_level', 'recorded_at', 'note'));
+        $catalogSymptom = Symptom::firstOrCreate([
+            'name' => trim((string) $request->symptom_name),
+        ]);
+
+        $symptom->update([
+            'symptom_id' => $catalogSymptom->id,
+            'severity_level' => $request->severity_level,
+            'recorded_at' => $request->recorded_at,
+            'note' => $request->note,
+        ]);
+
+        $this->syncSymptomDiseaseLinks($symptom->user_id, $catalogSymptom);
 
         $referer = $request->header('referer');
         if ($referer && str_contains($referer, '/user/')) {
             $userId = $request->input('user_id') ? (int)$request->input('user_id') : $symptom->user_id;
-            return redirect(route('users.show', $userId) . '#symptomsPane')->with('success', 'Symptom updated successfully.');
+            return redirect(route('admin.users.show', $userId) . '#symptomsPane')->with('success', 'Symptom updated successfully.');
         }
 
         return redirect(route('health') . '#symptomsPane')->with('success', 'Symptom updated successfully.');
@@ -367,7 +375,7 @@ class HealthController extends Controller
         $referer = $request->header('referer');
         if ($referer && str_contains($referer, '/user/')) {
             $userId = $request->input('user_id') ? (int)$request->input('user_id') : $userDisease->user_id;
-            return redirect(route('users.show', $userId) . '#diseasesPane')->with('success', 'Disease record updated successfully.');
+            return redirect(route('admin.users.show', $userId) . '#diseasesPane')->with('success', 'Disease record updated successfully.');
         }
 
         return redirect(route('health') . '#diseasesPane')->with('success', 'Disease record updated successfully.');
@@ -404,7 +412,7 @@ class HealthController extends Controller
         if ($referer && str_contains($referer, '/user/')) {
             $userId = $request->input('user_id') ? (int)$request->input('user_id') : $upload->user_id;
             $fragment = $upload->type === 'prescription' ? '#prescriptions' : '#reportsPane';
-            return redirect(route('users.show', $userId) . $fragment)->with('success', ucfirst($upload->type) . ' updated successfully.');
+            return redirect(route('admin.users.show', $userId) . $fragment)->with('success', ucfirst($upload->type) . ' updated successfully.');
         }
 
         return redirect(route('health') . ($upload->type === 'prescription' ? '#prescriptions' : '#reportsPane'))->with('success', ucfirst($request->type) . ' updated successfully.');
@@ -422,12 +430,12 @@ class HealthController extends Controller
         $healthMetric->delete();
         
         if ($user->role === 'admin') {
-            return redirect(route('users.show', $userId) . '#metrics')->with('success', 'Health metric deleted.');
+            return redirect(route('admin.users.show', $userId) . '#metrics')->with('success', 'Health metric deleted.');
         }
         return redirect(route('health') . '#metrics')->with('success', 'Health metric deleted.');
     }
 
-    public function destroySymptom(Symptom $symptom)
+    public function destroySymptom(UserSymptom $symptom)
     {
         $user = Auth::user();
         if (!$user || ($symptom->user_id !== $user->id && $user->role !== 'admin')) abort(403);
@@ -435,7 +443,7 @@ class HealthController extends Controller
         $symptom->delete();
         
         if ($user->role === 'admin') {
-            return redirect(route('users.show', $userId) . '#symptomsPane')->with('success', 'Symptom record deleted.');
+            return redirect(route('admin.users.show', $userId) . '#symptomsPane')->with('success', 'Symptom record deleted.');
         }
         return redirect(route('health') . '#symptomsPane')->with('success', 'Symptom record deleted.');
     }
@@ -448,7 +456,7 @@ class HealthController extends Controller
         $userDisease->delete();
         
         if ($user->role === 'admin') {
-            return redirect(route('users.show', $userId) . '#diseasesPane')->with('success', 'Disease record removed.');
+            return redirect(route('admin.users.show', $userId) . '#diseasesPane')->with('success', 'Disease record removed.');
         }
         return redirect(route('health') . '#diseasesPane')->with('success', 'Disease record removed.');
     }
@@ -467,8 +475,21 @@ class HealthController extends Controller
 
         if ($user->role === 'admin') {
             $fragment = $upload->type === 'prescription' ? '#prescriptions' : '#reportsPane';
-            return redirect(route('users.show', $userId) . $fragment)->with('success', 'Upload deleted successfully.');
+            return redirect(route('admin.users.show', $userId) . $fragment)->with('success', 'Upload deleted successfully.');
         }
         return redirect(route('health') . ($upload->type === 'prescription' ? '#prescriptions' : '#reportsPane'))->with('success', 'Upload deleted successfully.');
+    }
+
+    private function syncSymptomDiseaseLinks(int $userId, Symptom $symptom): void
+    {
+        $diseaseIds = UserDisease::where('user_id', $userId)
+            ->pluck('disease_id')
+            ->all();
+
+        if (empty($diseaseIds)) {
+            return;
+        }
+
+        $symptom->diseases()->syncWithoutDetaching($diseaseIds);
     }
 }

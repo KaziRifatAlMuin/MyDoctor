@@ -7,9 +7,15 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="vapid-public-key" content="{{ env('VAPID_PUBLIC_KEY') }}">
-    <link rel="icon" type="image/png" href="{{ asset('images/logos/applogo.jpg') }}">
-    <link rel="shortcut icon" href="{{ asset('images/logos/applogo.jpg') }}" type="image/x-icon">
-    <title>@yield('title', 'My Doctor') - Healthcare Platform</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/logos/applogo.png') }}">
+    <link rel="shortcut icon" href="{{ asset('images/logos/applogo.png') }}" type="image/x-icon">
+    <title>
+        @hasSection('title')
+            @yield('title') - {{ __('ui.meta.platform') }}
+        @else
+            {{ __('ui.meta.app_name') }} - {{ __('ui.meta.platform') }}
+        @endif
+    </title>
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -35,6 +41,15 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow-x: hidden;
             background-color: #ffffff;
+            padding-top: 84px;
+        }
+
+        .bn-label {
+            display: none !important;
+        }
+
+        html[lang^='bn'] .bn-label {
+            display: inline !important;
         }
 
         /* Banner Styles */
@@ -53,51 +68,36 @@
         .page-nav-bar {
             position: relative;
             width: 100%;
+            background: transparent;
+            border-bottom: none;
+            box-shadow: none;
+        }
+
+        .page-nav-bar .banner-nav {
+            padding: 12px 40px;
+        }
+
+        /* Dark text links on white navbar */
+        /* Navbar Styles - Positioned absolutely on banner */
+        .banner-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 12px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 1001;
             background: #ffffff;
             border-bottom: 1px solid #e2e8f0;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         }
 
-        .page-nav-bar .banner-nav {
-            position: relative;
-            top: auto;
-            left: auto;
-            right: auto;
-            padding: 14px 40px;
-        }
-
-        /* Dark text links on white navbar */
-        .page-nav-bar .banner-nav-link {
-            color: #2d3748;
-            text-shadow: none;
-        }
-
-        .page-nav-bar .banner-nav-link:hover {
-            color: #667eea;
-            border-bottom-color: #667eea;
-        }
-
-        .page-nav-bar .banner-nav-link.active {
-            color: #667eea;
-            border-bottom-color: #667eea;
-        }
-
-        /* User circle on white bar */
-        .page-nav-bar .user-circle {
-            border-color: #667eea;
-        }
-
-        /* Navbar Styles - Positioned absolutely on banner */
-        .banner-nav {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            padding: 20px 40px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            z-index: 100;
+        .nav-theme-admin .banner-nav {
+            background: linear-gradient(135deg, #5b2b88 0%, #7b3fb4 100%);
+            border-bottom: none;
+            box-shadow: 0 2px 10px rgba(91, 43, 136, 0.35);
         }
 
         /* Logo Styles */
@@ -126,22 +126,31 @@
 
         .banner-nav-link {
             text-decoration: none;
-            color: white;
+            color: #2d3748;
             font-weight: 500;
-            font-size: 1.1rem;
+            font-size: 0.9rem;
             padding: 0.5rem 0;
             transition: all 0.3s ease;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         .banner-nav-link:hover {
-            color: #ffd700;
-            border-bottom: 2px solid #ffd700;
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
         }
 
         .banner-nav-link.active {
-            color: #ffd700;
-            border-bottom: 2px solid #ffd700;
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .nav-theme-admin .banner-nav-link {
+            color: #ffffff;
+        }
+
+        .nav-theme-admin .banner-nav-link:hover,
+        .nav-theme-admin .banner-nav-link.active {
+            color: #ffffff;
+            border-bottom-color: #ffffff;
         }
 
         /* User Circle Menu */
@@ -150,11 +159,11 @@
         }
 
         .user-circle {
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             cursor: pointer;
-            border: 3px solid white;
+            border: 2px solid #667eea;
             overflow: hidden;
             transition: transform 0.3s ease;
             background-color: #fff;
@@ -162,7 +171,7 @@
 
         .user-circle:hover {
             transform: scale(1.1);
-            border-color: #ffd700;
+            border-color: #667eea;
         }
 
         .user-circle img {
@@ -171,12 +180,14 @@
             object-fit: cover;
         }
 
-        .user-circle i {
-            font-size: 30px;
+        .user-circle span {
+            font-size: 16px;
+            font-weight: 700;
             color: #667eea;
-            line-height: 50px;
+            line-height: 40px;
             text-align: center;
             width: 100%;
+            display: block;
         }
 
         /* Dropdown Menu */
@@ -249,11 +260,6 @@
             padding-left: 25px;
         }
 
-        .dropdown-item-custom i {
-            width: 20px;
-            color: #667eea;
-        }
-
         .divider {
             height: 1px;
             background-color: #e2e8f0;
@@ -272,22 +278,75 @@
 
         /* ========== UPDATED NOTIFICATION BELL STYLES ========== */
         /* Notification Bell - Yellow normally, Green badge */
-        .notification-bell {
+        .notification-bell,
+        .mailbox-bell {
             position: relative;
-            margin-right: 15px;
+            margin-right: 0;
             cursor: pointer;
             transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            color: #374151;
+            background: transparent;
         }
 
-        .notification-bell i {
-            font-size: 1.4rem;
-            color: #ffd700;
-            transition: all 0.3s ease;
+        .notification-bell i,
+        .mailbox-bell i {
+            font-size: 1.15rem;
+            line-height: 1;
         }
 
-        .notification-bell:hover i {
-            transform: scale(1.1);
-            color: #ffc107;
+        .language-toggle-switch {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 76px;
+            height: 30px;
+            padding: 0 8px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            color: #374151;
+            background: #ffffff;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-decoration: none;
+            overflow: hidden;
+        }
+
+        .language-toggle-switch .toggle-label {
+            position: relative;
+            z-index: 2;
+            color: #6b7280;
+            transition: color 0.25s ease;
+            font-size: 0.72rem;
+            line-height: 1;
+        }
+
+        .language-toggle-switch .toggle-knob {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 34px;
+            height: 22px;
+            border-radius: 6px;
+            background: #111827;
+            transition: transform 0.25s ease;
+            z-index: 1;
+        }
+
+        .language-toggle-switch.is-bn .toggle-knob {
+            transform: translateX(36px);
+        }
+
+        .language-toggle-switch.is-en .toggle-label-en,
+        .language-toggle-switch.is-bn .toggle-label-bn {
+            color: #ffffff;
         }
 
         .notification-bell .badge {
@@ -307,28 +366,6 @@
             animation: popIn 0.3s ease;
         }
 
-        .mailbox-bell {
-            position: relative;
-            margin-right: 2px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .mailbox-bell i {
-            font-size: 1.35rem;
-            color: #ffd700;
-            transition: all 0.3s ease;
-        }
-
-        .mailbox-bell:hover i {
-            transform: scale(1.1);
-            color: #ffc107;
-        }
-
         .mailbox-bell .badge {
             position: absolute;
             top: -5px;
@@ -343,6 +380,41 @@
             text-align: center;
             border: 2px solid white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .nav-theme-admin .notification-bell,
+        .nav-theme-admin .mailbox-bell {
+            color: #ffffff;
+            background: transparent;
+        }
+
+        .nav-theme-admin .language-toggle-switch {
+            background: rgba(255, 255, 255, 0.14);
+            color: #ffffff;
+            border-color: rgba(255, 255, 255, 0.35);
+        }
+
+        .nav-theme-admin .language-toggle-switch .toggle-knob {
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .nav-theme-admin .language-toggle-switch .toggle-label {
+            color: rgba(255, 255, 255, 0.78);
+        }
+
+        .nav-theme-admin .language-toggle-switch.is-en .toggle-label-en,
+        .nav-theme-admin .language-toggle-switch.is-bn .toggle-label-bn {
+            color: #111827;
+        }
+
+        .notification-bell:hover,
+        .mailbox-bell:hover {
+            transform: translateY(-1px);
+            background: rgba(102, 126, 234, 0.08);
+        }
+
+        .language-toggle-switch:hover {
+            transform: translateY(-1px);
         }
 
         @keyframes popIn {
@@ -367,6 +439,10 @@
         }
 
         .notification-bell.shake i {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .notification-bell.shake {
             animation: shake 0.5s ease-in-out;
         }
 
@@ -513,7 +589,21 @@
         .nav-right {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 10px;
+        }
+
+        .nav-user-name {
+            font-size: 0.84rem;
+            font-weight: 600;
+            color: #1f2937;
+            max-width: 160px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .nav-theme-admin .nav-user-name {
+            color: #ffffff;
         }
 
         /* Banner Content */
@@ -1128,6 +1218,10 @@
             .banner-nav {
                 padding: 15px;
                 flex-wrap: wrap;
+            }
+
+            body {
+                padding-top: 112px;
             }
 
             .banner-nav-menu {
@@ -1972,12 +2066,16 @@
 <body>
     <div class="app-root">
         <!-- Banner / Navbar -->
-        <div class="{{ request()->routeIs('home') ? 'banner' : 'page-nav-bar' }}">
+        @php
+            $isAdminNav = auth()->check() && auth()->user()->isAdmin();
+            $navThemeClass = $isAdminNav ? 'nav-theme-admin' : 'nav-theme-regular';
+        @endphp
+        <div class="{{ request()->routeIs('home') ? 'banner' : 'page-nav-bar' }} {{ $navThemeClass }}">
             <!-- Navigation on Banner -->
             <nav class="banner-nav">
                 <!-- Logo -->
                 <div class="banner-logo">
-                    <img src="{{ asset('images/logos/applogo.jpg') }}" alt="My Doctor Logo">
+                    <img src="{{ asset('images/logos/applogo.png') }}" alt="My Doctor Logo">
                 </div>
 
                 <!-- Navigation Menu -->
@@ -1985,45 +2083,44 @@
                     <li class="banner-nav-item">
                         <a href="{{ route('home') }}"
                             class="banner-nav-link {{ request()->routeIs('home') ? 'active' : '' }}">
-                            <i class="fas fa-home me-1"></i> Home
+                            {{ __('ui.nav.home') }}
                         </a>
                     </li>
                     @auth
                         <li class="banner-nav-item">
                             <a href="{{ route('dashboard') }}"
                                 class="banner-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                                <i class="fas fa-tachometer-alt me-1"></i> Dashboard
-                            </a>
-                        </li>
-                        <li class="banner-nav-item">
-                            <a href="{{ route('suggestions') }}"
-                                class="banner-nav-link {{ request()->routeIs('suggestions*') ? 'active' : '' }}">
-                                <i class="fas fa-lightbulb me-1"></i> Suggestions
+                                {{ __('ui.nav.dashboard') }}
                             </a>
                         </li>
                     @endauth
                     <li class="banner-nav-item">
                         <a href="{{ route('medicine.index') }}"
                             class="banner-nav-link {{ request()->routeIs('medicine*') ? 'active' : '' }}">
-                            <i class="fas fa-pills me-1"></i> Medicine
+                            {{ __('ui.nav.medicine') }}
                         </a>
                     </li>
                     <li class="banner-nav-item">
                         <a href="{{ route('health') }}"
                             class="banner-nav-link {{ request()->routeIs('health*') ? 'active' : '' }}">
-                            <i class="fas fa-heartbeat me-1"></i> Health
+                            {{ __('ui.nav.health') }}
                         </a>
                     </li>
                     <li class="banner-nav-item">
                         <a href="{{ route('community.landing') }}"
                             class="banner-nav-link {{ request()->routeIs('community*') ? 'active' : '' }}">
-                            <i class="fas fa-users me-1"></i> Community
+                            {{ __('ui.nav.community') }}
+                        </a>
+                    </li>
+                    <li class="banner-nav-item">
+                        <a href="{{ route('suggestions') }}" class="banner-nav-link {{ request()->routeIs('suggestions') ? 'active' : '' }}">
+                            {{ __('ui.nav.suggestions') }}
                         </a>
                     </li>
                     <li class="banner-nav-item">
                         <a href="{{ route('help') }}"
                             class="banner-nav-link {{ request()->routeIs('help*') ? 'active' : '' }}">
-                            <i class="fas fa-question-circle me-1"></i> Help
+                            {{ __('ui.nav.help') }}
                         </a>
                     </li>
                 </ul>
@@ -2038,37 +2135,58 @@
                                 ->count();
                         @endphp
 
-                        <!-- Mailbox icon -->
-                        <a href="{{ route('profile.mailbox') }}" class="mailbox-bell" id="mailboxBell" title="Mailbox">
+                        <a href="{{ route('language.switch', ['locale' => app()->getLocale() === 'en' ? 'bn' : 'en']) }}"
+                           class="language-toggle-switch {{ app()->getLocale() === 'bn' ? 'is-bn' : 'is-en' }}"
+                           title="{{ __('ui.nav.switch_language') }}"
+                           aria-label="{{ __('ui.nav.switch_language') }}">
+                            <span class="toggle-label toggle-label-en">EN</span>
+                            <span class="toggle-label toggle-label-bn">BN</span>
+                            <span class="toggle-knob" aria-hidden="true"></span>
+                        </a>
+
+                        <!-- Mailbox -->
+                        <a href="{{ route('profile.mailbox') }}" class="mailbox-bell" id="mailboxBell" title="{{ __('ui.nav.mailbox') }}">
                             <i class="fas fa-envelope"></i>
                             <span class="badge" id="mailboxCount" style="display: {{ $unreadMailCount > 0 ? 'inline-block' : 'none' }};">
                                 {{ $unreadMailCount }}
                             </span>
                         </a>
 
-                        <!-- Notification Bell - Yellow with Green badge -->
+                        <!-- Notifications -->
                         <div class="notification-bell" id="notificationBell" onclick="toggleNotificationDropdown()">
                             <i class="fas fa-bell"></i>
                             <span class="badge" id="notificationCount" style="display: none;">0</span>
                         </div>
 
+                        <span class="nav-user-name">{{ auth()->user()->name }}</span>
+
                         <!-- Notification Dropdown -->
                         <div class="notification-dropdown" id="notificationDropdown">
                             <div class="notification-header">
-                                <h6>Notifications</h6>
-                                <button onclick="markAllNotificationsRead()">Mark all as read</button>
+                                <h6>{{ __('ui.nav.notifications') }}</h6>
+                                <button onclick="markAllNotificationsRead()">{{ __('ui.nav.mark_all_read') }}</button>
                             </div>
                             <div class="notification-list" id="notificationList">
                                 <div class="notification-empty">
-                                    <i class="fas fa-bell-slash"></i>
-                                    <p>No notifications yet</p>
+                                    <p>{{ __('ui.nav.no_notifications') }}</p>
                                 </div>
                             </div>
                             <div class="notification-footer">
-                                <a href="{{ route('notifications.index') }}">View all notifications</a>
+                                <a href="{{ route('notifications.index') }}">{{ __('ui.nav.view_all_notifications') }}</a>
                             </div>
                         </div>
                     @endauth
+
+                    @guest
+                        <a href="{{ route('language.switch', ['locale' => app()->getLocale() === 'en' ? 'bn' : 'en']) }}"
+                           class="language-toggle-switch {{ app()->getLocale() === 'bn' ? 'is-bn' : 'is-en' }}"
+                           title="{{ __('ui.nav.switch_language') }}"
+                           aria-label="{{ __('ui.nav.switch_language') }}">
+                            <span class="toggle-label toggle-label-en">EN</span>
+                            <span class="toggle-label toggle-label-bn">BN</span>
+                            <span class="toggle-knob" aria-hidden="true"></span>
+                        </a>
+                    @endguest
 
                     <!-- User Circle Menu -->
                     <div class="user-menu" id="userMenu">
@@ -2078,10 +2196,10 @@
                                     <img src="{{ asset('storage/' . auth()->user()->picture) }}"
                                         alt="{{ auth()->user()->name }}">
                                 @else
-                                    <i class="fas fa-user-circle"></i>
+                                    <span>{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
                                 @endif
                             @else
-                                <i class="fas fa-user-circle"></i>
+                                <span>G</span>
                             @endauth
                         </div>
 
@@ -2094,52 +2212,32 @@
                                 </div>
 
                                 <a href="{{ route('dashboard') }}" class="dropdown-item-custom">
-                                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                                    <i class="fas fa-tachometer-alt me-2"></i>{{ __('ui.nav.dashboard') }}
                                 </a>
 
                                 <a href="{{ route('profile') }}" class="dropdown-item-custom">
-                                    <i class="fas fa-user"></i> Profile
+                                    <i class="fas fa-user me-2"></i>{{ __('ui.menu.profile') }}
                                 </a>
 
                                 <a href="{{ route('notifications.index') }}" class="dropdown-item-custom" id="notification-link">
-                                    <i class="fas fa-bell"></i> Notifications
+                                    <i class="fas fa-bell me-2"></i>{{ __('ui.nav.notifications') }}
                                     <span class="notification-badge" id="notificationCountBadge" style="display: none;">0</span>
                                 </a>
 
                                 <a href="{{ route('profile.mailbox') }}" class="dropdown-item-custom">
-                                    <i class="fas fa-envelope"></i> Mailbox
+                                    <i class="fas fa-envelope me-2"></i>{{ __('ui.nav.mailbox') }}
                                 </a>
 
-                                <a href="{{ route('suggestions') }}" class="dropdown-item-custom">
-                                    <i class="fas fa-lightbulb"></i> Suggestions
-                                </a>
-
-                                <!-- Notification Quick Toggles -->
                                 <div class="divider"></div>
-                                <div class="px-3 py-2">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <span><i class="fas fa-envelope me-2"></i>Email Alerts</span>
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" 
-                                                   onchange="toggleEmailQuick()" 
-                                                   {{ auth()->user()->email_notifications ? 'checked' : '' }}>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span><i class="fas fa-bell me-2"></i>Push Alerts</span>
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" 
-                                                   onchange="togglePushQuick()" 
-                                                   {{ auth()->user()->push_notifications ? 'checked' : '' }}>
-                                        </div>
-                                    </div>
-                                </div>
+                                <a href="{{ route('profile.setting') }}" class="dropdown-item-custom">
+                                    <i class="fas fa-cog me-2"></i>{{ __('ui.menu.settings') }}
+                                </a>
 
                                 <!-- Admin Dashboard Link -->
                                 @if (auth()->user()->isAdmin())
                                     <div class="divider"></div>
                                     <a href="{{ route('admin.dashboard') }}" class="dropdown-item-custom">
-                                        <i class="fas fa-shield-alt"></i> Admin Dashboard
+                                        <i class="fas fa-user-shield me-2"></i>{{ __('ui.menu.admin_dashboard') }}
                                     </a>
                                 @endif
 
@@ -2148,17 +2246,17 @@
                                     @csrf
                                     <button type="submit" class="dropdown-item-custom"
                                         style="width: 100%; border: none; background: none; cursor: pointer; color: #dc3545;">
-                                        <i class="fas fa-sign-out-alt"></i> Logout
+                                        <i class="fas fa-sign-out-alt me-2"></i>{{ __('ui.menu.logout') }}
                                     </button>
                                 </form>
                             @else
                                 <!-- GUEST USER MENU -->
                                 <a href="{{ route('login') }}" class="dropdown-item-custom">
-                                    <i class="fas fa-sign-in-alt"></i> Login
+                                    <i class="fas fa-sign-in-alt me-2"></i>{{ __('ui.menu.login') }}
                                 </a>
 
                                 <a href="{{ route('register') }}" class="dropdown-item-custom">
-                                    <i class="fas fa-user-plus"></i> Register
+                                    <i class="fas fa-user-plus me-2"></i>{{ __('ui.menu.register') }}
                                 </a>
                             @endauth
                         </div>
@@ -2275,10 +2373,7 @@
                 AI-powered health information - consult a doctor for medical advice
             </div>
 
-            <div class="chatbot-settings">
-                <input type="checkbox" id="chatbotPromptToggle" checked>
-                <label for="chatbotPromptToggle">Bubble reminders</label>
-            </div>
+            <!-- Chatbot settings moved to profile page (cookie-controlled) -->
 
             <div class="chatbot-messages" id="chatMessages">
                 <div style="text-align: center; color: #718096; padding: 20px;">
@@ -2439,7 +2534,7 @@
                 <!-- About Section -->
                 <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
                     <div class="footer-logo mb-3">
-                        <img src="{{ asset('images/logos/applogo.jpg') }}" alt="My Doctor" height="40">
+                        <img src="{{ asset('images/logos/applogo.png') }}" alt="My Doctor" height="40">
                         <span class="fw-bold text-white ms-2">My Doctor</span>
                     </div>
                     <p class="footer-text">
@@ -2999,9 +3094,87 @@ window.clearModalCommentFile = function(postId) {
                         button.classList.remove("liked");
                         icon.style.color = "inherit";
                     }
+
+                    if (!data.liked) {
+                        const starButtons = document.querySelectorAll(`[id="star-btn-${postId}"]`);
+                        starButtons.forEach((starBtn) => {
+                            const starIcon = starBtn.querySelector('i');
+                            starBtn.classList.remove('starred');
+                            if (starIcon) {
+                                starIcon.classList.remove('fas', 'text-warning');
+                                starIcon.classList.add('far');
+                            }
+                        });
+                    }
                 }
             } catch (err) {
                 console.error("Like error:", err);
+            }
+        };
+
+        window.toggleStar = async function(postId, button) {
+            if (!button) return;
+
+            try {
+                const response = await fetch(`/community/posts/${postId}/star`, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const starButtons = document.querySelectorAll(`[id="star-btn-${postId}"]`);
+                    starButtons.forEach((starButton) => {
+                        const starIcon = starButton.querySelector('i');
+                        if (data.starred) {
+                            starButton.classList.add('starred');
+                            if (starIcon) {
+                                starIcon.classList.remove('far');
+                                starIcon.classList.add('fas', 'text-warning');
+                            }
+                        } else {
+                            starButton.classList.remove('starred');
+                            if (starIcon) {
+                                starIcon.classList.remove('fas', 'text-warning');
+                                starIcon.classList.add('far');
+                            }
+                        }
+                    });
+
+                    if (data.liked) {
+                        const likeButtons = document.querySelectorAll(`[id="like-btn-${postId}"]`);
+                        likeButtons.forEach((likeBtn) => {
+                            const likeIcon = likeBtn.querySelector('i');
+                            const likeCount = likeBtn.querySelector('.like-count');
+
+                            likeBtn.classList.add('liked');
+                            if (likeIcon) {
+                                likeIcon.classList.remove('far');
+                                likeIcon.classList.add('fas');
+                                likeIcon.style.color = '#dc3545';
+                            }
+                            if (likeCount && typeof data.count !== 'undefined') {
+                                likeCount.textContent = data.count;
+                            }
+                        });
+                    }
+
+                    if (typeof window.showToast === 'function' && data.message) {
+                        window.showToast(data.message, 'success');
+                    }
+                } else if (typeof window.showToast === 'function') {
+                    window.showToast(data.message || 'Unable to star post', 'error');
+                }
+            } catch (err) {
+                console.error("Star error:", err);
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Unable to star post', 'error');
+                }
             }
         };
 
@@ -3859,89 +4032,67 @@ window.openVideoModal = function(type, source, isReel = false) {
         // Chatbot variables
         let isTyping = false;
         let conversationHistory = [];
-        let chatbotPromptInterval;
         let chatbotPromptTimeout;
-        const chatbotPromptStorageKey = 'chatbotPromptEnabled';
-        let chatbotPromptEnabled = true;
-        let chatbotAudioContext = null;
+
+        // Cookie helpers
+        function setCookie(name, value, days) {
+            let expires = "";
+            if (days) {
+                const date = new Date();
+                date.setTime(date.getTime() + (days*24*60*60*1000));
+                expires = "; expires=" + date.toUTCString();
+            }
+            document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+        }
+
+        function getCookie(name) {
+            const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+            return v ? v.pop() : null;
+        }
+
+        // Show or hide chatbot icon based on cookie
+        function updateChatbotVisibility(enabled) {
+            const chatbotIcon = document.getElementById('chatbotIcon');
+            if (!chatbotIcon) return;
+            if (enabled) {
+                chatbotIcon.style.display = '';
+                // trigger prompt cycle when enabled
+                startChatbotPromptCycle();
+            } else {
+                chatbotIcon.style.display = 'none';
+                chatbotIcon.classList.remove('glow-pulse', 'show-tooltip');
+                if (chatbotPromptTimeout) {
+                    clearTimeout(chatbotPromptTimeout);
+                }
+            }
+        }
 
         function initializeChatbotPromptSetting() {
-            const saved = localStorage.getItem(chatbotPromptStorageKey);
-            chatbotPromptEnabled = saved === null ? true : saved === 'true';
+            const saved = getCookie('chatbot_bubble_enabled');
+            const enabled = saved === null ? '1' : saved; // default enabled
 
-            const toggle = document.getElementById('chatbotPromptToggle');
-            if (toggle) {
-                toggle.checked = chatbotPromptEnabled;
-                toggle.addEventListener('change', function() {
-                    chatbotPromptEnabled = this.checked;
-                    localStorage.setItem(chatbotPromptStorageKey, String(chatbotPromptEnabled));
-
-                    const chatbotIcon = document.getElementById('chatbotIcon');
-                    if (chatbotIcon && !chatbotPromptEnabled) {
-                        chatbotIcon.classList.remove('glow-pulse', 'show-tooltip');
-                    }
-
-                    startChatbotPromptCycle();
-                });
-            }
-        }
-
-        function unlockChatbotAudio() {
-            if (!chatbotAudioContext && window.AudioContext) {
-                chatbotAudioContext = new AudioContext();
-            }
-
-            if (chatbotAudioContext && chatbotAudioContext.state === 'suspended') {
-                chatbotAudioContext.resume().catch(() => {});
-            }
-        }
-
-        function playChatbotPromptSound() {
-            if (!chatbotPromptEnabled || !window.AudioContext) return;
-
-            if (!chatbotAudioContext) {
-                chatbotAudioContext = new AudioContext();
-            }
-
-            if (chatbotAudioContext.state !== 'running') {
-                return;
-            }
-
-            const oscillator = chatbotAudioContext.createOscillator();
-            const gainNode = chatbotAudioContext.createGain();
-
-            oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(880, chatbotAudioContext.currentTime);
-            gainNode.gain.setValueAtTime(0.0001, chatbotAudioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.05, chatbotAudioContext.currentTime + 0.02);
-            gainNode.gain.exponentialRampToValueAtTime(0.0001, chatbotAudioContext.currentTime + 0.18);
-
-            oscillator.connect(gainNode);
-            gainNode.connect(chatbotAudioContext.destination);
-            oscillator.start();
-            oscillator.stop(chatbotAudioContext.currentTime + 0.2);
+            // Ensure the floating icon visibility matches cookie
+            updateChatbotVisibility(enabled === '1');
         }
 
         function startChatbotPromptCycle() {
             const chatbotIcon = document.getElementById('chatbotIcon');
             if (!chatbotIcon) return;
 
-            if (chatbotPromptInterval) {
-                clearInterval(chatbotPromptInterval);
-            }
-
             if (chatbotPromptTimeout) {
                 clearTimeout(chatbotPromptTimeout);
             }
 
-            if (!chatbotPromptEnabled) {
+            // If icon is hidden via cookie, do nothing
+            const saved = getCookie('chatbot_bubble_enabled');
+            const enabled = saved === null ? '1' : saved;
+            if (enabled !== '1') {
                 chatbotIcon.classList.remove('glow-pulse', 'show-tooltip');
                 return;
             }
 
             const showPrompt = () => {
                 chatbotIcon.classList.add('glow-pulse', 'show-tooltip');
-                playChatbotPromptSound();
 
                 if (chatbotPromptTimeout) {
                     clearTimeout(chatbotPromptTimeout);
@@ -3952,10 +4103,8 @@ window.openVideoModal = function(type, source, isReel = false) {
                 }, 10000);
             };
 
-            // Trigger immediately on load/refresh, then continue every 20 seconds.
+            // Trigger immediately once on page load/refresh.
             showPrompt();
-
-            chatbotPromptInterval = setInterval(showPrompt, 20000);
         }
 
         // Send message to chatbot
@@ -4095,10 +4244,143 @@ window.openVideoModal = function(type, source, isReel = false) {
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            initializeChatbotPromptSetting();
+            const appLocale = document.documentElement.lang?.startsWith('bn') ? 'bn' : 'en';
+            const autoTranslations = @json(app()->getLocale() === 'bn' ? __('ui.auto') : []);
 
-            document.addEventListener('click', unlockChatbotAudio, { once: true });
-            document.addEventListener('keydown', unlockChatbotAudio, { once: true });
+            const splitMixedLabel = (value) => {
+                if (!value || typeof value !== 'string') return null;
+                const match = value.match(/^(.*?)\s*\(([\u0980-\u09FF][^)]*)\)\s*$/u);
+                if (!match) return null;
+                return {
+                    en: match[1].trim(),
+                    bn: match[2].trim(),
+                };
+            };
+
+            const applyLocaleToMixedContent = (root = document.body) => {
+                const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+                    acceptNode(node) {
+                        if (!node || !node.nodeValue || !node.nodeValue.trim()) {
+                            return NodeFilter.FILTER_REJECT;
+                        }
+                        const parentTag = node.parentElement?.tagName;
+                        if (parentTag && ['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEXTAREA'].includes(parentTag)) {
+                            return NodeFilter.FILTER_REJECT;
+                        }
+                        return NodeFilter.FILTER_ACCEPT;
+                    }
+                });
+
+                const textNodes = [];
+                while (walker.nextNode()) {
+                    textNodes.push(walker.currentNode);
+                }
+
+                textNodes.forEach((node) => {
+                    const original = node.nodeValue;
+                    const parsed = splitMixedLabel(original.trim());
+                    if (!parsed) return;
+
+                    const localized = appLocale === 'bn' ? parsed.bn : parsed.en;
+                    const leading = original.match(/^\s*/)?.[0] ?? '';
+                    const trailing = original.match(/\s*$/)?.[0] ?? '';
+                    node.nodeValue = `${leading}${localized}${trailing}`;
+                });
+
+                root.querySelectorAll('input[placeholder], textarea[placeholder], [title]').forEach((element) => {
+                    if (element.hasAttribute('placeholder')) {
+                        const placeholder = element.getAttribute('placeholder') || '';
+                        const parsed = splitMixedLabel(placeholder);
+                        if (parsed) {
+                            element.setAttribute('placeholder', appLocale === 'bn' ? parsed.bn : parsed.en);
+                        }
+                    }
+
+                    if (element.hasAttribute('title')) {
+                        const title = element.getAttribute('title') || '';
+                        const parsed = splitMixedLabel(title);
+                        if (parsed) {
+                            element.setAttribute('title', appLocale === 'bn' ? parsed.bn : parsed.en);
+                        }
+                    }
+                });
+            };
+
+            const applyExactTextTranslations = (root = document.body) => {
+                if (appLocale !== 'bn' || !autoTranslations || typeof autoTranslations !== 'object') {
+                    return;
+                }
+
+                const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+                    acceptNode(node) {
+                        if (!node || !node.nodeValue || !node.nodeValue.trim()) {
+                            return NodeFilter.FILTER_REJECT;
+                        }
+                        const parentEl = node.parentElement;
+                        const parentTag = parentEl?.tagName;
+                        if (parentTag && ['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEXTAREA'].includes(parentTag)) {
+                            return NodeFilter.FILTER_REJECT;
+                        }
+
+                        // Avoid touching obvious identity content.
+                        if (parentEl && (parentEl.classList.contains('nav-user-name') || parentEl.closest('.dropdown-header'))) {
+                            return NodeFilter.FILTER_REJECT;
+                        }
+
+                        return NodeFilter.FILTER_ACCEPT;
+                    }
+                });
+
+                const textNodes = [];
+                while (walker.nextNode()) {
+                    textNodes.push(walker.currentNode);
+                }
+
+                textNodes.forEach((node) => {
+                    const original = node.nodeValue;
+                    const trimmed = original.trim();
+                    if (!trimmed) return;
+
+                    const translated = autoTranslations[trimmed];
+                    if (!translated) return;
+
+                    const leading = original.match(/^\s*/)?.[0] ?? '';
+                    const trailing = original.match(/\s*$/)?.[0] ?? '';
+                    node.nodeValue = `${leading}${translated}${trailing}`;
+                });
+
+                root.querySelectorAll('input[placeholder], textarea[placeholder], [title]').forEach((element) => {
+                    if (element.hasAttribute('placeholder')) {
+                        const placeholder = (element.getAttribute('placeholder') || '').trim();
+                        if (autoTranslations[placeholder]) {
+                            element.setAttribute('placeholder', autoTranslations[placeholder]);
+                        }
+                    }
+
+                    if (element.hasAttribute('title')) {
+                        const title = (element.getAttribute('title') || '').trim();
+                        if (autoTranslations[title]) {
+                            element.setAttribute('title', autoTranslations[title]);
+                        }
+                    }
+                });
+
+                const currentTitle = document.title || '';
+                if (currentTitle) {
+                    if (autoTranslations[currentTitle]) {
+                        document.title = autoTranslations[currentTitle];
+                    } else if (currentTitle.includes(' - ')) {
+                        const parts = currentTitle.split(' - ');
+                        const translatedParts = parts.map((part) => autoTranslations[part.trim()] || part.trim());
+                        document.title = translatedParts.join(' - ');
+                    }
+                }
+            };
+
+            applyLocaleToMixedContent();
+            applyExactTextTranslations();
+
+            initializeChatbotPromptSetting();
 
             startChatbotPromptCycle();
 
@@ -4255,7 +4537,7 @@ window.openVideoModal = function(type, source, isReel = false) {
             }
         };
 
-        window.openEditDisease = function(id, diseaseId, diseaseName, diseaseBn, status, diagnosedAt, notes) {
+        window.openEditDisease = function(id, diseaseId, diseaseName, status, diagnosedAt, notes) {
             try {
                 const diseaseLabel = document.getElementById('diseaseModalLabel');
                 if (diseaseLabel) diseaseLabel.textContent = 'Edit Disease Record';
@@ -4276,7 +4558,7 @@ window.openVideoModal = function(type, source, isReel = false) {
                     idHidden.value = diseaseId;
                 }
                 const searchInput = document.getElementById('diseaseSearchInput');
-                if (searchInput) searchInput.value = diseaseName + (diseaseBn ? ' (' + diseaseBn + ')' : '');
+                if (searchInput) searchInput.value = diseaseName;
                 const statusInput = document.getElementById('diseaseStatus');
                 if (statusInput) statusInput.value = status;
                 const dateInput = document.getElementById('diseaseDiagnosedAt');

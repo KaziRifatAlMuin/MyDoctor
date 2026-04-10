@@ -15,6 +15,7 @@ use App\Models\MedicineSchedule;
 use App\Models\Post;
 use App\Models\PostLike;
 use App\Models\Symptom;
+use App\Models\UserSymptom;
 use App\Models\Upload;
 use App\Models\User;
 use App\Models\UserAddress;
@@ -28,6 +29,7 @@ class HighVolumeDemoSeeder extends Seeder
 {
     public function run(): void
     {
+        $this->ensureAdminAccount();
         $users = $this->seedUsers();
         $diseaseIds = Disease::query()->pluck('id')->values();
 
@@ -40,6 +42,31 @@ class HighVolumeDemoSeeder extends Seeder
         [$posts, $comments] = $this->seedCommunityData($users, $diseaseIds);
         $this->seedMailings($users);
         $this->seedPushSubscriptions($users);
+    }
+
+    private function ensureAdminAccount(): void
+    {
+        User::query()->updateOrCreate(
+            ['email' => 'admin@mydoctor.com'],
+            [
+                'name' => 'System Admin',
+                'phone' => '01700000000',
+                'date_of_birth' => now()->subYears(32)->format('Y-m-d'),
+                'occupation' => 'Administrator',
+                'blood_group' => 'O+',
+                'email_verified_at' => now(),
+                'password' => Hash::make('abcd1234'),
+                'role' => 'admin',
+                'email_notifications' => true,
+                'push_notifications' => true,
+                'notification_settings' => [
+                    'reminders' => true,
+                    'updates' => true,
+                    'newsletter' => false,
+                ],
+                'remember_token' => Str::random(10),
+            ]
+        );
     }
 
     private function seedUsers()
@@ -80,7 +107,7 @@ class HighVolumeDemoSeeder extends Seeder
                 'blood_group' => $bloodGroups[array_rand($bloodGroups)],
                 'email_verified_at' => $now,
                 'password' => Hash::make('abcd1234'),
-                'role' => $i === 1 ? 'admin' : 'member',
+                'role' => 'member',
                 'email_notifications' => true,
                 'push_notifications' => true,
                 'notification_settings' => json_encode([
@@ -96,7 +123,10 @@ class HighVolumeDemoSeeder extends Seeder
 
         User::query()->insert($rows);
 
-        return User::query()->orderBy('id')->get();
+        return User::query()
+            ->where('email', 'like', 'user%@gmail.com')
+            ->orderBy('id')
+            ->get();
     }
 
     private function seedUserDiseases($users, $diseaseIds): void
@@ -164,7 +194,7 @@ class HighVolumeDemoSeeder extends Seeder
             HealthMetric::factory()->count($metricCount)->create(['user_id' => $user->id]);
 
             $symptomCount = $isTop ? random_int(25, 45) : random_int(8, 20);
-            Symptom::factory()->count($symptomCount)->create(['user_id' => $user->id]);
+            UserSymptom::factory()->count($symptomCount)->create(['user_id' => $user->id]);
 
             $envCount = $isTop ? random_int(8, 18) : random_int(4, 10);
             $environments = Environment::factory()->count($envCount)->create(['user_id' => $user->id]);

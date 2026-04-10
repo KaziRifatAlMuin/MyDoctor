@@ -26,16 +26,16 @@ self.addEventListener('push', function(event) {
             data = {
                 title: 'My Doctor',
                 body: event.data.text(),
-                icon: '/images/logos/applogo.jpg',
-                badge: '/images/logos/applogo.jpg'
+                icon: '/images/logos/applogo.png',
+                badge: '/images/logos/applogo.png'
             };
         }
     }
 
     const options = {
         body: data.body || 'Time to take your medicine',
-        icon: data.icon || '/images/logos/applogo.jpg',
-        badge: data.badge || '/images/logos/applogo.jpg',
+        icon: data.icon || '/images/logos/applogo.png',
+        badge: data.badge || '/images/logos/applogo.png',
         vibrate: [200, 100, 200],
         data: data.data || {},
         actions: data.actions || [

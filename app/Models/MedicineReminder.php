@@ -47,7 +47,7 @@ class MedicineReminder extends Model
             'taken_at' => now()
         ]);
 
-        $this->updateLog('taken');
+        $this->updateLog();
         
         return $this;
     }
@@ -58,7 +58,7 @@ class MedicineReminder extends Model
     public function markAsMissed()
     {
         $this->update(['status' => 'missed']);
-        $this->updateLog('missed');
+        $this->updateLog();
         
         return $this;
     }
@@ -66,8 +66,14 @@ class MedicineReminder extends Model
     /**
      * Update medicine log.
      */
-    private function updateLog($action)
+    private function updateLog(): void
     {
+        $this->loadMissing('schedule.medicine');
+
+        if (!$this->schedule || !$this->schedule->medicine) {
+            return;
+        }
+
         $date = $this->reminder_at->toDateString();
         $medicineId = $this->schedule->medicine_id;
         $userId = $this->schedule->medicine->user_id;
@@ -85,20 +91,15 @@ class MedicineReminder extends Model
             ]
         );
 
-        $totalScheduled = MedicineReminder::whereHas('schedule', function($q) use ($medicineId) {
+        $baseQuery = MedicineReminder::whereHas('schedule', function ($q) use ($medicineId) {
                 $q->where('medicine_id', $medicineId);
             })
-            ->whereDate('reminder_at', $date)
-            ->count();
-        
-        $log->total_scheduled = $totalScheduled;
-        
-        if ($action === 'taken') {
-            $log->total_taken += 1;
-        } else {
-            $log->total_missed += 1;
-        }
-        
+            ->whereDate('reminder_at', $date);
+
+        $log->total_scheduled = (clone $baseQuery)->count();
+        $log->total_taken = (clone $baseQuery)->where('status', 'taken')->count();
+        $log->total_missed = (clone $baseQuery)->where('status', 'missed')->count();
+
         $log->save();
     }
 
@@ -107,13 +108,14 @@ class MedicineReminder extends Model
      */
     public function getStatusLabelAttribute()
     {
-        $labels = [
-            'pending' => 'Pending',
-            'taken' => 'Taken',
-            'missed' => 'Missed',
-            'snoozed' => 'Snoozed'
-        ];
-        return $labels[$this->status] ?? ucfirst($this->status);
+        $key = "ui.medicine.{$this->status}";
+        $translated = __($key);
+
+        if ($translated === $key) {
+            return ucfirst($this->status);
+        }
+
+        return $translated;
     }
 
     /**
@@ -123,7 +125,11 @@ class MedicineReminder extends Model
     {
         $medicineName = $this->schedule->medicine->medicine_name;
         $time = $this->reminder_at->format('h:i A');
-        return "Time to take {$medicineName} at {$time}";
+
+        return __('ui.medicine.time_to_take', [
+            'medicine' => $medicineName,
+            'time' => $time,
+        ]);
     }
 
     /**

@@ -591,9 +591,9 @@
                         @endphp
                         <div class="hero-disease-tags">
                             @forelse($heroDiseases as $disease)
-                                <span class="hero-disease-tag">
-                                    {{ $disease->disease_name }}{{ $disease->disease_name_bn ? ' (' . $disease->disease_name_bn . ')' : '' }}
-                                </span>
+                                <a href="{{ route('public.disease.show', $disease) }}" class="hero-disease-tag text-decoration-none">
+                                    {{ $disease->disease_name }}
+                                </a>
                             @empty
                                 <span class="hero-disease-tag" style="background: rgba(255,255,255,0.14); color: #f1f5f9; border-color: rgba(255,255,255,0.25);">
                                     No disease tags yet
@@ -1206,20 +1206,19 @@
             function renderDiseaseDropdown(query = '') {
                 diseaseDropdown.innerHTML = '';
                 const matches = query
-                    ? diseases.filter(d => d.disease_name.toLowerCase().includes(query) || (d.disease_name_bn && d.disease_name_bn.toLowerCase().includes(query)))
+                    ? diseases.filter(d => d.disease_name.toLowerCase().includes(query))
                     : diseases;
                 
                 if (matches.length) {
                     matches.forEach(disease => {
-                        const bn = disease.disease_name_bn || '';
                         const opt = document.createElement('a');
                         opt.className = 'dropdown-item';
                         opt.href = '#';
                         opt.style.cssText = 'font-size:0.85rem; padding:0.45rem 1rem; white-space:normal;';
-                        opt.innerHTML = disease.disease_name + (bn ? ' <span style="color:#a0aec0;">(' + bn + ')</span>' : '');
+                        opt.innerHTML = disease.disease_name;
                         opt.addEventListener('click', (e) => {
                             e.preventDefault();
-                            diseaseSearch.value = disease.disease_name + (bn ? ' (' + bn + ')' : '');
+                            diseaseSearch.value = disease.disease_name;
                             diseaseHidden.value = disease.id;
                             diseaseDropdown.style.display = 'none';
                         });
@@ -1442,7 +1441,7 @@
         // Initialize data structures for edit functions (page-specific overrides)
         window.metricFieldDefs = @json(collect($metricConfig)->map(fn($c) => $c['js_fields']));
         window.symptomsList = @json($symptomsList, JSON_UNESCAPED_UNICODE);
-        const diseasesData = @json($allDiseases->map(fn($d) => ['id' => $d->id, 'name' => $d->disease_name, 'bn' => $d->disease_name_bn]), JSON_UNESCAPED_UNICODE);
+        const diseasesData = @json($allDiseases->map(fn($d) => ['id' => $d->id, 'name' => $d->disease_name]), JSON_UNESCAPED_UNICODE);
 
         // ── Tab Persistence ──
         const editUserForm = document.querySelector('.user-update-form');
@@ -1486,3 +1485,4 @@
         });
     </script>
 @endpush
+

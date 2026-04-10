@@ -5,6 +5,7 @@ namespace Tests\Feature\Integration;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\User;
+use App\Models\Symptom;
 use App\Models\Translation;
 
 class EndToEndTest extends TestCase
@@ -41,9 +42,12 @@ class EndToEndTest extends TestCase
         $post = $this->actingAs($user)->post(route('health.symptom.store'), $symptomData);
         $post->assertRedirect(route('health') . '#symptomsPane');
 
-        $this->assertDatabaseHas('symptoms', [
+        $catalogSymptom = Symptom::query()->where('name', $first->key)->first();
+        $this->assertNotNull($catalogSymptom);
+
+        $this->assertDatabaseHas('user_symptoms', [
             'user_id' => $user->id,
-            'symptom_name' => $first->key,
+            'symptom_id' => $catalogSymptom->id,
         ]);
 
         // Visit health page again and ensure symptom English name appears

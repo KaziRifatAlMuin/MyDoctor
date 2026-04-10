@@ -214,6 +214,87 @@
             color: white;
         }
 
+        .ai-summary-card {
+            background: linear-gradient(150deg, #ffffff 0%, #f6f8ff 100%);
+            border-radius: 16px;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e5e9ff;
+            padding: 1.1rem 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .ai-summary-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #4450a8;
+            margin-bottom: 0.45rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .ai-summary-title-left {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .ai-summary-regenerate {
+            border: none;
+            background: #eef2ff;
+            color: #4756b3;
+            font-size: 0.76rem;
+            font-weight: 700;
+            border-radius: 999px;
+            padding: 0.28rem 0.65rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .ai-summary-regenerate:hover {
+            background: #dfe7ff;
+            transform: translateY(-1px);
+        }
+
+        .ai-summary-title i {
+            color: #667eea;
+        }
+
+        .ai-summary-note {
+            font-size: 0.78rem;
+            color: #6b7280;
+            margin-bottom: 0.75rem;
+        }
+
+        .ai-summary-body {
+            font-size: 0.9rem;
+            color: #334155;
+            line-height: 1.65;
+        }
+
+        .ai-summary-body h2,
+        .ai-summary-body h3,
+        .ai-summary-body h4 {
+            font-size: 0.93rem;
+            margin: 0.45rem 0;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .ai-summary-body ul {
+            margin: 0.35rem 0 0.55rem 1rem;
+            padding-left: 0.5rem;
+        }
+
+        .ai-summary-loading {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            color: #64748b;
+            font-size: 0.85rem;
+        }
+
         .empty-state {
             text-align: center;
             padding: 3rem 1rem;
@@ -246,6 +327,28 @@
                     style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px;">
                     <i class="fas fa-heartbeat me-1"></i> Health Dashboard
                 </a>
+            </div>
+
+            {{-- AI Summery (top section) --}}
+            <div class="ai-summary-card" id="aiSummaryCard">
+                <div class="ai-summary-title">
+                    <span class="ai-summary-title-left">
+                        <i class="fas fa-robot"></i>
+                        <span>Health Summery of You</span>
+                    </span>
+                    <button type="button" class="ai-summary-regenerate" id="aiSummaryRegenerateBtn">
+                        <i class="fas fa-sync-alt me-1"></i>Regenerate
+                    </button>
+                </div>
+                <div class="ai-summary-note">
+                    Generated from AI chatbot using your latest health data.
+                </div>
+                <div class="ai-summary-body" id="aiSummaryBody">
+                    <span class="ai-summary-loading">
+                        <i class="fas fa-circle-notch fa-spin"></i>
+                        Preparing your personalized AI summery...
+                    </span>
+                </div>
             </div>
 
             {{-- Filter Buttons --}}
@@ -334,9 +437,15 @@
                                         class="summary-dot {{ $cond->status === 'active' ? 'red' : ($cond->status === 'chronic' ? 'orange' : 'green') }}">
                                     </div>
                                     <div>
-                                        <span class="fw-semibold">{{ $cond->disease->disease_name ?? 'Unknown' }}</span>
+                                        @if($cond->disease)
+                                            <a href="{{ route('public.disease.show', $cond->disease) }}" class="fw-semibold text-decoration-none">
+                                                {{ $cond->disease->disease_name }}
+                                            </a>
+                                        @else
+                                            <span class="fw-semibold">Unknown</span>
+                                        @endif
                                         <span class="text-muted" style="font-size: 0.75rem;"> &middot;
-                                            {{ ucfirst($cond->status) }}</span>
+                                            {{ $cond->status_label }}</span>
                                     </div>
                                 </div>
                             @empty
@@ -357,7 +466,13 @@
                                         class="summary-dot {{ $sym->severity_level >= 7 ? 'red' : ($sym->severity_level >= 4 ? 'orange' : 'green') }}">
                                     </div>
                                     <div class="flex-grow-1">
-                                        <span>{{ $sym->symptom_name }}</span>
+                                        @if($sym->symptom)
+                                            <a href="{{ route('public.symptoms.show', $sym->symptom) }}" class="text-decoration-none">
+                                                {{ $sym->symptom_name }}
+                                            </a>
+                                        @else
+                                            <span>{{ $sym->symptom_name }}</span>
+                                        @endif
                                     </div>
                                     <span class="text-muted"
                                         style="font-size: 0.75rem;">{{ $sym->severity_level }}/10</span>
@@ -401,6 +516,11 @@
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>
+        const AI_SUMMERY_USER_ID = {{ (int) $user->id }};
+        const AI_SUMMERY_USER_EMAIL = @json((string) $user->email);
+        const AI_SUMMERY_CACHE_KEY = `mydoctor.ai_summery_cache.v1.user.${AI_SUMMERY_USER_ID}`;
+        const AI_SUMMERY_LAST_ACTIVE_KEY = 'mydoctor.ai_last_active_user';
+
         document.addEventListener('DOMContentLoaded', function() {
             // Adherence Donut
             const canvas = document.getElementById('adherenceDonut');
@@ -434,6 +554,39 @@
                     }
                 });
             }
+
+            const regenerateBtn = document.getElementById('aiSummaryRegenerateBtn');
+            if (regenerateBtn) {
+                regenerateBtn.addEventListener('click', function() {
+                    loadAiSummery(true);
+                });
+            }
+
+            // If the last active user seen in this browser tab is different,
+            // treat this as a login change and force regeneration.
+            try {
+                const lastActive = sessionStorage.getItem(AI_SUMMERY_LAST_ACTIVE_KEY);
+                if (lastActive === null || String(lastActive) !== String(AI_SUMMERY_USER_ID)) {
+                    // Different user (or first time) — generate fresh summary.
+                    loadAiSummery(true);
+                } else {
+                    loadAiSummery(false);
+                }
+            } catch (e) {
+                loadAiSummery(false);
+            }
+
+            // Clear cached AI summary on logout forms so next login always regenerates.
+            try {
+                document.querySelectorAll('form[action="/logout"]').forEach(f => {
+                    f.addEventListener('submit', () => {
+                        try {
+                            sessionStorage.removeItem(AI_SUMMERY_CACHE_KEY);
+                            sessionStorage.removeItem(AI_SUMMERY_LAST_ACTIVE_KEY);
+                        } catch (e) {}
+                    }, { once: true });
+                });
+            } catch (e) {}
         });
 
         function filterSuggestions(category, btn) {
@@ -448,5 +601,163 @@
                 }
             });
         }
+
+        async function loadAiSummery(forceRefresh = false) {
+            const target = document.getElementById('aiSummaryBody');
+            if (!target) return;
+
+            if (!forceRefresh) {
+                const cached = getCachedAiSummery();
+                if (cached) {
+                    target.innerHTML = renderChatbotMarkup(cached);
+                    return;
+                }
+            }
+
+            target.innerHTML = '<span class="ai-summary-loading"><i class="fas fa-circle-notch fa-spin"></i>Preparing your personalized AI summery...</span>';
+
+            try {
+                const response = await fetch('{{ route('chatbot.about_me') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({})
+                });
+
+                const data = await response.json();
+                const reply = typeof data.reply === 'string' && data.reply.trim() !== ''
+                    ? data.reply
+                    : 'Unable to generate AI summery right now. Please try again in a moment.';
+
+                if (response.ok) {
+                    cacheAiSummery(reply);
+                    try {
+                        // Mark this user as the last active so subsequent page loads
+                        // in the same tab will reuse the cached summary until logout.
+                        sessionStorage.setItem(AI_SUMMERY_LAST_ACTIVE_KEY, String(AI_SUMMERY_USER_ID));
+                    } catch (e) {}
+                }
+
+                target.innerHTML = renderChatbotMarkup(reply);
+            } catch (error) {
+                target.innerHTML = '<p class="mb-0">Unable to generate AI summery right now. Please try again in a moment.</p>';
+            }
+        }
+
+        function getCachedAiSummery() {
+            try {
+                const raw = sessionStorage.getItem(AI_SUMMERY_CACHE_KEY);
+                if (!raw) return null;
+                const parsed = JSON.parse(raw);
+                if (!parsed || typeof parsed.reply !== 'string') return null;
+                if ((parsed.userId ?? null) !== AI_SUMMERY_USER_ID) return null;
+                return parsed.reply;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function cacheAiSummery(reply) {
+            try {
+                sessionStorage.setItem(AI_SUMMERY_CACHE_KEY, JSON.stringify({
+                    reply,
+                    userId: AI_SUMMERY_USER_ID,
+                    userEmail: AI_SUMMERY_USER_EMAIL,
+                    savedAt: Date.now(),
+                }));
+            } catch (e) {
+                // Ignore cache failures silently.
+            }
+        }
+
+        function renderChatbotMarkup(text) {
+            const escaped = escapeHtml(text);
+            const lines = escaped.split(/\r?\n/);
+            let html = '';
+            let inList = false;
+
+            for (const rawLine of lines) {
+                const line = rawLine.trim();
+
+                if (line === '') {
+                    if (inList) {
+                        html += '</ul>';
+                        inList = false;
+                    }
+                    continue;
+                }
+
+                if (line.startsWith('## ')) {
+                    if (inList) {
+                        html += '</ul>';
+                        inList = false;
+                    }
+                    html += `<h3>${emphasizeLine(line.substring(3))}</h3>`;
+                    continue;
+                }
+
+                if (line.startsWith('- ')) {
+                    if (!inList) {
+                        html += '<ul>';
+                        inList = true;
+                    }
+                    html += `<li>${emphasizeLine(line.substring(2))}</li>`;
+                    continue;
+                }
+
+                if (inList) {
+                    html += '</ul>';
+                    inList = false;
+                }
+
+                html += `<p>${emphasizeLine(line)}</p>`;
+            }
+
+            if (inList) {
+                html += '</ul>';
+            }
+
+            return html || '<p class="mb-0">No AI summery available.</p>';
+        }
+
+        function emphasizeLine(input) {
+            let line = input.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+            // Make the full leading label before the first colon bold.
+            line = line.replace(/^\s*([^:<>]{2,120})\s*:\s*(.*)$/i, (m, label, rest) => {
+                return `<strong>${label.trim()}:</strong> ${rest}`;
+            });
+
+            const keywordPattern = /\b(summary|details|suggestions|tips|overview|condition|health|symptom|symptoms|disease|diseases|medicine|medicines|metric|metrics|adherence|warning|urgent|improve|monitor|doctor|exercise|sleep|hydration|stress|chronic|active|managed|severity|diagnosed|risk|risks|trend|blood\s+pressure|glucose|heart\s+rate|bmi|eczema|conjunctivitis|tachycardia)\b/gi;
+            const valuePattern = /\b(\d+\/?\d*\s*(?:mg\/dL|mmhg|bpm|%)?)\b/gi;
+
+            const firstColon = line.indexOf(':');
+            if (firstColon !== -1) {
+                const head = line.slice(0, firstColon + 1);
+                let tail = line.slice(firstColon + 1);
+                tail = tail.replace(keywordPattern, '<strong>$1</strong>');
+                tail = tail.replace(valuePattern, '<strong>$1</strong>');
+                line = head + tail;
+            } else {
+                line = line.replace(keywordPattern, '<strong>$1</strong>');
+            }
+
+            if (!/<strong>/.test(line)) {
+                line = line.replace(/^((?:\w+\s+){1,3}\w+)/, '<strong>$1</strong>');
+            }
+
+            return line;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
     </script>
 @endpush
+

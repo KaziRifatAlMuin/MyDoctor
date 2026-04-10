@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
 use App\Models\HealthMetric;
-use App\Models\Symptom;
+use App\Models\UserSymptom;
 use App\Models\Medicine;
 use App\Models\MedicineLog;
 use App\Models\UserDisease;
@@ -23,7 +23,8 @@ class SuggestionsController extends Controller
             ->map(fn($g) => $g->first());
 
         // Recent symptoms (last 14 days)
-        $recentSymptoms = Symptom::where('user_id', $user->id)
+        $recentSymptoms = UserSymptom::where('user_id', $user->id)
+            ->with('symptom')
             ->where('recorded_at', '>=', now()->subDays(14))
             ->orderByDesc('severity_level')
             ->get();
@@ -231,7 +232,7 @@ class SuggestionsController extends Controller
         // ── Symptom-based ──
         $severeSymptoms = $recentSymptoms->where('severity_level', '>=', 7);
         if ($severeSymptoms->isNotEmpty()) {
-            $names = $severeSymptoms->pluck('symptom_name')->unique()->take(3)->implode(', ');
+            $names = $severeSymptoms->map(fn($row) => $row->symptom_name)->filter()->unique()->take(3)->implode(', ');
             $suggestions[] = [
                 'icon' => 'fa-exclamation-triangle',
                 'color' => 'danger',

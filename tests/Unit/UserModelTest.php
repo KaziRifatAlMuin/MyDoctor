@@ -5,8 +5,8 @@ namespace Tests\Unit;
 use App\Models\HealthMetric;
 use App\Models\Medicine;
 use App\Models\MedicineLog;
-use App\Models\Symptom;
 use App\Models\User;
+use App\Models\UserSymptom;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -31,6 +31,8 @@ class UserModelTest extends TestCase
             'password',
             'email_notifications',
             'push_notifications',
+            'show_personal_info',
+            'show_diseases',
             'notification_settings',
         ];
         
@@ -113,7 +115,7 @@ class UserModelTest extends TestCase
     public function user_has_symptoms_relationship(): void
     {
         $user = User::factory()->create();
-        Symptom::factory()->create(['user_id' => $user->id]);
+        UserSymptom::factory()->create(['user_id' => $user->id]);
 
         $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\HasMany::class, $user->symptoms());
         $this->assertEquals(1, $user->symptoms()->count());
@@ -158,11 +160,11 @@ class UserModelTest extends TestCase
     public function deleting_user_cascades_symptoms(): void
     {
         $user = User::factory()->create();
-        Symptom::factory()->count(3)->create(['user_id' => $user->id]);
+        UserSymptom::factory()->count(3)->create(['user_id' => $user->id]);
 
         $user->delete();
 
-        $this->assertDatabaseMissing('symptoms', ['user_id' => $user->id]);
+        $this->assertDatabaseMissing('user_symptoms', ['user_id' => $user->id]);
     }
 
     #[Test]

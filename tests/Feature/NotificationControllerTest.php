@@ -8,6 +8,7 @@ use App\Models\Post;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 
 class NotificationControllerTest extends TestCase
 {
@@ -24,7 +25,7 @@ class NotificationControllerTest extends TestCase
         $this->fromUser = User::factory()->create();
     }
 
-    /** @test */
+#[Test]
     public function it_redirects_to_login_for_guest_index()
     {
         $response = $this->get(route('notifications.index'));
@@ -32,7 +33,7 @@ class NotificationControllerTest extends TestCase
         $response->assertRedirect(route('login'));
     }
 
-    /** @test */
+#[Test]
     public function it_returns_json_notifications_for_api_request()
     {
         Notification::factory()->count(5)->create([
@@ -63,7 +64,7 @@ class NotificationControllerTest extends TestCase
         $this->assertCount(5, $response->json('notifications'));
     }
 
-    /** @test */
+#[Test]
     public function it_limits_notifications_to_5_for_api_request()
     {
         Notification::factory()->count(10)->create([
@@ -78,7 +79,7 @@ class NotificationControllerTest extends TestCase
         $this->assertCount(5, $response->json('notifications'));
     }
 
-    /** @test */
+#[Test]
     public function it_returns_notifications_page_for_web_request()
     {
         Notification::factory()->count(15)->create([
@@ -96,7 +97,7 @@ class NotificationControllerTest extends TestCase
         $this->assertCount(15, $response->viewData('notifications'));
     }
 
-    /** @test */
+#[Test]
     public function it_returns_unread_count()
     {
         Notification::query()->delete();
@@ -119,7 +120,7 @@ class NotificationControllerTest extends TestCase
             ->assertJson(['count' => 2]);
     }
 
-    /** @test */
+#[Test]
     public function it_returns_unauthorized_for_guest_unread_count()
     {
         $response = $this->getJson(route('notifications.unread-count'));
@@ -127,7 +128,7 @@ class NotificationControllerTest extends TestCase
         $response->assertStatus(401);
     }
 
-    /** @test */
+#[Test]
     public function it_can_mark_notification_as_read()
     {
         $notification = Notification::factory()->create([
@@ -148,7 +149,7 @@ class NotificationControllerTest extends TestCase
         ]);
     }
 
-    /** @test */
+#[Test]
     public function it_returns_not_found_when_marking_others_notification_as_read()
     {
         $otherUser = User::factory()->create();
@@ -166,7 +167,7 @@ class NotificationControllerTest extends TestCase
         $response->assertStatus(404); // or 404, depending on your controller
     }
 
-    /** @test */
+#[Test]
     public function it_can_mark_all_notifications_as_read()
     {
         Notification::query()->delete();
@@ -188,7 +189,7 @@ class NotificationControllerTest extends TestCase
         );
     }
 
-    /** @test */
+#[Test]
     public function it_can_delete_a_notification()
     {
         $notification = Notification::factory()->create([
@@ -206,7 +207,7 @@ class NotificationControllerTest extends TestCase
         ]);
     }
 
-    /** @test */
+#[Test]
     public function it_returns_not_found_when_deleting_others_notification()
     {
         $otherUser = User::factory()->create();
@@ -223,7 +224,7 @@ class NotificationControllerTest extends TestCase
         $response->assertStatus(404); // or 404, depending on your controller
     }
 
-    /** @test */
+#[Test]
     public function it_can_clear_all_notifications()
     {
         Notification::query()->delete();
@@ -245,7 +246,7 @@ class NotificationControllerTest extends TestCase
         );
     }
 
-    /** @test */
+#[Test]
     public function it_returns_not_found_when_marking_nonexistent_notification()
     {
         $response = $this->actingAs($this->user)
@@ -255,7 +256,7 @@ class NotificationControllerTest extends TestCase
         $response->assertStatus(404);
     }
 
-    /** @test */
+#[Test]
     public function it_returns_not_found_when_deleting_nonexistent_notification()
     {
         $response = $this->actingAs($this->user)
@@ -265,7 +266,7 @@ class NotificationControllerTest extends TestCase
         $response->assertStatus(404);
     }
 
-    /** @test */
+#[Test]
     public function it_returns_unauthorized_for_guest_when_marking_read()
     {
         $notification = Notification::factory()->create();
@@ -275,7 +276,7 @@ class NotificationControllerTest extends TestCase
         $response->assertStatus(401);
     }
 
-    /** @test */
+#[Test]
     public function it_returns_unauthorized_for_guest_when_clearing_all()
     {
         $response = $this->deleteJson(route('notifications.clear-all'));
@@ -283,7 +284,7 @@ class NotificationControllerTest extends TestCase
         $response->assertStatus(401);
     }
 
-    /** @test */
+#[Test]
     public function it_updates_unread_count_after_marking_read()
     {
         Notification::query()->delete();
@@ -307,7 +308,7 @@ class NotificationControllerTest extends TestCase
         $response->assertJson(['count' => 4]);
     }
 
-    /** @test */
+#[Test]
     public function it_handles_notifications_with_valid_from_user()
     {
         $notification = Notification::factory()->create([
@@ -323,7 +324,7 @@ class NotificationControllerTest extends TestCase
         $this->assertEquals($this->fromUser->name, $response->json('notifications.0.from_user.name'));
     }
 
-    /** @test */
+#[Test]
     public function it_correctly_formats_notification_data_for_api()
     {
         $post = Post::factory()->create();

@@ -15,7 +15,14 @@ class Mailing extends Model
         'receiver_id',
         'title',
         'message',
+        'is_read',
+        'is_starred',
         'status',
+    ];
+
+    protected $casts = [
+        'is_read' => 'boolean',
+        'is_starred' => 'boolean',
     ];
 
     public function sender(): BelongsTo

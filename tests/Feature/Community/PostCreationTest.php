@@ -9,6 +9,7 @@ use App\Models\Post;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use PHPUnit\Framework\Attributes\Test;
 
 class PostCreationTest extends TestCase
 {
@@ -24,7 +25,7 @@ class PostCreationTest extends TestCase
         $this->disease = Disease::factory()->create();
     }
 
-    /** @test */
+#[Test]
     public function authenticated_user_can_create_a_post()
     {
         $this->actingAs($this->user);
@@ -37,17 +38,19 @@ class PostCreationTest extends TestCase
         $response->assertStatus(200);
         $response->assertJson([
             'success' => true,
-            'message' => 'Post created successfully!'
+            'requires_approval' => true,
+            'message' => 'Post submitted for admin approval.'
         ]);
 
         $this->assertDatabaseHas('posts', [
             'user_id' => $this->user->id,
             'disease_id' => $this->disease->id,
             'description' => 'This is a test post description',
+            'is_approved' => false,
         ]);
     }
 
-    /** @test */
+#[Test]
     public function unauthenticated_user_cannot_create_a_post()
     {
         $response = $this->post('/community/posts', [
@@ -62,7 +65,7 @@ class PostCreationTest extends TestCase
         ]);
     }
 
-    /** @test */
+#[Test]
     public function post_requires_at_least_description_or_file()
     {
         $this->actingAs($this->user);
@@ -78,7 +81,7 @@ class PostCreationTest extends TestCase
         ]);
     }
 
-    /** @test */
+#[Test]
     public function post_requires_a_valid_disease()
     {
         $this->actingAs($this->user);
@@ -92,19 +95,14 @@ class PostCreationTest extends TestCase
         $response->assertJsonValidationErrors(['disease_id']);
     }
 
-    /** @test */
+#[Test]
     public function user_can_upload_single_file_with_post()
     {
-        // Skip this test if GD is not installed
-        if (!extension_loaded('gd')) {
-            $this->markTestSkipped('GD extension is not installed.');
-        }
-        
         Storage::fake('public');
         
         $this->actingAs($this->user);
         
-        $file = UploadedFile::fake()->image('test-image.jpg');
+        $file = UploadedFile::fake()->create('test-image.jpg', 100, 'image/jpeg');
 
         $response = $this->post('/community/posts', [
             'disease_id' => $this->disease->id,
@@ -126,19 +124,14 @@ class PostCreationTest extends TestCase
         $this->assertCount(1, $post->files);
     }
 
-    /** @test */
+#[Test]
     public function user_can_upload_multiple_files_with_post()
     {
-        // Skip this test if GD is not installed
-        if (!extension_loaded('gd')) {
-            $this->markTestSkipped('GD extension is not installed.');
-        }
-        
         Storage::fake('public');
         
         $this->actingAs($this->user);
         
-        $file1 = UploadedFile::fake()->image('image1.jpg');
+        $file1 = UploadedFile::fake()->create('image1.jpg', 100, 'image/jpeg');
         $file2 = UploadedFile::fake()->create('document.pdf', 100);
 
         $response = $this->post('/community/posts', [
@@ -155,7 +148,7 @@ class PostCreationTest extends TestCase
         $this->assertCount(2, $post->files);
     }
 
-    /** @test */
+#[Test]
     public function file_size_cannot_exceed_10mb_per_file()
     {
         Storage::fake('public');
@@ -174,7 +167,7 @@ class PostCreationTest extends TestCase
         $response->assertJsonValidationErrors(['files.0']);
     }
 
-    /** @test */
+#[Test]
     public function total_file_size_cannot_exceed_50mb()
     {
         Storage::fake('public');

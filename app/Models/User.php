@@ -24,6 +24,8 @@ class User extends Authenticatable
         'password',
         'email_notifications',
         'push_notifications',
+        'show_personal_info',
+        'show_diseases',
         'notification_settings',
     ];
 
@@ -38,6 +40,8 @@ class User extends Authenticatable
         'password'           => 'hashed',
         'email_notifications' => 'boolean',
         'push_notifications' => 'boolean',
+        'show_personal_info' => 'boolean',
+        'show_diseases' => 'boolean',
         'notification_settings' => 'array',
     ];
 
@@ -202,7 +206,7 @@ class User extends Authenticatable
 
     public function symptoms()
     {
-        return $this->hasMany(Symptom::class);
+        return $this->hasMany(UserSymptom::class);
     }
 
     public function medicines()

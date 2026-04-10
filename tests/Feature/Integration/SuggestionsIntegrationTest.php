@@ -9,6 +9,7 @@ use App\Models\MedicineLog;
 use App\Models\Symptom;
 use App\Models\User;
 use App\Models\UserDisease;
+use App\Models\UserSymptom;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -196,9 +197,11 @@ class SuggestionsIntegrationTest extends TestCase
     {
         $user = User::factory()->create();
 
-        Symptom::factory()->create([
+        $symptom = Symptom::factory()->create(['name' => 'chest_pain']);
+
+        UserSymptom::factory()->create([
             'user_id'        => $user->id,
-            'symptom_name'   => 'chest_pain',
+            'symptom_id'     => $symptom->id,
             'severity_level' => 9,
             'recorded_at'    => now()->subDays(2),
         ]);
@@ -217,9 +220,11 @@ class SuggestionsIntegrationTest extends TestCase
     {
         $user = User::factory()->create();
 
-        Symptom::factory()->create([
+        $symptom = Symptom::factory()->create(['name' => 'chest_pain']);
+
+        UserSymptom::factory()->create([
             'user_id'        => $user->id,
-            'symptom_name'   => 'chest_pain',
+            'symptom_id'     => $symptom->id,
             'severity_level' => 10,
             'recorded_at'    => now()->subDays(20),  // outside window
         ]);

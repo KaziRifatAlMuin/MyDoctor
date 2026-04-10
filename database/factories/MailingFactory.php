@@ -26,16 +26,13 @@ class MailingFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => User::factory(),
-            'recipient_email' => $this->faker->safeEmail(),
-            'subject' => $this->faker->sentence(),
-            'body' => $this->faker->paragraph(5),
-            'mailable_type' => 'MedicineReminderMail',
-            'mailable_id' => null,
-            'status' => 'pending',
-            'error_message' => null,
-            'retry_count' => 0,
-            'sent_at' => null,
+            'sender_id' => User::factory(),
+            'receiver_id' => User::factory(),
+            'title' => $this->faker->sentence(),
+            'message' => $this->faker->paragraph(3),
+            'is_read' => false,
+            'is_starred' => false,
+            'status' => 'unread',
         ];
     }
 
@@ -46,30 +43,30 @@ class MailingFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'status' => 'sent',
-            'sent_at' => now(),
+            'is_read' => true,
         ]);
     }
 
     /**
      * Indicate that the mailing has failed.
      */
-    public function failed(): static
+    public function draft(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'failed',
-            'error_message' => 'SMTP connection failed',
-            'retry_count' => 1,
+            'status' => 'draft',
+            'receiver_id' => null,
+            'is_read' => false,
         ]);
     }
 
     /**
      * Indicate that the mailing is pending.
      */
-    public function pending(): static
+    public function archived(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'pending',
-            'sent_at' => null,
+            'status' => 'archived',
+            'is_read' => true,
         ]);
     }
 }

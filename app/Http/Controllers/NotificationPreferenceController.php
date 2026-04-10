@@ -15,7 +15,8 @@ class NotificationPreferenceController extends Controller
     public function index()
     {
         $user = Auth::user();
-        return view('profile.notifications', compact('user'));
+        $chatbotBubbleEnabled = request()->cookie('chatbot_bubble_enabled', '1') === '1';
+        return view('profile.setting', compact('user', 'chatbotBubbleEnabled'));
     }
 
     public function update(Request $request)
@@ -25,19 +26,29 @@ class NotificationPreferenceController extends Controller
         $validated = $request->validate([
             'email_notifications' => 'sometimes|boolean',
             'push_notifications' => 'sometimes|boolean',
+            'show_personal_info' => 'sometimes|boolean',
+            'show_diseases' => 'sometimes|boolean',
             'reminder_before_minutes' => 'nullable|integer|min:0|max:120',
         ]);
 
-        $user->email_notifications = $validated['email_notifications'] ?? $user->email_notifications;
-        $user->push_notifications = $validated['push_notifications'] ?? $user->push_notifications;
+        $user->email_notifications = $request->has('email_notifications');
+        $user->push_notifications = $request->has('push_notifications');
+        $user->show_personal_info = $request->has('show_personal_info');
+        $user->show_diseases = $request->has('show_diseases');
 
-        $settings = $user->notification_settings ?? [];
+        $settings = is_array($user->notification_settings) ? $user->notification_settings : [];
         $settings['reminder_before_minutes'] = $validated['reminder_before_minutes'] ?? 5;
         $user->notification_settings = $settings;
         
         $user->save();
 
-        return redirect()->back()->with('success', 'Notification preferences updated successfully.');
+        // Persist chatbot bubble preference as a cookie (365 days)
+        $chatbotCookieValue = $request->has('chatbot_bubble') ? '1' : '0';
+        $minutes = 60 * 24 * 365; // 1 year
+
+        return redirect()->back()
+            ->with('success', 'Notification preferences updated successfully.')
+            ->withCookie(cookie('chatbot_bubble_enabled', $chatbotCookieValue, $minutes));
     }
 
     public function toggleEmail(Request $request)

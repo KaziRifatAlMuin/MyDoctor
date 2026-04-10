@@ -8,6 +8,7 @@ use App\Models\Post;
 use App\Models\Comment;
 use App\Models\Disease;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 
 class PostManagementTest extends TestCase
 {
@@ -28,7 +29,7 @@ class PostManagementTest extends TestCase
         ]);
     }
 
-    /** @test */
+#[Test]
     public function user_can_edit_their_own_post()
     {
         $this->actingAs($this->user);
@@ -49,7 +50,7 @@ class PostManagementTest extends TestCase
         ]);
     }
 
-    /** @test */
+#[Test]
     public function user_cannot_edit_others_post()
     {
         $this->actingAs($this->anotherUser);
@@ -70,7 +71,7 @@ class PostManagementTest extends TestCase
         ]);
     }
 
-    /** @test */
+#[Test]
     public function user_can_delete_their_own_post()
     {
         $this->actingAs($this->user);
@@ -88,7 +89,7 @@ class PostManagementTest extends TestCase
         ]);
     }
 
-    /** @test */
+#[Test]
     public function user_cannot_delete_others_post()
     {
         $this->actingAs($this->anotherUser);
@@ -106,7 +107,7 @@ class PostManagementTest extends TestCase
         ]);
     }
 
-    /** @test */
+#[Test]
     public function user_can_edit_their_own_comment()
     {
         $this->actingAs($this->user);
@@ -133,7 +134,7 @@ class PostManagementTest extends TestCase
         ]);
     }
 
-    /** @test */
+#[Test]
     public function user_cannot_edit_others_comment()
     {
         $this->actingAs($this->anotherUser);
@@ -154,7 +155,7 @@ class PostManagementTest extends TestCase
         ]);
     }
 
-    /** @test */
+#[Test]
     public function user_can_delete_their_own_comment()
     {
         $this->actingAs($this->user);
@@ -177,7 +178,7 @@ class PostManagementTest extends TestCase
         ]);
     }
 
-    /** @test */
+#[Test]
     public function user_cannot_delete_others_comment()
     {
         $this->actingAs($this->anotherUser);

@@ -64,6 +64,6 @@ class MedicineScheduleTest extends TestCase
     public function test_period_label_attribute()
     {
         $schedule = new MedicineSchedule(['dosage_period_days' => 1]);
-        $this->assertEquals('প্রতিদিন', $schedule->period_label);
+        $this->assertEquals('Daily', $schedule->period_label);
     }
 }

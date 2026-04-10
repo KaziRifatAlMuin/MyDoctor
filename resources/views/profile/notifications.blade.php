@@ -112,6 +112,29 @@
                                     <small class="text-muted">How early to send reminders</small>
                                 </div>
                             </div>
+
+                                <!-- Chatbot Bubble -->
+                                <div class="card mb-4">
+                                    <div class="card-header bg-light">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-comments text-info me-2"></i>
+                                            Chatbot Bubble
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-check form-switch mb-3">
+                                            <input class="form-check-input" type="checkbox"
+                                                   name="chatbot_bubble" id="chatbot_bubble"
+                                                   value="1" {{ ($chatbotBubbleEnabled ?? true) ? 'checked' : '' }}>
+                                            <label class="form-check-label fw-bold" for="chatbot_bubble">
+                                                Show Chatbot Bubble (floating assistant)
+                                            </label>
+                                            <p class="text-muted small mt-1">
+                                                Toggle whether the chatbot icon appears and shows reminders.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
                         </div>
 
                         <!-- Action Buttons -->
@@ -132,6 +155,26 @@
     document.getElementById('push_notifications').addEventListener('change', function() {
         if (typeof window.toggleNotifications === 'function') {
             window.toggleNotifications(this.checked);
+        }
+    });
+</script>
+<script>
+    // Helper to set cookie (days)
+    function setCookie(name, value, days) {
+        let expires = "";
+        if (days) {
+            const date = new Date();
+            date.setTime(date.getTime() + (days*24*60*60*1000));
+            expires = "; expires=" + date.toUTCString();
+        }
+        document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+    }
+
+    document.getElementById('chatbot_bubble')?.addEventListener('change', function() {
+        const enabled = this.checked ? '1' : '0';
+        setCookie('chatbot_bubble_enabled', enabled, 365);
+        if (typeof window.updateChatbotVisibility === 'function') {
+            window.updateChatbotVisibility(enabled === '1');
         }
     });
 </script>

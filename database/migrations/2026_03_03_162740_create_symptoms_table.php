@@ -13,14 +13,7 @@ return new class extends Migration
     {
         Schema::create('symptoms', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->string('symptom_name');
-            $table->unsignedTinyInteger('severity_level')->nullable();
-            $table->text('note')->nullable();
-            $table->dateTime('recorded_at');
-            $table->timestamps();
-
-            $table->index(['user_id', 'recorded_at']);
+            $table->string('name')->unique();
         });
     }
 

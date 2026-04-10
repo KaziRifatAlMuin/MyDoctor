@@ -11,7 +11,7 @@ use App\Models\Medicine;
 use App\Models\MedicineReminder;
 use App\Models\MedicineSchedule;
 use App\Models\HealthMetric;
-use App\Models\Symptom;
+use App\Models\UserSymptom;
 use App\Models\Disease;
 use App\Models\UserDisease;
 use Carbon\Carbon;
@@ -122,7 +122,7 @@ class AdminDashboardController extends Controller
             })->count(),
             'total_health_metrics' => HealthMetric::count(),
             'recent_metrics' => HealthMetric::whereDate('created_at', '>=', $today->subDays(7))->count(),
-            'total_symptoms' => Symptom::count(),
+            'total_symptoms' => UserSymptom::count(),
             'total_diseases' => Disease::count(),
             
             // System statistics

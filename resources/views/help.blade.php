@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Help Center - My Doctor')
+@section('title', __('ui.auto.Help'))
 
 @push('styles')
     <style>

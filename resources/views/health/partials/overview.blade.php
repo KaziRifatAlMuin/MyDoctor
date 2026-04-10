@@ -9,7 +9,6 @@
 @php
     $metricConfig  = $metricConfig  ?? config('health.metric_types');
     $symptomsBn    = $symptomsList  ?? config('health.symptoms');
-    $diseasesBnMap = $diseasesBn    ?? config('health.diseases');
 
     $activeMeds       = $medicines->filter(fn($m) => $m->schedules->where('is_active', true)->isNotEmpty());
     $activeConditions = $userDiseases->whereIn('status', ['active', 'chronic', 'managed']);
@@ -40,7 +39,7 @@
             <div class="health-card-header">
                 <h5>
                     <i class="fas fa-tachometer-alt"></i> Health Metrics
-                    <span class="bn-label">স্বাস্থ্য মেট্রিক্স</span>
+                    <span class="bn-label">{{ __('ui.nav.health') }}</span>
                 </h5>
                 <button class="btn btn-sm text-white px-3"
                         data-bs-toggle="modal" data-bs-target="#addMetricModal"
@@ -110,7 +109,7 @@
             <div class="health-card-header">
                 <h5>
                     <i class="fas fa-check-double"></i> Adherence
-                    <span class="bn-label">অনুগত্য</span>
+                    <span class="bn-label">{{ __('ui.health.adherence') }}</span>
                 </h5>
                 <span class="health-card-badge bg-light text-muted">30 days</span>
             </div>
@@ -160,7 +159,7 @@
             <div class="health-card-header">
                 <h5>
                     <i class="fas fa-notes-medical"></i> Symptoms
-                    <span class="bn-label">লক্ষণ</span>
+                    <span class="bn-label">{{ __('ui.health.symptom') }}</span>
                 </h5>
                 <button class="btn btn-sm text-white px-2"
                         data-bs-toggle="modal" data-bs-target="#addSymptomModal"
@@ -182,9 +181,15 @@
                                 {{ $sym->severity_level ?? '—' }}
                             </span>
                             <div class="flex-grow-1" style="min-width:0;">
-                                <div class="fw-semibold text-truncate" style="font-size:0.88rem;color:#2d3748;">
-                                    {{ $sym->symptom_name }}
-                                </div>
+                                @if($sym->symptom)
+                                    <a href="{{ route('public.symptoms.show', $sym->symptom) }}" class="fw-semibold text-truncate text-decoration-none d-inline-block" style="font-size:0.88rem;color:#2d3748; max-width: 100%;">
+                                        {{ $sym->symptom_name }}
+                                    </a>
+                                @else
+                                    <div class="fw-semibold text-truncate" style="font-size:0.88rem;color:#2d3748;">
+                                        {{ $sym->symptom_name }}
+                                    </div>
+                                @endif
                                 @if(!empty($symptomsBn[$sym->symptom_name]))
                                     <div class="bn-label text-truncate">{{ $symptomsBn[$sym->symptom_name] }}</div>
                                 @endif
@@ -206,7 +211,7 @@
             <div class="health-card-header">
                 <h5>
                     <i class="fas fa-virus"></i> Conditions
-                    <span class="bn-label">রোগ</span>
+                    <span class="bn-label">{{ __('ui.health.disease') }}</span>
                 </h5>
                 <button class="btn btn-sm text-white px-2"
                         data-bs-toggle="modal" data-bs-target="#addDiseaseModal"
@@ -223,7 +228,6 @@
                 @else
                     @foreach($activeConditions->take(5) as $ud)
                         @php
-                            $bnName      = $ud->disease->disease_name_bn ?? ($diseasesBnMap[$ud->disease->disease_name ?? ''] ?? '');
                             $statusBadge = match($ud->status) {
                                 'active'  => 'severity-8',
                                 'chronic' => 'severity-5',
@@ -237,17 +241,20 @@
                                 <i class="fas fa-virus"></i>
                             </div>
                             <div class="flex-grow-1" style="min-width:0;">
-                                <div class="fw-semibold text-truncate" style="font-size:0.88rem;color:#2d3748;">
-                                    {{ $ud->disease->disease_name ?? 'Unknown' }}
-                                </div>
-                                @if($bnName)
-                                    <div class="bn-label text-truncate">{{ $bnName }}</div>
+                                @if($ud->disease)
+                                    <a href="{{ route('public.disease.show', $ud->disease) }}" class="fw-semibold text-truncate text-decoration-none d-inline-block" style="font-size:0.88rem;color:#2d3748; max-width: 100%;">
+                                        {{ $ud->disease->disease_name }}
+                                    </a>
+                                @else
+                                    <div class="fw-semibold text-truncate" style="font-size:0.88rem;color:#2d3748;">
+                                        Unknown
+                                    </div>
                                 @endif
                                 @if($ud->diagnosed_at)
                                     <div class="small text-muted">Since {{ $ud->diagnosed_at->format('M Y') }}</div>
                                 @endif
                             </div>
-                            <span class="severity-badge {{ $statusBadge }} text-capitalize flex-shrink-0">{{ $ud->status }}</span>
+                            <span class="severity-badge {{ $statusBadge }} text-capitalize flex-shrink-0">{{ $ud->status_label }}</span>
                         </div>
                     @endforeach
                 @endif
@@ -261,7 +268,7 @@
             <div class="health-card-header">
                 <h5>
                     <i class="fas fa-pills"></i> Medicines
-                    <span class="bn-label">ওষুধ</span>
+                    <span class="bn-label">{{ __('ui.nav.medicine') }}</span>
                 </h5>
                 <span class="health-card-badge bg-light text-muted">{{ $activeMeds->count() }} active</span>
             </div>
@@ -304,7 +311,7 @@
             <div class="health-card-header">
                 <h5>
                     <i class="fas fa-prescription"></i> Prescriptions
-                    <span class="bn-label">প্রেসক্রিপশন</span>
+                    <span class="bn-label">{{ __('ui.health.prescription') }}</span>
                 </h5>
                 <div class="d-flex align-items-center gap-2">
                     <span class="health-card-badge bg-light text-muted">{{ $prescriptionUploads->count() }}</span>
@@ -350,7 +357,7 @@
             <div class="health-card-header">
                 <h5>
                     <i class="fas fa-file-medical-alt"></i> Reports
-                    <span class="bn-label">রিপোর্ট</span>
+                    <span class="bn-label">{{ __('ui.health.medical_report') }}</span>
                 </h5>
                 <div class="d-flex align-items-center gap-2">
                     <span class="health-card-badge bg-light text-muted">{{ $reportUploads->count() }}</span>
@@ -390,4 +397,5 @@
         </div>
     </div>
 </div>
+
 
