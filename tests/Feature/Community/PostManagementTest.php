@@ -62,7 +62,7 @@ class PostManagementTest extends TestCase
         $response->assertStatus(403);
         $response->assertJson([
             'success' => false,
-            'message' => 'You can only edit your own posts'
+            'message' => 'You can only edit your own posts unless you are an admin'
         ]);
 
         $this->assertDatabaseHas('posts', [
@@ -99,7 +99,7 @@ class PostManagementTest extends TestCase
         $response->assertStatus(403);
         $response->assertJson([
             'success' => false,
-            'message' => 'You can only delete your own posts'
+            'message' => 'You can only delete your own posts unless you are an admin'
         ]);
 
         $this->assertDatabaseHas('posts', [

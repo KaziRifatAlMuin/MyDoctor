@@ -2109,6 +2109,12 @@
                             </a>
                         </li>
                         <li class="banner-nav-item">
+                            <a href="{{ route('admin.health.index') }}"
+                                class="banner-nav-link {{ request()->routeIs('admin.health.*') || request()->routeIs('admin.metrics.*') ? 'active' : '' }}">
+                                Health
+                            </a>
+                        </li>
+                        <li class="banner-nav-item">
                             <a href="{{ route('community.posts.index') }}"
                                 class="banner-nav-link {{ request()->routeIs('community*') ? 'active' : '' }}">
                                 Community

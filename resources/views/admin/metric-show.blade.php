@@ -87,7 +87,8 @@
 
     .btn-main,
     .btn-soft,
-    .btn-delete {
+    .btn-delete,
+    .btn-add-field {
         min-height: 44px;
         border: 0;
         border-radius: 11px;
@@ -104,6 +105,30 @@
     .btn-main { color: #fff; background: linear-gradient(135deg, #0e7490, #06b6d4); }
     .btn-soft { color: #164e63; background: #e0f7ff; }
     .btn-delete { color: #fff; background: #dc2626; }
+    .btn-add-field { color: #164e63; background: #e0f7ff; min-height: 38px; }
+
+    .field-builder {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .field-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 0.5rem;
+    }
+
+    .btn-remove-field {
+        border: 0;
+        border-radius: 9px;
+        background: #fee2e2;
+        color: #991b1b;
+        font-weight: 700;
+        padding: 0.35rem 0.6rem;
+        min-width: 38px;
+    }
 
     .table-wrap {
         overflow-x: auto;
@@ -178,8 +203,17 @@
                     <label class="form-label fw-semibold">Metric Name</label>
                     <input class="form-input" type="text" name="metric_name" value="{{ $healthMetric->metric_name }}" required>
 
-                    <label class="form-label fw-semibold">Fields (comma separated)</label>
-                    <input class="form-input" type="text" name="fields" value="{{ implode(',', (array) $healthMetric->fields) }}" required>
+                    <label class="form-label fw-semibold">Fields</label>
+                    <div class="field-builder" data-field-builder="metric-show">
+                        @foreach ((array) $healthMetric->fields as $field)
+                            <div class="field-row">
+                                <input class="form-input" type="text" name="fields[]" value="{{ $field }}" required>
+                                <button type="button" class="btn-remove-field" title="Remove field">-</button>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <button class="btn-add-field mb-2" type="button" data-add-field="metric-show"><i class="fas fa-plus"></i>Add Field</button>
 
                     <button class="btn-main" type="submit"><i class="fas fa-floppy-disk"></i>Save Changes</button>
                 </form>
@@ -230,3 +264,38 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const container = document.querySelector('[data-field-builder="metric-show"]');
+        const addButton = document.querySelector('[data-add-field="metric-show"]');
+
+        if (!container || !addButton) {
+            return;
+        }
+
+        function bindRemoveButtons() {
+            container.querySelectorAll('.btn-remove-field').forEach(function (button) {
+                button.onclick = function () {
+                    const rows = container.querySelectorAll('.field-row');
+                    if (rows.length <= 1) {
+                        return;
+                    }
+                    button.closest('.field-row').remove();
+                };
+            });
+        }
+
+        addButton.addEventListener('click', function () {
+            const row = document.createElement('div');
+            row.className = 'field-row';
+            row.innerHTML = '<input class="form-input" type="text" name="fields[]" placeholder="Field label (e.g. Heart Rate (bpm))" required><button type="button" class="btn-remove-field" title="Remove field">-</button>';
+            container.appendChild(row);
+            bindRemoveButtons();
+        });
+
+        bindRemoveButtons();
+    });
+</script>
+@endpush

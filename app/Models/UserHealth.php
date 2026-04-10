@@ -50,7 +50,7 @@ class UserHealth extends Model
             return;
         }
 
-        $defaultFields = array_values((array) data_get(config('health.metric_types'), $metricName . '.fields', ['value']));
+        $defaultFields = HealthMetric::defaultFieldLabels($metricName);
 
         $definition = HealthMetric::query()->firstOrCreate(
             ['metric_name' => $metricName],

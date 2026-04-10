@@ -178,18 +178,7 @@ class DashboardController extends Controller
 
     private function ensureMetricDefinitions()
     {
-        $definitions = HealthMetric::query()->orderBy('metric_name')->get();
-        if ($definitions->isNotEmpty()) {
-            return $definitions;
-        }
-
-        foreach (config('health.metric_types', []) as $metricName => $cfg) {
-            HealthMetric::query()->create([
-                'metric_name' => $metricName,
-                'fields' => array_values((array) ($cfg['fields'] ?? [])),
-            ]);
-        }
-
+        HealthMetric::seedDefaults();
         return HealthMetric::query()->orderBy('metric_name')->get();
     }
 

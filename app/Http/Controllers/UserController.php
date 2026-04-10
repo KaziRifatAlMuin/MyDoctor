@@ -194,18 +194,7 @@ class UserController extends Controller
 
     private function ensureMetricDefinitions()
     {
-        $definitions = HealthMetric::query()->orderBy('metric_name')->get();
-        if ($definitions->isNotEmpty()) {
-            return $definitions;
-        }
-
-        foreach (config('health.metric_types', []) as $metricName => $cfg) {
-            HealthMetric::query()->create([
-                'metric_name' => $metricName,
-                'fields' => array_values((array) ($cfg['fields'] ?? [])),
-            ]);
-        }
-
+        HealthMetric::seedDefaults();
         return HealthMetric::query()->orderBy('metric_name')->get();
     }
 
@@ -220,11 +209,12 @@ class UserController extends Controller
                 'bn' => '',
                 'unit' => '',
                 'fields' => $fields,
-                'js_fields' => collect($fields)->map(function (string $field): array {
+                'js_fields' => collect($fields)->values()->map(function (string $field, int $index): array {
                     return [
-                        'name' => 'value_' . $field,
-                        'label' => ucwords(str_replace('_', ' ', $field)),
-                        'placeholder' => 'Enter ' . str_replace('_', ' ', $field),
+                        'name' => 'value_' . $index,
+                        'field_key' => $field,
+                        'label' => $field,
+                        'placeholder' => 'Enter ' . $field,
                         'min' => 0,
                         'max' => 100000,
                         'step' => '0.01',

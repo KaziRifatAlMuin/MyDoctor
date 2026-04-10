@@ -134,15 +134,6 @@ class MedicalSeeder extends Seeder
 
     private function ensureMetricDefinitions(): void
     {
-        if (HealthMetric::query()->exists()) {
-            return;
-        }
-
-        foreach (config('health.metric_types', []) as $metricName => $cfg) {
-            HealthMetric::query()->create([
-                'metric_name' => $metricName,
-                'fields' => array_values((array) ($cfg['fields'] ?? [])),
-            ]);
-        }
+        HealthMetric::seedDefaults();
     }
 }

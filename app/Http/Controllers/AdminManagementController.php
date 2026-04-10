@@ -283,7 +283,8 @@ class AdminManagementController extends Controller
     {
         $validated = $request->validate([
             'metric_name' => ['required', 'string', 'max:255', 'unique:health_metrics,metric_name'],
-            'fields' => ['required', 'string', 'max:2000'],
+            'fields' => ['required', 'array', 'min:1'],
+            'fields.*' => ['required', 'string', 'max:255'],
         ]);
 
         HealthMetric::create([
@@ -300,7 +301,8 @@ class AdminManagementController extends Controller
     {
         $validated = $request->validate([
             'metric_name' => ['required', 'string', 'max:255', 'unique:health_metrics,metric_name,' . $healthMetric->id],
-            'fields' => ['required', 'string', 'max:2000'],
+            'fields' => ['required', 'array', 'min:1'],
+            'fields.*' => ['required', 'string', 'max:255'],
         ]);
 
         $healthMetric->update([
@@ -328,12 +330,11 @@ class AdminManagementController extends Controller
             ->with('success', 'Health metric definition deleted successfully.');
     }
 
-    private function parseFields(string $fieldsRaw): array
+    private function parseFields(array $fieldsRaw): array
     {
-        $parts = collect(explode(',', $fieldsRaw))
+        $parts = collect($fieldsRaw)
             ->map(fn(string $field) => trim($field))
             ->filter(fn(string $field) => $field !== '')
-            ->map(fn(string $field) => str_replace(' ', '_', strtolower($field)))
             ->unique()
             ->values()
             ->all();

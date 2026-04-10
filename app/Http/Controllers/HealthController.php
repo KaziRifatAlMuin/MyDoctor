@@ -144,10 +144,7 @@ class HealthController extends Controller
             return back()->with('error', 'Selected metric definition no longer exists.');
         }
 
-        $value = [];
-        foreach ((array) $definition->fields as $field) {
-            $value[$field] = $request->input("value_$field", 0);
-        }
+        $value = $this->extractMetricValuesFromRequest($request, $metricType, (array) $definition->fields);
 
         UserHealth::create([
             'user_id'     => $userId,
@@ -318,10 +315,7 @@ class HealthController extends Controller
             return back()->with('error', 'Selected metric definition no longer exists.');
         }
 
-        $value = [];
-        foreach ((array) $definition->fields as $field) {
-            $value[$field] = $request->input("value_$field", 0);
-        }
+        $value = $this->extractMetricValuesFromRequest($request, $metricType, (array) $definition->fields);
 
         $healthMetric->update([
             'health_metric_id' => $definition->id,
@@ -508,18 +502,7 @@ class HealthController extends Controller
 
     private function ensureMetricDefinitions()
     {
-        $definitions = HealthMetric::query()->orderBy('metric_name')->get();
-        if ($definitions->isNotEmpty()) {
-            return $definitions;
-        }
-
-        foreach (config('health.metric_types', []) as $metricName => $cfg) {
-            HealthMetric::query()->create([
-                'metric_name' => $metricName,
-                'fields' => array_values((array) ($cfg['fields'] ?? [])),
-            ]);
-        }
-
+        HealthMetric::seedDefaults();
         return HealthMetric::query()->orderBy('metric_name')->get();
     }
 
@@ -534,11 +517,12 @@ class HealthController extends Controller
                 'bn' => '',
                 'unit' => '',
                 'fields' => $fields,
-                'js_fields' => collect($fields)->map(function (string $field): array {
+                'js_fields' => collect($fields)->values()->map(function (string $field, int $index): array {
                     return [
-                        'name' => 'value_' . $field,
-                        'label' => ucwords(str_replace('_', ' ', $field)),
-                        'placeholder' => 'Enter ' . str_replace('_', ' ', $field),
+                        'name' => 'value_' . $index,
+                        'field_key' => $field,
+                        'label' => $field,
+                        'placeholder' => 'Enter ' . $field,
                         'min' => 0,
                         'max' => 100000,
                         'step' => '0.01',
@@ -548,5 +532,25 @@ class HealthController extends Controller
         }
 
         return $config;
+    }
+
+    private function extractMetricValuesFromRequest(Request $request, string $metricType, array $fields): array
+    {
+        $values = [];
+        $legacyFields = array_values((array) data_get(config('health.metric_types', []), $metricType . '.fields', []));
+
+        foreach (array_values($fields) as $index => $fieldLabel) {
+            $value = $request->input('value_' . $index);
+            if ($value === null) {
+                $legacyField = $legacyFields[$index] ?? null;
+                if ($legacyField !== null) {
+                    $value = $request->input('value_' . $legacyField);
+                }
+            }
+
+            $values[$fieldLabel] = $value ?? 0;
+        }
+
+        return $values;
     }
 }
