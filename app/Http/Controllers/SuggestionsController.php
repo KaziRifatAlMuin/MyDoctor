@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
 use App\Models\HealthMetric;
+use App\Models\UserHealth;
 use App\Models\UserSymptom;
 use App\Models\Medicine;
 use App\Models\MedicineLog;
@@ -14,12 +15,15 @@ class SuggestionsController extends Controller
     public function index()
     {
         $user = Auth::user();
+        $this->ensureMetricDefinitions();
 
         // Latest metrics by type
-        $latestMetrics = HealthMetric::where('user_id', $user->id)
+        $latestMetrics = UserHealth::with('healthMetric')
+            ->where('user_id', $user->id)
             ->orderByDesc('recorded_at')
             ->get()
-            ->groupBy('metric_type')
+            ->filter(fn(UserHealth $record) => $record->healthMetric !== null)
+            ->groupBy(fn(UserHealth $record) => $record->metric_type ?? 'unknown')
             ->map(fn($g) => $g->first());
 
         // Recent symptoms (last 14 days)
@@ -326,5 +330,19 @@ class SuggestionsController extends Controller
         ];
 
         return $suggestions;
+    }
+
+    private function ensureMetricDefinitions(): void
+    {
+        if (HealthMetric::query()->exists()) {
+            return;
+        }
+
+        foreach (config('health.metric_types', []) as $metricName => $cfg) {
+            HealthMetric::query()->create([
+                'metric_name' => $metricName,
+                'fields' => array_values((array) ($cfg['fields'] ?? [])),
+            ]);
+        }
     }
 }

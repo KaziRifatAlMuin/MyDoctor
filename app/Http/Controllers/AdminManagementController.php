@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Disease;
+use App\Models\HealthMetric;
 use App\Models\Symptom;
 use App\Models\User;
+use App\Models\UserHealth;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -240,5 +242,106 @@ class AdminManagementController extends Controller
         return redirect()
             ->route('admin.symptoms.index')
             ->with('success', 'Symptom deleted successfully.');
+    }
+
+    public function metricsIndex(Request $request): View
+    {
+        $search = trim((string) $request->query('q', ''));
+
+        $metrics = HealthMetric::query()
+            ->withCount('userHealthRecords')
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where('metric_name', 'like', "%{$search}%");
+            })
+            ->orderBy('metric_name')
+            ->paginate(60)
+            ->withQueryString();
+
+        return view('admin.health', [
+            'metrics' => $metrics,
+            'search' => $search,
+        ]);
+    }
+
+    public function metricsShow(HealthMetric $healthMetric): View
+    {
+        $healthMetric->loadCount('userHealthRecords');
+
+        $recentEntries = UserHealth::query()
+            ->with('user')
+            ->where('health_metric_id', $healthMetric->id)
+            ->orderByDesc('recorded_at')
+            ->paginate(25);
+
+        return view('admin.metric-show', [
+            'healthMetric' => $healthMetric,
+            'recentEntries' => $recentEntries,
+        ]);
+    }
+
+    public function metricsStore(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'metric_name' => ['required', 'string', 'max:255', 'unique:health_metrics,metric_name'],
+            'fields' => ['required', 'string', 'max:2000'],
+        ]);
+
+        HealthMetric::create([
+            'metric_name' => $validated['metric_name'],
+            'fields' => $this->parseFields($validated['fields']),
+        ]);
+
+        return redirect()
+            ->route('admin.health.index')
+            ->with('success', 'Health metric definition created successfully.');
+    }
+
+    public function metricsUpdate(Request $request, HealthMetric $healthMetric): RedirectResponse
+    {
+        $validated = $request->validate([
+            'metric_name' => ['required', 'string', 'max:255', 'unique:health_metrics,metric_name,' . $healthMetric->id],
+            'fields' => ['required', 'string', 'max:2000'],
+        ]);
+
+        $healthMetric->update([
+            'metric_name' => $validated['metric_name'],
+            'fields' => $this->parseFields($validated['fields']),
+        ]);
+
+        return redirect()
+            ->route('admin.metrics.show', $healthMetric)
+            ->with('success', 'Health metric definition updated successfully.');
+    }
+
+    public function metricsDestroy(HealthMetric $healthMetric): RedirectResponse
+    {
+        if ($healthMetric->userHealthRecords()->exists()) {
+            return back()->withErrors([
+                'delete' => 'This metric is linked to user health records and cannot be deleted.',
+            ]);
+        }
+
+        $healthMetric->delete();
+
+        return redirect()
+            ->route('admin.health.index')
+            ->with('success', 'Health metric definition deleted successfully.');
+    }
+
+    private function parseFields(string $fieldsRaw): array
+    {
+        $parts = collect(explode(',', $fieldsRaw))
+            ->map(fn(string $field) => trim($field))
+            ->filter(fn(string $field) => $field !== '')
+            ->map(fn(string $field) => str_replace(' ', '_', strtolower($field)))
+            ->unique()
+            ->values()
+            ->all();
+
+        if (empty($parts)) {
+            return ['value'];
+        }
+
+        return $parts;
     }
 }

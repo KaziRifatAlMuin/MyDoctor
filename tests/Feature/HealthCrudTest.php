@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Disease;
-use App\Models\HealthMetric;
+use App\Models\UserHealth;
 use App\Models\Symptom;
 use App\Models\User;
 use App\Models\UserDisease;
@@ -51,7 +51,7 @@ class HealthCrudTest extends TestCase
     #[Test]
     public function guest_is_redirected_from_update_metric(): void
     {
-        $metric = HealthMetric::factory()->create();
+        $metric = UserHealth::factory()->create();
 
         $this->put(route('health.metric.update', $metric->id))
              ->assertRedirect(route('login'));
@@ -60,7 +60,7 @@ class HealthCrudTest extends TestCase
     #[Test]
     public function guest_is_redirected_from_destroy_metric(): void
     {
-        $metric = HealthMetric::factory()->create();
+        $metric = UserHealth::factory()->create();
 
         $this->delete(route('health.metric.destroy', $metric->id))
              ->assertRedirect(route('login'));
@@ -93,9 +93,8 @@ class HealthCrudTest extends TestCase
              ->assertRedirect(route('health') . '#metrics')
              ->assertSessionHas('success');
 
-        $this->assertDatabaseHas('health_metrics', [
-            'user_id'     => $user->id,
-            'metric_type' => 'heart_rate',
+        $this->assertDatabaseHas('user_health', [
+            'user_id' => $user->id,
         ]);
     }
 
@@ -126,14 +125,14 @@ class HealthCrudTest extends TestCase
     public function authenticated_user_can_delete_own_metric(): void
     {
         $user   = User::factory()->create();
-        $metric = HealthMetric::factory()->create(['user_id' => $user->id]);
+        $metric = UserHealth::factory()->create(['user_id' => $user->id]);
 
         $this->actingAs($user)
              ->delete(route('health.metric.destroy', $metric->id))
              ->assertRedirect(route('health') . '#metrics')
              ->assertSessionHas('success');
 
-        $this->assertDatabaseMissing('health_metrics', ['id' => $metric->id]);
+        $this->assertDatabaseMissing('user_health', ['id' => $metric->id]);
     }
 
     #[Test]
@@ -349,13 +348,13 @@ class HealthCrudTest extends TestCase
     {
         $owner  = User::factory()->create();
         $other  = User::factory()->create();
-        $metric = HealthMetric::factory()->create(['user_id' => $owner->id]);
+        $metric = UserHealth::factory()->create(['user_id' => $owner->id]);
 
         $this->actingAs($other)
              ->delete(route('health.metric.destroy', $metric->id))
              ->assertStatus(403);
 
-        $this->assertDatabaseHas('health_metrics', ['id' => $metric->id]);
+        $this->assertDatabaseHas('user_health', ['id' => $metric->id]);
     }
 
     #[Test]
@@ -363,7 +362,7 @@ class HealthCrudTest extends TestCase
     {
         $owner  = User::factory()->create();
         $other  = User::factory()->create();
-        $metric = HealthMetric::factory()->create(['user_id' => $owner->id]);
+        $metric = UserHealth::factory()->create(['user_id' => $owner->id]);
 
         $this->actingAs($other)
              ->put(route('health.metric.update', $metric->id), [
@@ -431,10 +430,9 @@ class HealthCrudTest extends TestCase
     public function owner_can_update_own_metric(): void
     {
         $user   = User::factory()->create();
-        $metric = HealthMetric::factory()->create([
+        $metric = UserHealth::factory()->create([
             'user_id'     => $user->id,
-            'metric_type' => 'heart_rate',
-            'value'       => ['bpm' => 70, 'unit' => 'bpm'],
+            'value'       => ['bpm' => 70],
         ]);
 
         $this->actingAs($user)

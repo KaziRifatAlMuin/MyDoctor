@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use App\Models\HealthMetric;
+use App\Models\UserHealth;
 use App\Models\User;
 use Carbon\Carbon;
 
@@ -68,15 +70,20 @@ class UserController extends Controller
             abort(403, 'Access denied. Admin privileges required.');
         }
         
+        $metricDefinitions = $this->ensureMetricDefinitions();
+
         // Load all health data for the user (same as HealthController)
-        $healthMetrics = \App\Models\HealthMetric::where('user_id', $user->id)
+        $healthMetrics = UserHealth::with('healthMetric')
+            ->where('user_id', $user->id)
             ->orderByDesc('recorded_at')
             ->limit(50)
-            ->get();
+            ->get()
+            ->filter(fn(UserHealth $record) => $record->healthMetric !== null)
+            ->values();
 
-        $metricsByType = $healthMetrics->groupBy('metric_type');
+        $metricsByType = $healthMetrics->groupBy(fn(UserHealth $record) => $record->metric_type ?? 'unknown');
         $latestMetrics = $metricsByType->map(fn($group) => $group->first());
-        $metricConfig = config('health.metric_types');
+        $metricConfig = $this->buildMetricConfig($metricDefinitions);
 
         // Symptoms
         $symptoms = \App\Models\UserSymptom::where('user_id', $user->id)
@@ -183,5 +190,49 @@ class UserController extends Controller
 
         $redirectTab = request()->input('redirect_tab', 'overview');
         return back()->with('success', "{$user->name} was updated successfully.")->withFragment($redirectTab);
+    }
+
+    private function ensureMetricDefinitions()
+    {
+        $definitions = HealthMetric::query()->orderBy('metric_name')->get();
+        if ($definitions->isNotEmpty()) {
+            return $definitions;
+        }
+
+        foreach (config('health.metric_types', []) as $metricName => $cfg) {
+            HealthMetric::query()->create([
+                'metric_name' => $metricName,
+                'fields' => array_values((array) ($cfg['fields'] ?? [])),
+            ]);
+        }
+
+        return HealthMetric::query()->orderBy('metric_name')->get();
+    }
+
+    private function buildMetricConfig($definitions): array
+    {
+        $config = [];
+        foreach ($definitions as $definition) {
+            $metricName = (string) $definition->metric_name;
+            $fields = array_values((array) $definition->fields);
+            $config[$metricName] = [
+                'en' => ucwords(str_replace('_', ' ', $metricName)),
+                'bn' => '',
+                'unit' => '',
+                'fields' => $fields,
+                'js_fields' => collect($fields)->map(function (string $field): array {
+                    return [
+                        'name' => 'value_' . $field,
+                        'label' => ucwords(str_replace('_', ' ', $field)),
+                        'placeholder' => 'Enter ' . str_replace('_', ' ', $field),
+                        'min' => 0,
+                        'max' => 100000,
+                        'step' => '0.01',
+                    ];
+                })->all(),
+            ];
+        }
+
+        return $config;
     }
 }

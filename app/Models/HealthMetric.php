@@ -9,20 +9,19 @@ class HealthMetric extends Model
 {
     use HasFactory;
 
+    public $timestamps = false;
+
     protected $fillable = [
-        'user_id',
-        'metric_type',
-        'recorded_at',
-        'value',
+        'metric_name',
+        'fields',
     ];
 
     protected $casts = [
-        'recorded_at' => 'datetime',
-        'value'       => 'array',
+        'fields' => 'array',
     ];
 
-    public function user()
+    public function userHealthRecords()
     {
-        return $this->belongsTo(User::class);
+        return $this->hasMany(UserHealth::class);
     }
 }

@@ -16,6 +16,7 @@ use App\Models\Upload;
 use App\Models\User;
 use App\Models\UserAddress;
 use App\Models\UserDisease;
+use App\Models\UserHealth;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -38,6 +39,7 @@ class PatientProfilesSeeder extends Seeder
 
     public function run(): void
     {
+        $this->ensureMetricDefinitions();
         $this->seedUser1();
         $this->seedUser2();
         $this->seedUser3();
@@ -390,12 +392,34 @@ class PatientProfilesSeeder extends Seeder
      */
     private function metrics(int $userId, string $type, int $count, callable $valueFactory): void
     {
+        $definition = HealthMetric::query()->where('metric_name', $type)->first();
+        if (!$definition) {
+            return;
+        }
+
         for ($i = 0; $i < $count; $i++) {
-            HealthMetric::create([
+            $value = (array) $valueFactory($i);
+            unset($value['unit']);
+
+            UserHealth::create([
                 'user_id'     => $userId,
-                'metric_type' => $type,
+                'health_metric_id' => $definition->id,
                 'recorded_at' => now()->subDays(rand(1, 180))->subHours(rand(0, 23)),
-                'value'       => $valueFactory($i),
+                'value'       => $value,
+            ]);
+        }
+    }
+
+    private function ensureMetricDefinitions(): void
+    {
+        if (HealthMetric::query()->exists()) {
+            return;
+        }
+
+        foreach (config('health.metric_types', []) as $metricName => $cfg) {
+            HealthMetric::query()->create([
+                'metric_name' => $metricName,
+                'fields' => array_values((array) ($cfg['fields'] ?? [])),
             ]);
         }
     }

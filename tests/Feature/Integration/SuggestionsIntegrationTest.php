@@ -3,7 +3,7 @@
 namespace Tests\Feature\Integration;
 
 use App\Models\Disease;
-use App\Models\HealthMetric;
+use App\Models\UserHealth;
 use App\Models\Medicine;
 use App\Models\MedicineLog;
 use App\Models\Symptom;
@@ -37,7 +37,7 @@ class SuggestionsIntegrationTest extends TestCase
         $medicine = Medicine::factory()->create(['user_id' => $user->id]);
 
         // High blood pressure
-        HealthMetric::factory()->create([
+        UserHealth::factory()->create([
             'user_id'     => $user->id,
             'metric_type' => 'blood_pressure',
             'value'       => ['systolic' => 160, 'diastolic' => 100],
@@ -282,15 +282,15 @@ class SuggestionsIntegrationTest extends TestCase
     {
         $user = User::factory()->create();
 
-        HealthMetric::factory()->create([
+        UserHealth::factory()->create([
             'user_id' => $user->id, 'metric_type' => 'blood_pressure',
             'value'   => ['systolic' => 155, 'diastolic' => 100], 'recorded_at' => now(),
         ]);
-        HealthMetric::factory()->create([
+        UserHealth::factory()->create([
             'user_id' => $user->id, 'metric_type' => 'blood_glucose',
             'value'   => ['value' => 220], 'recorded_at' => now(),
         ]);
-        HealthMetric::factory()->create([
+        UserHealth::factory()->create([
             'user_id' => $user->id, 'metric_type' => 'temperature',
             'value'   => ['value' => 38.8], 'recorded_at' => now(),
         ]);
@@ -318,7 +318,7 @@ class SuggestionsIntegrationTest extends TestCase
         $userB = User::factory()->create();
 
         // UserB has high BP — userA should NOT get that suggestion
-        HealthMetric::factory()->create([
+        UserHealth::factory()->create([
             'user_id'     => $userB->id,
             'metric_type' => 'blood_pressure',
             'value'       => ['systolic' => 170, 'diastolic' => 110],

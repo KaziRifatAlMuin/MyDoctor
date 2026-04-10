@@ -143,7 +143,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/health/disease', [HealthController::class, 'storeDisease'])->name('health.disease.store');
     Route::post('/health/upload', [HealthController::class, 'storeUpload'])->name('health.upload.store');
     Route::put('/health/metric/{healthMetric}', [HealthController::class, 'updateMetric'])->name('health.metric.update');
-    Route::get('/health/metric/{healthMetric}', function (\App\Models\HealthMetric $healthMetric) {
+    Route::get('/health/metric/{healthMetric}', function (\App\Models\UserHealth $healthMetric) {
         if (auth()->user()?->isAdmin()) {
             return redirect()->route('admin.users.show', $healthMetric->user_id);
         }
@@ -384,6 +384,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::patch('/symptoms/{symptom}', [AdminManagementController::class, 'symptomsUpdate'])->name('symptoms.update');
     Route::delete('/symptoms/{symptom}', [AdminManagementController::class, 'symptomsDestroy'])->name('symptoms.destroy');
 
+    Route::get('/health', [AdminManagementController::class, 'metricsIndex'])->name('health.index');
+    Route::post('/health', [AdminManagementController::class, 'metricsStore'])->name('health.store');
+    Route::get('/metrics/{healthMetric}', [AdminManagementController::class, 'metricsShow'])->name('metrics.show');
+    Route::patch('/metrics/{healthMetric}', [AdminManagementController::class, 'metricsUpdate'])->name('metrics.update');
+    Route::delete('/metrics/{healthMetric}', [AdminManagementController::class, 'metricsDestroy'])->name('metrics.destroy');
+
     Route::get('/user/{user}', [App\Http\Controllers\UserController::class, 'show'])->name('users.show');
     
     // Future admin routes
@@ -406,7 +412,7 @@ Route::middleware(['auth', 'admin'])->prefix('api/users')->group(function () {
     });
     
     Route::get('{id}/medical', function ($id) {
-        $user = \App\Models\User::with(['medicines.activeSchedule', 'userDiseases.disease', 'healthMetrics'])->findOrFail($id);
+        $user = \App\Models\User::with(['medicines.activeSchedule', 'userDiseases.disease', 'healthMetrics.healthMetric'])->findOrFail($id);
         return response()->json([
             'medicines' => $user->medicines->map(fn($m) => [
                 'id' => $m->id,

@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Disease;
-use App\Models\HealthMetric;
+use App\Models\UserHealth;
 use App\Models\Medicine;
 use App\Models\MedicineLog;
 use App\Models\Symptom;
@@ -98,13 +98,13 @@ class SuggestionsPageTest extends TestCase
         $userA = User::factory()->create();
         $userB = User::factory()->create();
 
-        HealthMetric::factory()->create([
+        UserHealth::factory()->create([
             'user_id'     => $userA->id,
             'metric_type' => 'blood_pressure',
             'value'       => ['systolic' => 120, 'diastolic' => 80],
             'recorded_at' => now(),
         ]);
-        HealthMetric::factory()->count(3)->create(['user_id' => $userB->id]);
+        UserHealth::factory()->count(3)->create(['user_id' => $userB->id]);
 
         $response = $this->actingAs($userA)
                          ->get(route('suggestions'));
@@ -208,7 +208,7 @@ class SuggestionsPageTest extends TestCase
     {
         $user = User::factory()->create();
 
-        HealthMetric::factory()->create([
+        UserHealth::factory()->create([
             'user_id'     => $user->id,
             'metric_type' => 'blood_pressure',
             'value'       => ['systolic' => 155, 'diastolic' => 98],
@@ -228,7 +228,7 @@ class SuggestionsPageTest extends TestCase
     {
         $user = User::factory()->create();
 
-        HealthMetric::factory()->create([
+        UserHealth::factory()->create([
             'user_id'     => $user->id,
             'metric_type' => 'temperature',
             'value'       => ['value' => 39.2],
@@ -397,13 +397,13 @@ class SuggestionsPageTest extends TestCase
     {
         $user = User::factory()->create();
 
-        HealthMetric::factory()->create([
+        UserHealth::factory()->create([
             'user_id'     => $user->id,
             'metric_type' => 'blood_pressure',
             'value'       => ['systolic' => 180, 'diastolic' => 110], // older, high
             'recorded_at' => now()->subDays(10),
         ]);
-        HealthMetric::factory()->create([
+        UserHealth::factory()->create([
             'user_id'     => $user->id,
             'metric_type' => 'blood_pressure',
             'value'       => ['systolic' => 115, 'diastolic' => 75],  // newest, normal

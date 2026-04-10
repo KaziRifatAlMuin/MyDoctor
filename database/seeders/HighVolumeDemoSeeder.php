@@ -20,6 +20,7 @@ use App\Models\Upload;
 use App\Models\User;
 use App\Models\UserAddress;
 use App\Models\UserDisease;
+use App\Models\UserHealth;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -29,6 +30,7 @@ class HighVolumeDemoSeeder extends Seeder
 {
     public function run(): void
     {
+        $this->ensureMetricDefinitions();
         $this->ensureAdminAccount();
         $users = $this->seedUsers();
         $diseaseIds = Disease::query()->pluck('id')->values();
@@ -191,7 +193,7 @@ class HighVolumeDemoSeeder extends Seeder
             UserAddress::factory()->count($addressCount)->create(['user_id' => $user->id]);
 
             $metricCount = $isTop ? random_int(25, 45) : random_int(8, 20);
-            HealthMetric::factory()->count($metricCount)->create(['user_id' => $user->id]);
+            UserHealth::factory()->count($metricCount)->create(['user_id' => $user->id]);
 
             $symptomCount = $isTop ? random_int(25, 45) : random_int(8, 20);
             UserSymptom::factory()->count($symptomCount)->create(['user_id' => $user->id]);
@@ -242,6 +244,20 @@ class HighVolumeDemoSeeder extends Seeder
                     );
                 }
             }
+        }
+    }
+
+    private function ensureMetricDefinitions(): void
+    {
+        if (HealthMetric::query()->exists()) {
+            return;
+        }
+
+        foreach (config('health.metric_types', []) as $metricName => $cfg) {
+            HealthMetric::query()->create([
+                'metric_name' => $metricName,
+                'fields' => array_values((array) ($cfg['fields'] ?? [])),
+            ]);
         }
     }
 

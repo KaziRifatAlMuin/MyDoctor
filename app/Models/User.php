@@ -201,7 +201,14 @@ class User extends Authenticatable
     // Health relationships
     public function healthMetrics()
     {
-        return $this->hasMany(HealthMetric::class);
+        return $this->hasMany(UserHealth::class, 'user_id');
+    }
+
+    public function healthMetricDefinitions()
+    {
+        return $this->belongsToMany(HealthMetric::class, 'user_health', 'user_id', 'health_metric_id')
+            ->withPivot('value', 'recorded_at')
+            ->withTimestamps();
     }
 
     public function symptoms()

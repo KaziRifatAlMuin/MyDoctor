@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\HealthMetric;
+use App\Models\UserHealth;
 use App\Models\Medicine;
 use App\Models\MedicineLog;
 use App\Models\MedicineSchedule;
@@ -38,7 +38,7 @@ class HealthTest extends TestCase
     public function health_page_shows_health_metrics_for_authenticated_user(): void
     {
         $user = User::factory()->create();
-        HealthMetric::factory()->count(3)->create(['user_id' => $user->id]);
+        UserHealth::factory()->count(3)->create(['user_id' => $user->id]);
 
         $this->actingAs($user)
              ->get(route('health'))
@@ -83,8 +83,8 @@ class HealthTest extends TestCase
         $userA = User::factory()->create();
         $userB = User::factory()->create();
 
-        HealthMetric::factory()->count(5)->create(['user_id' => $userA->id]);
-        HealthMetric::factory()->count(3)->create(['user_id' => $userB->id]);
+        UserHealth::factory()->count(5)->create(['user_id' => $userA->id]);
+        UserHealth::factory()->count(3)->create(['user_id' => $userB->id]);
 
         $response = $this->actingAs($userA)
                          ->get(route('health'));
@@ -131,13 +131,13 @@ class HealthTest extends TestCase
     {
         $user = User::factory()->create();
 
-        HealthMetric::factory()->create([
+        UserHealth::factory()->create([
             'user_id'     => $user->id,
             'metric_type' => 'heart_rate',
             'value'       => ['bpm' => 72, 'unit' => 'bpm'],
             'recorded_at' => now(),
         ]);
-        HealthMetric::factory()->create([
+        UserHealth::factory()->create([
             'user_id'     => $user->id,
             'metric_type' => 'body_weight',
             'value'       => ['value' => 70, 'unit' => 'kg'],

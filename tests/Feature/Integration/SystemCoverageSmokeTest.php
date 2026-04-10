@@ -152,9 +152,8 @@ class SystemCoverageSmokeTest extends TestCase
             ])
             ->assertRedirect(route('health') . '#metrics');
 
-        $this->assertDatabaseHas('health_metrics', [
+        $this->assertDatabaseHas('user_health', [
             'user_id' => $user->id,
-            'metric_type' => 'heart_rate',
         ]);
 
         $this->actingAs($user)

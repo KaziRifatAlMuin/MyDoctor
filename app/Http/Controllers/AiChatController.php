@@ -22,6 +22,7 @@ class AiChatController extends Controller
         'medicine_reminders',
         'medicine_logs',
         'health_metrics',
+        'user_health',
         'environments',
         'environment_metrics',
         'symptoms',
@@ -51,7 +52,7 @@ class AiChatController extends Controller
         'medicine_logs',
         'medicine_reminders',
         'medicine_schedules',
-        'health_metrics',
+        'user_health',
         'environments',
         'environment_metrics',
         'user_symptoms',
@@ -541,13 +542,14 @@ class AiChatController extends Controller
                     ->map(fn($r) => (array) $r)
                     ->all();
 
-                // health_metrics — value is a JSON column, decode it
+                // user_health + health_metrics (definition) joined
                 $metrics = DB::connection($conn)
-                    ->table('health_metrics')
-                    ->where('user_id', $userId)
-                    ->orderByDesc('recorded_at')
+                    ->table('user_health as uh')
+                    ->leftJoin('health_metrics as hm', 'hm.id', '=', 'uh.health_metric_id')
+                    ->where('uh.user_id', $userId)
+                    ->orderByDesc('uh.recorded_at')
                     ->limit(20)
-                    ->get(['metric_type', 'value', 'recorded_at'])
+                    ->get(['hm.metric_name as metric_type', 'uh.value', 'uh.recorded_at'])
                     ->map(function ($r): array {
                         $row = (array) $r;
                         if (is_string($row['value'])) {
@@ -1081,7 +1083,7 @@ class AiChatController extends Controller
         $queries = [
             "SELECT d.disease_name as disease, ud.status, ud.diagnosed_at, ud.notes FROM user_diseases ud LEFT JOIN diseases d ON d.id = ud.disease_id WHERE ud.user_id = {$userId} ORDER BY ud.id DESC LIMIT 20",
             "SELECT s.name as symptom, us.severity_level, us.note, us.recorded_at FROM user_symptoms us LEFT JOIN symptoms s ON s.id = us.symptom_id WHERE us.user_id = {$userId} ORDER BY us.recorded_at DESC LIMIT 20",
-            "SELECT metric_type, value, recorded_at FROM health_metrics WHERE user_id = {$userId} ORDER BY recorded_at DESC LIMIT 20",
+            "SELECT hm.metric_name as metric_type, uh.value, uh.recorded_at FROM user_health uh LEFT JOIN health_metrics hm ON hm.id = uh.health_metric_id WHERE uh.user_id = {$userId} ORDER BY uh.recorded_at DESC LIMIT 20",
             "SELECT medicine_name, type, rule, unit FROM medicines WHERE user_id = {$userId} ORDER BY id DESC LIMIT 10",
         ];
 

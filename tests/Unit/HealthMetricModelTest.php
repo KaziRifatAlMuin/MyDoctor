@@ -3,7 +3,7 @@
 namespace Tests\Unit;
 
 use App\Models\HealthMetric;
-use App\Models\User;
+use App\Models\UserHealth;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -15,62 +15,52 @@ class HealthMetricModelTest extends TestCase
     #[Test]
     public function health_metric_has_correct_fillable_attributes(): void
     {
-        $expected = ['user_id', 'metric_type', 'recorded_at', 'value'];
+        $expected = ['metric_name', 'fields'];
         $this->assertEquals($expected, (new HealthMetric())->getFillable());
     }
 
     #[Test]
-    public function health_metric_casts_value_to_array(): void
+    public function health_metric_casts_fields_to_array(): void
     {
         $casts = (new HealthMetric())->getCasts();
-        $this->assertArrayHasKey('value', $casts);
-        $this->assertEquals('array', $casts['value']);
+        $this->assertArrayHasKey('fields', $casts);
+        $this->assertEquals('array', $casts['fields']);
     }
 
     #[Test]
-    public function health_metric_casts_recorded_at_to_datetime(): void
+    public function health_metric_has_user_health_records_relationship(): void
     {
-        $casts = (new HealthMetric())->getCasts();
-        $this->assertArrayHasKey('recorded_at', $casts);
-        $this->assertEquals('datetime', $casts['recorded_at']);
-    }
-
-    #[Test]
-    public function health_metric_belongs_to_user(): void
-    {
-        $user = User::factory()->create();
-        $metric = HealthMetric::factory()->create(['user_id' => $user->id]);
-
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\BelongsTo::class, $metric->user());
-        $this->assertEquals($user->id, $metric->user->id);
-    }
-
-    #[Test]
-    public function health_metric_stores_value_as_json_array(): void
-    {
-        $user = User::factory()->create();
         $metric = HealthMetric::factory()->create([
-            'user_id'     => $user->id,
-            'metric_type' => 'blood_pressure',
-            'value'       => ['systolic' => 120, 'diastolic' => 80, 'unit' => 'mmHg'],
-            'recorded_at' => now(),
+            'metric_name' => 'heart_rate',
+            'fields' => ['bpm'],
+        ]);
+
+        UserHealth::factory()->count(2)->create(['health_metric_id' => $metric->id]);
+
+        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\HasMany::class, $metric->userHealthRecords());
+        $this->assertEquals(2, $metric->userHealthRecords()->count());
+    }
+
+    #[Test]
+    public function health_metric_stores_fields_as_json_array(): void
+    {
+        $metric = HealthMetric::factory()->create([
+            'metric_name' => 'blood_pressure',
+            'fields' => ['systolic', 'diastolic'],
         ]);
 
         $fresh = HealthMetric::find($metric->id);
-        $this->assertIsArray($fresh->value);
-        $this->assertEquals(120, $fresh->value['systolic']);
+        $this->assertIsArray($fresh->fields);
+        $this->assertEquals('systolic', $fresh->fields[0]);
     }
 
     #[Test]
-    public function health_metrics_can_be_filtered_by_user(): void
+    public function health_metrics_can_be_filtered_by_metric_name(): void
     {
-        $userA = User::factory()->create();
-        $userB = User::factory()->create();
+        HealthMetric::factory()->create(['metric_name' => 'blood_pressure', 'fields' => ['systolic', 'diastolic']]);
+        HealthMetric::factory()->create(['metric_name' => 'heart_rate', 'fields' => ['bpm']]);
 
-        HealthMetric::factory()->count(3)->create(['user_id' => $userA->id]);
-        HealthMetric::factory()->count(2)->create(['user_id' => $userB->id]);
-
-        $this->assertEquals(3, HealthMetric::where('user_id', $userA->id)->count());
-        $this->assertEquals(2, HealthMetric::where('user_id', $userB->id)->count());
+        $this->assertEquals(1, HealthMetric::where('metric_name', 'blood_pressure')->count());
+        $this->assertEquals(1, HealthMetric::where('metric_name', 'heart_rate')->count());
     }
 }

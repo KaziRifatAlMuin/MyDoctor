@@ -11,6 +11,7 @@ use App\Models\CommentLike;
 use App\Models\Disease;
 use App\Models\EnvironmentMetric;
 use App\Models\HealthMetric;
+use App\Models\UserHealth;
 use App\Models\Mailing;
 use App\Models\Medicine;
 use App\Models\MedicineLog;
@@ -45,8 +46,8 @@ class AdminDashboardController extends Controller
             ->latest()
             ->take(6)
             ->get();
-        $latestMetrics = HealthMetric::with('user')
-            ->latest()
+        $latestMetrics = UserHealth::with(['user', 'healthMetric'])
+            ->latest('recorded_at')
             ->take(6)
             ->get();
         $navigationCards = $this->getNavigationCards();
@@ -113,7 +114,7 @@ class AdminDashboardController extends Controller
             'medical' => [
                 'medicines' => Medicine::count(),
                 'medicine_logs' => MedicineLog::count(),
-                'health_metrics' => HealthMetric::count(),
+                'health_metrics' => UserHealth::count(),
                 'environment_metrics' => EnvironmentMetric::count(),
                 'user_symptoms' => UserSymptom::count(),
                 'user_diseases' => UserDisease::count(),
@@ -129,7 +130,7 @@ class AdminDashboardController extends Controller
             'active_reminders' => MedicineReminder::whereHas('schedule', function($q) {
                 $q->where('is_active', true);
             })->count(),
-                'new_metrics_this_week' => HealthMetric::whereDate('created_at', '>=', $weekAgo)->count(),
+                'new_metrics_this_week' => UserHealth::whereDate('created_at', '>=', $weekAgo)->count(),
                 'new_logs_this_week' => MedicineLog::whereDate('created_at', '>=', $weekAgo)->count(),
             ],
             'database' => $databaseSummary,
@@ -159,6 +160,13 @@ class AdminDashboardController extends Controller
                 'icon' => 'fa-stethoscope',
                 'route' => route('admin.symptoms.index'),
                 'accent' => 'accent-symptoms',
+            ],
+            [
+                'title' => 'Health Metrics Catalog',
+                'description' => 'Define custom metric names and fields for user tracking.',
+                'icon' => 'fa-heartbeat',
+                'route' => route('admin.health.index'),
+                'accent' => 'accent-public',
             ],
             [
                 'title' => 'Public Diseases',
@@ -287,7 +295,7 @@ class AdminDashboardController extends Controller
             'posts' => Post::where('user_id', $user->id)->count(),
             'comments' => Comment::where('user_id', $user->id)->count(),
             'medicines' => Medicine::where('user_id', $user->id)->count(),
-            'health_metrics' => HealthMetric::where('user_id', $user->id)->count(),
+            'health_metrics' => UserHealth::where('user_id', $user->id)->count(),
             'active_reminders' => MedicineReminder::whereHas('schedule', function($q) use ($user) {
                 $q->whereHas('medicine', function($q) use ($user) {
                     $q->where('user_id', $user->id);
@@ -332,8 +340,9 @@ class AdminDashboardController extends Controller
         }
         
         // Recent health metrics
-        $recentMetrics = HealthMetric::where('user_id', $user->id)
-            ->latest()
+        $recentMetrics = UserHealth::with('healthMetric')
+            ->where('user_id', $user->id)
+            ->latest('recorded_at')
             ->take(2)
             ->get();
             
@@ -341,7 +350,7 @@ class AdminDashboardController extends Controller
             $recentActivities->push([
                 'title' => 'Recorded health data',
                 'description' => ucfirst($metric->metric_type ?? 'Health metric'),
-                'time' => $metric->created_at->diffForHumans(),
+                'time' => $metric->recorded_at?->diffForHumans() ?? $metric->created_at->diffForHumans(),
                 'icon' => 'fa-heartbeat',
                 'color' => 'danger'
             ]);

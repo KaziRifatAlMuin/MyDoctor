@@ -40,6 +40,7 @@ return [
         'medicine_reminders',
         'medicine_logs',
         'health_metrics',
+        'user_health',
         'environments',
         'environment_metrics',
         'symptoms',

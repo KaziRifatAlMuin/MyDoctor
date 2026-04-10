@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Models\HealthMetric;
+use App\Models\UserHealth;
 use App\Models\Medicine;
 use App\Models\MedicineLog;
 use App\Models\User;
@@ -105,7 +105,7 @@ class UserModelTest extends TestCase
     public function user_has_health_metrics_relationship(): void
     {
         $user = User::factory()->create();
-        HealthMetric::factory()->create(['user_id' => $user->id]);
+        UserHealth::factory()->create(['user_id' => $user->id]);
 
         $this->assertInstanceOf(\Illuminate\Database\Eloquent\Relations\HasMany::class, $user->healthMetrics());
         $this->assertEquals(1, $user->healthMetrics()->count());
@@ -149,11 +149,11 @@ class UserModelTest extends TestCase
     public function deleting_user_cascades_health_metrics(): void
     {
         $user = User::factory()->create();
-        HealthMetric::factory()->create(['user_id' => $user->id]);
+        UserHealth::factory()->create(['user_id' => $user->id]);
 
         $user->delete();
 
-        $this->assertDatabaseMissing('health_metrics', ['user_id' => $user->id]);
+        $this->assertDatabaseMissing('user_health', ['user_id' => $user->id]);
     }
 
     #[Test]
