@@ -4,173 +4,214 @@
 
 @push('styles')
 <style>
-    .admin-surface {
+    .admin-users-surface {
         min-height: 100vh;
         padding: 2rem 0 4rem;
-        background: radial-gradient(circle at 85% 15%, rgba(240, 147, 251, 0.28), transparent 35%),
-                    radial-gradient(circle at 10% 85%, rgba(102, 126, 234, 0.25), transparent 38%),
-                    linear-gradient(145deg, #eff4ff 0%, #f7f9ff 45%, #eef2ff 100%);
+        background:
+            radial-gradient(circle at 12% 12%, rgba(37, 99, 235, 0.2), transparent 36%),
+            radial-gradient(circle at 82% 18%, rgba(14, 165, 233, 0.18), transparent 30%),
+            linear-gradient(160deg, #eef4ff 0%, #f8fbff 45%, #edf3ff 100%);
     }
 
-    .hero-card {
+    .users-hero {
         border-radius: 26px;
-        padding: 1.8rem;
+        padding: 1.9rem;
         color: #fff;
-        margin-bottom: 1.5rem;
-        background: linear-gradient(135deg, #2446d8 0%, #5f63f2 45%, #ca5dc8 100%);
-        box-shadow: 0 20px 50px rgba(36, 70, 216, 0.28);
+        margin-bottom: 1.4rem;
+        background: linear-gradient(135deg, #123fbb 0%, #1f5fd1 52%, #0ea5e9 100%);
+        box-shadow: 0 20px 54px rgba(18, 63, 187, 0.25);
     }
 
-    .hero-title {
+    .users-hero h1 {
         margin: 0;
-        font-size: 1.7rem;
+        font-size: 1.75rem;
         font-weight: 800;
     }
 
-    .hero-sub {
-        margin-top: 0.35rem;
+    .users-hero p {
+        margin-top: 0.45rem;
         opacity: 0.92;
     }
 
-    .hero-pills {
+    .hero-stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.7rem;
         margin-top: 1rem;
-        display: flex;
-        gap: 0.75rem;
-        flex-wrap: wrap;
     }
 
-    .hero-pill {
-        border: 1px solid rgba(255, 255, 255, 0.22);
-        background: rgba(255, 255, 255, 0.14);
+    .hero-stat {
+        border: 1px solid rgba(255, 255, 255, 0.24);
         border-radius: 14px;
-        padding: 0.55rem 0.85rem;
-        min-width: 120px;
+        background: rgba(255, 255, 255, 0.12);
+        padding: 0.65rem 0.85rem;
     }
 
-    .hero-pill strong {
-        display: block;
-        line-height: 1.1;
+    .hero-stat strong {
         font-size: 1.2rem;
+        line-height: 1.1;
+        display: block;
     }
 
-    .panel-card {
+    .users-panel {
         background: #fff;
         border-radius: 22px;
-        border: 1px solid rgba(36, 70, 216, 0.12);
-        box-shadow: 0 12px 32px rgba(18, 32, 86, 0.08);
+        border: 1px solid rgba(30, 64, 175, 0.11);
+        box-shadow: 0 12px 32px rgba(15, 33, 87, 0.08);
         overflow: hidden;
     }
 
-    .panel-head {
+    .users-panel-head {
         padding: 1.2rem;
-        border-bottom: 1px solid rgba(36, 70, 216, 0.1);
-        background: linear-gradient(180deg, #fdfdff 0%, #f8faff 100%);
+        border-bottom: 1px solid rgba(30, 64, 175, 0.1);
+        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
     }
 
-    .search-form {
+    .filter-form {
         display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 0.75rem;
+        grid-template-columns: 1fr auto auto;
+        gap: 0.65rem;
     }
 
-    .search-form input {
+    .filter-form input {
         min-height: 46px;
         border-radius: 12px;
-        border: 1px solid rgba(36, 70, 216, 0.2);
-        padding: 0.6rem 0.9rem;
+        border: 1px solid rgba(30, 64, 175, 0.22);
+        padding: 0.65rem 0.9rem;
     }
 
-    .search-form button,
-    .action-btn {
+    .btn-main,
+    .btn-ghost {
+        min-height: 46px;
         border: 0;
         border-radius: 12px;
-        min-height: 46px;
-        padding: 0.6rem 1rem;
         font-weight: 700;
+        padding: 0.6rem 1rem;
     }
 
-    .action-btn {
-        background: linear-gradient(135deg, #2446d8, #5f63f2);
+    .btn-main {
         color: #fff;
+        background: linear-gradient(135deg, #1d4ed8, #0ea5e9);
     }
 
-    .table-wrap {
+    .btn-ghost {
+        color: #17356c;
+        background: #eaf1ff;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .table-shell {
         padding: 1rem;
     }
 
-    .table-admin {
+    .table-users {
         width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
+        border-collapse: collapse;
     }
 
-    .table-admin th {
-        background: #f4f7ff;
-        color: #51608a;
+    .table-users th {
+        background: #f3f7ff;
+        color: #5c6f95;
         text-transform: uppercase;
-        font-size: 0.75rem;
-        letter-spacing: 0.08em;
-        padding: 0.85rem;
-        border-bottom: 1px solid rgba(36, 70, 216, 0.12);
+        letter-spacing: 0.06em;
+        font-size: 0.74rem;
+        padding: 0.8rem;
+        border-bottom: 1px solid rgba(30, 64, 175, 0.12);
+        white-space: nowrap;
     }
 
-    .table-admin td {
+    .table-users td {
         padding: 0.85rem;
-        border-bottom: 1px solid rgba(36, 70, 216, 0.08);
+        border-bottom: 1px solid rgba(30, 64, 175, 0.08);
         vertical-align: middle;
     }
 
-    .table-admin tr:hover td {
+    .table-users tr:hover td {
         background: #f9fbff;
     }
 
-    .mini-input,
-    .mini-select {
-        width: 100%;
-        min-height: 36px;
-        border-radius: 9px;
-        border: 1px solid rgba(36, 70, 216, 0.2);
-        padding: 0.35rem 0.55rem;
-        font-size: 0.86rem;
-    }
-
-    .row-actions {
+    .user-cell {
         display: flex;
-        gap: 0.45rem;
         align-items: center;
+        gap: 0.75rem;
     }
 
-    .btn-save {
-        border: 0;
-        border-radius: 8px;
-        background: #0f9f5f;
+    .user-avatar,
+    .user-avatar-placeholder {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+
+    .user-avatar-placeholder {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         color: #fff;
-        font-size: 0.78rem;
-        padding: 0.44rem 0.62rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #1d4ed8, #0ea5e9);
     }
 
-    .btn-delete {
-        border: 0;
-        border-radius: 8px;
-        background: #d44c4c;
-        color: #fff;
-        font-size: 0.78rem;
-        padding: 0.44rem 0.62rem;
+    .user-name {
+        color: #193664;
+        font-weight: 700;
     }
 
-    .create-grid {
-        display: grid;
-        grid-template-columns: 1.3fr 1.3fr 1fr 1fr 1fr auto;
-        gap: 0.6rem;
-        margin-top: 1rem;
+    .user-sub {
+        color: #7487ab;
+        font-size: 0.83rem;
+    }
+
+    .role-badge,
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        border-radius: 999px;
+        padding: 0.38rem 0.72rem;
+        font-size: 0.78rem;
+        font-weight: 700;
+    }
+
+    .role-admin { background: rgba(180, 83, 9, 0.14); color: #b45309; }
+    .role-member { background: rgba(29, 78, 216, 0.14); color: #1d4ed8; }
+    .status-ok { background: rgba(15, 159, 95, 0.14); color: #0f9f5f; }
+    .status-pending { background: rgba(217, 119, 6, 0.18); color: #b45309; }
+
+    .action-link {
+        border-radius: 10px;
+        border: 1px solid rgba(30, 64, 175, 0.25);
+        padding: 0.36rem 0.64rem;
+        color: #1d4ed8;
+        text-decoration: none;
+        font-size: 0.82rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .pagination-wrap {
+        padding: 0.8rem 1rem 1.2rem;
     }
 
     @media (max-width: 991px) {
-        .create-grid {
-            grid-template-columns: 1fr;
+        .hero-stats {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
-        .search-form {
+        .filter-form {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 575px) {
+        .hero-stats {
             grid-template-columns: 1fr;
         }
     }
@@ -178,24 +219,16 @@
 @endpush
 
 @section('content')
-<div class="admin-surface">
+<div class="admin-users-surface">
     <div class="container" style="max-width: 1240px;">
-        <div class="hero-card">
-            <h1 class="hero-title"><i class="fas fa-users-cog me-2"></i>Admin Users</h1>
-            <p class="hero-sub">Create, update, and remove user accounts from one table-based control center.</p>
-            <div class="hero-pills">
-                <div class="hero-pill">
-                    <small>Total</small>
-                    <strong>{{ number_format($users->total()) }}</strong>
-                </div>
-                <div class="hero-pill">
-                    <small>Admins</small>
-                    <strong>{{ number_format($adminCount) }}</strong>
-                </div>
-                <div class="hero-pill">
-                    <small>Members</small>
-                    <strong>{{ number_format($memberCount) }}</strong>
-                </div>
+        <div class="users-hero">
+            <h1><i class="fas fa-users me-2"></i>Admin Users Directory</h1>
+            <p>All user accounts are now listed here. Dashboard is reserved for cards and system-wide statistics.</p>
+            <div class="hero-stats">
+                <div class="hero-stat"><small>Total Users</small><strong>{{ number_format($users->total()) }}</strong></div>
+                <div class="hero-stat"><small>Admins</small><strong>{{ number_format($adminCount) }}</strong></div>
+                <div class="hero-stat"><small>Members</small><strong>{{ number_format($memberCount) }}</strong></div>
+                <div class="hero-stat"><small>Verified</small><strong>{{ number_format($verifiedCount) }}</strong></div>
             </div>
         </div>
 
@@ -213,86 +246,82 @@
             </div>
         @endif
 
-        <div class="panel-card">
-            <div class="panel-head">
-                <form class="search-form" method="GET" action="{{ route('admin.users.index') }}">
-                    <input type="text" name="q" value="{{ $search }}" placeholder="Search users by name or email">
-                    <button class="action-btn" type="submit"><i class="fas fa-magnifying-glass me-1"></i>Search</button>
-                </form>
-
-                <form class="create-grid" method="POST" action="{{ route('admin.users.store') }}">
-                    @csrf
-                    <input class="mini-input" type="text" name="name" placeholder="New user name" required>
-                    <input class="mini-input" type="email" name="email" placeholder="Email" required>
-                    <input class="mini-input" type="password" name="password" placeholder="Password" required>
-                    <input class="mini-input" type="text" name="phone" placeholder="Phone">
-                    <select class="mini-select" name="role" required>
-                        <option value="member">member</option>
-                        <option value="admin">admin</option>
-                    </select>
-                    <button class="action-btn" type="submit"><i class="fas fa-plus me-1"></i>Create</button>
+        <section class="users-panel">
+            <div class="users-panel-head">
+                <form class="filter-form" method="GET" action="{{ route('admin.users.index') }}">
+                    <input type="text" name="q" value="{{ $search }}" placeholder="Search by name or email...">
+                    <button class="btn-main" type="submit"><i class="fas fa-magnifying-glass me-1"></i>Search</button>
+                    <a href="{{ route('admin.dashboard') }}" class="btn-ghost"><i class="fas fa-arrow-left me-1"></i>Dashboard</a>
                 </form>
             </div>
 
-            <div class="table-wrap table-responsive">
-                <table class="table-admin">
+            <div class="table-shell table-responsive">
+                <table class="table-users" id="usersTable">
                     <thead>
                         <tr>
-                            <th style="width: 80px;">ID</th>
-                            <th>Name</th>
+                            <th>User</th>
                             <th>Email</th>
-                            <th style="width: 140px;">Role</th>
-                            <th style="width: 150px;">Phone</th>
-                            <th style="width: 190px;">Actions</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Joined</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                    @forelse ($users as $user)
-                        <tr>
-                            <td>#{{ $user->id }}</td>
-                            <td>
-                                <form method="POST" action="{{ route('admin.users.update', $user) }}" class="row-actions">
-                                    @csrf
-                                    @method('PATCH')
-                                    <input class="mini-input" type="text" name="name" value="{{ $user->name }}" required>
-                            </td>
-                            <td>
-                                    <input class="mini-input" type="email" name="email" value="{{ $user->email }}" required>
-                            </td>
-                            <td>
-                                    <select class="mini-select" name="role" required>
-                                        <option value="member" {{ $user->role === 'member' ? 'selected' : '' }}>member</option>
-                                        <option value="admin" {{ $user->role === 'admin' ? 'selected' : '' }}>admin</option>
-                                    </select>
-                            </td>
-                            <td>
-                                    <input class="mini-input" type="text" name="phone" value="{{ $user->phone }}">
-                            </td>
-                            <td>
-                                <div class="row-actions">
-                                    <button class="btn-save" type="submit"><i class="fas fa-floppy-disk"></i></button>
-                                </form>
-                                    <form method="POST" action="{{ route('admin.users.destroy', $user) }}" onsubmit="return confirm('Delete this user?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn-delete" type="submit"><i class="fas fa-trash"></i></button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" style="text-align: center; color: #7a84a8; padding: 1.8rem;">No users found.</td>
-                        </tr>
-                    @endforelse
+                        @forelse ($users as $user)
+                            <tr>
+                                <td>
+                                    <div class="user-cell">
+                                        @if ($user->picture)
+                                            <img src="{{ asset('storage/' . $user->picture) }}" alt="{{ $user->name }}" class="user-avatar">
+                                        @else
+                                            <span class="user-avatar-placeholder">{{ strtoupper(substr($user->name, 0, 2)) }}</span>
+                                        @endif
+                                        <div>
+                                            <div class="user-name">{{ $user->name }}</div>
+                                            <div class="user-sub">ID #{{ $user->id }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ $user->email }}</td>
+                                <td>
+                                    <span class="role-badge role-{{ strtolower($user->role) }}">
+                                        <i class="fas {{ $user->role === 'admin' ? 'fa-crown' : 'fa-user' }}"></i>
+                                        {{ ucfirst($user->role) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    @if ($user->email_verified_at)
+                                        <span class="status-badge status-ok"><i class="fas fa-circle-check"></i>Verified</span>
+                                    @else
+                                        <span class="status-badge status-pending"><i class="fas fa-clock"></i>Pending</span>
+                                    @endif
+                                </td>
+                                <td>{{ optional($user->created_at)->format('M d, Y') }}</td>
+                                <td>
+                                    <a href="{{ route('admin.users.show', $user) }}" class="action-link">
+                                        <i class="fas fa-arrow-up-right-from-square"></i>View
+                                    </a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">No users found.</td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
-
-                @if ($users->hasPages())
-                    <div class="mt-3">{{ $users->links() }}</div>
-                @endif
             </div>
-        </div>
+
+            @if ($users->hasPages())
+                <div class="pagination-wrap d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2">
+                    <div class="small text-muted">
+                        Showing {{ $users->firstItem() }} to {{ $users->lastItem() }} of {{ $users->total() }} users
+                    </div>
+                    <div>{{ $users->links() }}</div>
+                </div>
+            @endif
+        </section>
     </div>
 </div>
 @endsection

@@ -38,6 +38,8 @@ class AdminManagementController extends Controller
             'search' => $search,
             'adminCount' => User::where('role', 'admin')->count(),
             'memberCount' => User::where('role', 'member')->count(),
+            'verifiedCount' => User::whereNotNull('email_verified_at')->count(),
+            'newThisWeekCount' => User::whereDate('created_at', '>=', now()->subDays(7))->count(),
         ]);
     }
 
