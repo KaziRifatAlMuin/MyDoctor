@@ -2120,8 +2120,8 @@
                             </a>
                         </li>
                         <li class="banner-nav-item">
-                            <a href="{{ route('community.posts.index') }}"
-                                class="banner-nav-link {{ request()->routeIs('community*') ? 'active' : '' }}">
+                            <a href="{{ route('admin.community.posts.index') }}"
+                                class="banner-nav-link {{ request()->routeIs('admin.community.*') ? 'active' : '' }}">
                                 Community
                             </a>
                         </li>

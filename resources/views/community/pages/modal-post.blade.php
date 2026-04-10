@@ -3,6 +3,7 @@
     $isAuthenticated = Auth::check();
     $isOwner = $isAuthenticated && Auth::id() === $post->user_id;
     $isAdmin = $isAuthenticated && Auth::user()->isAdmin();
+    $isAdminReadOnly = $isAdmin;
     $isAnonymous = (bool) $post->is_anonymous;
     $displayName = $isAnonymous ? 'Anonymous Member' : $post->user->name;
     $userLiked = $isAuthenticated ? $post->likes()->where('user_id', Auth::id())->exists() : false;
@@ -45,18 +46,22 @@
             <!-- Edit and Delete Icons -->
             @auth
                 <div style="display: flex; gap: 8px;">
-                    <button onclick="reportPost({{ $post->id }})" style="width: 34px; height: 34px; border: none; border-radius: 50%; background: #f0f2f5; color: #dc3545; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" title="{{ $post->is_reported ? 'Reported' : 'Report Post' }}">
-                        <i class="fas fa-flag"></i>
-                    </button>
+                    @if(! $isAdminReadOnly)
+                        <button onclick="reportPost({{ $post->id }})" style="width: 34px; height: 34px; border: none; border-radius: 50%; background: #f0f2f5; color: #dc3545; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" title="{{ $post->is_reported ? 'Reported' : 'Report Post' }}">
+                            <i class="fas fa-flag"></i>
+                        </button>
+                    @endif
                     @if($isAdmin && !$post->is_approved)
                         <button onclick="approvePost({{ $post->id }})" style="width: 34px; height: 34px; border: none; border-radius: 50%; background: #f0f2f5; color: #198754; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" title="Approve Post">
                             <i class="fas fa-check-circle"></i>
                         </button>
                     @endif
-                    @if($isOwner)
+                    @if($isOwner && ! $isAdminReadOnly)
                         <button onclick="editPost({{ $post->id }})" style="width: 34px; height: 34px; border: none; border-radius: 50%; background: #f0f2f5; color: #1877f2; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" title="Edit Post">
                             <i class="fas fa-edit"></i>
                         </button>
+                    @endif
+                    @if($isOwner || $isAdmin)
                         <button onclick="confirmDelete({{ $post->id }}, 'post')" style="width: 34px; height: 34px; border: none; border-radius: 50%; background: #f0f2f5; color: #dc3545; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" title="Delete Post">
                             <i class="fas fa-trash"></i>
                         </button>
@@ -178,13 +183,20 @@
         <!-- Post Action Buttons -->
         <div style="display: flex; gap: 8px; margin: 12px 16px 0 16px; padding: 0;">
             @auth
-                <button onclick="toggleLike({{ $post->id }}, this)" id="like-btn-{{ $post->id }}" style="flex: 1; padding: 10px; border: none; border-radius: 6px; background: #f0f2f5; color: #1a1a1a; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;" class="{{ $userLiked ? 'liked' : '' }}">
-                    <i class="{{ $userLiked ? 'fas' : 'far' }} fa-heart" style="{{ $userLiked ? 'color: #dc3545;' : '' }}"></i>
-                    <span class="like-count">{{ $post->like_count }}</span>
-                </button>
-                <button onclick="toggleStar({{ $post->id }}, this)" id="star-btn-{{ $post->id }}" style="flex: 0 0 auto; min-width: 48px; padding: 10px; border: none; border-radius: 6px; background: #f0f2f5; color: #1a1a1a; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;" class="{{ $userStarred ? 'starred' : '' }}" title="{{ $userStarred ? 'Remove star' : 'Star this post' }}">
-                    <i class="{{ $userStarred ? 'fas text-warning' : 'far' }} fa-star"></i>
-                </button>
+                @if(! $isAdminReadOnly)
+                    <button onclick="toggleLike({{ $post->id }}, this)" id="like-btn-{{ $post->id }}" style="flex: 1; padding: 10px; border: none; border-radius: 6px; background: #f0f2f5; color: #1a1a1a; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;" class="{{ $userLiked ? 'liked' : '' }}">
+                        <i class="{{ $userLiked ? 'fas' : 'far' }} fa-heart" style="{{ $userLiked ? 'color: #dc3545;' : '' }}"></i>
+                        <span class="like-count">{{ $post->like_count }}</span>
+                    </button>
+                    <button onclick="toggleStar({{ $post->id }}, this)" id="star-btn-{{ $post->id }}" style="flex: 0 0 auto; min-width: 48px; padding: 10px; border: none; border-radius: 6px; background: #f0f2f5; color: #1a1a1a; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;" class="{{ $userStarred ? 'starred' : '' }}" title="{{ $userStarred ? 'Remove star' : 'Star this post' }}">
+                        <i class="{{ $userStarred ? 'fas text-warning' : 'far' }} fa-star"></i>
+                    </button>
+                @else
+                    <div style="flex: 1; padding: 10px; border: none; border-radius: 6px; background: #f8f6ff; color: #4b5563; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i class="far fa-heart"></i>
+                        <span class="like-count">{{ $post->like_count }}</span>
+                    </div>
+                @endif
             @else
                 <a href="{{ route('login') }}" style="flex: 1; padding: 10px; border: none; border-radius: 6px; background: #f0f2f5; color: #1a1a1a; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;">
                     <i class="far fa-heart"></i>
@@ -215,6 +227,7 @@
 
     <!-- Sticky Comment Form at Bottom - USING MODAL-SPECIFIC IDs -->
     @auth
+        @if(! $isAdminReadOnly)
         <div style="border-top: 1px solid #e4e6eb; padding: 12px 16px; background: white; flex-shrink: 0;">
             <form id="modal-comment-form-{{ $post->id }}" onsubmit="submitModalComment(event, {{ $post->id }}); return false;">
                 @csrf
@@ -271,6 +284,7 @@
                 </div>
             </form>
         </div>
+        @endif
     @endauth
 
 </div>

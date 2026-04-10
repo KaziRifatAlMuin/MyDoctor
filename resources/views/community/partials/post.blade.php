@@ -3,6 +3,7 @@
     $isAuthenticated = Auth::check();
     $isOwner = $isAuthenticated && Auth::id() === $post->user_id;
     $isAdmin = $isAuthenticated && Auth::user()->isAdmin();
+    $isAdminReadOnly = $isAdmin;
     $isAnonymous = (bool) $post->is_anonymous;
     $displayName = $isAnonymous ? 'Anonymous Member' : $post->user->name;
     $userLiked = $isAuthenticated ? $post->likes()->where('user_id', Auth::id())->exists() : false;
@@ -56,31 +57,37 @@
                 </a>
 
                 @auth
-                    <button class="dropdown-item" onclick="toggleStar({{ $post->id }}, document.getElementById('star-btn-{{ $post->id }}'))" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#1a1a1a; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb;">
-                        <i class="{{ $userStarred ? 'fas text-warning' : 'far' }} fa-star" style="width:18px;"></i>
-                        <span>{{ $userStarred ? 'Remove Star' : 'Star Post' }}</span>
-                    </button>
+                    @if(! $isAdminReadOnly)
+                        <button class="dropdown-item" onclick="toggleStar({{ $post->id }}, document.getElementById('star-btn-{{ $post->id }}'))" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#1a1a1a; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb;">
+                            <i class="{{ $userStarred ? 'fas text-warning' : 'far' }} fa-star" style="width:18px;"></i>
+                            <span>{{ $userStarred ? 'Remove Star' : 'Star Post' }}</span>
+                        </button>
+                    @endif
                 @endauth
                 
                 @auth
-                    @if($isOwner || $isAdmin)
+                    @if($isOwner && ! $isAdminReadOnly)
                         <!-- Edit Post (only for owner) -->
                         <button class="dropdown-item" onclick="editPost({{ $post->id }})" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#1a1a1a; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb;">
                             <i class="fas fa-edit" style="width:18px; color:#1877f2;"></i>
                             <span>Edit Post</span>
                         </button>
-                        
-                        <!-- Delete Post (only for owner) -->
+                    @endif
+
+                    @if($isOwner || $isAdmin)
+                        <!-- Delete Post (owner/admin) -->
                         <button class="dropdown-item text-danger" onclick="confirmDelete({{ $post->id }},'post')" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#dc3545; cursor:pointer; transition:background 0.2s; text-align:left;">
                             <i class="fas fa-trash" style="width:18px; color:#dc3545;"></i>
                             <span>Delete Post</span>
                         </button>
                     @endif
 
-                    <button class="dropdown-item" onclick="reportPost({{ $post->id }})" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#dc3545; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb;">
-                        <i class="fas fa-flag" style="width:18px; color:#dc3545;"></i>
-                        <span>{{ $post->is_reported ? 'Reported' : 'Report Post' }}</span>
-                    </button>
+                    @if(! $isAdminReadOnly)
+                        <button class="dropdown-item" onclick="reportPost({{ $post->id }})" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#dc3545; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb;">
+                            <i class="fas fa-flag" style="width:18px; color:#dc3545;"></i>
+                            <span>{{ $post->is_reported ? 'Reported' : 'Report Post' }}</span>
+                        </button>
+                    @endif
 
                     @if($isAdmin && !$post->is_approved)
                         <button class="dropdown-item" onclick="approvePost({{ $post->id }})" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#198754; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb;">
@@ -238,13 +245,20 @@
     <!-- Post Action Buttons -->
     <div class="post-action-buttons" style="display:flex;gap:8px;margin-top:12px;padding:0;">
         @auth
-            <button class="post-action-btn like-btn {{ $userLiked ? 'liked' : '' }}" onclick="toggleLike({{ $post->id }},this)" id="like-btn-{{ $post->id }}" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#1a1a1a;font-size:14px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
-                <i class="{{ $userLiked ? 'fas' : 'far' }} fa-heart"></i>
-                <span class="like-count">{{ $post->like_count }}</span>
-            </button>
-            <button class="post-action-btn star-btn {{ $userStarred ? 'starred' : '' }}" onclick="toggleStar({{ $post->id }},this)" id="star-btn-{{ $post->id }}" style="flex:0 0 auto;min-width:48px;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#1a1a1a;font-size:14px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;" title="{{ $userStarred ? 'Remove star' : 'Star this post' }}">
-                <i class="{{ $userStarred ? 'fas text-warning' : 'far' }} fa-star"></i>
-            </button>
+            @if(! $isAdminReadOnly)
+                <button class="post-action-btn like-btn {{ $userLiked ? 'liked' : '' }}" onclick="toggleLike({{ $post->id }},this)" id="like-btn-{{ $post->id }}" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#1a1a1a;font-size:14px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
+                    <i class="{{ $userLiked ? 'fas' : 'far' }} fa-heart"></i>
+                    <span class="like-count">{{ $post->like_count }}</span>
+                </button>
+                <button class="post-action-btn star-btn {{ $userStarred ? 'starred' : '' }}" onclick="toggleStar({{ $post->id }},this)" id="star-btn-{{ $post->id }}" style="flex:0 0 auto;min-width:48px;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#1a1a1a;font-size:14px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;" title="{{ $userStarred ? 'Remove star' : 'Star this post' }}">
+                    <i class="{{ $userStarred ? 'fas text-warning' : 'far' }} fa-star"></i>
+                </button>
+            @else
+                <div class="post-action-btn" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f8f6ff;color:#4b5563;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;">
+                    <i class="far fa-heart"></i>
+                    <span class="like-count">{{ $post->like_count }}</span>
+                </div>
+            @endif
         @else
             <a href="{{ route('login') }}" class="post-action-btn" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#1a1a1a;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
                 <i class="far fa-heart"></i>
@@ -272,6 +286,7 @@
         @endif
         
         @auth
+            @if(! $isAdminReadOnly)
             <form class="comment-form" onsubmit="submitComment(event, {{ $post->id }}); return false;" style="margin:0;padding:0;">
                 @csrf
                 <div class="comment-input-group" style="display:flex;gap:8px;align-items:flex-start;margin:0;padding:0;">
@@ -325,6 +340,7 @@
                 </div>
                 <!-- REMOVED DUPLICATE PREVIEW CONTAINER -->
             </form>
+            @endif
         @endauth
     </div>
 </div>

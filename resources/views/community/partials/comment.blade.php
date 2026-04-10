@@ -1,4 +1,7 @@
 <div class="comment" id="comment-{{ $comment->id }}" data-comment-id="{{ $comment->id }}">
+    @php
+        $isAdminReadOnly = Auth::check() && Auth::user()->isAdmin();
+    @endphp
     <div class="comment-avatar" onclick="showUserModal({{ $comment->user->id }})" style="cursor: pointer;">
         @if($comment->user->picture)
             <img src="{{ asset('storage/' . $comment->user->picture) }}" alt="{{ $comment->user->name }}">
@@ -14,7 +17,7 @@
             <span class="comment-time">{{ $comment->created_at->diffForHumans() }}</span>
             
             @auth
-                @if(Auth::id() === $comment->user_id)
+                @if(Auth::id() === $comment->user_id && ! $isAdminReadOnly)
                     <div class="comment-actions" style="display: flex; gap: 4px;">
                         <button class="comment-action-btn" onclick="editComment({{ $comment->id }})" title="Edit" style="background: none; border: none; padding: 4px; color: #65676b; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; outline: none;">
                             <i class="fas fa-edit"></i>
@@ -75,12 +78,19 @@
         @endif
         
         @auth
+            @if(! $isAdminReadOnly)
             <button class="comment-like-btn {{ $comment->likes()->where('user_id', Auth::id())->exists() ? 'liked' : '' }}" 
                     onclick="toggleCommentLike({{ $comment->id }}, this)"
                     style="background: none; border: none; padding: 2px 0; color: #65676b; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; outline: none;">
                 <i class="{{ $comment->likes()->where('user_id', Auth::id())->exists() ? 'fas' : 'far' }} fa-heart"></i>
                 <span class="like-count">{{ $comment->like_count }}</span>
             </button>
+            @else
+                <span style="display:inline-flex; align-items:center; gap:4px; color:#65676b; font-size:12px;">
+                    <i class="far fa-heart"></i>
+                    <span class="like-count">{{ $comment->like_count }}</span>
+                </span>
+            @endif
         @endauth
     </div>
 </div>

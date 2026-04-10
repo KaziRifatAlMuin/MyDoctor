@@ -60,6 +60,16 @@ class CommunityController extends Controller
     }
 
     /**
+     * Admin community posts feed.
+     */
+    public function adminPostsIndex(Request $request)
+    {
+        $request->merge(['admin_community' => true]);
+
+        return $this->index($request);
+    }
+
+    /**
      * Disease-specific posts feed route.
      */
     public function diseasePosts(Request $request, Disease $disease)
@@ -76,6 +86,9 @@ class CommunityController extends Controller
     {
         try {
             $diseaseId = $request->get('disease');
+            $isAdminCommunity = (bool) $request->boolean('admin_community', false)
+                && Auth::check()
+                && Auth::user()->isAdmin();
             $userDiseaseIds = Auth::check()
                 ? Auth::user()->userDiseases()->pluck('disease_id')->all()
                 : [];
@@ -134,6 +147,15 @@ class CommunityController extends Controller
                                        ->sortByDesc('posts_count')
                                        ->take(5)
                                        ->values();
+
+            $pendingPreviewPosts = collect();
+            if ($isAdminCommunity) {
+                $pendingPreviewPosts = Post::with(['user', 'disease'])
+                    ->where('is_approved', false)
+                    ->latest()
+                    ->take(3)
+                    ->get();
+            }
             
             // Log for debugging
             Log::info('Community index loaded', [
@@ -150,7 +172,9 @@ class CommunityController extends Controller
                 'totalUsers', 
                 'totalComments', 
                 'activeToday', 
-                'trendingDiseases'
+                'trendingDiseases',
+                'isAdminCommunity',
+                'pendingPreviewPosts'
             ));
         } catch (\Exception $e) {
             Log::error('Community Index Error: ' . $e->getMessage(), [
@@ -169,6 +193,8 @@ class CommunityController extends Controller
                 'totalComments' => 0,
                 'activeToday' => 0,
                 'trendingDiseases' => collect([]),
+                'isAdminCommunity' => (bool) $request->boolean('admin_community', false),
+                'pendingPreviewPosts' => collect([]),
                 'error' => 'Error loading community: ' . $e->getMessage()
             ]);
         }
@@ -282,6 +308,7 @@ class CommunityController extends Controller
             $diseaseId = $request->get('disease');
             $userId = Auth::id();
             $isAdmin = Auth::user()->isAdmin();
+            $isAdminCommunity = (bool) $request->boolean('admin_community', false) && $isAdmin;
 
             $query = Post::with(['user', 'disease', 'comments' => function ($q) {
                 $q->with('user')->latest()->limit(3);
@@ -342,6 +369,7 @@ class CommunityController extends Controller
                 'activeToday' => $activeToday,
                 'trendingDiseases' => $trendingDiseases,
                 'isPendingPage' => true,
+                'isAdminCommunity' => $isAdminCommunity,
             ]);
         } catch (\Exception $e) {
             Log::error('Community Pending Posts Error: ' . $e->getMessage(), [
@@ -359,9 +387,20 @@ class CommunityController extends Controller
                 'activeToday' => 0,
                 'trendingDiseases' => collect([]),
                 'isPendingPage' => true,
+                'isAdminCommunity' => (bool) $request->boolean('admin_community', false),
                 'error' => 'Error loading pending posts: ' . $e->getMessage(),
             ]);
         }
+    }
+
+    /**
+     * Admin-only pending posts feed.
+     */
+    public function adminPendingPosts(Request $request)
+    {
+        $request->merge(['admin_community' => true]);
+
+        return $this->pendingPosts($request);
     }
 
     /**
@@ -656,6 +695,13 @@ class CommunityController extends Controller
                 ], 401);
             }
 
+            if (Auth::user()->isAdmin()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Admin accounts are view-only in community.'
+                ], 403);
+            }
+
             $request->validate([
                 'disease_id' => 'required|exists:diseases,id',
                 'description' => 'nullable|string|max:5000',
@@ -875,6 +921,13 @@ class CommunityController extends Controller
                 ], 401);
             }
 
+            if (Auth::user()->isAdmin()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Admin accounts cannot react to posts.'
+                ], 403);
+            }
+
             $user = Auth::user();
             $existingLike = PostLike::where('post_id', $post->id)
                                     ->where('user_id', $user->id)
@@ -931,6 +984,13 @@ class CommunityController extends Controller
                     'success' => false,
                     'message' => 'Please login to star posts'
                 ], 401);
+            }
+
+            if (Auth::user()->isAdmin()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Admin accounts cannot react to posts.'
+                ], 403);
             }
 
             $user = Auth::user();
@@ -1093,6 +1153,13 @@ class CommunityController extends Controller
                     'success' => false,
                     'message' => 'Please login to comment'
                 ], 401);
+            }
+
+            if (Auth::user()->isAdmin()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Admin accounts cannot comment on posts.'
+                ], 403);
             }
 
             $request->validate([
@@ -1277,6 +1344,13 @@ class CommunityController extends Controller
                     'success' => false,
                     'message' => 'Please login to like comments'
                 ], 401);
+            }
+
+            if (Auth::user()->isAdmin()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Admin accounts cannot react to comments.'
+                ], 403);
             }
 
             $user = Auth::user();

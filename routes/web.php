@@ -390,6 +390,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::patch('/metrics/{healthMetric}', [AdminManagementController::class, 'metricsUpdate'])->name('metrics.update');
     Route::delete('/metrics/{healthMetric}', [AdminManagementController::class, 'metricsDestroy'])->name('metrics.destroy');
 
+    Route::prefix('community')->name('community.')->group(function () {
+        Route::get('/posts', [CommunityController::class, 'adminPostsIndex'])->name('posts.index');
+        Route::get('/posts/pending', [CommunityController::class, 'adminPendingPosts'])->name('posts.pending');
+        Route::post('/posts/{post}/approve', [CommunityController::class, 'approvePost'])->name('posts.approve');
+        Route::post('/posts/{post}/delete', [CommunityController::class, 'destroyPost'])->name('posts.destroy');
+    });
+
     Route::get('/user/{user}', [App\Http\Controllers\UserController::class, 'show'])->name('users.show');
     
     // Future admin routes
