@@ -827,6 +827,16 @@
                 <i class="fas fa-bolt"></i> Quick Actions
             </div>
             <div class="row g-2">
+                @if(!auth()->check() || !auth()->user()->isAdmin())
+                    <div class="col-6 col-md-3 col-xl">
+                        <a href="javascript:void(0)" onclick="toggleChatbot()" class="quick-action-card">
+                            <div class="quick-action-icon qa-icon-indigo">
+                                <i class="fas fa-user-md"></i>
+                            </div>
+                            <div class="quick-action-label">MyDoctor AI</div>
+                        </a>
+                    </div>
+                @endif
                 <div class="col-6 col-md-3 col-xl">
                     <a href="{{ route('health') }}#metrics" class="quick-action-card">
                         <div class="quick-action-icon qa-icon-purple">

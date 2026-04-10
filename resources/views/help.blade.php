@@ -299,6 +299,13 @@
                     <i class="fas fa-search search-icon"></i>
                     <input type="text" id="helpSearchInput" placeholder="Search for help topics..." autocomplete="off">
                 </div>
+                @if(!auth()->check() || !auth()->user()->isAdmin())
+                    <div class="mt-3" style="text-align:center;">
+                        <button onclick="toggleChatbot()" class="btn btn-sm btn-light" style="border-radius:12px;border:1px solid rgba(0,0,0,0.06);">
+                            <i class="fas fa-user-md me-1"></i> Ask MyDoctor AI
+                        </button>
+                    </div>
+                @endif
             </div>
 
             {{-- Quick Links --}}

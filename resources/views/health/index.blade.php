@@ -435,6 +435,13 @@
                         Your complete health overview &middot; last updated {{ now()->format('M d, Y') }}
                     </p>
                 </div>
+                @if(!auth()->check() || !auth()->user()->isAdmin())
+                    <div>
+                        <button onclick="toggleChatbot()" class="btn btn-sm btn-outline-primary" style="border-radius:10px;">
+                            <i class="fas fa-user-md me-1"></i> Ask MyDoctor AI
+                        </button>
+                    </div>
+                @endif
             </div>
 
             {{-- ── Summary Cards Row ── --}}

@@ -675,7 +675,7 @@
             cursor: pointer;
             box-shadow: 0 5px 25px rgba(102, 126, 234, 0.4);
             transition: all 0.3s ease;
-            z-index: 1000;
+            z-index: 1102;
             border: 3px solid white;
         }
 
@@ -745,7 +745,7 @@
             border-radius: 20px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
             display: none;
-            z-index: 999;
+            z-index: 1101;
             overflow: hidden;
             flex-direction: column;
         }
@@ -2394,7 +2394,7 @@
             <!-- Chatbot Modal -->
             <div class="chatbot-modal" id="chatbotModal">
                 <div class="chatbot-header">
-                    <h5><i class="fas fa-user-md me-2"></i>Health Assistant</h5>
+                    <h5><i class="fas fa-user-md me-2"></i>MyDoctor AI</h5>
                     <button onclick="toggleChatbot()"><i class="fas fa-times"></i></button>
                 </div>
 
@@ -2409,10 +2409,10 @@
                 <div class="chatbot-messages" id="chatMessages">
                     <div style="text-align: center; color: #718096; padding: 20px;">
                         <i class="fas fa-user-md fa-3x mb-3" style="color: #667eea;"></i>
-                        <p>Hello! I'm your AI health assistant.<br>How can I help you today?</p>
+                        <p>Hello! I'm MyDoctor AI, your personal health assistant.<br>How can I help you today?</p>
                         <small class="text-muted d-block mt-2">
                             <i class="fas fa-info-circle me-1"></i>
-                            Ask about symptoms, medicines, diet, exercise, or general health tips
+                            Ask about symptoms, diet, exercise, or general health tips
                         </small>
                     </div>
                 </div>

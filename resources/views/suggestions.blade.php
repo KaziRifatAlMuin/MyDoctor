@@ -323,10 +323,17 @@
                         Personalized health recommendations based on your data
                     </p>
                 </div>
-                <a href="{{ route('health') }}" class="btn btn-sm text-white"
-                    style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px;">
-                    <i class="fas fa-heartbeat me-1"></i> Health Dashboard
-                </a>
+                <div class="d-flex gap-2">
+                    @if(!auth()->check() || !auth()->user()->isAdmin())
+                        <button onclick="toggleChatbot()" class="btn btn-sm btn-outline-primary" style="border-radius:10px;">
+                            <i class="fas fa-user-md me-1"></i> Ask MyDoctor AI
+                        </button>
+                    @endif
+                    <a href="{{ route('health') }}" class="btn btn-sm text-white"
+                        style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px;">
+                        <i class="fas fa-heartbeat me-1"></i> Health Dashboard
+                    </a>
+                </div>
             </div>
 
             {{-- AI Summary (top section) --}}
