@@ -1,6 +1,10 @@
 @extends('layouts.app')
 
 @section('content')
+    @php
+        $isOwner = auth()->check() && auth()->id() === $post->user_id;
+        $isAdmin = auth()->check() && auth()->user()->isAdmin();
+    @endphp
     <div
         style="background: linear-gradient(180deg, #eef4ff 0%, #f8fbff 60%, #ffffff 100%); min-height: 100vh; padding: 2rem 0 4rem;">
         <div class="container" style="max-width: 980px;">
@@ -14,6 +18,8 @@
                             <h1 class="mb-0" style="font-size:1.7rem; font-weight:800;">Post #{{ $post->id }}</h1>
                         </div>
                         <div class="d-flex gap-2">
+                            <a href="{{ url()->previous() }}" class="btn btn-outline-light"
+                                style="border-radius: 12px; font-weight:700;">Back</a>
                             <a href="{{ route('community.posts.index') }}" class="btn btn-light"
                                 style="border-radius: 12px; color:#0b57d0; font-weight:700;">All Posts</a>
                             @if ($post->disease_id)
@@ -25,6 +31,39 @@
                     </div>
                 </div>
             </div>
+
+            @if ($isOwner || $isAdmin)
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
+                    <div class="card-body p-3 p-md-4 d-flex flex-wrap gap-2 align-items-center">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="collapse"
+                            data-bs-target="#editPostForm" aria-expanded="false" aria-controls="editPostForm"
+                            style="border-radius: 10px; font-weight:700;">
+                            <i class="fas fa-pen me-1"></i>Edit
+                        </button>
+                        <form method="POST" action="{{ route('community.posts.destroy', $post) }}"
+                            onsubmit="return confirm('Delete this post? This cannot be undone.');">
+                            @csrf
+                            <button type="submit" class="btn btn-danger" style="border-radius: 10px; font-weight:700;">
+                                <i class="fas fa-trash me-1"></i>Delete
+                            </button>
+                        </form>
+                    </div>
+                    <div class="collapse" id="editPostForm">
+                        <div class="card-body pt-0 p-3 p-md-4">
+                            <form method="POST" action="{{ route('community.posts.update', $post) }}">
+                                @csrf
+                                <div class="mb-2">
+                                    <label class="form-label fw-semibold">Edit Description</label>
+                                    <textarea name="description" class="form-control" rows="5" required>{{ $post->description }}</textarea>
+                                </div>
+                                <button type="submit" class="btn btn-success" style="border-radius: 10px; font-weight:700;">
+                                    <i class="fas fa-floppy-disk me-1"></i>Save Changes
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            @endif
 
             <div class="card border-0 shadow-sm" style="border-radius: 16px;">
                 <div class="card-body p-4 p-md-5">

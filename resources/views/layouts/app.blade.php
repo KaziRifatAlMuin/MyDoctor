@@ -2070,6 +2070,7 @@
             $isAdminNav = auth()->check() && auth()->user()->isAdmin();
             $navThemeClass = $isAdminNav ? 'nav-theme-admin' : 'nav-theme-regular';
             $dashboardRoute = $isAdminNav ? route('admin.dashboard') : route('dashboard');
+            $profileDashboardRoute = auth()->check() ? route('dashboard') : route('home');
         @endphp
         <div class="{{ request()->routeIs('home') ? 'banner' : 'page-nav-bar' }} {{ $navThemeClass }}">
             <!-- Navigation on Banner -->
@@ -2104,6 +2105,12 @@
                             <a href="{{ route('admin.symptoms.index') }}"
                                 class="banner-nav-link {{ request()->routeIs('admin.symptoms.*') ? 'active' : '' }}">
                                 Symptoms
+                            </a>
+                        </li>
+                        <li class="banner-nav-item">
+                            <a href="{{ route('community.posts.index') }}"
+                                class="banner-nav-link {{ request()->routeIs('community*') ? 'active' : '' }}">
+                                Community
                             </a>
                         </li>
                     @else
@@ -2239,7 +2246,7 @@
                                     <p>{{ auth()->user()->email }}</p>
                                 </div>
 
-                                <a href="{{ $dashboardRoute }}" class="dropdown-item-custom">
+                                <a href="{{ $profileDashboardRoute }}" class="dropdown-item-custom">
                                     <i class="fas fa-tachometer-alt me-2"></i>{{ __('ui.nav.dashboard') }}
                                 </a>
 
@@ -2260,14 +2267,6 @@
                                 <a href="{{ route('profile.setting') }}" class="dropdown-item-custom">
                                     <i class="fas fa-cog me-2"></i>{{ __('ui.menu.settings') }}
                                 </a>
-
-                                <!-- Admin Dashboard Link -->
-                                @if (auth()->user()->isAdmin())
-                                    <div class="divider"></div>
-                                    <a href="{{ route('admin.dashboard') }}" class="dropdown-item-custom">
-                                        <i class="fas fa-user-shield me-2"></i>{{ __('ui.menu.admin_dashboard') }}
-                                    </a>
-                                @endif
 
                                 <div class="divider"></div>
                                 <form method="POST" action="{{ route('logout') }}">

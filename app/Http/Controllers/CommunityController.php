@@ -281,12 +281,16 @@ class CommunityController extends Controller
         try {
             $diseaseId = $request->get('disease');
             $userId = Auth::id();
+            $isAdmin = Auth::user()->isAdmin();
 
             $query = Post::with(['user', 'disease', 'comments' => function ($q) {
                 $q->with('user')->latest()->limit(3);
             }])->withCount(['likes as likes_count'])
-              ->where('user_id', $userId)
               ->where('is_approved', false);
+
+            if (!$isAdmin) {
+                $query->where('user_id', $userId);
+            }
 
             if ($diseaseId && $diseaseId !== 'all') {
                 $query->where('disease_id', $diseaseId);
@@ -295,21 +299,30 @@ class CommunityController extends Controller
             $posts = $query->latest()->paginate(10)->withQueryString();
 
             $diseases = Disease::withCount([
-                'posts as posts_count' => function ($q) use ($userId) {
-                    $q->where('user_id', $userId)->where('is_approved', false);
+                'posts as posts_count' => function ($q) use ($userId, $isAdmin) {
+                    if (!$isAdmin) {
+                        $q->where('user_id', $userId);
+                    }
+                    $q->where('is_approved', false);
                 }
             ])->orderBy('disease_name')->get();
 
             $totalPosts = (clone $query)->count();
             $totalUsers = User::count();
-            $totalComments = Comment::whereHas('post', function ($postQuery) use ($userId) {
-                $postQuery->where('user_id', $userId)->where('is_approved', false);
+            $totalComments = Comment::whereHas('post', function ($postQuery) use ($userId, $isAdmin) {
+                if (!$isAdmin) {
+                    $postQuery->where('user_id', $userId);
+                }
+                $postQuery->where('is_approved', false);
             })->count();
             $activeToday = User::whereDate('updated_at', today())->count() ?: 0;
 
             $trendingDiseases = Disease::withCount([
-                'posts as posts_count' => function ($q) use ($userId) {
-                    $q->where('user_id', $userId)->where('is_approved', false);
+                'posts as posts_count' => function ($q) use ($userId, $isAdmin) {
+                    if (!$isAdmin) {
+                        $q->where('user_id', $userId);
+                    }
+                    $q->where('is_approved', false);
                 }
             ])->get()
               ->filter(function ($disease) {
@@ -757,10 +770,13 @@ class CommunityController extends Controller
                 ], 401);
             }
 
-            if (Auth::id() !== $post->user_id) {
+            $isOwner = Auth::id() === $post->user_id;
+            $isAdmin = Auth::user()->isAdmin();
+
+            if (!$isOwner && !$isAdmin) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'You can only edit your own posts'
+                    'message' => 'You can only edit your own posts unless you are an admin'
                 ], 403);
             }
 
@@ -804,10 +820,13 @@ class CommunityController extends Controller
                 ], 401);
             }
 
-            if (Auth::id() !== $post->user_id) {
+            $isOwner = Auth::id() === $post->user_id;
+            $isAdmin = Auth::user()->isAdmin();
+
+            if (!$isOwner && !$isAdmin) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'You can only delete your own posts'
+                    'message' => 'You can only delete your own posts unless you are an admin'
                 ], 403);
             }
 

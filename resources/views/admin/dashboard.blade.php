@@ -256,20 +256,20 @@
             <p class="hub-hero-sub">Central management cards plus complete website statistics from your database.</p>
             <div class="hub-pill-grid">
                 <div class="hub-pill">
-                    <small>Database Tables</small>
-                    <strong>{{ number_format($stats['database']['tables_count'] ?? 0) }}</strong>
-                </div>
-                <div class="hub-pill">
-                    <small>Total Records</small>
-                    <strong>{{ number_format($stats['database']['total_records'] ?? 0) }}</strong>
-                </div>
-                <div class="hub-pill">
                     <small>Total Users</small>
                     <strong>{{ number_format($stats['users']['total'] ?? 0) }}</strong>
                 </div>
                 <div class="hub-pill">
                     <small>Active Reminders</small>
                     <strong>{{ number_format($stats['operations']['active_reminders'] ?? 0) }}</strong>
+                </div>
+                <div class="hub-pill">
+                    <small>Community Posts</small>
+                    <strong>{{ number_format($stats['community']['posts'] ?? 0) }}</strong>
+                </div>
+                <div class="hub-pill">
+                    <small>Health Metrics</small>
+                    <strong>{{ number_format($stats['medical']['health_metrics'] ?? 0) }}</strong>
                 </div>
             </div>
         </div>
@@ -365,36 +365,7 @@
         </div>
 
         <div class="row g-3">
-            <div class="col-lg-6">
-                <section class="hub-block">
-                    <div class="hub-block-head">
-                        <h2><i class="fas fa-table me-2"></i>Largest Database Tables</h2>
-                    </div>
-                    <div class="table-shell table-responsive">
-                        <table class="table-hub">
-                            <thead>
-                                <tr>
-                                    <th>Table</th>
-                                    <th>Rows</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($stats['database']['largest_tables'] ?? [] as $table)
-                                    <tr>
-                                        <td>{{ $table['name'] }}</td>
-                                        <td>{{ number_format($table['rows']) }}</td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="2" class="text-center text-muted">No table information found.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
-            </div>
-            <div class="col-lg-6">
+            <div class="col-12">
                 <section class="hub-block">
                     <div class="hub-block-head">
                         <h2><i class="fas fa-notes-medical me-2"></i>Latest Records</h2>

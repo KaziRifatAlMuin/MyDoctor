@@ -30,7 +30,7 @@ class AdminManagementController extends Controller
             })
             ->orderByRaw("CASE WHEN role = 'admin' THEN 0 ELSE 1 END")
             ->orderBy('name')
-            ->paginate(20)
+            ->paginate(60)
             ->withQueryString();
 
         return view('admin.users', [
@@ -130,7 +130,7 @@ class AdminManagementController extends Controller
                 $query->where('disease_name', 'like', "%{$search}%");
             })
             ->orderBy('disease_name')
-            ->paginate(20)
+            ->paginate(60)
             ->withQueryString();
 
         return view('admin.diseases', [
@@ -192,7 +192,7 @@ class AdminManagementController extends Controller
                 $query->where('name', 'like', "%{$search}%");
             })
             ->orderBy('name')
-            ->paginate(20)
+            ->paginate(60)
             ->withQueryString();
 
         return view('admin.symptoms', [

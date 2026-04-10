@@ -63,7 +63,7 @@
                 @endauth
                 
                 @auth
-                    @if($isOwner)
+                    @if($isOwner || $isAdmin)
                         <!-- Edit Post (only for owner) -->
                         <button class="dropdown-item" onclick="editPost({{ $post->id }})" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#1a1a1a; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb;">
                             <i class="fas fa-edit" style="width:18px; color:#1877f2;"></i>
