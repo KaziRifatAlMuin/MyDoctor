@@ -12,10 +12,10 @@ use App\Http\Controllers\MedicineScheduleController;
 use App\Http\Controllers\MedicineReminderController;
 use App\Http\Controllers\MedicineLogController;
 use App\Http\Controllers\SuggestionsController;
-use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CommunityController;
 use App\Http\Controllers\AiChatController;
 use App\Http\Controllers\PublicHealthController;
+use App\Http\Controllers\AdminManagementController;
 use App\Models\Disease;
 use Illuminate\Http\Request;
 
@@ -29,6 +29,10 @@ use Illuminate\Http\Request;
 
 // Home
 Route::get('/', function () {
+    if (auth()->check() && auth()->user()->isAdmin()) {
+        return redirect()->route('admin.dashboard');
+    }
+
     return view('home');
 })->name('home');
 
@@ -89,6 +93,13 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/home', function () {
+        if (auth()->user()?->isAdmin()) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        return redirect()->route('home');
+    });
     
     // Profile
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
@@ -354,8 +365,25 @@ Route::middleware(['auth', 'admin'])->patch('/user/{user}', [App\Http\Controller
 */
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/users', [AdminManagementController::class, 'usersIndex'])->name('users.index');
+    Route::post('/users', [AdminManagementController::class, 'usersStore'])->name('users.store');
+    Route::patch('/users/{user}', [AdminManagementController::class, 'usersUpdate'])->name('users.update');
+    Route::delete('/users/{user}', [AdminManagementController::class, 'usersDestroy'])->name('users.destroy');
+
+    Route::get('/diseases', [AdminManagementController::class, 'diseasesIndex'])->name('diseases.index');
+    Route::post('/diseases', [AdminManagementController::class, 'diseasesStore'])->name('diseases.store');
+    Route::patch('/diseases/{disease}', [AdminManagementController::class, 'diseasesUpdate'])->name('diseases.update');
+    Route::delete('/diseases/{disease}', [AdminManagementController::class, 'diseasesDestroy'])->name('diseases.destroy');
+
+    Route::get('/symptoms', [AdminManagementController::class, 'symptomsIndex'])->name('symptoms.index');
+    Route::get('/symtoms', function () {
+        return redirect()->route('admin.symptoms.index');
+    })->name('symtoms.index');
+    Route::post('/symptoms', [AdminManagementController::class, 'symptomsStore'])->name('symptoms.store');
+    Route::patch('/symptoms/{symptom}', [AdminManagementController::class, 'symptomsUpdate'])->name('symptoms.update');
+    Route::delete('/symptoms/{symptom}', [AdminManagementController::class, 'symptomsDestroy'])->name('symptoms.destroy');
+
     Route::get('/user/{user}', [App\Http\Controllers\UserController::class, 'show'])->name('users.show');
-    Route::patch('/users/{user}', [App\Http\Controllers\AdminDashboardController::class, 'updateUser'])->name('users.update');
     
     // Future admin routes
     Route::get('/medical', [App\Http\Controllers\AdminDashboardController::class, 'medical'])->name('medical.index');

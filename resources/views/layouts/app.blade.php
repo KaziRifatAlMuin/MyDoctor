@@ -2069,6 +2069,7 @@
         @php
             $isAdminNav = auth()->check() && auth()->user()->isAdmin();
             $navThemeClass = $isAdminNav ? 'nav-theme-admin' : 'nav-theme-regular';
+            $dashboardRoute = $isAdminNav ? route('admin.dashboard') : route('dashboard');
         @endphp
         <div class="{{ request()->routeIs('home') ? 'banner' : 'page-nav-bar' }} {{ $navThemeClass }}">
             <!-- Navigation on Banner -->
@@ -2080,49 +2081,76 @@
 
                 <!-- Navigation Menu -->
                 <ul class="banner-nav-menu">
-                    <li class="banner-nav-item">
-                        <a href="{{ route('home') }}"
-                            class="banner-nav-link {{ request()->routeIs('home') ? 'active' : '' }}">
-                            {{ __('ui.nav.home') }}
-                        </a>
-                    </li>
-                    @auth
+                    @if ($isAdminNav)
                         <li class="banner-nav-item">
-                            <a href="{{ route('dashboard') }}"
-                                class="banner-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                                {{ __('ui.nav.dashboard') }}
+                            <a href="{{ route('admin.dashboard') }}"
+                                class="banner-nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                                Dashboard
                             </a>
                         </li>
-                    @endauth
-                    <li class="banner-nav-item">
-                        <a href="{{ route('medicine.index') }}"
-                            class="banner-nav-link {{ request()->routeIs('medicine*') ? 'active' : '' }}">
-                            {{ __('ui.nav.medicine') }}
-                        </a>
-                    </li>
-                    <li class="banner-nav-item">
-                        <a href="{{ route('health') }}"
-                            class="banner-nav-link {{ request()->routeIs('health*') ? 'active' : '' }}">
-                            {{ __('ui.nav.health') }}
-                        </a>
-                    </li>
-                    <li class="banner-nav-item">
-                        <a href="{{ route('community.landing') }}"
-                            class="banner-nav-link {{ request()->routeIs('community*') ? 'active' : '' }}">
-                            {{ __('ui.nav.community') }}
-                        </a>
-                    </li>
-                    <li class="banner-nav-item">
-                        <a href="{{ route('suggestions') }}" class="banner-nav-link {{ request()->routeIs('suggestions') ? 'active' : '' }}">
-                            {{ __('ui.nav.suggestions') }}
-                        </a>
-                    </li>
-                    <li class="banner-nav-item">
-                        <a href="{{ route('help') }}"
-                            class="banner-nav-link {{ request()->routeIs('help*') ? 'active' : '' }}">
-                            {{ __('ui.nav.help') }}
-                        </a>
-                    </li>
+                        <li class="banner-nav-item">
+                            <a href="{{ route('admin.users.index') }}"
+                                class="banner-nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                                Users
+                            </a>
+                        </li>
+                        <li class="banner-nav-item">
+                            <a href="{{ route('admin.diseases.index') }}"
+                                class="banner-nav-link {{ request()->routeIs('admin.diseases.*') ? 'active' : '' }}">
+                                Diseases
+                            </a>
+                        </li>
+                        <li class="banner-nav-item">
+                            <a href="{{ route('admin.symptoms.index') }}"
+                                class="banner-nav-link {{ request()->routeIs('admin.symptoms.*') ? 'active' : '' }}">
+                                Symptoms
+                            </a>
+                        </li>
+                    @else
+                        <li class="banner-nav-item">
+                            <a href="{{ route('home') }}"
+                                class="banner-nav-link {{ request()->routeIs('home') ? 'active' : '' }}">
+                                {{ __('ui.nav.home') }}
+                            </a>
+                        </li>
+                        @auth
+                            <li class="banner-nav-item">
+                                <a href="{{ $dashboardRoute }}"
+                                    class="banner-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                                    {{ __('ui.nav.dashboard') }}
+                                </a>
+                            </li>
+                        @endauth
+                        <li class="banner-nav-item">
+                            <a href="{{ route('medicine.index') }}"
+                                class="banner-nav-link {{ request()->routeIs('medicine*') ? 'active' : '' }}">
+                                {{ __('ui.nav.medicine') }}
+                            </a>
+                        </li>
+                        <li class="banner-nav-item">
+                            <a href="{{ route('health') }}"
+                                class="banner-nav-link {{ request()->routeIs('health*') ? 'active' : '' }}">
+                                {{ __('ui.nav.health') }}
+                            </a>
+                        </li>
+                        <li class="banner-nav-item">
+                            <a href="{{ route('community.landing') }}"
+                                class="banner-nav-link {{ request()->routeIs('community*') ? 'active' : '' }}">
+                                {{ __('ui.nav.community') }}
+                            </a>
+                        </li>
+                        <li class="banner-nav-item">
+                            <a href="{{ route('suggestions') }}" class="banner-nav-link {{ request()->routeIs('suggestions') ? 'active' : '' }}">
+                                {{ __('ui.nav.suggestions') }}
+                            </a>
+                        </li>
+                        <li class="banner-nav-item">
+                            <a href="{{ route('help') }}"
+                                class="banner-nav-link {{ request()->routeIs('help*') ? 'active' : '' }}">
+                                {{ __('ui.nav.help') }}
+                            </a>
+                        </li>
+                    @endif
                 </ul>
 
                 <!-- Right Side Navigation (Notifications + User Menu) -->
@@ -2211,7 +2239,7 @@
                                     <p>{{ auth()->user()->email }}</p>
                                 </div>
 
-                                <a href="{{ route('dashboard') }}" class="dropdown-item-custom">
+                                <a href="{{ $dashboardRoute }}" class="dropdown-item-custom">
                                     <i class="fas fa-tachometer-alt me-2"></i>{{ __('ui.nav.dashboard') }}
                                 </a>
 

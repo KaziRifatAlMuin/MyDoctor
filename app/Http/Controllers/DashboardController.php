@@ -17,6 +17,10 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
+        if ($user?->isAdmin()) {
+            return redirect()->route('admin.dashboard');
+        }
+
         // Health metrics summary
         $healthMetrics = HealthMetric::where('user_id', $user->id)
             ->orderByDesc('recorded_at')
