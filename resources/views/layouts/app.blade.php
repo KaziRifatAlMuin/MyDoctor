@@ -2071,6 +2071,7 @@
             $navThemeClass = $isAdminNav ? 'nav-theme-admin' : 'nav-theme-regular';
             $dashboardRoute = $isAdminNav ? route('admin.dashboard') : route('dashboard');
             $profileDashboardRoute = auth()->check() ? route('dashboard') : route('home');
+            $canUseChatbot = !auth()->check() || !auth()->user()->isAdmin();
         @endphp
         <div class="{{ request()->routeIs('home') ? 'banner' : 'page-nav-bar' }} {{ $navThemeClass }}">
             <!-- Navigation on Banner -->
@@ -2321,10 +2322,12 @@
                                             class="btn btn-light btn-lg rounded-pill px-5 py-3 fw-semibold">
                                             Dashboard <i class="fas fa-arrow-right ms-2"></i>
                                         </a>
-                                        <button onclick="toggleChatbot()"
-                                            class="btn btn-outline-light btn-lg rounded-pill px-5 py-3 fw-semibold">
-                                            <i class="fas fa-robot me-2"></i>Ask AI
-                                        </button>
+                                        @if (!auth()->user()->isAdmin())
+                                            <button onclick="toggleChatbot()"
+                                                class="btn btn-outline-light btn-lg rounded-pill px-5 py-3 fw-semibold">
+                                                <i class="fas fa-robot me-2"></i>Ask AI
+                                            </button>
+                                        @endif
                                     </div>
                                 @endguest
                             </div>
@@ -2381,42 +2384,44 @@
             @yield('content')
         </main>
 
-        <!-- Chatbot Icon -->
-        <div class="chatbot-icon" id="chatbotIcon" onclick="toggleChatbot()">
-            <i class="fas fa-user-md"></i>
-            <span class="chatbot-tooltip">Ask me about health!</span>
-        </div>
-
-        <!-- Chatbot Modal -->
-        <div class="chatbot-modal" id="chatbotModal">
-            <div class="chatbot-header">
-                <h5><i class="fas fa-user-md me-2"></i>Health Assistant</h5>
-                <button onclick="toggleChatbot()"><i class="fas fa-times"></i></button>
+        @if ($canUseChatbot)
+            <!-- Chatbot Icon -->
+            <div class="chatbot-icon" id="chatbotIcon" onclick="toggleChatbot()">
+                <i class="fas fa-user-md"></i>
+                <span class="chatbot-tooltip">Ask me about health!</span>
             </div>
 
-            <!-- Disclaimer Banner -->
-            <div class="bg-warning bg-opacity-10 p-2 text-center small" style="border-bottom: 1px solid #dee2e6;">
-                <i class="fas fa-exclamation-triangle text-warning me-1"></i>
-                AI-powered health information - consult a doctor for medical advice
-            </div>
+            <!-- Chatbot Modal -->
+            <div class="chatbot-modal" id="chatbotModal">
+                <div class="chatbot-header">
+                    <h5><i class="fas fa-user-md me-2"></i>Health Assistant</h5>
+                    <button onclick="toggleChatbot()"><i class="fas fa-times"></i></button>
+                </div>
 
-            <!-- Chatbot settings moved to profile page (cookie-controlled) -->
+                <!-- Disclaimer Banner -->
+                <div class="bg-warning bg-opacity-10 p-2 text-center small" style="border-bottom: 1px solid #dee2e6;">
+                    <i class="fas fa-exclamation-triangle text-warning me-1"></i>
+                    AI-powered health information - consult a doctor for medical advice
+                </div>
 
-            <div class="chatbot-messages" id="chatMessages">
-                <div style="text-align: center; color: #718096; padding: 20px;">
-                    <i class="fas fa-user-md fa-3x mb-3" style="color: #667eea;"></i>
-                    <p>Hello! I'm your AI health assistant.<br>How can I help you today?</p>
-                    <small class="text-muted d-block mt-2">
-                        <i class="fas fa-info-circle me-1"></i>
-                        Ask about symptoms, medicines, diet, exercise, or general health tips
-                    </small>
+                <!-- Chatbot settings moved to profile page (cookie-controlled) -->
+
+                <div class="chatbot-messages" id="chatMessages">
+                    <div style="text-align: center; color: #718096; padding: 20px;">
+                        <i class="fas fa-user-md fa-3x mb-3" style="color: #667eea;"></i>
+                        <p>Hello! I'm your AI health assistant.<br>How can I help you today?</p>
+                        <small class="text-muted d-block mt-2">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Ask about symptoms, medicines, diet, exercise, or general health tips
+                        </small>
+                    </div>
+                </div>
+                <div class="chatbot-input">
+                    <input type="text" placeholder="Type your health question..." id="chatInput">
+                    <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
                 </div>
             </div>
-            <div class="chatbot-input">
-                <input type="text" placeholder="Type your health question..." id="chatInput">
-                <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
-            </div>
-        </div>
+        @endif
     </div>
 
     <!-- ==================== ALL MODALS ==================== -->
@@ -3801,6 +3806,7 @@ window.openVideoModal = function(type, source, isReel = false) {
         // Chatbot toggle
         function toggleChatbot() {
             const modal = document.getElementById('chatbotModal');
+            if (!modal) return;
             modal.classList.toggle('show');
         }
 

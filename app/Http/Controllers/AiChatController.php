@@ -71,6 +71,12 @@ class AiChatController extends Controller
 
         $authUserId = $request->user()?->id;
 
+        if ($request->user()?->isAdmin()) {
+            return response()->json([
+                'reply' => 'Chatbot is disabled for admin accounts.',
+            ], 403);
+        }
+
         if ($this->isUnauthorizedDataRequest($validated['message'])) {
             return response()->json([
                 'reply' => $this->formatStructuredReply(
@@ -89,7 +95,7 @@ class AiChatController extends Controller
                     $snapshot = $this->getPersonalHealthSnapshot($authUserId);
                     if ($snapshot !== null) {
                         $directReply = $this->buildPersonalHealthReply($snapshot);
-                        if ($directReply !== null) {
+                        if ($directReply !== null && $apiKey === '' && $googleKey === '') {
                             return response()->json(['reply' => $this->formatStructuredReply($directReply)]);
                         }
 
@@ -184,7 +190,7 @@ class AiChatController extends Controller
                     if ($snapshot !== null) {
                         // If data is simple enough, reply directly without LLM
                         $directReply = $this->buildPersonalHealthReply($snapshot);
-                        if ($directReply !== null) {
+                        if ($directReply !== null && $apiKey === '' && $googleKey === '') {
                             return response()->json(['reply' => $directReply]);
                         }
                         // Rich data: let LLM summarise from the snapshot
@@ -363,6 +369,7 @@ class AiChatController extends Controller
               . 'When the user asks about their health, diseases, symptoms, or medicines, answer using the data retrieved from their records — do NOT ask them to repeat information the system already has. '
               . 'Never disclose other users\' data, sensitive credentials, tokens, passwords, phone numbers, or emails. If asked, refuse briefly. '
               . 'Always format responses with a short title, bold section labels, and bullet points where useful. '
+              . 'When giving tips, use natural bullet points and avoid labels like Tip 1, Tip 2, etc. '
               . 'Be concise, friendly, and practical. '
               . 'Never provide a clinical diagnosis. '
               . 'For emergencies or severe symptoms, advise contacting local emergency services immediately.';
@@ -848,9 +855,10 @@ class AiChatController extends Controller
                 . 'Use ONLY the provided JSON data to answer. Do not ask clarifying questions — the data is already here. '
             . 'Do not reveal or infer data about any other users. '
             . 'Format output with a short title, bold labels, and bullet points when appropriate. '
+                . 'Do not write numbered tip labels like Tip 1/Tip 2; use natural bullet suggestions. '
                 . 'Provide personalized suggestions and tips based on the data, and vary phrasing/points between requests so responses are not identical each time. '
                 . 'If the JSON is empty, say no matching records were found. '
-                . 'Be concise (2–6 sentences), friendly, and remind the user this is not a medical diagnosis.';
+                . 'Be concise, friendly, and remind the user this is not a medical diagnosis.';
         $user   = "Question: {$question}\n\nData source: {$sql}\n\nData:\n{$json}\n\nAnswer:";
 
         // Try Google Gemini first
@@ -898,6 +906,61 @@ class AiChatController extends Controller
     }
 
     /**
+     * Generate 4-5 personalized smart suggestions from user records.
+     */
+    public function smartSuggestions(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if ($user === null) {
+            return response()->json(['message' => 'Authentication required.'], 401);
+        }
+
+        if ($user->isAdmin()) {
+            return response()->json(['message' => 'Chatbot is disabled for admin accounts.'], 403);
+        }
+
+        $snapshot = $this->getPersonalHealthSnapshot((int) $user->id);
+        if ($snapshot === null) {
+            return response()->json(['message' => 'Could not access user records right now.'], 502);
+        }
+
+        $apiKey    = (string) config('services.openrouter.api_key', '');
+        $googleKey = (string) (env('GOOGLE_API_KEY', '') ?: config('services.google.api_key', ''));
+
+        if ($apiKey === '' && $googleKey === '') {
+            return response()->json(['message' => 'AI service is not configured yet.'], 503);
+        }
+
+        $baseUrl      = rtrim((string) config('services.openrouter.base_url', 'https://openrouter.ai/api/v1'), '/');
+        $primaryModel = (string) config('services.openrouter.model', 'qwen/qwen3-6b-instruct:free');
+        $fallbackModels = array_filter(array_merge(
+            (array) config('services.openrouter.fallback_models', []),
+            [
+                config('services.openrouter.fallback_model_1'),
+                config('services.openrouter.fallback_model_2'),
+                config('services.openrouter.fallback_model_3'),
+            ]
+        ));
+
+        $models = collect(array_merge([$primaryModel], $fallbackModels))
+            ->filter(fn($m) => is_string($m) && trim($m) !== '')
+            ->map(fn($m) => trim($m))
+            ->unique()
+            ->values()
+            ->all();
+
+        $parsed = $this->generateLlmSmartSuggestions($snapshot, $apiKey, $googleKey, $baseUrl, $models);
+        if ($parsed === []) {
+            return response()->json(['message' => 'AI suggestions could not be generated right now.'], 502);
+        }
+
+        return response()->json([
+            'suggestions' => $parsed,
+            'source' => 'llm',
+        ]);
+    }
+
+    /**
      * Gather a broad set of current user's records and ask the LLM to produce
      * an "About me" summary strictly from those records.
      */
@@ -906,6 +969,10 @@ class AiChatController extends Controller
         $user = $request->user();
         if ($user === null) {
             return response()->json(['reply' => $this->formatStructuredReply('Authentication required.')], 401);
+        }
+
+        if ($user->isAdmin()) {
+            return response()->json(['reply' => 'Chatbot is disabled for admin accounts.'], 403);
         }
 
         $userId = $user->id;
@@ -931,18 +998,41 @@ class AiChatController extends Controller
             . "Current user id: {$userId}\n"
             . "Current user email: {$userEmail}\n"
             . "First focus on my diseases (2-3 lines), then my symptoms and trend (3-4 lines).\n"
-            . "Then give:\nTo Do: 4-6 bullet points\nNot To Do: 3-5 bullet points\n"
-            . "End with exactly 2 lines overall condition.";
+            . "Then provide exactly 4-5 personalized suggestions based on my diseases, symptoms, and health metrics.";
 
         // Enforce strict output formatting instructions for the LLM to follow.
-        $formatInstruction = "\n\nStrict format required: Provide a short title, then a 'Diseases' section (2-3 lines), then a 'Symptoms and trend' section (3-4 lines), then 'To Do' with 4-6 bullet points, then 'Not To Do' with 3-5 bullet points, and finish with exactly 2 lines labeled 'Overall condition'. Use bold labels and bullet points where appropriate. Keep the narrative concise (total 2-6 sentences for summary sections). Do not include other users' data.";
+        $formatInstruction = "\n\nStrict format required:"
+            . "\n- Add a short heading."
+            . "\n- Add **Diseases** section with 2-3 concise bullets grounded in my disease records."
+            . "\n- Add **Symptoms and Metrics Trend** section with 2-3 concise bullets grounded in my symptoms and health metrics."
+            . "\n- Add **Smart Suggestions** section with exactly 4 or 5 bullet points."
+            . "\n- Each suggestion must be practical and personalized to my retrieved data."
+            . "\n- Do NOT use numbered labels like Tip 1/Tip 2."
+            . "\n- Use markdown bolding where useful, especially for key risks/actions."
+            . "\n- Keep tone concise and useful."
+            . "\nDo not include other users' data.";
 
         $question = $question . $formatInstruction;
 
         $apiKey    = (string) config('services.openrouter.api_key', '');
         $googleKey = (string) (env('GOOGLE_API_KEY', '') ?: config('services.google.api_key', ''));
+
+        // If AI keys are not configured, return a deterministic local summary
+        // built from the user's snapshot and include fallback suggestions so
+        // the UI still shows a helpful health summary.
         if ($apiKey === '' && $googleKey === '') {
-            return response()->json([ 'reply' => $this->formatStructuredReply('AI service is not configured yet. Please set OPENROUTER_API_KEY or GOOGLE_API_KEY in your .env file.') ], 503);
+            try {
+                $local = $this->buildPersonalHealthReply($snapshot, true);
+                $reply = $this->formatStructuredReply($local ?? 'I could not generate a summary right now.');
+                $fallback = $this->buildFallbackSmartSuggestions($snapshot);
+                if (count($fallback) >= 4) {
+                    $reply = $this->appendSmartSuggestionsSection($reply, array_slice($fallback, 0, 4));
+                }
+                return response()->json(['reply' => $reply]);
+            } catch (\Throwable $e) {
+                Log::warning('AboutMe local summary failed when AI keys missing', ['message' => $e->getMessage()]);
+                return response()->json([ 'reply' => $this->formatStructuredReply('AI service is not configured yet. Please set OPENROUTER_API_KEY or GOOGLE_API_KEY in your .env file.') ], 503);
+            }
         }
 
         $baseUrl      = rtrim((string) config('services.openrouter.base_url', 'https://openrouter.ai/api/v1'), '/');
@@ -976,14 +1066,36 @@ class AiChatController extends Controller
 
         if ($final !== null) {
             // For Suggestions page summary, return the model output directly so
-            // the requested sections (Diseases, Symptoms and trend, To Do,
-            // Not To Do, Overall condition) are shown without generic wrappers.
-            return response()->json(['reply' => $this->cleanAboutMeResponse($final)]);
+            // the requested sections are shown without generic wrappers.
+            $reply = $this->cleanAboutMeResponse($final);
+            $llmSuggestions = $this->generateLlmSmartSuggestions($snapshot, $apiKey, $googleKey, $baseUrl, $models);
+            if (count($llmSuggestions) < 4) {
+                $llmSuggestions = $this->buildFallbackSmartSuggestions($snapshot);
+            }
+            $reply = $this->appendSmartSuggestionsSection($reply, array_slice($llmSuggestions, 0, 4));
+            return response()->json(['reply' => $reply]);
         }
 
-        // If LLM summarization fails, provide deterministic local fallback.
-        $fallback = $this->buildPersonalHealthReply($snapshot, true);
-        return response()->json(['reply' => $this->formatStructuredReply($fallback)]);
+        // If the LLM failed, fall back to a deterministic local summary built
+        // from the user's snapshot so the UI shows helpful information.
+        try {
+            $local = $this->buildPersonalHealthReply($snapshot, true);
+            if ($local !== null) {
+                $reply = $this->formatStructuredReply($local);
+                $llmSuggestions = $this->generateLlmSmartSuggestions($snapshot, $apiKey, $googleKey, $baseUrl, $models);
+                if (count($llmSuggestions) < 4) {
+                    $llmSuggestions = $this->buildFallbackSmartSuggestions($snapshot);
+                }
+                $reply = $this->appendSmartSuggestionsSection($reply, array_slice($llmSuggestions, 0, 4));
+                return response()->json(['reply' => $reply]);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('AboutMe local fallback failed', ['message' => $e->getMessage()]);
+        }
+
+        return response()->json([
+            'reply' => 'AI summary could not be generated right now. Please regenerate in a moment.',
+        ], 502);
     }
 
     /**
@@ -1024,6 +1136,242 @@ class AiChatController extends Controller
 
         $clean = trim(implode("\n", $filtered));
         return $clean !== '' ? $clean : trim($text);
+    }
+
+    private function parseSmartSuggestionsFromModel(string $raw): array
+    {
+        $text = trim($raw);
+
+        $text = preg_replace('/^```(?:json)?\s*/i', '', $text);
+        $text = preg_replace('/\s*```$/', '', (string) $text);
+
+        $start = strpos($text, '[');
+        $end = strrpos($text, ']');
+        if ($start === false || $end === false || $end <= $start) {
+            return [];
+        }
+
+        $json = substr($text, $start, $end - $start + 1);
+        $decoded = json_decode($json, true);
+        if (!is_array($decoded)) {
+            return [];
+        }
+
+        $allowedCategories = ['Metric Alert', 'Adherence', 'Symptom', 'Condition', 'Lifestyle', 'Wellness'];
+        $allowedColors = ['danger', 'warning', 'info', 'success', 'primary'];
+
+        $normalized = [];
+        foreach ($decoded as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+
+            $title = trim((string) ($item['title'] ?? ''));
+            $message = trim((string) ($item['message'] ?? ''));
+            $category = trim((string) ($item['category'] ?? 'Wellness'));
+            $color = trim((string) ($item['color'] ?? 'primary'));
+            $icon = trim((string) ($item['icon'] ?? 'fa-lightbulb'));
+
+            if ($title === '' || $message === '') {
+                continue;
+            }
+
+            if (!in_array($category, $allowedCategories, true)) {
+                $category = 'Wellness';
+            }
+            if (!in_array($color, $allowedColors, true)) {
+                $color = 'primary';
+            }
+            if ($icon === '') {
+                $icon = 'fa-lightbulb';
+            }
+
+            $normalized[] = [
+                'title' => $title,
+                'message' => $message,
+                'category' => $category,
+                'color' => $color,
+                'icon' => $icon,
+            ];
+        }
+
+        if (count($normalized) < 4) {
+            return [];
+        }
+
+        return array_slice($normalized, 0, 5);
+    }
+
+    private function generateLlmSmartSuggestions(
+        array $snapshot,
+        string $apiKey,
+        string $googleKey,
+        string $baseUrl,
+        array $models
+    ): array {
+        $json = json_encode($snapshot, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        $system = 'You are MyDoctor AI assistant. '
+            . 'Use ONLY the provided JSON user records. '
+            . 'Return STRICT JSON only: an array of 4 or 5 objects. '
+            . 'Each object must include: title, message, category, color, icon. '
+            . 'title: concise and useful. '
+            . 'message: practical and personalized, include bold markdown where useful using **text**. '
+            . 'category must be one of: Metric Alert, Adherence, Symptom, Condition, Lifestyle, Wellness. '
+            . 'color must be one of: danger, warning, info, success, primary. '
+            . 'icon must be a Font Awesome icon class name like fa-heartbeat or fa-pills. '
+            . 'Do NOT use numbered labels like Tip 1/Tip 2. '
+            . 'Do NOT include any markdown wrapper or explanation outside JSON.';
+        $userPrompt = "User data JSON:\n{$json}\n\nReturn the JSON array now.";
+
+        $modelRaw = null;
+
+        if ($googleKey !== '') {
+            $googleModel = (string) (env('GOOGLE_MODEL', '') ?: config('services.google.model', 'gemini-1.5-flash'));
+            $resp = $this->googleChatRequest($system, $userPrompt, $googleKey, $googleModel, 0.3, 700);
+            if ($resp !== null) {
+                $modelRaw = $resp;
+            }
+        }
+
+        if ($modelRaw === null) {
+            foreach ($models as $model) {
+                try {
+                    $response = Http::timeout(35)
+                        ->withToken($apiKey)
+                        ->withHeaders([
+                            'HTTP-Referer' => (string) config('services.openrouter.site_url', config('app.url')),
+                            'X-Title'      => (string) config('services.openrouter.app_name', config('app.name')),
+                            'Content-Type' => 'application/json',
+                            'Accept'       => 'application/json',
+                        ])
+                        ->post($baseUrl . '/chat/completions', [
+                            'model'       => $model,
+                            'messages'    => [
+                                ['role' => 'system', 'content' => $system],
+                                ['role' => 'user', 'content' => $userPrompt],
+                            ],
+                            'temperature' => 0.3,
+                            'max_tokens'  => 700,
+                        ]);
+
+                    if ($response->successful()) {
+                        $reply = $this->extractReplyText(data_get($response->json(), 'choices.0.message.content'));
+                        if ($reply !== null) {
+                            $modelRaw = $reply;
+                            break;
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('Smart suggestions model call failed', [
+                        'model' => $model,
+                        'message' => $e->getMessage(),
+                    ]);
+                }
+            }
+        }
+
+        if ($modelRaw === null) {
+            return [];
+        }
+
+        return $this->parseSmartSuggestionsFromModel($modelRaw);
+    }
+
+    private function appendSmartSuggestionsSection(string $summaryText, array $suggestions): string
+    {
+        $content = trim($summaryText);
+        $content = preg_replace('/\n\*\*Smart Suggestions\*\*[\s\S]*$/i', '', $content) ?? $content;
+        $content = trim($content);
+
+        $bullets = [];
+        foreach ($suggestions as $s) {
+            $title = trim((string) ($s['title'] ?? 'Suggestion'));
+            $message = trim((string) ($s['message'] ?? ''));
+            if ($title === '' || $message === '') {
+                continue;
+            }
+            $bullets[] = "- **{$title}**: {$message}";
+        }
+
+        if (count($bullets) < 4) {
+            return $content;
+        }
+
+        return $content . "\n\n**Smart Suggestions**\n" . implode("\n", array_slice($bullets, 0, 4));
+    }
+
+    private function buildFallbackSmartSuggestions(array $snapshot): array
+    {
+        $suggestions = [];
+
+        $diseases = array_slice((array) ($snapshot['diseases'] ?? []), 0, 2);
+        $symptoms = array_slice((array) ($snapshot['symptoms'] ?? []), 0, 3);
+        $medicines = array_slice((array) ($snapshot['medicines'] ?? []), 0, 2);
+        $metrics = array_slice((array) ($snapshot['health_metrics'] ?? []), 0, 2);
+
+        if ($diseases !== []) {
+            $names = implode(', ', array_map(fn($d) => (string) ($d['disease'] ?? 'Unknown'), $diseases));
+            $suggestions[] = [
+                'title' => 'Condition-focused follow-up',
+                'message' => "Based on your records, **{$names}** should be reviewed regularly. Keep tracking symptoms and share changes during your next consultation.",
+                'category' => 'Condition',
+                'color' => 'warning',
+                'icon' => 'fa-notes-medical',
+            ];
+        }
+
+        if ($symptoms !== []) {
+            $names = implode(', ', array_map(fn($s) => (string) ($s['symptom'] ?? 'Symptom'), $symptoms));
+            $suggestions[] = [
+                'title' => 'Track symptom trend daily',
+                'message' => "Your recent symptoms include **{$names}**. Logging timing and severity consistently can help identify triggers and recovery patterns.",
+                'category' => 'Symptom',
+                'color' => 'danger',
+                'icon' => 'fa-thermometer-half',
+            ];
+        }
+
+        if ($medicines !== []) {
+            $names = implode(', ', array_map(fn($m) => (string) ($m['medicine_name'] ?? 'Medicine'), $medicines));
+            $suggestions[] = [
+                'title' => 'Improve medicine consistency',
+                'message' => "You are taking **{$names}**. Use reminder timing and a fixed daily routine to reduce missed doses.",
+                'category' => 'Adherence',
+                'color' => 'info',
+                'icon' => 'fa-pills',
+            ];
+        }
+
+        if ($metrics !== []) {
+            $names = implode(', ', array_map(fn($m) => (string) ($m['metric_type'] ?? 'metric'), $metrics));
+            $suggestions[] = [
+                'title' => 'Review key health metrics',
+                'message' => "Recent metrics like **{$names}** should be monitored on a fixed schedule to catch early changes.",
+                'category' => 'Metric Alert',
+                'color' => 'primary',
+                'icon' => 'fa-chart-line',
+            ];
+        }
+
+        $suggestions[] = [
+            'title' => 'Daily recovery routine',
+            'message' => 'Support recovery with **consistent sleep, hydration, light activity, and stress control**. These habits improve long-term stability across most conditions.',
+            'category' => 'Lifestyle',
+            'color' => 'success',
+            'icon' => 'fa-leaf',
+        ];
+
+        while (count($suggestions) < 4) {
+            $suggestions[] = [
+                'title' => 'Preventive care reminder',
+                'message' => 'Plan a routine follow-up to review your latest records and adjust your care plan safely with your clinician.',
+                'category' => 'Wellness',
+                'color' => 'primary',
+                'icon' => 'fa-user-md',
+            ];
+        }
+
+        return array_slice($suggestions, 0, 5);
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -1150,70 +1498,21 @@ class AiChatController extends Controller
             $sentences = [$text];
         }
 
-        $summary = array_shift($sentences) ?? $text;
-        $detailItems = array_slice($sentences, 0, 4);
-        $suggestions = $this->buildDefaultSuggestions($text);
-        $tips = $this->buildDefaultTips($text);
+        $items = array_slice($sentences, 0, 6);
+        if ($items === []) {
+            $items = [$text];
+        }
 
         $output = [
             '## MyDoctor AI Response',
             '',
-            '**Summary**',
-            '- ' . $summary,
+            '**Response**',
         ];
 
-        if ($detailItems !== []) {
-            $output[] = '';
-            $output[] = '**Details**';
-            foreach ($detailItems as $item) {
-                $output[] = '- ' . $item;
-            }
-        }
-
-        $output[] = '';
-        $output[] = '**Suggestions**';
-        foreach ($suggestions as $suggestion) {
-            $output[] = '- ' . $suggestion;
-        }
-
-        $output[] = '';
-        $output[] = '**Tips**';
-        foreach ($tips as $tip) {
-            $output[] = '- ' . $tip;
+        foreach ($items as $item) {
+            $output[] = '- ' . $item;
         }
 
         return implode("\n", $output);
-    }
-
-    private function buildDefaultSuggestions(string $context): array
-    {
-        $suggestions = [
-            'Review your latest health entries and keep them updated so recommendations stay accurate.',
-            'Share persistent or worsening symptoms with a licensed doctor for proper evaluation.',
-            'Use your medicine reminders consistently to improve treatment adherence and routine tracking.',
-            'Ask follow-up questions about trends in your records so you can monitor changes over time.',
-        ];
-
-        if (preg_match('/\b(emergency|chest pain|shortness of breath|severe|faint|stroke)\b/i', $context)) {
-            $suggestions[0] = 'Seek urgent medical care immediately if severe or emergency symptoms are present.';
-        }
-
-        return array_slice($suggestions, 0, 4);
-    }
-
-    private function buildDefaultTips(string $context): array
-    {
-        $tips = [
-            'Tip 1: Stay hydrated and aim for regular sleep to support recovery and overall health.',
-            'Tip 2: Record symptoms with time and severity so changes can be tracked accurately.',
-            'Tip 3: Follow prescribed medicines exactly and avoid skipping doses without medical advice.',
-            'Tip 4: Seek immediate emergency help if you develop severe or rapidly worsening symptoms.',
-        ];
-
-        if (!preg_match('/\b(emergency|severe|worsening)\b/i', $context)) {
-            $tips[3] = 'Tip 4: Schedule routine check-ups to review progress and adjust plans safely.';
-        }
-
-        return array_slice($tips, 0, 4);
     }
 }

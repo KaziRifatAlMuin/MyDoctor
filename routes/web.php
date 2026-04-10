@@ -199,6 +199,7 @@ Route::middleware('auth')->prefix('notifications')->name('notifications.')->grou
     // AI Chatbot
     Route::post('/chatbot/message', [AiChatController::class, 'message'])->name('chatbot.message');
     Route::post('/chatbot/about-me', [AiChatController::class, 'aboutMe'])->name('chatbot.about_me');
+    Route::post('/chatbot/smart-suggestions', [AiChatController::class, 'smartSuggestions'])->name('chatbot.smart_suggestions');
 
     // Email verification
     Route::post('/email/verification-notification', function (\Illuminate\Http\Request $request) {

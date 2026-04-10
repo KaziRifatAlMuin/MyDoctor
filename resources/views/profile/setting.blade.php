@@ -165,15 +165,17 @@
                                 </div>
                             </div>
 
-                            <div class="settings-card">
-                                <h5><i class="fas fa-comments text-info me-2"></i>Chatbot Bubble</h5>
-                                <p class="settings-help">Show or hide floating AI assistant bubble with cookie-based preference.</p>
-                                <div class="form-check form-switch mt-2 mb-0">
-                                    <input class="form-check-input" type="checkbox" name="chatbot_bubble" id="chatbot_bubble"
-                                        value="1" {{ $chatbotBubbleEnabled ?? true ? 'checked' : '' }}>
-                                    <label class="form-check-label fw-semibold" for="chatbot_bubble">Show Chatbot Bubble</label>
+                            @if (!$user->isAdmin())
+                                <div class="settings-card">
+                                    <h5><i class="fas fa-comments text-info me-2"></i>Chatbot Bubble</h5>
+                                    <p class="settings-help">Show or hide floating AI assistant bubble with cookie-based preference.</p>
+                                    <div class="form-check form-switch mt-2 mb-0">
+                                        <input class="form-check-input" type="checkbox" name="chatbot_bubble" id="chatbot_bubble"
+                                            value="1" {{ $chatbotBubbleEnabled ?? true ? 'checked' : '' }}>
+                                        <label class="form-check-label fw-semibold" for="chatbot_bubble">Show Chatbot Bubble</label>
+                                    </div>
                                 </div>
-                            </div>
+                            @endif
 
                             <div class="settings-card">
                                 <h5><i class="fas fa-user-shield text-warning me-2"></i>Public Profile Permissions</h5>
