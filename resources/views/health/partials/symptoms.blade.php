@@ -74,7 +74,13 @@
                                                     <i class="fas fa-thermometer-half"></i>
                                                 </div>
                                                 <div>
-                                                    <span class="fw-semibold">{{ $symptom->symptom_name }}</span>
+                                                    @if($symptom->symptom)
+                                                        <a href="{{ route('public.symptoms.show', $symptom->symptom) }}" class="fw-semibold text-decoration-none">
+                                                            {{ $symptom->symptom_name }}
+                                                        </a>
+                                                    @else
+                                                        <span class="fw-semibold">{{ $symptom->symptom_name }}</span>
+                                                    @endif
                                                     @if (!empty($symptomsBn[$symptom->symptom_name]))
                                                         <span class="bn-label d-block">({{ $symptomsBn[$symptom->symptom_name] }})</span>
                                                     @endif

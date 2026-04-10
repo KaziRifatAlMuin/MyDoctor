@@ -196,8 +196,8 @@ window.testNotification = function() {
     if (Notification.permission === 'granted') {
         new Notification('🔔 Test Notification', {
             body: 'Push notifications are working!',
-            icon: '/images/logos/applogo.jpg',
-            badge: '/images/logos/applogo.jpg',
+                icon: '/images/logos/applogo.png',
+                badge: '/images/logos/applogo.png',
             vibrate: [200, 100, 200]
         });
         console.log('✅ Test notification sent');

@@ -19,6 +19,8 @@ return new class extends Migration
             $table->integer('file_size')->nullable();
             $table->integer('like_count')->default(0);
             $table->timestamps();
+
+            $table->index(['post_id', 'created_at']);
         });
     }
 

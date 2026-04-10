@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Medicine Management - My Doctor')
+@section('title', __('ui.auto.Medicine'))
 
 @section('content')
 <div class="container py-5">

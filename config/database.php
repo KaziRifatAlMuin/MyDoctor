@@ -63,6 +63,56 @@ return [
             ]) : [],
         ],
 
+        // ============================================================
+        // Add this block inside the 'connections' array in
+        // config/database.php — right after the existing 'mysql' block.
+        // ============================================================
+
+        // In config/database.php, find:
+        //   'connections' => [
+        //       'mysql' => [ ... ],          <-- existing block
+        //
+        // And add this IMMEDIATELY after it:
+
+        'mysql_chatbot' => [
+            'driver'         => 'mysql',
+            'url'            => env('DB_CHATBOT_URL'),
+            'host'           => env('DB_CHATBOT_HOST', '127.0.0.1'),
+            'port'           => env('DB_CHATBOT_PORT', '3306'),
+            'database'       => env('DB_CHATBOT_DATABASE', 'mydoctor_db'),
+            'username'       => env('DB_CHATBOT_USERNAME', 'root'),
+            'password'       => env('DB_CHATBOT_PASSWORD', ''),
+            'unix_socket'    => env('DB_SOCKET', ''),
+            'charset'        => 'utf8mb4',
+            'collation'      => 'utf8mb4_unicode_ci',
+            'prefix'         => '',
+            'prefix_indexes' => true,
+            'strict'         => true,
+            'engine'         => null,
+            'options'        => extension_loaded('pdo_mysql')
+                ? array_filter([
+                    PDO::MYSQL_ATTR_SSL_CA => env('DB_CHATBOT_SSL_CA'),
+                ])
+                : [],
+        ],
+
+        // ============================================================
+        // IMPORTANT: After editing database.php run:
+        //   php artisan config:clear
+        //   php artisan cache:clear
+        // ============================================================
+        //
+        // To create the read-only MySQL user (recommended for production):
+        //   CREATE USER 'chatbot_readonly'@'localhost' IDENTIFIED BY 'strong_password_here';
+        //   GRANT SELECT ON mydoctor_db.* TO 'chatbot_readonly'@'localhost';
+        //   FLUSH PRIVILEGES;
+        //
+        // Then set in .env:
+        //   DB_CHATBOT_USERNAME=chatbot_readonly
+        //   DB_CHATBOT_PASSWORD=strong_password_here
+        // ============================================================
+
+
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),

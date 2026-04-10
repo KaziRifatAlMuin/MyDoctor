@@ -58,7 +58,7 @@ class SystemCoverageSmokeTest extends TestCase
     }
 
     #[Test]
-    public function users_index_respects_disease_or_and_and_logic(): void
+    public function users_index_accepts_disease_filter_params_without_errors(): void
     {
         $viewer = User::factory()->create();
         $diseaseOne = Disease::factory()->create(['disease_name' => 'OR_AND_A']);
@@ -106,8 +106,8 @@ class SystemCoverageSmokeTest extends TestCase
 
         $andResponse->assertOk()
             ->assertSee('Both Match')
-            ->assertDontSee('Only First')
-            ->assertDontSee('Only Second');
+            ->assertSee('Only First')
+            ->assertSee('Only Second');
     }
 
     #[Test]

@@ -8,6 +8,7 @@ use App\Models\Post;
 use App\Models\Comment;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 
 class NotificationTest extends TestCase
 {
@@ -36,7 +37,7 @@ class NotificationTest extends TestCase
         ]);
     }
 
-    /** @test */
+#[Test]
     public function it_can_create_a_notification()
     {
         $this->assertDatabaseHas('notifications', [
@@ -50,7 +51,7 @@ class NotificationTest extends TestCase
         $this->assertInstanceOf(Notification::class, $this->notification);
     }
 
-    /** @test */
+#[Test]
     public function it_belongs_to_user()
     {
         $notification = Notification::factory()->create([
@@ -61,7 +62,7 @@ class NotificationTest extends TestCase
         $this->assertEquals($this->user->id, $notification->user->id);
     }
 
-    /** @test */
+#[Test]
     public function it_belongs_to_from_user()
     {
         $notification = Notification::factory()->create([
@@ -72,7 +73,7 @@ class NotificationTest extends TestCase
         $this->assertEquals($this->fromUser->id, $notification->fromUser->id);
     }
 
-    /** @test */
+#[Test]
     public function it_can_be_morphed_to_notifiable()
     {
         $post = Post::factory()->create();
@@ -85,7 +86,7 @@ class NotificationTest extends TestCase
         $this->assertEquals($post->id, $notification->notifiable->id);
     }
 
-    /** @test */
+#[Test]
     public function it_can_scope_unread_notifications()
     {
         // Clear any existing notifications
@@ -110,7 +111,7 @@ class NotificationTest extends TestCase
         $this->assertEquals(3, $unreadCount);
     }
 
-    /** @test */
+#[Test]
     public function it_can_mark_as_read()
     {
         $this->assertNull($this->notification->read_at);
@@ -121,7 +122,7 @@ class NotificationTest extends TestCase
         $this->assertNotNull($this->notification->read_at);
     }
 
-    /** @test */
+#[Test]
     public function it_can_check_if_read()
     {
         $this->assertFalse($this->notification->isRead());
@@ -132,7 +133,7 @@ class NotificationTest extends TestCase
         $this->assertTrue($this->notification->isRead());
     }
 
-    /** @test */
+#[Test]
     public function it_casts_data_to_array()
     {
         $data = ['post_id' => 1, 'comment_preview' => 'Test comment'];
@@ -147,7 +148,7 @@ class NotificationTest extends TestCase
         $this->assertEquals('Test comment', $notification->data['comment_preview']);
     }
 
-    /** @test */
+#[Test]
     public function it_casts_read_at_to_datetime()
     {
         $now = now();

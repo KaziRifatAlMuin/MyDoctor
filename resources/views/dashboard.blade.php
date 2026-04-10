@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard')
+@section('title', __('ui.auto.Dashboard'))
 
 @push('styles')
 <style>
@@ -1167,9 +1167,15 @@
                             @foreach($activeConditions->take(5) as $ud)
                                 <div class="d-flex align-items-center justify-content-between py-2 {{ !$loop->last ? 'border-bottom' : '' }}" style="border-color:#f0f0f0 !important;">
                                     <div>
-                                        <div class="fw-semibold" style="font-size:0.88rem;color:#2d3748;">
-                                            {{ $ud->disease->disease_name ?? 'Unknown' }}
-                                        </div>
+                                        @if($ud->disease)
+                                            <a href="{{ route('public.disease.show', $ud->disease) }}" class="fw-semibold text-decoration-none" style="font-size:0.88rem;color:#2d3748;">
+                                                {{ $ud->disease->disease_name }}
+                                            </a>
+                                        @else
+                                            <div class="fw-semibold" style="font-size:0.88rem;color:#2d3748;">
+                                                Unknown
+                                            </div>
+                                        @endif
                                         @if($ud->diagnosed_at)
                                             <div class="text-muted" style="font-size:0.72rem;">
                                                 Since {{ \Carbon\Carbon::parse($ud->diagnosed_at)->format('M Y') }}
@@ -1177,7 +1183,7 @@
                                         @endif
                                     </div>
                                     <span class="condition-badge condition-{{ $ud->status }}">
-                                        {{ ucfirst($ud->status) }}
+                                        {{ $ud->status_label }}
                                     </span>
                                 </div>
                             @endforeach
@@ -1210,9 +1216,15 @@
                                         @endphp
                                         <div class="symptom-dot {{ $dotClass }}"></div>
                                         <div class="flex-grow-1" style="min-width:0;">
-                                            <div class="fw-semibold text-truncate" style="font-size:0.85rem;color:#2d3748;">
-                                                {{ $sym->symptom_name }}
-                                            </div>
+                                            @if($sym->symptom)
+                                                <a href="{{ route('public.symptoms.show', $sym->symptom) }}" class="fw-semibold text-truncate text-decoration-none d-inline-block" style="font-size:0.85rem;color:#2d3748;max-width:100%;">
+                                                    {{ $sym->symptom_name }}
+                                                </a>
+                                            @else
+                                                <div class="fw-semibold text-truncate" style="font-size:0.85rem;color:#2d3748;">
+                                                    {{ $sym->symptom_name }}
+                                                </div>
+                                            @endif
                                             <div class="text-muted" style="font-size:0.72rem;">
                                                 Severity {{ $sev }}/10 &middot; {{ $sym->recorded_at->format('M d') }}
                                             </div>
@@ -1534,3 +1546,4 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endpush
+

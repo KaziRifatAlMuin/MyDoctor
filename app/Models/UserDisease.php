@@ -30,4 +30,16 @@ class UserDisease extends Model
     {
         return $this->belongsTo(Disease::class);
     }
+
+    public function getStatusLabelAttribute(): string
+    {
+        $key = "ui.health.{$this->status}";
+        $translated = __($key);
+
+        if ($translated === $key) {
+            return ucfirst((string) $this->status);
+        }
+
+        return $translated;
+    }
 }

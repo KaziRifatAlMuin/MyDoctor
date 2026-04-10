@@ -343,9 +343,9 @@
 
                         <div class="d-flex flex-wrap gap-2 mt-2">
                             @forelse($profileDiseases as $disease)
-                                <span class="profile-disease-tag">
-                                    {{ $disease->disease_name }}{{ $disease->disease_name_bn ? ' (' . $disease->disease_name_bn . ')' : '' }}
-                                </span>
+                                <a href="{{ route('public.disease.show', $disease) }}" class="profile-disease-tag text-decoration-none">
+                                    {{ $disease->disease_name }}
+                                </a>
                             @empty
                                 <span class="profile-disease-tag" style="background: #f1f5f9; color: #64748b; border-color: #e2e8f0;">
                                     No disease tags yet
@@ -474,6 +474,11 @@
                                     Picture</span>
                                 <i class="fas fa-chevron-right text-muted" style="font-size:0.8rem;"></i>
                             </button>
+
+                            <a href="{{ route('profile.setting') }}" class="action-btn text-start">
+                                <span><i class="fas fa-cog me-2" style="color:#667eea;"></i>Settings</span>
+                                <i class="fas fa-chevron-right text-muted" style="font-size:0.8rem;"></i>
+                            </a>
 
                             {{-- Email verification UI removed (handled elsewhere) --}}
 
@@ -763,3 +768,4 @@
         @endif
     </script>
 @endpush
+

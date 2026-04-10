@@ -14,11 +14,15 @@ return new class extends Migration
             $table->foreignId('receiver_id')->nullable()->constrained('users')->cascadeOnDelete();
             $table->string('title');
             $table->longText('message');
+            $table->boolean('is_read')->default(false);
+            $table->boolean('is_starred')->default(false);
             $table->enum('status', ['draft', 'sent', 'unread', 'read', 'archived'])->default('draft');
             $table->timestamps();
 
             $table->index(['receiver_id', 'status']);
             $table->index(['sender_id', 'status']);
+            $table->index(['receiver_id', 'is_starred']);
+            $table->index(['sender_id', 'is_starred']);
         });
     }
 

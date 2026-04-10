@@ -1,50 +1,69 @@
 @php
     $description = $post->description ?? '';
+    $isAuthenticated = Auth::check();
+    $isOwner = $isAuthenticated && Auth::id() === $post->user_id;
+    $isAdmin = $isAuthenticated && Auth::user()->isAdmin();
+    $isAnonymous = (bool) $post->is_anonymous;
+    $displayName = $isAnonymous ? 'Anonymous Member' : $post->user->name;
+    $userLiked = $isAuthenticated ? $post->likes()->where('user_id', Auth::id())->exists() : false;
+    $userStarred = $isAuthenticated
+        ? $post->likes()->where('user_id', Auth::id())->where('is_starred', true)->exists()
+        : false;
 @endphp
 
 <div class="post-card" id="post-{{ $post->id }}" data-post-id="{{ $post->id }}">
     <!-- Post Header -->
     <div class="post-header" style="padding:0 0 12px 0;margin:0;">
-        <div class="post-user" onclick="showUserModal({{ $post->user->id }})" style="display:flex;gap:12px;cursor:pointer;">
+        <div class="post-user" @if(!$isAnonymous) onclick="showUserModal({{ $post->user->id }})" @endif style="display:flex;gap:12px;cursor:{{ $isAnonymous ? 'default' : 'pointer' }};">
             <div class="user-avatar" style="width:48px;height:48px;border-radius:50%;overflow:hidden;flex-shrink:0;">
-                @if($post->user->picture)
+                @if(!$isAnonymous && $post->user->picture)
                     <img src="{{ asset('storage/' . $post->user->picture) }}" alt="{{ $post->user->name }}" style="width:100%;height:100%;object-fit:cover;">
                 @else
-                    <div class="avatar-placeholder" style="width:100%;height:100%;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;">{{ strtoupper(substr($post->user->name,0,1)) }}</div>
+                    <div class="avatar-placeholder" style="width:100%;height:100%;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;">{{ $isAnonymous ? 'A' : strtoupper(substr($post->user->name,0,1)) }}</div>
                 @endif
             </div>
             <div class="user-info">
-                <h6 class="user-name" style="font-size:15px;font-weight:600;margin:0;padding:0;color:#1a1a1a;">{{ $post->user->name }}</h6>
+                <h6 class="user-name" style="font-size:15px;font-weight:600;margin:0;padding:0;color:#1a1a1a;">{{ $displayName }}</h6>
                 <div class="post-meta" style="display:flex;align-items:center;gap:12px;font-size:12px;color:#65676b;margin:0;padding:0;">
                     <span class="post-time"><i class="far fa-clock me-1"></i>{{ $post->created_at->diffForHumans() }}</span>
+                    <a href="{{ route('community.post.show', $post) }}" class="text-decoration-none" style="font-weight:600; color:#1877f2;">
+                        Open Post
+                    </a>
                     @if($post->disease)
-                        <span class="post-disease-badge" title="{{ $post->disease->disease_name }}" style="background:#e7f3ff;color:#1877f2;padding:4px 12px;border-radius:4px;font-weight:500;font-size:12px;display:inline-flex;align-items:center;gap:4px;">
+                        <a href="{{ route('public.disease.show', $post->disease) }}" class="post-disease-badge text-decoration-none" title="{{ $post->disease->disease_name }}" style="background:#e7f3ff;color:#1877f2;padding:4px 12px;border-radius:4px;font-weight:500;font-size:12px;display:inline-flex;align-items:center;gap:4px;">
                             <i class="fas fa-tag me-1"></i>{{ $post->disease->disease_name }}
-                            @if(isset($post->disease->bn_name))
-                                <span style="font-size:10px;color:#65676b;margin-left:4px;">({{ $post->disease->bn_name }})</span>
-                            @endif
-                        </span>
+                        </a>
                     @endif
                 </div>
             </div>
         </div>
         
         <!-- Three Dots Dropdown Menu -->
-        <div class="post-actions-menu" style="position:relative; display:flex; align-items:center;">
+        <div class="post-actions-menu" style="position:relative; display:flex; align-items:center; gap:8px;">
+            @if($post->is_edited)
+                <span style="font-size:11px; font-weight:600; color:#65676b; background:#f0f2f5; border-radius:12px; padding:4px 8px;">Edited</span>
+            @endif
             <button class="post-menu-btn" onclick="togglePostMenu({{ $post->id }})" title="More options" style="width:34px;height:34px;border:none;border-radius:50%;background:#f0f2f5;color:#65676b;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;">
                 <i class="fas fa-ellipsis-v"></i>
             </button>
             
             <!-- Dropdown Menu -->
             <div class="post-dropdown-menu" id="post-menu-{{ $post->id }}" style="display:none; position:absolute; top:40px; right:0; background:white; border-radius:8px; box-shadow:0 2px 12px rgba(0,0,0,0.15); min-width:180px; z-index:1000; overflow:hidden;">
-                <!-- View Full Post in Modal -->
-                <button class="dropdown-item" onclick="openPostModal({{ $post->id }})" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#1a1a1a; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb;">
+                <!-- View Full Post Page -->
+                <a class="dropdown-item" href="{{ route('community.post.show', $post) }}" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#1a1a1a; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb; text-decoration:none;">
                     <i class="fas fa-expand" style="width:18px; color:#1877f2;"></i>
                     <span>View Full Post</span>
-                </button>
+                </a>
+
+                @auth
+                    <button class="dropdown-item" onclick="toggleStar({{ $post->id }}, document.getElementById('star-btn-{{ $post->id }}'))" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#1a1a1a; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb;">
+                        <i class="{{ $userStarred ? 'fas text-warning' : 'far' }} fa-star" style="width:18px;"></i>
+                        <span>{{ $userStarred ? 'Remove Star' : 'Star Post' }}</span>
+                    </button>
+                @endauth
                 
                 @auth
-                    @if(Auth::id() === $post->user_id)
+                    @if($isOwner)
                         <!-- Edit Post (only for owner) -->
                         <button class="dropdown-item" onclick="editPost({{ $post->id }})" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#1a1a1a; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb;">
                             <i class="fas fa-edit" style="width:18px; color:#1877f2;"></i>
@@ -55,6 +74,18 @@
                         <button class="dropdown-item text-danger" onclick="confirmDelete({{ $post->id }},'post')" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#dc3545; cursor:pointer; transition:background 0.2s; text-align:left;">
                             <i class="fas fa-trash" style="width:18px; color:#dc3545;"></i>
                             <span>Delete Post</span>
+                        </button>
+                    @endif
+
+                    <button class="dropdown-item" onclick="reportPost({{ $post->id }})" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#dc3545; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb;">
+                        <i class="fas fa-flag" style="width:18px; color:#dc3545;"></i>
+                        <span>{{ $post->is_reported ? 'Reported' : 'Report Post' }}</span>
+                    </button>
+
+                    @if($isAdmin && !$post->is_approved)
+                        <button class="dropdown-item" onclick="approvePost({{ $post->id }})" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#198754; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb;">
+                            <i class="fas fa-check-circle" style="width:18px; color:#198754;"></i>
+                            <span>Approve Post</span>
                         </button>
                     @endif
                 @endauth
@@ -207,9 +238,12 @@
     <!-- Post Action Buttons -->
     <div class="post-action-buttons" style="display:flex;gap:8px;margin-top:12px;padding:0;">
         @auth
-            <button class="post-action-btn like-btn {{ $post->likes()->where('user_id',Auth::id())->exists() ? 'liked' : '' }}" onclick="toggleLike({{ $post->id }},this)" id="like-btn-{{ $post->id }}" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#1a1a1a;font-size:14px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
-                <i class="{{ $post->likes()->where('user_id',Auth::id())->exists() ? 'fas' : 'far' }} fa-heart"></i>
+            <button class="post-action-btn like-btn {{ $userLiked ? 'liked' : '' }}" onclick="toggleLike({{ $post->id }},this)" id="like-btn-{{ $post->id }}" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#1a1a1a;font-size:14px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
+                <i class="{{ $userLiked ? 'fas' : 'far' }} fa-heart"></i>
                 <span class="like-count">{{ $post->like_count }}</span>
+            </button>
+            <button class="post-action-btn star-btn {{ $userStarred ? 'starred' : '' }}" onclick="toggleStar({{ $post->id }},this)" id="star-btn-{{ $post->id }}" style="flex:0 0 auto;min-width:48px;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#1a1a1a;font-size:14px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;" title="{{ $userStarred ? 'Remove star' : 'Star this post' }}">
+                <i class="{{ $userStarred ? 'fas text-warning' : 'far' }} fa-star"></i>
             </button>
         @else
             <a href="{{ route('login') }}" class="post-action-btn" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#1a1a1a;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">

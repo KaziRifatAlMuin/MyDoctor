@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Auth;
 use App\Models\HealthMetric;
 use App\Models\MedicineReminder;
-use App\Models\Symptom;
+use App\Models\UserSymptom;
 use App\Models\Medicine;
 use App\Models\MedicineLog;
 use App\Models\UserDisease;
@@ -28,7 +28,8 @@ class DashboardController extends Controller
         $metricConfig   = config('health.metric_types');
 
         // Recent symptoms
-        $symptoms = Symptom::where('user_id', $user->id)
+        $symptoms = UserSymptom::where('user_id', $user->id)
+            ->with('symptom')
             ->orderByDesc('recorded_at')
             ->limit(10)
             ->get();
@@ -64,7 +65,7 @@ class DashboardController extends Controller
         // Recent activity (last 7 days)
         $recentMetricsCount  = HealthMetric::where('user_id', $user->id)
             ->where('recorded_at', '>=', now()->subDays(7))->count();
-        $recentSymptomsCount = Symptom::where('user_id', $user->id)
+        $recentSymptomsCount = UserSymptom::where('user_id', $user->id)
             ->where('recorded_at', '>=', now()->subDays(7))->count();
 
         // ── 30-day adherence breakdown for sparkline ──

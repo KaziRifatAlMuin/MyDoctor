@@ -128,6 +128,34 @@
         background-color: rgba(68,71,70,0.08);
         color: #444746;
     }
+
+    .gmail-bulk-form {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: 8px;
+    }
+
+    .gmail-bulk-select {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+    }
+
+    .gmail-bulk-btn {
+        border: 1px solid #dadce0;
+        background: #fff;
+        color: #444746;
+        font-size: 12px;
+        border-radius: 999px;
+        padding: 4px 10px;
+        line-height: 1.2;
+    }
+
+    .gmail-bulk-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
     
     .gmail-list {
         flex: 1;
@@ -160,8 +188,23 @@
     .gmail-row-icons {
         display: flex;
         align-items: center;
-        width: 60px;
+        width: 72px; /* space for checkbox + star */
+        gap: 8px;
+        padding-left: 8px;
         color: #c4c7c5;
+        flex-shrink: 0;
+        box-sizing: border-box;
+        justify-content: flex-start;
+    }
+
+    .gmail-row > a {
+        min-width: 0; /* allow proper truncation and prevent overlap */
+    }
+
+    .gmail-row-select {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
     }
     
     .gmail-sender {
@@ -253,6 +296,16 @@
                     <i class="fas fa-paper-plane"></i> Sent
                 </a>
             </li>
+            <li>
+                <a href="{{ route('profile.mailbox.starred') }}" class="gmail-nav-item">
+                    <i class="fas fa-star"></i> Starred
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('profile.mailbox.archived') }}" class="gmail-nav-item">
+                    <i class="fas fa-box-archive"></i> Archived
+                </a>
+            </li>
         </ul>
     </div>
 
@@ -263,6 +316,17 @@
             <button class="gmail-icon-btn d-none d-md-flex me-2" onclick="window.location.reload();" title="Refresh">
                 <i class="fas fa-redo-alt fs-6 text-muted"></i>
             </button>
+
+            <form id="bulkStatusForm" method="POST" action="{{ route('profile.mailbox.bulk-status') }}" class="gmail-bulk-form">
+                @csrf
+                @method('PATCH')
+                <input id="bulkSelectAll" type="checkbox" class="gmail-bulk-select" title="Select all on this page">
+                <input type="hidden" name="status" id="bulkStatusInput" value="">
+                <button type="button" class="gmail-bulk-btn bulk-action-btn" data-status="read" disabled>Mark read</button>
+                <button type="button" class="gmail-bulk-btn bulk-action-btn" data-status="unread" disabled>Mark unread</button>
+                <button type="button" class="gmail-bulk-btn bulk-action-btn" data-status="archived" disabled>Archive</button>
+            </form>
+
             <div class="ms-auto d-flex align-items-center">
                 @if ($messages->hasPages())
                     <span class="text-muted small me-3">{{ $messages->firstItem() }}-{{ $messages->lastItem() }} of {{ $messages->total() }}</span>
@@ -285,25 +349,34 @@
             @endif
 
             @forelse($messages as $message)
-                <a href="{{ route('profile.mailbox.show', $message) }}" class="gmail-row {{ $message->status === 'read' ? 'read' : '' }}">
+                <div class="gmail-row {{ $message->status === 'read' ? 'read' : '' }}">
                     <div class="gmail-row-icons">
-                        <i class="far fa-square me-3"></i>
-                        <i class="far fa-star {{ $message->status === 'unread' ? 'text-warning' : '' }}"></i>
+                        <input type="checkbox" class="gmail-row-select" name="mailing_ids[]" value="{{ $message->id }}" form="bulkStatusForm" title="Select message">
+
+                        <form method="POST" action="{{ route('profile.mailbox.star', $message) }}" class="d-inline">
+                            @csrf
+                            @method('PATCH')
+                            <button type="submit" class="p-0 border-0 bg-transparent" title="Toggle star">
+                                <i class="{{ $message->is_starred ? 'fas text-warning' : 'far' }} fa-star"></i>
+                            </button>
+                        </form>
                     </div>
-                    
-                    <div class="gmail-sender">
-                        {{ $message->sender?->name ?? 'System User' }}
-                    </div>
-                    
-                    <div class="gmail-subject-container">
-                        <span class="gmail-subject">{{ $message->title ?: '(No subject)' }}</span>
-                        <span class="gmail-snippet">- {{ \Illuminate\Support\Str::limit($message->message, 80) }}</span>
-                    </div>
-                    
-                    <div class="gmail-date">
-                        {{ optional($message->created_at)->isToday() ? optional($message->created_at)->format('g:i A') : optional($message->created_at)->format('M j') }}
-                    </div>
-                </a>
+
+                    <a href="{{ route('profile.mailbox.show', $message) }}" class="d-flex align-items-center flex-grow-1 text-decoration-none text-reset">
+                        <div class="gmail-sender">
+                            {{ $message->sender?->name ?? 'System User' }}
+                        </div>
+
+                        <div class="gmail-subject-container">
+                            <span class="gmail-subject">{{ $message->title ?: '(No subject)' }}</span>
+                            <span class="gmail-snippet">- {{ \Illuminate\Support\Str::limit($message->message, 80) }}</span>
+                        </div>
+
+                        <div class="gmail-date">
+                            {{ optional($message->created_at)->isToday() ? optional($message->created_at)->format('g:i A') : optional($message->created_at)->format('M j') }}
+                        </div>
+                    </a>
+                </div>
             @empty
                 <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted opacity-75">
                     <i class="fas fa-inbox mb-3" style="font-size: 3rem;"></i>
@@ -313,4 +386,57 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const selectAll = document.getElementById('bulkSelectAll');
+        const rowChecks = Array.from(document.querySelectorAll('.gmail-row-select'));
+        const actionButtons = Array.from(document.querySelectorAll('.bulk-action-btn'));
+        const bulkStatusInput = document.getElementById('bulkStatusInput');
+        const bulkForm = document.getElementById('bulkStatusForm');
+
+        if (!selectAll || !bulkForm) {
+            return;
+        }
+
+        const syncActions = () => {
+            const selectedCount = rowChecks.filter((box) => box.checked).length;
+            const hasSelection = selectedCount > 0;
+
+            actionButtons.forEach((btn) => {
+                btn.disabled = !hasSelection;
+            });
+
+            if (!hasSelection) {
+                selectAll.checked = false;
+            } else {
+                selectAll.checked = rowChecks.every((box) => box.checked);
+            }
+        };
+
+        selectAll.addEventListener('change', function () {
+            rowChecks.forEach((box) => {
+                box.checked = selectAll.checked;
+            });
+            syncActions();
+        });
+
+        rowChecks.forEach((box) => {
+            box.addEventListener('change', syncActions);
+        });
+
+        actionButtons.forEach((btn) => {
+            btn.addEventListener('click', function () {
+                if (btn.disabled) {
+                    return;
+                }
+
+                bulkStatusInput.value = btn.dataset.status || '';
+                bulkForm.submit();
+            });
+        });
+
+        syncActions();
+    });
+</script>
 @endsection

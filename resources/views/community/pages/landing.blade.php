@@ -21,7 +21,7 @@
                 </p>
                 <div class="d-flex flex-wrap gap-3 button-group">
                     <!-- Redirect to login if not authenticated -->
-                    <a href="{{ auth()->check() ? route('community.index') : route('login') }}" class="btn btn-primary btn-lg rounded-pill px-5 join-discussions-btn">
+                    <a href="{{ auth()->check() ? route('community.posts.index') : route('login') }}" class="btn btn-primary btn-lg rounded-pill px-5 join-discussions-btn">
                         <i class="fas fa-comments me-2"></i>Join Discussions
                     </a>
                     @guest
@@ -173,7 +173,7 @@
                 <p class="lead mb-4 opacity-90">Connect with thousands of people who understand your journey</p>
                 <div class="d-flex justify-content-center gap-3 flex-wrap button-group">
                     <!-- Redirect to login if not authenticated -->
-                    <a href="{{ auth()->check() ? route('community.index') : route('login') }}" class="btn btn-light btn-lg rounded-pill px-5 start-connecting-btn">
+                    <a href="{{ auth()->check() ? route('community.posts.index') : route('login') }}" class="btn btn-light btn-lg rounded-pill px-5 start-connecting-btn">
                         <i class="fas fa-comments me-2"></i>Start Connecting
                     </a>
                     @guest

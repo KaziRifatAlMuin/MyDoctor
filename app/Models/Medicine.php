@@ -115,16 +115,19 @@ class Medicine extends Model
     public function getTypeLabelAttribute()
     {
         $labels = [
-            'tablet' => 'ট্যাবলেট',
-            'capsule' => 'ক্যাপসুল',
-            'syrup' => 'সিরাপ',
-            'injection' => 'ইনজেকশন',
-            'drops' => 'ড্রপস',
-            'cream' => 'ক্রিম',
-            'inhaler' => 'ইনহালার',
-            'other' => 'অন্যান্য'
+            'tablet' => ['en' => 'Tablet', 'bn' => 'ট্যাবলেট'],
+            'capsule' => ['en' => 'Capsule', 'bn' => 'ক্যাপসুল'],
+            'syrup' => ['en' => 'Syrup', 'bn' => 'সিরাপ'],
+            'injection' => ['en' => 'Injection', 'bn' => 'ইনজেকশন'],
+            'drops' => ['en' => 'Drops', 'bn' => 'ড্রপস'],
+            'cream' => ['en' => 'Cream', 'bn' => 'ক্রিম'],
+            'inhaler' => ['en' => 'Inhaler', 'bn' => 'ইনহালার'],
+            'other' => ['en' => 'Other', 'bn' => 'অন্যান্য'],
         ];
-        return $labels[$this->type] ?? ucfirst($this->type);
+
+        $locale = app()->getLocale() === 'bn' ? 'bn' : 'en';
+
+        return $labels[$this->type][$locale] ?? ucfirst($this->type);
     }
 
     /**
@@ -133,13 +136,16 @@ class Medicine extends Model
     public function getRuleLabelAttribute()
     {
         $labels = [
-            'before_food' => 'খাবারের আগে',
-            'after_food' => 'খাবারের পরে',
-            'with_food' => 'খাবারের সাথে',
-            'before_sleep' => 'ঘুমানোর আগে',
-            'anytime' => 'যেকোনো সময়'
+            'before_food' => ['en' => 'Before Food', 'bn' => 'খাবারের আগে'],
+            'after_food' => ['en' => 'After Food', 'bn' => 'খাবারের পরে'],
+            'with_food' => ['en' => 'With Food', 'bn' => 'খাবারের সাথে'],
+            'before_sleep' => ['en' => 'Before Sleep', 'bn' => 'ঘুমানোর আগে'],
+            'anytime' => ['en' => 'Anytime', 'bn' => 'যেকোনো সময়'],
         ];
-        return $labels[$this->rule] ?? ucfirst(str_replace('_', ' ', $this->rule));
+
+        $locale = app()->getLocale() === 'bn' ? 'bn' : 'en';
+
+        return $labels[$this->rule][$locale] ?? ucfirst(str_replace('_', ' ', $this->rule));
     }
 
     /**

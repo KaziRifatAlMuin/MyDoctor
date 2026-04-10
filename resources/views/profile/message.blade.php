@@ -94,6 +94,16 @@
                     <i class="fas fa-paper-plane"></i> Sent
                 </a>
             </li>
+            <li>
+                <a href="{{ route('profile.mailbox.starred') }}" class="gmail-nav-item {{ request('folder') === 'starred' ? 'active' : '' }}">
+                    <i class="fas fa-star"></i> Starred
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('profile.mailbox.archived') }}" class="gmail-nav-item {{ request('folder') === 'archived' ? 'active' : '' }}">
+                    <i class="fas fa-box-archive"></i> Archived
+                </a>
+            </li>
         </ul>
     </div>
 
@@ -101,7 +111,7 @@
     <div class="gmail-main">
         <!-- Toolbar -->
         <div class="gmail-toolbar">
-            <a href="{{ request('folder') === 'sent' ? route('profile.mailbox.sent') : route('profile.mailbox') }}" class="gmail-icon-btn me-3" title="Back to {{ request('folder') === 'sent' ? 'Sent' : 'Inbox' }}">
+            <a href="{{ request('folder') === 'sent' ? route('profile.mailbox.sent') : (request('folder') === 'starred' ? route('profile.mailbox.starred') : (request('folder') === 'archived' ? route('profile.mailbox.archived') : route('profile.mailbox'))) }}" class="gmail-icon-btn me-3" title="Back to mailbox">
                 <i class="fas fa-arrow-left"></i>
             </a>
             
@@ -112,6 +122,25 @@
                     <i class="fas fa-trash-alt"></i>
                 </button>
             </form>
+
+            <form method="POST" action="{{ route('profile.mailbox.star', $message) }}" class="d-inline mb-0">
+                @csrf
+                @method('PATCH')
+                <button type="submit" class="gmail-icon-btn" title="Toggle Star">
+                    <i class="{{ $message->is_starred ? 'fas text-warning' : 'far' }} fa-star"></i>
+                </button>
+            </form>
+
+            @if(($message->receiver_id ?? null) === auth()->id())
+                <form method="POST" action="{{ route('profile.mailbox.status', $message) }}" class="d-inline mb-0">
+                    @csrf
+                    @method('PATCH')
+                    <input type="hidden" name="status" value="{{ $message->status === 'archived' ? 'read' : 'archived' }}">
+                    <button type="submit" class="gmail-icon-btn" title="{{ $message->status === 'archived' ? 'Unarchive' : 'Archive' }}">
+                        <i class="fas fa-box-archive"></i>
+                    </button>
+                </form>
+            @endif
             
             <div class="ms-auto d-flex align-items-center gap-1">
                 <!-- Additional toolbar actions like print etc. could go here -->

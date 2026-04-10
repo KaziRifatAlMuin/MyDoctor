@@ -7,6 +7,7 @@ use App\Models\HealthMetric;
 use App\Models\Symptom;
 use App\Models\User;
 use App\Models\UserDisease;
+use App\Models\UserSymptom;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -68,7 +69,7 @@ class HealthCrudTest extends TestCase
     #[Test]
     public function guest_is_redirected_from_destroy_symptom(): void
     {
-        $symptom = Symptom::factory()->create();
+        $symptom = UserSymptom::factory()->create();
 
         $this->delete(route('health.symptom.destroy', $symptom->id))
              ->assertRedirect(route('login'));
@@ -112,9 +113,12 @@ class HealthCrudTest extends TestCase
              ->assertRedirect(route('health') . '#symptomsPane')
              ->assertSessionHas('success');
 
-        $this->assertDatabaseHas('symptoms', [
-            'user_id'      => $user->id,
-            'symptom_name' => 'Headache',
+        $catalogSymptom = Symptom::query()->where('name', 'Headache')->first();
+        $this->assertNotNull($catalogSymptom);
+
+        $this->assertDatabaseHas('user_symptoms', [
+            'user_id'    => $user->id,
+            'symptom_id' => $catalogSymptom->id,
         ]);
     }
 
@@ -136,14 +140,14 @@ class HealthCrudTest extends TestCase
     public function authenticated_user_can_delete_own_symptom(): void
     {
         $user    = User::factory()->create();
-        $symptom = Symptom::factory()->create(['user_id' => $user->id]);
+        $symptom = UserSymptom::factory()->create(['user_id' => $user->id]);
 
         $this->actingAs($user)
              ->delete(route('health.symptom.destroy', $symptom->id))
              ->assertRedirect(route('health') . '#symptomsPane')
              ->assertSessionHas('success');
 
-        $this->assertDatabaseMissing('symptoms', ['id' => $symptom->id]);
+        $this->assertDatabaseMissing('user_symptoms', ['id' => $symptom->id]);
     }
 
     // ──────────────────────────────────────────────────
@@ -232,7 +236,7 @@ class HealthCrudTest extends TestCase
              ])
              ->assertRedirect(route('health') . '#symptomsPane');
 
-        $this->assertDatabaseHas('symptoms', ['user_id' => $user->id, 'severity_level' => 10]);
+        $this->assertDatabaseHas('user_symptoms', ['user_id' => $user->id, 'severity_level' => 10]);
     }
 
     #[Test]
@@ -248,7 +252,7 @@ class HealthCrudTest extends TestCase
              ])
              ->assertRedirect(route('health') . '#symptomsPane');
 
-        $this->assertDatabaseHas('symptoms', ['user_id' => $user->id, 'severity_level' => 1]);
+        $this->assertDatabaseHas('user_symptoms', ['user_id' => $user->id, 'severity_level' => 1]);
     }
 
     #[Test]
@@ -375,13 +379,13 @@ class HealthCrudTest extends TestCase
     {
         $owner   = User::factory()->create();
         $other   = User::factory()->create();
-        $symptom = Symptom::factory()->create(['user_id' => $owner->id]);
+        $symptom = UserSymptom::factory()->create(['user_id' => $owner->id]);
 
         $this->actingAs($other)
              ->delete(route('health.symptom.destroy', $symptom->id))
              ->assertStatus(403);
 
-        $this->assertDatabaseHas('symptoms', ['id' => $symptom->id]);
+        $this->assertDatabaseHas('user_symptoms', ['id' => $symptom->id]);
     }
 
     #[Test]
@@ -389,7 +393,7 @@ class HealthCrudTest extends TestCase
     {
         $owner   = User::factory()->create();
         $other   = User::factory()->create();
-        $symptom = Symptom::factory()->create(['user_id' => $owner->id]);
+        $symptom = UserSymptom::factory()->create(['user_id' => $owner->id]);
 
         $this->actingAs($other)
              ->put(route('health.symptom.update', $symptom->id), [
@@ -447,7 +451,7 @@ class HealthCrudTest extends TestCase
     public function owner_can_update_own_symptom(): void
     {
         $user    = User::factory()->create();
-        $symptom = Symptom::factory()->create(['user_id' => $user->id]);
+        $symptom = UserSymptom::factory()->create(['user_id' => $user->id]);
 
         $this->actingAs($user)
              ->put(route('health.symptom.update', $symptom->id), [
@@ -458,9 +462,13 @@ class HealthCrudTest extends TestCase
              ->assertRedirect(route('health') . '#symptomsPane')
              ->assertSessionHas('success');
 
-        $this->assertDatabaseHas('symptoms', [
-            'id'           => $symptom->id,
-            'symptom_name' => 'Updated Symptom',
+        $updatedCatalogSymptom = Symptom::query()->where('name', 'Updated Symptom')->first();
+        $this->assertNotNull($updatedCatalogSymptom);
+
+        $this->assertDatabaseHas('user_symptoms', [
+            'id'         => $symptom->id,
+            'symptom_id' => $updatedCatalogSymptom->id,
+            'severity_level' => 4,
         ]);
     }
 }

@@ -10,12 +10,13 @@ use App\Models\Comment;
 use App\Models\PostLike;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use PHPUnit\Framework\Attributes\Test;
 
 class PostTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+#[Test]
     public function a_post_belongs_to_a_user()
     {
         $user = User::factory()->create();
@@ -25,7 +26,7 @@ class PostTest extends TestCase
         $this->assertEquals($user->id, $post->user->id);
     }
 
-    /** @test */
+#[Test]
     public function a_post_belongs_to_a_disease()
     {
         $disease = Disease::factory()->create();
@@ -35,7 +36,7 @@ class PostTest extends TestCase
         $this->assertEquals($disease->id, $post->disease->id);
     }
 
-    /** @test */
+#[Test]
     public function a_post_has_many_comments()
     {
         $post = Post::factory()->create();
@@ -45,7 +46,7 @@ class PostTest extends TestCase
         $this->assertInstanceOf(Comment::class, $post->comments->first());
     }
 
-    /** @test */
+#[Test]
     public function a_post_has_many_likes()
     {
         $post = Post::factory()->create();
@@ -55,7 +56,7 @@ class PostTest extends TestCase
         $this->assertInstanceOf(PostLike::class, $post->likes->first());
     }
 
-    /** @test */
+#[Test]
     public function it_can_check_if_a_post_is_liked_by_a_user()
     {
         $user = User::factory()->create();
@@ -74,7 +75,7 @@ class PostTest extends TestCase
         $this->assertTrue($post->isLikedBy($user));
     }
 
-    /** @test */
+#[Test]
     public function it_returns_correct_file_url()
     {
         $post = Post::factory()->create([
@@ -87,14 +88,14 @@ class PostTest extends TestCase
         );
     }
 
-    /** @test */
+#[Test]
     public function it_returns_null_file_url_when_no_file()
     {
         $post = Post::factory()->create(['file_path' => null]);
         $this->assertNull($post->file_url);
     }
 
-    /** @test */
+#[Test]
     public function it_returns_correct_file_icon_for_different_file_types()
     {
         $testCases = [
@@ -114,7 +115,7 @@ class PostTest extends TestCase
         }
     }
 
-    /** @test */
+#[Test]
     public function it_formats_file_size_correctly()
     {
         $testCases = [
@@ -131,7 +132,7 @@ class PostTest extends TestCase
         }
     }
 
-    /** @test */
+#[Test]
     public function it_handles_multiple_files_correctly()
     {
         $post = Post::factory()->withMultipleFiles()->create();

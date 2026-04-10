@@ -11,6 +11,7 @@ use App\Models\MedicineLog;
 use App\Models\MedicineReminder;
 use App\Models\MedicineSchedule;
 use App\Models\Symptom;
+use App\Models\UserSymptom;
 use App\Models\Upload;
 use App\Models\User;
 use App\Models\UserAddress;
@@ -405,10 +406,12 @@ class PatientProfilesSeeder extends Seeder
      */
     private function symptoms(int $userId, string $name, int $count, array $severityRange): void
     {
+        $catalogSymptom = Symptom::firstOrCreate(['name' => $name]);
+
         for ($i = 0; $i < $count; $i++) {
-            Symptom::create([
+            UserSymptom::create([
                 'user_id'        => $userId,
-                'symptom_name'   => $name,
+                'symptom_id'     => $catalogSymptom->id,
                 'severity_level' => rand($severityRange[0], $severityRange[1]),
                 'recorded_at'    => now()->subDays(rand(1, 180)),
                 'note'           => (rand(1, 3) === 1)

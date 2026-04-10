@@ -9,6 +9,8 @@ class CommentLike extends Model
 {
     use HasFactory;
 
+    protected $table = 'post_comments';
+
     protected $fillable = ['comment_id', 'user_id'];
     public $timestamps = false; // No timestamps needed
 

@@ -9,20 +9,20 @@ class Symptom extends Model
 {
     use HasFactory;
 
+    public $timestamps = false;
+
     protected $fillable = [
-        'user_id',
-        'symptom_name',
-        'severity_level',
-        'note',
-        'recorded_at',
+        'name',
     ];
 
-    protected $casts = [
-        'recorded_at' => 'datetime',
-    ];
-
-    public function user()
+    public function userSymptoms()
     {
-        return $this->belongsTo(User::class);
+        return $this->hasMany(UserSymptom::class);
+    }
+
+    public function diseases()
+    {
+        return $this->belongsToMany(Disease::class, 'disease_symptoms')
+            ->withTimestamps();
     }
 }

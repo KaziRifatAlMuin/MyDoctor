@@ -13,6 +13,10 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('disease_id')->constrained()->onDelete('cascade');
             $table->text('description');
+            $table->boolean('is_anonymous')->default(false);
+            $table->boolean('is_approved')->default(false);
+            $table->boolean('is_edited')->default(false);
+            $table->boolean('is_reported')->default(false);
             $table->string('file_path')->nullable();
             $table->string('file_type')->nullable();
             $table->string('file_name')->nullable();
@@ -21,6 +25,9 @@ return new class extends Migration
             $table->integer('like_count')->default(0);
             $table->integer('comment_count')->default(0);
             $table->timestamps();
+
+            $table->index(['is_approved', 'created_at']);
+            $table->index(['disease_id', 'is_approved', 'created_at']);
         });
     }
 

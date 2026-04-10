@@ -8,6 +8,7 @@ use App\Models\MedicineLog;
 use App\Models\MedicineSchedule;
 use App\Models\Symptom;
 use App\Models\User;
+use App\Models\UserSymptom;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -49,7 +50,14 @@ class HealthTest extends TestCase
     public function health_page_shows_symptoms_for_authenticated_user(): void
     {
         $user = User::factory()->create();
-        Symptom::factory()->count(3)->create(['user_id' => $user->id]);
+
+        $catalog = Symptom::factory()->count(3)->create();
+        foreach ($catalog as $symptom) {
+            UserSymptom::factory()->create([
+                'user_id' => $user->id,
+                'symptom_id' => $symptom->id,
+            ]);
+        }
 
         $this->actingAs($user)
              ->get(route('health'))

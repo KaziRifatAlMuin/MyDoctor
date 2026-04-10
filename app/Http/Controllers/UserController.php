@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use App\Models\Disease;
 use App\Models\User;
 use Carbon\Carbon;
 
@@ -15,18 +14,7 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::query()->with(['userDiseases.disease']);
-
-        $diseaseLogic = strtoupper((string) $request->get('disease_logic', 'OR'));
-        if (!in_array($diseaseLogic, ['OR', 'AND'], true)) {
-            $diseaseLogic = 'OR';
-        }
-
-        $selectedDiseases = collect($request->input('diseases', []))
-            ->map(fn($id) => (int) $id)
-            ->filter(fn($id) => $id > 0)
-            ->unique()
-            ->values();
+        $query = User::query();
         
         // Apply search filter
         if ($request->filled('search')) {
@@ -36,20 +24,6 @@ class UserController extends Controller
             });
         }
 
-        if ($selectedDiseases->isNotEmpty()) {
-            if ($diseaseLogic === 'AND') {
-                foreach ($selectedDiseases as $diseaseId) {
-                    $query->whereHas('userDiseases', function ($q) use ($diseaseId) {
-                        $q->where('disease_id', $diseaseId);
-                    });
-                }
-            } else {
-                $query->whereHas('userDiseases', function ($q) use ($selectedDiseases) {
-                    $q->whereIn('disease_id', $selectedDiseases->all());
-                });
-            }
-        }
-        
         // Default listing order: alphabetical by member name.
         $query->orderBy('name', 'asc');
         
@@ -60,21 +34,28 @@ class UserController extends Controller
         $memberCount = User::where('role', 'member')->count();
         $totalUsers = User::count();
         $recentUsers = User::whereDate('created_at', '>=', Carbon::now()->subWeek())->count();
-        $allDiseases = Disease::query()
-            ->withCount('users')
-            ->orderBy('disease_name')
-            ->get();
-        
+
         return view('users.index', compact(
             'users', 
             'adminCount',
             'memberCount', 
             'totalUsers',
-            'recentUsers',
-            'allDiseases',
-            'selectedDiseases',
-            'diseaseLogic'
+            'recentUsers'
         ));
+    }
+
+    /**
+     * Display the specified user profile (public view).
+     */
+    public function publicShow(User $user)
+    {
+        if ($user->show_diseases) {
+            $user->load(['userDiseases' => function ($query) {
+                $query->with('disease')->latest();
+            }]);
+        }
+
+        return view('users.public-show', compact('user'));
     }
 
     /**
@@ -97,17 +78,9 @@ class UserController extends Controller
         $latestMetrics = $metricsByType->map(fn($group) => $group->first());
         $metricConfig = config('health.metric_types');
 
-        // Enrich metric bn labels from DB translations
-        $metricBn = \App\Models\Translation::allOfType(\App\Models\Translation::TYPE_METRIC);
-        foreach ($metricConfig as $key => &$cfg) {
-            if (isset($metricBn[$key])) {
-                $cfg['bn'] = $metricBn[$key];
-            }
-        }
-        unset($cfg);
-
         // Symptoms
-        $symptoms = \App\Models\Symptom::where('user_id', $user->id)
+        $symptoms = \App\Models\UserSymptom::where('user_id', $user->id)
+            ->with('symptom')
             ->orderByDesc('recorded_at')
             ->limit(30)
             ->get();
@@ -141,8 +114,7 @@ class UserController extends Controller
 
         $allDiseases = \App\Models\Disease::orderBy('disease_name')->get();
 
-        // Disease translations (for dropdowns / labels)
-        $diseasesBn = \App\Models\Translation::allOfType(\App\Models\Translation::TYPE_DISEASE);
+        $diseasesBn = [];
 
         // Uploads
         $uploads = \App\Models\Upload::where('user_id', $user->id)
@@ -153,7 +125,7 @@ class UserController extends Controller
         $reportUploads = $uploads->where('type', 'report');
 
         // Symptom list
-        $symptomsList = \App\Models\Translation::allOfType(\App\Models\Translation::TYPE_SYMPTOM);
+        $symptomsList = config('health.symptoms', []);
         
         return view('users.show', compact(
             'user',

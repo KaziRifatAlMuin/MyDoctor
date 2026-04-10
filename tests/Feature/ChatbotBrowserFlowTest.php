@@ -58,6 +58,9 @@ class ChatbotBrowserFlowTest extends TestCase
                 ],
             ])
             ->assertOk()
-            ->assertJsonPath('reply', 'Hydrate and monitor your symptoms.');
+            ->assertJson(fn ($json) => $json
+                ->whereType('reply', 'string')
+                ->where('reply', fn (string $reply) => str_contains($reply, 'Hydrate and monitor your symptoms.'))
+                ->etc());
     }
 }

@@ -1,5 +1,14 @@
 @php
     $description = $post->description ?? '';
+    $isAuthenticated = Auth::check();
+    $isOwner = $isAuthenticated && Auth::id() === $post->user_id;
+    $isAdmin = $isAuthenticated && Auth::user()->isAdmin();
+    $isAnonymous = (bool) $post->is_anonymous;
+    $displayName = $isAnonymous ? 'Anonymous Member' : $post->user->name;
+    $userLiked = $isAuthenticated ? $post->likes()->where('user_id', Auth::id())->exists() : false;
+    $userStarred = $isAuthenticated
+        ? $post->likes()->where('user_id', Auth::id())->where('is_starred', true)->exists()
+        : false;
 @endphp
 
 <div class="modal-post-container" data-post-id="{{ $post->id }}" style="padding: 0; display: flex; position: relative; flex-direction: column; height: 100%; max-height: calc(90vh - 60px);">
@@ -9,25 +18,25 @@
         
         <!-- Post Header -->
         <div style="padding: 16px 16px 12px 16px; margin: 0; display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #e4e6eb;">
-            <div style="display: flex; gap: 12px; cursor: pointer;" onclick="showUserModal({{ $post->user->id }})">
+            <div style="display: flex; gap: 12px; cursor: {{ $isAnonymous ? 'default' : 'pointer' }};" @if(!$isAnonymous) onclick="showUserModal({{ $post->user->id }})" @endif>
                 <div style="width: 48px; height: 48px; border-radius: 50%; overflow: hidden; flex-shrink: 0;">
-                    @if($post->user->picture)
+                    @if(!$isAnonymous && $post->user->picture)
                         <img src="{{ asset('storage/' . $post->user->picture) }}" alt="{{ $post->user->name }}" style="width: 100%; height: 100%; object-fit: cover;">
                     @else
-                        <div style="width: 100%; height: 100%; background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 18px;">{{ strtoupper(substr($post->user->name,0,1)) }}</div>
+                        <div style="width: 100%; height: 100%; background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 18px;">{{ $isAnonymous ? 'A' : strtoupper(substr($post->user->name,0,1)) }}</div>
                     @endif
                 </div>
                 <div>
-                    <h6 style="font-size: 15px; font-weight: 600; margin: 0; padding: 0; color: #1a1a1a;">{{ $post->user->name }}</h6>
+                    <h6 style="font-size: 15px; font-weight: 600; margin: 0; padding: 0; color: #1a1a1a;">{{ $displayName }}</h6>
                     <div style="display: flex; align-items: center; gap: 12px; font-size: 12px; color: #65676b; margin: 0; padding: 0;">
                         <span><i class="far fa-clock me-1"></i>{{ $post->created_at->diffForHumans() }}</span>
+                        @if($post->is_edited)
+                            <span style="font-size:11px; font-weight:600; color:#65676b; background:#f0f2f5; border-radius:12px; padding:4px 8px;">Edited</span>
+                        @endif
                         @if($post->disease)
-                            <span style="background: #e7f3ff; color: #1877f2; padding: 4px 12px; border-radius: 4px; font-weight: 500; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">
+                            <a href="{{ route('public.disease.show', $post->disease) }}" style="background: #e7f3ff; color: #1877f2; padding: 4px 12px; border-radius: 4px; font-weight: 500; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; text-decoration: none;">
                                 <i class="fas fa-tag me-1"></i>{{ $post->disease->disease_name }}
-                                @if(isset($post->disease->bn_name))
-                                    <span style="font-size: 10px; color: #65676b; margin-left: 4px;">({{ $post->disease->bn_name }})</span>
-                                @endif
-                            </span>
+                            </a>
                         @endif
                     </div>
                 </div>
@@ -35,16 +44,24 @@
             
             <!-- Edit and Delete Icons -->
             @auth
-                @if(Auth::id() === $post->user_id)
-                    <div style="display: flex; gap: 8px;">
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="reportPost({{ $post->id }})" style="width: 34px; height: 34px; border: none; border-radius: 50%; background: #f0f2f5; color: #dc3545; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" title="{{ $post->is_reported ? 'Reported' : 'Report Post' }}">
+                        <i class="fas fa-flag"></i>
+                    </button>
+                    @if($isAdmin && !$post->is_approved)
+                        <button onclick="approvePost({{ $post->id }})" style="width: 34px; height: 34px; border: none; border-radius: 50%; background: #f0f2f5; color: #198754; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" title="Approve Post">
+                            <i class="fas fa-check-circle"></i>
+                        </button>
+                    @endif
+                    @if($isOwner)
                         <button onclick="editPost({{ $post->id }})" style="width: 34px; height: 34px; border: none; border-radius: 50%; background: #f0f2f5; color: #1877f2; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" title="Edit Post">
                             <i class="fas fa-edit"></i>
                         </button>
                         <button onclick="confirmDelete({{ $post->id }}, 'post')" style="width: 34px; height: 34px; border: none; border-radius: 50%; background: #f0f2f5; color: #dc3545; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" title="Delete Post">
                             <i class="fas fa-trash"></i>
                         </button>
-                    </div>
-                @endif
+                    @endif
+                </div>
             @endauth
         </div>
 
@@ -161,9 +178,12 @@
         <!-- Post Action Buttons -->
         <div style="display: flex; gap: 8px; margin: 12px 16px 0 16px; padding: 0;">
             @auth
-                <button onclick="toggleLike({{ $post->id }}, this)" id="like-btn-{{ $post->id }}" style="flex: 1; padding: 10px; border: none; border-radius: 6px; background: #f0f2f5; color: #1a1a1a; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;" class="{{ $post->likes()->where('user_id',Auth::id())->exists() ? 'liked' : '' }}">
-                    <i class="{{ $post->likes()->where('user_id',Auth::id())->exists() ? 'fas' : 'far' }} fa-heart" style="{{ $post->likes()->where('user_id',Auth::id())->exists() ? 'color: #dc3545;' : '' }}"></i>
+                <button onclick="toggleLike({{ $post->id }}, this)" id="like-btn-{{ $post->id }}" style="flex: 1; padding: 10px; border: none; border-radius: 6px; background: #f0f2f5; color: #1a1a1a; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;" class="{{ $userLiked ? 'liked' : '' }}">
+                    <i class="{{ $userLiked ? 'fas' : 'far' }} fa-heart" style="{{ $userLiked ? 'color: #dc3545;' : '' }}"></i>
                     <span class="like-count">{{ $post->like_count }}</span>
+                </button>
+                <button onclick="toggleStar({{ $post->id }}, this)" id="star-btn-{{ $post->id }}" style="flex: 0 0 auto; min-width: 48px; padding: 10px; border: none; border-radius: 6px; background: #f0f2f5; color: #1a1a1a; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;" class="{{ $userStarred ? 'starred' : '' }}" title="{{ $userStarred ? 'Remove star' : 'Star this post' }}">
+                    <i class="{{ $userStarred ? 'fas text-warning' : 'far' }} fa-star"></i>
                 </button>
             @else
                 <a href="{{ route('login') }}" style="flex: 1; padding: 10px; border: none; border-radius: 6px; background: #f0f2f5; color: #1a1a1a; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;">

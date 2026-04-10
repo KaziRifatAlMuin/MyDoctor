@@ -15,6 +15,8 @@ use App\Http\Controllers\SuggestionsController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CommunityController;
 use App\Http\Controllers\AiChatController;
+use App\Http\Controllers\PublicHealthController;
+use App\Models\Disease;
 use Illuminate\Http\Request;
 
 
@@ -44,6 +46,24 @@ Route::view('/sitemap', 'sitemap')->name('sitemap');
 Route::view('/appointments', 'appointments')->name('appointments');
 Route::view('/pharmacy/nearby', 'pharmacy.nearby')->name('pharmacy.nearby');
 Route::view('/emergency', 'emergency')->name('emergency');
+
+Route::get('/language/{locale}', function (string $locale) {
+    if (!in_array($locale, ['en', 'bn'], true)) {
+        abort(404);
+    }
+
+    session(['locale' => $locale]);
+
+    return back();
+})->name('language.switch');
+
+Route::get('/diseases', [PublicHealthController::class, 'indexDiseases'])->name('public.diseases.index');
+Route::get('/symptoms', [PublicHealthController::class, 'indexSymptoms'])->name('public.symptoms.index');
+Route::get('/disease/{disease}', [PublicHealthController::class, 'showDisease'])->name('public.disease.show');
+Route::get('/diseases/{disease}', function (Disease $disease) {
+    return redirect()->route('public.disease.show', $disease);
+});
+Route::get('/symptoms/{symptom}', [PublicHealthController::class, 'showSymptom'])->name('public.symptoms.show');
 
 /*
 |--------------------------------------------------------------------------
@@ -77,9 +97,15 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     
-    // Notification Preferences
-    Route::get('/profile/notifications', [NotificationPreferenceController::class, 'index'])->name('profile.notifications');
-    Route::put('/profile/notifications', [NotificationPreferenceController::class, 'update'])->name('profile.notifications.update');
+    // Settings (notification preferences)
+    Route::get('/profile/setting', [NotificationPreferenceController::class, 'index'])->name('profile.setting');
+    Route::put('/profile/setting', [NotificationPreferenceController::class, 'update'])->name('profile.setting.update');
+    Route::get('/profile/notifications', function () {
+        return redirect()->route('profile.setting');
+    })->name('profile.notifications');
+    Route::put('/profile/notifications', function () {
+        return redirect()->route('profile.setting');
+    })->name('profile.notifications.update');
     Route::post('/profile/notifications/toggle-email', [NotificationPreferenceController::class, 'toggleEmail'])->name('profile.notifications.toggle-email');
     Route::post('/profile/notifications/toggle-push', [NotificationPreferenceController::class, 'togglePush'])->name('profile.notifications.toggle-push');
 
@@ -87,12 +113,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile/mailbox', [App\Http\Controllers\MailingController::class, 'inbox'])->name('profile.mailbox');
     Route::get('/profile/mailbox/sent', [App\Http\Controllers\MailingController::class, 'sent'])->name('profile.mailbox.sent');
     Route::get('/profile/mailbox/drafts', [App\Http\Controllers\MailingController::class, 'drafts'])->name('profile.mailbox.drafts');
+    Route::get('/profile/mailbox/starred', [App\Http\Controllers\MailingController::class, 'starred'])->name('profile.mailbox.starred');
+    Route::get('/profile/mailbox/archived', [App\Http\Controllers\MailingController::class, 'archived'])->name('profile.mailbox.archived');
     Route::get('/profile/mailbox/compose', [App\Http\Controllers\MailingController::class, 'create'])->name('profile.mailbox.compose');
     Route::get('/profile/mailbox/recipients/search', [App\Http\Controllers\MailingController::class, 'searchRecipients'])->name('profile.mailbox.recipients.search');
     Route::get('/profile/mailbox/unread-count', [App\Http\Controllers\MailingController::class, 'unreadCount'])->name('profile.mailbox.unread-count');
     Route::post('/profile/mailbox', [App\Http\Controllers\MailingController::class, 'store'])->name('profile.mailbox.store');
+    Route::patch('/profile/mailbox/bulk/status', [App\Http\Controllers\MailingController::class, 'bulkUpdateStatus'])->name('profile.mailbox.bulk-status');
     Route::get('/profile/mailbox/{mailing}', [App\Http\Controllers\MailingController::class, 'show'])->name('profile.mailbox.show');
     Route::patch('/profile/mailbox/{mailing}/status', [App\Http\Controllers\MailingController::class, 'updateStatus'])->name('profile.mailbox.status');
+    Route::patch('/profile/mailbox/{mailing}/star', [App\Http\Controllers\MailingController::class, 'toggleStar'])->name('profile.mailbox.star');
     Route::delete('/profile/mailbox/{mailing}', [App\Http\Controllers\MailingController::class, 'destroy'])->name('profile.mailbox.destroy');
     
     // Health
@@ -103,19 +133,31 @@ Route::middleware('auth')->group(function () {
     Route::post('/health/upload', [HealthController::class, 'storeUpload'])->name('health.upload.store');
     Route::put('/health/metric/{healthMetric}', [HealthController::class, 'updateMetric'])->name('health.metric.update');
     Route::get('/health/metric/{healthMetric}', function (\App\Models\HealthMetric $healthMetric) {
+        if (auth()->user()?->isAdmin()) {
+            return redirect()->route('admin.users.show', $healthMetric->user_id);
+        }
         return redirect()->route('users.show', $healthMetric->user_id);
     })->name('health.metric.view');
     Route::put('/health/symptom/{symptom}', [HealthController::class, 'updateSymptom'])->name('health.symptom.update');
     // Friendly GET redirect: visiting a symptom URL should return to the user's profile
-    Route::get('/health/symptom/{symptom}', function (\App\Models\Symptom $symptom) {
+    Route::get('/health/symptom/{symptom}', function (\App\Models\UserSymptom $symptom) {
+        if (auth()->user()?->isAdmin()) {
+            return redirect()->route('admin.users.show', $symptom->user_id);
+        }
         return redirect()->route('users.show', $symptom->user_id);
     })->name('health.symptom.view');
     Route::put('/health/disease/{userDisease}', [HealthController::class, 'updateDisease'])->name('health.disease.update');
     Route::get('/health/disease/{userDisease}', function (\App\Models\UserDisease $userDisease) {
+        if (auth()->user()?->isAdmin()) {
+            return redirect()->route('admin.users.show', $userDisease->user_id);
+        }
         return redirect()->route('users.show', $userDisease->user_id);
     })->name('health.disease.view');
     Route::put('/health/upload/{upload}', [HealthController::class, 'updateUpload'])->name('health.upload.update');
     Route::get('/health/upload/{upload}', function (\App\Models\Upload $upload) {
+        if (auth()->user()?->isAdmin()) {
+            return redirect()->route('admin.users.show', $upload->user_id);
+        }
         return redirect()->route('users.show', $upload->user_id);
     })->name('health.upload.view');
     Route::delete('/health/metric/{healthMetric}', [HealthController::class, 'destroyMetric'])->name('health.metric.destroy');
@@ -145,6 +187,7 @@ Route::middleware('auth')->prefix('notifications')->name('notifications.')->grou
 
     // AI Chatbot
     Route::post('/chatbot/message', [AiChatController::class, 'message'])->name('chatbot.message');
+    Route::post('/chatbot/about-me', [AiChatController::class, 'aboutMe'])->name('chatbot.about_me');
 
     // Email verification
     Route::post('/email/verification-notification', function (\Illuminate\Http\Request $request) {
@@ -211,9 +254,20 @@ Route::prefix('health')->name('health.')->group(function () {
 */
 Route::prefix('community')->name('community.')->group(function () {
     // Page routes (return HTML)
+    Route::get('/', [CommunityController::class, 'home'])->name('home');
+    Route::get('/posts', [CommunityController::class, 'postsIndex'])->name('posts.index');
+    Route::get('/post/{post}', [CommunityController::class, 'showPost'])->name('post.show');
+    Route::get('/disease/{disease}/posts', [CommunityController::class, 'diseasePosts'])->name('disease.posts');
+
     Route::get('/landing', [CommunityController::class, 'landing'])->name('landing');
-    Route::get('/forum', [CommunityController::class, 'index'])->name('index');
-    Route::get('/posts/{post}', [CommunityController::class, 'showPost'])->name('posts.show');
+    Route::get('/forum', function () {
+        return redirect()->route('community.posts.index');
+    })->name('index');
+    Route::get('/posts/starred', [CommunityController::class, 'starredPosts'])->name('posts.starred');
+    Route::get('/posts/pending', [CommunityController::class, 'pendingPosts'])->name('posts.pending');
+    Route::get('/posts/{post}', function (\App\Models\Post $post) {
+        return redirect()->route('community.post.show', $post);
+    })->name('posts.show');
     
     // MODAL POST - CRITICAL FOR DYNAMIC RELOADS
     Route::get('/modal-post/{post}', [CommunityController::class, 'modalPost'])->name('modal.post');
@@ -228,6 +282,9 @@ Route::prefix('community')->name('community.')->group(function () {
     Route::post('/posts/{post}/update', [CommunityController::class, 'updatePost'])->name('posts.update');  // ← POST not PATCH
     Route::post('/posts/{post}/delete', [CommunityController::class, 'destroyPost'])->name('posts.destroy');
     Route::post('/posts/{post}/like', [CommunityController::class, 'togglePostLike'])->name('posts.like');
+    Route::post('/posts/{post}/star', [CommunityController::class, 'togglePostStar'])->name('posts.star');
+    Route::post('/posts/{post}/report', [CommunityController::class, 'reportPost'])->name('posts.report');
+    Route::post('/posts/{post}/approve', [CommunityController::class, 'approvePost'])->name('posts.approve');
     
     // User details for modals
     Route::get('/user/{userId}', [CommunityController::class, 'getUserDetails'])->name('user.details');
@@ -282,8 +339,10 @@ Route::prefix('medicine')->name('medicine.')->middleware('auth')->group(function
 // User routes (auth required)
 Route::middleware('auth')->group(function () {
     Route::get('/users', [App\Http\Controllers\UserController::class, 'index'])->name('users.index');
-    Route::get('/user/{user}', [App\Http\Controllers\UserController::class, 'show'])->name('users.show');
 });
+
+// Public user profile
+Route::get('/user/{user}', [App\Http\Controllers\UserController::class, 'publicShow'])->name('users.show');
 
 // Admin user update route
 Route::middleware(['auth', 'admin'])->patch('/user/{user}', [App\Http\Controllers\UserController::class, 'update'])->name('users.update');
@@ -295,6 +354,7 @@ Route::middleware(['auth', 'admin'])->patch('/user/{user}', [App\Http\Controller
 */
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/user/{user}', [App\Http\Controllers\UserController::class, 'show'])->name('users.show');
     Route::patch('/users/{user}', [App\Http\Controllers\AdminDashboardController::class, 'updateUser'])->name('users.update');
     
     // Future admin routes

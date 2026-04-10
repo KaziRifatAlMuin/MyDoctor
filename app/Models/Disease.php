@@ -11,7 +11,6 @@ class Disease extends Model
 
     protected $fillable = [
         'disease_name',
-        'disease_name_bn',
         'description',
     ];
 
@@ -39,5 +38,11 @@ class Disease extends Model
     public function userDiseases()
     {
         return $this->hasMany(UserDisease::class);
+    }
+
+    public function symptoms()
+    {
+        return $this->belongsToMany(Symptom::class, 'disease_symptoms')
+            ->withTimestamps();
     }
 }
