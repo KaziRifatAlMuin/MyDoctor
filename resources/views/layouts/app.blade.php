@@ -95,9 +95,9 @@
         }
 
         .nav-theme-admin .banner-nav {
-            background: linear-gradient(135deg, #5b2b88 0%, #7b3fb4 100%);
+            background: linear-gradient(135deg, #4b0082 0%, #7a3fb8 40%, #9b59ff 100%);
             border-bottom: none;
-            box-shadow: 0 2px 10px rgba(91, 43, 136, 0.35);
+            box-shadow: 0 4px 18px rgba(75, 0, 130, 0.35);
         }
 
         /* Logo Styles */
@@ -109,6 +109,11 @@
         .banner-logo img {
             width: 100%;
             height: auto;
+        }
+
+        /* Admin: make logo appear white on purple navbar */
+        .nav-theme-admin .banner-logo img {
+            filter: brightness(0) invert(1) saturate(0.8);
         }
 
         /* Navigation Menu */
@@ -2194,29 +2199,33 @@
                             </span>
                         </a>
 
-                        <!-- Notifications -->
-                        <div class="notification-bell" id="notificationBell" onclick="toggleNotificationDropdown()">
-                            <i class="fas fa-bell"></i>
-                            <span class="badge" id="notificationCount" style="display: none;">0</span>
-                        </div>
-
-                        <span class="nav-user-name">{{ auth()->user()->name }}</span>
-
-                        <!-- Notification Dropdown -->
-                        <div class="notification-dropdown" id="notificationDropdown">
-                            <div class="notification-header">
-                                <h6>{{ __('ui.nav.notifications') }}</h6>
-                                <button onclick="markAllNotificationsRead()">{{ __('ui.nav.mark_all_read') }}</button>
+                        @if (! $isAdminNav)
+                            <!-- Notifications -->
+                            <div class="notification-bell" id="notificationBell" onclick="toggleNotificationDropdown()">
+                                <i class="fas fa-bell"></i>
+                                <span class="badge" id="notificationCount" style="display: none;">0</span>
                             </div>
-                            <div class="notification-list" id="notificationList">
-                                <div class="notification-empty">
-                                    <p>{{ __('ui.nav.no_notifications') }}</p>
+
+                            <span class="nav-user-name">{{ auth()->user()->name }}</span>
+
+                            <!-- Notification Dropdown -->
+                            <div class="notification-dropdown" id="notificationDropdown">
+                                <div class="notification-header">
+                                    <h6>{{ __('ui.nav.notifications') }}</h6>
+                                    <button onclick="markAllNotificationsRead()">{{ __('ui.nav.mark_all_read') }}</button>
+                                </div>
+                                <div class="notification-list" id="notificationList">
+                                    <div class="notification-empty">
+                                        <p>{{ __('ui.nav.no_notifications') }}</p>
+                                    </div>
+                                </div>
+                                <div class="notification-footer">
+                                    <a href="{{ route('notifications.index') }}">{{ __('ui.nav.view_all_notifications') }}</a>
                                 </div>
                             </div>
-                            <div class="notification-footer">
-                                <a href="{{ route('notifications.index') }}">{{ __('ui.nav.view_all_notifications') }}</a>
-                            </div>
-                        </div>
+                        @else
+                            <span class="nav-user-name">{{ auth()->user()->name }}</span>
+                        @endif
                     @endauth
 
                     @guest
@@ -2253,18 +2262,22 @@
                                     <p>{{ auth()->user()->email }}</p>
                                 </div>
 
-                                <a href="{{ $profileDashboardRoute }}" class="dropdown-item-custom">
-                                    <i class="fas fa-tachometer-alt me-2"></i>{{ __('ui.nav.dashboard') }}
-                                </a>
+                                @if (! auth()->user()->isAdmin())
+                                    <a href="{{ $profileDashboardRoute }}" class="dropdown-item-custom">
+                                        <i class="fas fa-tachometer-alt me-2"></i>{{ __('ui.nav.dashboard') }}
+                                    </a>
+                                @endif
 
                                 <a href="{{ route('profile') }}" class="dropdown-item-custom">
                                     <i class="fas fa-user me-2"></i>{{ __('ui.menu.profile') }}
                                 </a>
 
-                                <a href="{{ route('notifications.index') }}" class="dropdown-item-custom" id="notification-link">
-                                    <i class="fas fa-bell me-2"></i>{{ __('ui.nav.notifications') }}
-                                    <span class="notification-badge" id="notificationCountBadge" style="display: none;">0</span>
-                                </a>
+                                @if (! auth()->user()->isAdmin())
+                                    <a href="{{ route('notifications.index') }}" class="dropdown-item-custom" id="notification-link">
+                                        <i class="fas fa-bell me-2"></i>{{ __('ui.nav.notifications') }}
+                                        <span class="notification-badge" id="notificationCountBadge" style="display: none;">0</span>
+                                    </a>
+                                @endif
 
                                 <a href="{{ route('profile.mailbox') }}" class="dropdown-item-custom">
                                     <i class="fas fa-envelope me-2"></i>{{ __('ui.nav.mailbox') }}
@@ -3784,25 +3797,27 @@ window.openVideoModal = function(type, source, isReel = false) {
         function toggleUserDropdown() {
             const dropdown = document.getElementById('userDropdown');
             dropdown.classList.toggle('show');
-            
-            // Close notification dropdown if open
+
+            // Close notification dropdown if open (guarded)
             const notifDropdown = document.getElementById('notificationDropdown');
-            if (notifDropdown.classList.contains('show')) {
+            if (notifDropdown && notifDropdown.classList.contains('show')) {
                 notifDropdown.classList.remove('show');
             }
         }
 
+        @if (! $isAdminNav)
         // Notification dropdown toggle
         function toggleNotificationDropdown() {
             const dropdown = document.getElementById('notificationDropdown');
+            if (!dropdown) return;
             dropdown.classList.toggle('show');
-            
+
             // Close user dropdown if open
             const userDropdown = document.getElementById('userDropdown');
-            if (userDropdown.classList.contains('show')) {
+            if (userDropdown && userDropdown.classList.contains('show')) {
                 userDropdown.classList.remove('show');
             }
-            
+
             // Load notifications if dropdown is opened
             if (dropdown.classList.contains('show')) {
                 loadNotifications();
@@ -3876,6 +3891,7 @@ window.openVideoModal = function(type, source, isReel = false) {
                     </div>
                 `;
             });
+
         }
 
         // Update notification dropdown
@@ -4046,6 +4062,7 @@ window.openVideoModal = function(type, source, isReel = false) {
                 }
             }, 30000);
         }
+        @endif
 
         // Close dropdowns when clicking outside
         window.onclick = function(event) {
@@ -4292,9 +4309,11 @@ window.openVideoModal = function(type, source, isReel = false) {
         // Make functions global
         window.toggleEmailQuick = toggleEmailQuick;
         window.togglePushQuick = togglePushQuick;
-        window.toggleNotificationDropdown = toggleNotificationDropdown;
-        window.markAllNotificationsRead = markAllNotificationsRead;
-        window.handleNotificationClick = handleNotificationClick;
+        @if (! $isAdminNav)
+            window.toggleNotificationDropdown = toggleNotificationDropdown;
+            window.markAllNotificationsRead = markAllNotificationsRead;
+            window.handleNotificationClick = handleNotificationClick;
+        @endif
         window.toggleChatbot = toggleChatbot;
         window.sendMessage = sendMessage;
         window.addMessage = addMessage;
@@ -4442,25 +4461,36 @@ window.openVideoModal = function(type, source, isReel = false) {
             startChatbotPromptCycle();
 
             if ('{{ Auth::check() }}' === '1') {
-                // Load initial navbar counts
-                Promise.all([
-                    fetch('/notifications/unread-count', {
-                        headers: {
-                            'Accept': 'application/json'
-                        }
-                    }).then(res => res.json()),
+                // Load mailbox count (notifications hidden for admin)
+                @if (! $isAdminNav)
+                    // Load initial navbar counts
+                    Promise.all([
+                        fetch('/notifications/unread-count', {
+                            headers: {
+                                'Accept': 'application/json'
+                            }
+                        }).then(res => res.json()),
+                        fetch('/profile/mailbox/unread-count', {
+                            headers: {
+                                'Accept': 'application/json'
+                            }
+                        }).then(res => res.json()),
+                    ])
+                    .then(([notificationData, mailboxData]) => {
+                        updateNotificationCount(notificationData.count || 0);
+                        updateMailboxCount(mailboxData.count || 0);
+                        startNotificationUpdates();
+                    })
+                    .catch(err => console.error('Error loading initial counts:', err));
+                @else
                     fetch('/profile/mailbox/unread-count', {
                         headers: {
                             'Accept': 'application/json'
                         }
-                    }).then(res => res.json()),
-                ])
-                .then(([notificationData, mailboxData]) => {
-                    updateNotificationCount(notificationData.count || 0);
-                    updateMailboxCount(mailboxData.count || 0);
-                    startNotificationUpdates();
-                })
-                .catch(err => console.error('Error loading initial counts:', err));
+                    }).then(res => res.json())
+                    .then(data => updateMailboxCount(data.count || 0))
+                    .catch(err => console.error('Error updating mailbox count:', err));
+                @endif
             }
         });
         
