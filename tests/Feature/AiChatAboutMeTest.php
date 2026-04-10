@@ -25,7 +25,7 @@ class AiChatAboutMeTest extends TestCase
     }
 
     #[Test]
-    public function returns_service_unavailable_when_ai_keys_are_missing(): void
+    public function returns_local_summary_when_ai_keys_are_missing(): void
     {
         $user = User::factory()->create();
 
@@ -38,11 +38,12 @@ class AiChatAboutMeTest extends TestCase
 
         $response = $this->actingAs($user)
             ->postJson(route('chatbot.about_me'))
-            ->assertStatus(503);
+            ->assertOk();
 
         $reply = (string) $response->json('reply');
 
-        $this->assertStringContainsString('OPENROUTER_API_KEY or GOOGLE_API_KEY', $reply);
+        $this->assertStringContainsString('## MyDoctor AI Response', $reply);
+        $this->assertStringContainsString('**Smart Suggestions**', $reply);
         Http::assertNothingSent();
     }
 
@@ -104,10 +105,14 @@ class AiChatAboutMeTest extends TestCase
             ], 200);
         });
 
-        $this->actingAs($user)
+        $response = $this->actingAs($user)
             ->postJson(route('chatbot.about_me'))
             ->assertOk()
-            ->assertJsonPath('reply', 'About me summary');
+            ->assertJson(fn($json) => $json->whereType('reply', 'string'));
+
+        $reply = (string) $response->json('reply');
+
+        $this->assertStringContainsString('About me summary', $reply);
 
         $this->assertStringContainsString('Own Disease Marker', $capturedPrompt);
         $this->assertStringContainsString('own_symptom_marker', $capturedPrompt);

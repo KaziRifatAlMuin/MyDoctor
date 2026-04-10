@@ -88,6 +88,12 @@ class AiChatController extends Controller
         $apiKey    = (string) config('services.openrouter.api_key', '');
         $googleKey = (string) (env('GOOGLE_API_KEY', '') ?: config('services.google.api_key', ''));
 
+        Log::info('aboutMe called', [
+            'user_id' => $userId,
+            'api_key_present' => $apiKey !== '',
+            'google_key_present' => $googleKey !== '',
+        ]);
+
         // Personal health queries must still work from DB even when external AI is down.
         if ((bool) config('chatbot.enable_text_to_sql', true)) {
             try {
@@ -660,10 +666,15 @@ class AiChatController extends Controller
             }
         }
 
-        // Try OpenRouter models
+        // Try OpenRouter models (bounded attempts to avoid long request chains).
+        $attempted = 0;
         foreach ($models as $model) {
+            if ($attempted >= 2) {
+                break;
+            }
+            $attempted++;
             try {
-                $response = Http::timeout(30)
+                $response = Http::timeout(12)
                     ->withToken($apiKey)
                     ->withHeaders([
                         'HTTP-Referer' => (string) config('services.openrouter.site_url', config('app.url')),
@@ -1064,6 +1075,12 @@ class AiChatController extends Controller
             $googleKey
         );
 
+        Log::info('aboutMe LLM summary result', [
+            'user_id' => $userId,
+            'has_final' => $final !== null,
+            'final_length' => is_string($final) ? strlen($final) : 0,
+        ]);
+
         if ($final !== null) {
             // For Suggestions page summary, return the model output directly so
             // the requested sections are shown without generic wrappers.
@@ -1082,10 +1099,8 @@ class AiChatController extends Controller
             $local = $this->buildPersonalHealthReply($snapshot, true);
             if ($local !== null) {
                 $reply = $this->formatStructuredReply($local);
-                $llmSuggestions = $this->generateLlmSmartSuggestions($snapshot, $apiKey, $googleKey, $baseUrl, $models);
-                if (count($llmSuggestions) < 4) {
-                    $llmSuggestions = $this->buildFallbackSmartSuggestions($snapshot);
-                }
+                // Keep fallback fast/reliable when LLM summary already failed.
+                $llmSuggestions = $this->buildFallbackSmartSuggestions($snapshot);
                 $reply = $this->appendSmartSuggestionsSection($reply, array_slice($llmSuggestions, 0, 4));
                 return response()->json(['reply' => $reply]);
             }
@@ -1234,9 +1249,14 @@ class AiChatController extends Controller
         }
 
         if ($modelRaw === null) {
+            $attempted = 0;
             foreach ($models as $model) {
+                if ($attempted >= 2) {
+                    break;
+                }
+                $attempted++;
                 try {
-                    $response = Http::timeout(35)
+                    $response = Http::timeout(10)
                         ->withToken($apiKey)
                         ->withHeaders([
                             'HTTP-Referer' => (string) config('services.openrouter.site_url', config('app.url')),
