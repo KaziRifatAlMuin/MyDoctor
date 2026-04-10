@@ -268,7 +268,8 @@ Route::prefix('community')->name('community.')->group(function () {
     // Page routes (return HTML)
     Route::get('/', [CommunityController::class, 'home'])->name('home');
     Route::get('/posts', [CommunityController::class, 'postsIndex'])->name('posts.index');
-    Route::get('/post/{post}', [CommunityController::class, 'showPost'])->name('post.show');
+    Route::get('/post/{post}', [CommunityController::class, 'showPost'])->whereNumber('post')->name('post.show');
+    Route::get('/posts/{post}', [CommunityController::class, 'showPost'])->whereNumber('post')->name('posts.show');
     Route::get('/disease/{disease}/posts', [CommunityController::class, 'diseasePosts'])->name('disease.posts');
 
     Route::get('/landing', [CommunityController::class, 'landing'])->name('landing');
@@ -277,9 +278,10 @@ Route::prefix('community')->name('community.')->group(function () {
     })->name('index');
     Route::get('/posts/starred', [CommunityController::class, 'starredPosts'])->name('posts.starred');
     Route::get('/posts/pending', [CommunityController::class, 'pendingPosts'])->name('posts.pending');
-    Route::get('/posts/{post}', function (\App\Models\Post $post) {
-        return redirect()->route('community.post.show', $post);
-    })->name('posts.show');
+    // Legacy alias kept for compatibility
+    Route::get('/forum/posts/{post}', function (\App\Models\Post $post) {
+        return redirect()->route('community.posts.show', $post);
+    });
     
     // MODAL POST - CRITICAL FOR DYNAMIC RELOADS
     Route::get('/modal-post/{post}', [CommunityController::class, 'modalPost'])->name('modal.post');
@@ -290,22 +292,24 @@ Route::prefix('community')->name('community.')->group(function () {
     Route::get('/posts/{post}/comments/more', [CommunityController::class, 'loadMoreComments'])->name('posts.comments.more');
     
     // Post CRUD - MATCHES YOUR JAVASCRIPT EXACTLY
-    Route::post('/posts', [CommunityController::class, 'storePost'])->name('posts.store');
-    Route::post('/posts/{post}/update', [CommunityController::class, 'updatePost'])->name('posts.update');  // ← POST not PATCH
-    Route::post('/posts/{post}/delete', [CommunityController::class, 'destroyPost'])->name('posts.destroy');
-    Route::post('/posts/{post}/like', [CommunityController::class, 'togglePostLike'])->name('posts.like');
-    Route::post('/posts/{post}/star', [CommunityController::class, 'togglePostStar'])->name('posts.star');
-    Route::post('/posts/{post}/report', [CommunityController::class, 'reportPost'])->name('posts.report');
-    Route::post('/posts/{post}/approve', [CommunityController::class, 'approvePost'])->name('posts.approve');
+    Route::middleware('auth')->group(function () {
+        Route::post('/posts', [CommunityController::class, 'storePost'])->name('posts.store');
+        Route::patch('/posts/{post}', [CommunityController::class, 'updatePost'])->name('posts.update');
+        Route::delete('/posts/{post}', [CommunityController::class, 'destroyPost'])->name('posts.destroy');
+        Route::put('/posts/{post}/likes', [CommunityController::class, 'togglePostLike'])->name('posts.like');
+        Route::put('/posts/{post}/star', [CommunityController::class, 'togglePostStar'])->name('posts.star');
+        Route::post('/posts/{post}/report', [CommunityController::class, 'reportPost'])->name('posts.report');
+        Route::patch('/posts/{post}/approve', [CommunityController::class, 'approvePost'])->name('posts.approve');
+
+        Route::post('/posts/{post}/comments', [CommunityController::class, 'storeComment'])->name('comments.store');
+        Route::patch('/comments/{comment}', [CommunityController::class, 'updateComment'])->name('comments.update');
+        Route::delete('/comments/{comment}', [CommunityController::class, 'destroyComment'])->name('comments.destroy');
+        Route::put('/comments/{comment}/likes', [CommunityController::class, 'toggleCommentLike'])->name('comments.like');
+    });
     
     // User details for modals
     Route::get('/user/{userId}', [CommunityController::class, 'getUserDetails'])->name('user.details');
     
-    // Comment CRUD - MATCHES JAVASCRIPT
-    Route::post('/posts/{post}/comments', [CommunityController::class, 'storeComment'])->name('comments.store');
-    Route::post('/comments/{comment}/update', [CommunityController::class, 'updateComment'])->name('comments.update');
-    Route::post('/comments/{comment}/delete', [CommunityController::class, 'destroyComment'])->name('comments.destroy');
-    Route::post('/comments/{comment}/like', [CommunityController::class, 'toggleCommentLike'])->name('comments.like');
 });
 
 /*
@@ -393,8 +397,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::prefix('community')->name('community.')->group(function () {
         Route::get('/posts', [CommunityController::class, 'adminPostsIndex'])->name('posts.index');
         Route::get('/posts/pending', [CommunityController::class, 'adminPendingPosts'])->name('posts.pending');
-        Route::post('/posts/{post}/approve', [CommunityController::class, 'approvePost'])->name('posts.approve');
-        Route::post('/posts/{post}/delete', [CommunityController::class, 'destroyPost'])->name('posts.destroy');
+        Route::patch('/posts/{post}/approve', [CommunityController::class, 'approvePost'])->name('posts.approve');
+        Route::delete('/posts/{post}', [CommunityController::class, 'destroyPost'])->name('posts.destroy');
+        Route::get('/modal-post/{post}', [CommunityController::class, 'modalPost'])->name('modal.post');
+        Route::get('/user/{userId}', [CommunityController::class, 'getUserDetails'])->name('user.details');
     });
 
     Route::get('/user/{user}', [App\Http\Controllers\UserController::class, 'show'])->name('users.show');

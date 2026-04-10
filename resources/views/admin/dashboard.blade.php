@@ -267,6 +267,10 @@
                     <small>Community Posts</small>
                     <strong>{{ number_format($stats['community']['posts'] ?? 0) }}</strong>
                 </div>
+                <div class="hub-pill" style="background: rgba(255, 255, 255, 0.2); border-color: rgba(255, 208, 0, 0.45);">
+                    <small>Pending Posts</small>
+                    <strong>{{ number_format($stats['community']['pending_posts'] ?? 0) }}</strong>
+                </div>
                 <div class="hub-pill">
                     <small>Health Metrics</small>
                     <strong>{{ number_format($stats['medical']['health_metrics'] ?? 0) }}</strong>
@@ -309,9 +313,59 @@
                     </div>
                     <div class="stats-grid">
                         <div class="stat-item"><small>Posts</small><strong>{{ number_format($stats['community']['posts'] ?? 0) }}</strong></div>
+                        <div class="stat-item"><small>Pending Posts</small><strong style="color:#b45309;">{{ number_format($stats['community']['pending_posts'] ?? 0) }}</strong></div>
+                        <div class="stat-item"><small>Approved Posts</small><strong>{{ number_format($stats['community']['approved_posts'] ?? 0) }}</strong></div>
+                        <div class="stat-item"><small>Approved Today</small><strong>{{ number_format($stats['community']['approved_today'] ?? 0) }}</strong></div>
                         <div class="stat-item"><small>Comments</small><strong>{{ number_format($stats['community']['comments'] ?? 0) }}</strong></div>
                         <div class="stat-item"><small>Post Likes</small><strong>{{ number_format($stats['community']['post_likes'] ?? 0) }}</strong></div>
                         <div class="stat-item"><small>Comment Likes</small><strong>{{ number_format($stats['community']['comment_likes'] ?? 0) }}</strong></div>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-12">
+                <section class="hub-block" style="border-left: 6px solid #f59e0b;">
+                    <div class="hub-block-head d-flex justify-content-between align-items-center">
+                        <h2><i class="fas fa-hourglass-half me-2"></i>Pending Post Moderation Queue</h2>
+                        <a href="{{ route('admin.community.posts.pending') }}" class="btn btn-sm btn-outline-warning rounded-pill">
+                            <i class="fas fa-list me-1"></i>View All Pending
+                        </a>
+                    </div>
+                    <div class="table-shell table-responsive">
+                        @if($pendingPosts->isEmpty())
+                            <div class="alert alert-success mb-0">
+                                <i class="fas fa-check-circle me-2"></i>No pending community posts right now.
+                            </div>
+                        @else
+                            <table class="table-hub">
+                                <thead>
+                                    <tr>
+                                        <th>Author</th>
+                                        <th>Disease</th>
+                                        <th>Preview</th>
+                                        <th>Submitted</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($pendingPosts as $pendingPost)
+                                        <tr style="background: linear-gradient(90deg, rgba(245, 158, 11, 0.08) 0%, rgba(255, 255, 255, 1) 28%);">
+                                            <td>{{ $pendingPost->is_anonymous ? 'Anonymous Member' : ($pendingPost->user->name ?? 'Unknown') }}</td>
+                                            <td>{{ $pendingPost->disease->disease_name ?? 'General' }}</td>
+                                            <td>{{ \Illuminate\Support\Str::limit($pendingPost->description, 80) }}</td>
+                                            <td>{{ $pendingPost->created_at->diffForHumans() }}</td>
+                                            <td>
+                                                <a href="{{ route('community.post.show', $pendingPost) }}" class="btn btn-sm btn-outline-primary">
+                                                    Review
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        @endif
                     </div>
                 </section>
             </div>

@@ -3,7 +3,8 @@
     $isAuthenticated = Auth::check();
     $isOwner = $isAuthenticated && Auth::id() === $post->user_id;
     $isAdmin = $isAuthenticated && Auth::user()->isAdmin();
-    $isAdminReadOnly = $isAdmin;
+    $adminReadOnlyCommunity = $adminReadOnlyCommunity ?? false;
+    $isAdminReadOnly = $isAdmin && $adminReadOnlyCommunity;
     $isAnonymous = (bool) $post->is_anonymous;
     $displayName = $isAnonymous ? 'Anonymous Member' : $post->user->name;
     $userLiked = $isAuthenticated ? $post->likes()->where('user_id', Auth::id())->exists() : false;
@@ -213,7 +214,7 @@
         <div id="comments-section-{{ $post->id }}" style="margin: 12px 0 0 0; padding: 16px; border-top: 1px solid #e4e6eb;">
             <div id="comments-container-{{ $post->id }}" style="margin: 0; padding: 0; max-height: 400px; overflow-y: auto;">
                 @forelse($post->comments as $comment)
-                    @include('community.partials.comment', ['comment' => $comment])
+                    @include('community.partials.comment', ['comment' => $comment, 'adminReadOnlyCommunity' => $adminReadOnlyCommunity])
                 @empty
                     <div style="text-align: center; padding: 20px; color: #65676b;">
                         <i class="fas fa-comment-slash fa-2x mb-2"></i>

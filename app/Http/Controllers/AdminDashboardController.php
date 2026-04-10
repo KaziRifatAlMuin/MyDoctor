@@ -50,6 +50,11 @@ class AdminDashboardController extends Controller
             ->latest('recorded_at')
             ->take(6)
             ->get();
+        $pendingPosts = Post::with(['user', 'disease'])
+            ->where('is_approved', false)
+            ->latest()
+            ->take(5)
+            ->get();
         $navigationCards = $this->getNavigationCards();
 
         return view('admin.dashboard', compact(
@@ -58,6 +63,7 @@ class AdminDashboardController extends Controller
             'latestDiseaseRecords',
             'latestMedicines',
             'latestMetrics',
+            'pendingPosts',
             'navigationCards'
         ));
     }
@@ -107,6 +113,9 @@ class AdminDashboardController extends Controller
             ],
             'community' => [
                 'posts' => Post::count(),
+                'pending_posts' => Post::where('is_approved', false)->count(),
+                'approved_posts' => Post::where('is_approved', true)->count(),
+                'approved_today' => Post::where('is_approved', true)->whereDate('updated_at', $today)->count(),
                 'comments' => Comment::count(),
                 'post_likes' => PostLike::count(),
                 'comment_likes' => CommentLike::count(),

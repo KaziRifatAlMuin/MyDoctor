@@ -23,6 +23,10 @@ class CommunityController extends Controller
      */
     public function home()
     {
+        if (Auth::check() && Auth::user()->isAdmin()) {
+            return redirect()->route('admin.community.posts.index');
+        }
+
         $userDiseaseIds = Auth::check()
             ? Auth::user()->userDiseases()->pluck('disease_id')->all()
             : [];
@@ -56,6 +60,10 @@ class CommunityController extends Controller
      */
     public function postsIndex(Request $request)
     {
+        if (Auth::check() && Auth::user()->isAdmin()) {
+            return redirect()->route('admin.community.posts.index');
+        }
+
         return $this->index($request);
     }
 
@@ -74,6 +82,10 @@ class CommunityController extends Controller
      */
     public function diseasePosts(Request $request, Disease $disease)
     {
+        if (Auth::check() && Auth::user()->isAdmin()) {
+            return redirect()->route('admin.community.posts.index', ['disease' => $disease->id]);
+        }
+
         $request->merge(['disease' => $disease->id]);
 
         return $this->index($request);
@@ -304,6 +316,10 @@ class CommunityController extends Controller
             return redirect()->route('login');
         }
 
+        if (Auth::user()->isAdmin() && !(bool) $request->boolean('admin_community', false)) {
+            return redirect()->route('admin.community.posts.pending');
+        }
+
         try {
             $diseaseId = $request->get('disease');
             $userId = Auth::id();
@@ -420,15 +436,20 @@ class CommunityController extends Controller
     public function showPost(Post $post)
     {
         try {
+            $isAdminCommunity = false;
+
             if (!$post->is_approved && !$this->canAccessUnapprovedPost($post)) {
                 abort(403, 'This post is pending approval.');
             }
 
             $post->load(['user', 'disease', 'comments' => function($q) {
-                $q->with('user')->latest();
+                $q->with('user')->withCount(['likes as likes_count'])->latest();
             }])->loadCount(['likes as likes_count']);
             
-            return view('community.pages.show', compact('post'));
+            return view('community.pages.show', [
+                'post' => $post,
+                'isAdminCommunity' => $isAdminCommunity,
+            ]);
         } catch (\Exception $e) {
             Log::error('Show Post Error: ' . $e->getMessage());
             return back()->with('error', 'Error loading post');
@@ -441,6 +462,11 @@ class CommunityController extends Controller
     public function modalPost(Post $post)
     {
         try {
+            $isAdminCommunity = request()->routeIs('admin.community.*')
+                || ((bool) request()->boolean('admin_community', false)
+                    && Auth::check()
+                    && Auth::user()->isAdmin());
+
             if (!$post->is_approved && !$this->canAccessUnapprovedPost($post)) {
                 return response()->json(['error' => 'This post is pending approval.'], 403);
             }
@@ -457,7 +483,10 @@ class CommunityController extends Controller
             ])->loadCount(['likes as likes_count']);
             
             // Return the modal post view
-            return view('community.pages.modal-post', compact('post'));
+            return view('community.pages.modal-post', [
+                'post' => $post,
+                'adminReadOnlyCommunity' => $isAdminCommunity,
+            ]);
         } catch (\Exception $e) {
             Log::error('Modal Post Error: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to load post'], 500);
@@ -826,6 +855,8 @@ class CommunityController extends Controller
                 ], 403);
             }
 
+            $this->authorize('update', $post);
+
             $request->validate([
                 'description' => 'required|string|max:5000',
             ]);
@@ -875,6 +906,8 @@ class CommunityController extends Controller
                     'message' => 'You can only delete your own posts unless you are an admin'
                 ], 403);
             }
+
+            $this->authorize('delete', $post);
 
             // Delete all files
             if ($post->files && is_array($post->files)) {
@@ -1240,12 +1273,7 @@ class CommunityController extends Controller
                 ], 401);
             }
 
-            if (Auth::id() !== $comment->user_id) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'You can only edit your own comments'
-                ], 403);
-            }
+            $this->authorize('update', $comment);
 
             $request->validate([
                 'description' => 'nullable|string|max:2000',
@@ -1295,12 +1323,7 @@ class CommunityController extends Controller
                 ], 401);
             }
 
-            if (Auth::id() !== $comment->user_id) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'You can only delete your own comments'
-                ], 403);
-            }
+            $this->authorize('delete', $comment);
 
             $post = $comment->post;
             

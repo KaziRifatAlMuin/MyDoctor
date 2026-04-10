@@ -1647,7 +1647,7 @@ body {
                 <!-- Posts Feed -->
                 <div id="postsFeed">
                     @forelse($posts as $post)
-                        @include('community.partials.post', ['post' => $post])
+                        @include('community.partials.post', ['post' => $post, 'adminReadOnlyCommunity' => $isAdminCommunity])
                     @empty
                         <div style="text-align: center; padding: 60px 20px; background: white; border-radius: 12px;">
                             <i class="fas fa-comments fa-4x mb-3" style="color: #adb5bd;"></i>
@@ -2018,7 +2018,7 @@ function reportPost(postId) {
 function approvePost(postId) {
     const approveBase = @json($isAdminCommunity ? '/admin/community/posts/' : '/community/posts/');
     fetch(`${approveBase}${postId}/approve`, {
-        method: 'POST',
+        method: 'PATCH',
         headers: {
             'X-CSRF-TOKEN': csrfToken,
             'Accept': 'application/json',

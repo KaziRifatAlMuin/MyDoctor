@@ -2701,6 +2701,10 @@
         };
 
         // ==================== POST MODAL FUNCTIONS ====================
+        window.getCommunityBasePath = function() {
+            return window.location.pathname.startsWith('/admin/community') ? '/admin/community' : '/community';
+        };
+
         window.openPostModal = function(postId) {
             const modalBody = document.getElementById('postModalBody');
             if (!modalBody) {
@@ -2721,7 +2725,7 @@
             postModal.show();
             
             // Fetch the post HTML
-            fetch(`/community/modal-post/${postId}`)
+            fetch(`${window.getCommunityBasePath()}/modal-post/${postId}`)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Post is deleted or cannot be loaded');
@@ -2802,7 +2806,7 @@ window.submitModalComment = async function(event, postId) {
     submitBtn.innerHTML = '<span class="spinner-small"></span>';
 
     try {
-        const res = await fetch(`/community/posts/${postId}/comments`, {
+        const res = await fetch(`${window.getCommunityBasePath()}/posts/${postId}/comments`, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
@@ -3055,7 +3059,7 @@ window.clearModalCommentFile = function(postId) {
             }
 
             try {
-                const response = await fetch(`/community/posts/${postId}/comments`, {
+                const response = await fetch(`${window.getCommunityBasePath()}/posts/${postId}/comments`, {
                     method: "POST",
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
@@ -3117,8 +3121,8 @@ window.clearModalCommentFile = function(postId) {
         // ==================== LIKE FUNCTIONS ====================
         window.toggleLike = async function(postId, button) {
             try {
-                const response = await fetch(`/community/posts/${postId}/like`, {
-                    method: "POST",
+                const response = await fetch(`${window.getCommunityBasePath()}/posts/${postId}/likes`, {
+                    method: "PUT",
                     headers: {
                         "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
                         "Accept": "application/json",
@@ -3167,8 +3171,8 @@ window.clearModalCommentFile = function(postId) {
             if (!button) return;
 
             try {
-                const response = await fetch(`/community/posts/${postId}/star`, {
-                    method: "POST",
+                const response = await fetch(`${window.getCommunityBasePath()}/posts/${postId}/star`, {
+                    method: "PUT",
                     headers: {
                         "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
                         "Accept": "application/json",
@@ -3231,8 +3235,8 @@ window.clearModalCommentFile = function(postId) {
 
         window.toggleCommentLike = async function(commentId, button) {
             try {
-                const response = await fetch(`/community/comments/${commentId}/like`, {
-                    method: "POST",
+                const response = await fetch(`${window.getCommunityBasePath()}/comments/${commentId}/likes`, {
+                    method: "PUT",
                     headers: {
                         "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
                         "Accept": "application/json",
@@ -3370,7 +3374,7 @@ window.clearModalCommentFile = function(postId) {
             const userModal = new bootstrap.Modal(userModalEl);
             userModal.show();
             
-            fetch(`/community/user/${userId}`)
+            fetch(`${window.getCommunityBasePath()}/user/${userId}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -3607,9 +3611,10 @@ window.openVideoModal = function(type, source, isReel = false) {
                 confirmDeleteBtn.addEventListener('click', function() {
                     if (!window.deleteId || !window.deleteType) return;
 
+                    const basePath = window.getCommunityBasePath();
                     const url = window.deleteType === 'post'
-                        ? `/community/posts/${window.deleteId}/delete`
-                        : `/community/comments/${window.deleteId}/delete`;
+                        ? `${basePath}/posts/${window.deleteId}`
+                        : `${basePath}/comments/${window.deleteId}`;
 
                     const deleteBtn = this;
                     const originalText = deleteBtn.innerHTML;
@@ -3617,7 +3622,7 @@ window.openVideoModal = function(type, source, isReel = false) {
                     deleteBtn.innerHTML = '<span class="spinner-small me-2"></span> Deleting...';
 
                     fetch(url, {
-                        method: 'POST',
+                        method: 'DELETE',
                         headers: {
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                             'Accept': 'application/json'
@@ -3695,9 +3700,10 @@ window.openVideoModal = function(type, source, isReel = false) {
                         return;
                     }
 
+                    const basePath = window.getCommunityBasePath();
                     const url = window.currentEditType === 'post'
-                        ? `/community/posts/${window.currentEditId}/update`
-                        : `/community/comments/${window.currentEditId}/update`;
+                        ? `${basePath}/posts/${window.currentEditId}`
+                        : `${basePath}/comments/${window.currentEditId}`;
 
                     const saveBtn = this;
                     const originalText = saveBtn.innerHTML;
@@ -3705,7 +3711,7 @@ window.openVideoModal = function(type, source, isReel = false) {
                     saveBtn.innerHTML = '<span class="spinner-small me-2"></span> Saving...';
 
                     fetch(url, {
-                        method: 'POST',
+                        method: 'PATCH',
                         headers: {
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                             'Accept': 'application/json',
