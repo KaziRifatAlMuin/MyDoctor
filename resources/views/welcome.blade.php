@@ -4,7 +4,28 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+        <title>Welcome - MyDoctor</title>
+        <meta name="description" content="MyDoctor is a smart healthcare companion for tracking health metrics, medicine schedules, reminders, and community support.">
+        <meta name="keywords" content="MyDoctor, healthcare app, medicine reminder, health tracking, symptom tracking, disease management">
+        <meta name="author" content="MyDoctor">
+        <meta name="robots" content="index, follow, max-image-preview:large">
+        <link rel="canonical" href="{{ url()->current() }}">
+
+        <meta property="og:type" content="website">
+        <meta property="og:site_name" content="MyDoctor">
+        <meta property="og:title" content="Welcome - MyDoctor">
+        <meta property="og:description" content="MyDoctor is a smart healthcare companion for tracking health metrics, medicine schedules, reminders, and community support.">
+        <meta property="og:url" content="{{ url()->current() }}">
+        <meta property="og:image" content="{{ asset('images/logos/applogo_white.jpg') }}">
+
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:title" content="Welcome - MyDoctor">
+        <meta name="twitter:description" content="MyDoctor is a smart healthcare companion for tracking health metrics, medicine schedules, reminders, and community support.">
+        <meta name="twitter:image" content="{{ asset('images/logos/applogo_white.jpg') }}">
+
+        <link rel="icon" type="image/jpeg" href="{{ asset('images/logos/applogo_white.jpg') }}">
+        <link rel="shortcut icon" href="{{ asset('images/logos/applogo_white.jpg') }}" type="image/jpeg">
+        <link rel="apple-touch-icon" href="{{ asset('images/logos/applogo_white.jpg') }}">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">

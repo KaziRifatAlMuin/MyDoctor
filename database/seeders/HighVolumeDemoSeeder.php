@@ -7,7 +7,6 @@ use App\Models\CommentLike;
 use App\Models\Disease;
 use App\Models\Environment;
 use App\Models\EnvironmentMetric;
-use Illuminate\Support\Facades\Schema;
 use App\Models\HealthMetric;
 use App\Models\Medicine;
 use App\Models\MedicineLog;
@@ -15,17 +14,17 @@ use App\Models\MedicineReminder;
 use App\Models\MedicineSchedule;
 use App\Models\Post;
 use App\Models\PostLike;
-use App\Models\Symptom;
-use App\Models\UserSymptom;
 use App\Models\Upload;
 use App\Models\User;
-use App\Models\UserSetting;
 use App\Models\UserAddress;
 use App\Models\UserDisease;
 use App\Models\UserHealth;
+use App\Models\UserSetting;
+use App\Models\UserSymptom;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class HighVolumeDemoSeeder extends Seeder
@@ -34,34 +33,41 @@ class HighVolumeDemoSeeder extends Seeder
     {
         $this->ensureMetricDefinitions();
         $this->ensureAdminAccount();
+
         $users = $this->seedUsers();
         $diseaseIds = Disease::query()->pluck('id')->values();
 
-        if ($diseaseIds->isEmpty()) {
+        if ($users->isEmpty() || $diseaseIds->isEmpty()) {
             return;
         }
 
         $this->seedUserDiseases($users, $diseaseIds);
         $this->seedHealthAndMedicineData($users);
-        [$posts, $comments] = $this->seedCommunityData($users, $diseaseIds);
+        $this->seedCommunityData($users, $diseaseIds);
         $this->seedMailings($users);
         $this->seedPushSubscriptions($users);
     }
 
+    private function ensureMetricDefinitions(): void
+    {
+        HealthMetric::seedDefaults();
+    }
+
     private function ensureAdminAccount(): void
     {
-        User::query()->updateOrCreate(
+        $admin = User::query()->updateOrCreate(
             ['email' => 'admin@mydoctor.com'],
             [
                 'name' => 'System Admin',
                 'phone' => '01700000000',
-                'date_of_birth' => now()->subYears(32)->format('Y-m-d'),
+                'date_of_birth' => now()->subYears(34)->format('Y-m-d'),
                 'occupation' => 'Administrator',
                 'blood_group' => 'O+',
                 'gender' => 'male',
                 'email_verified_at' => now(),
                 'password' => Hash::make('abcd1234'),
                 'role' => 'admin',
+                'is_active' => true,
                 'notification_settings' => [
                     'reminders' => true,
                     'updates' => true,
@@ -71,55 +77,44 @@ class HighVolumeDemoSeeder extends Seeder
             ]
         );
 
-        $admin = User::query()->where('email', 'admin@mydoctor.com')->first();
-        if ($admin) {
-            UserSetting::query()->updateOrCreate(
-                ['user_id' => $admin->id],
-                [
-                    'email_notifications' => true,
-                    'push_notifications' => true,
-                    'show_personal_info' => false,
-                    'show_diseases' => false,
-                    'show_chatbot' => false,
-                    'show_notification_badge' => true,
-                    'show_mail_badge' => true,
-                ]
-            );
+        UserSetting::query()->updateOrCreate(
+            ['user_id' => $admin->id],
+            [
+                'email_notifications' => true,
+                'push_notifications' => true,
+                'show_personal_info' => false,
+                'show_diseases' => false,
+                'show_chatbot' => false,
+                'show_notification_badge' => true,
+                'show_mail_badge' => true,
+            ]
+        );
 
-            UserAddress::query()->updateOrCreate(
-                ['user_id' => $admin->id],
-                [
-                    'division_id' => 6,
-                    'division' => 'Dhaka',
-                    'division_bn' => 'ঢাকা',
-                    'district_id' => 26,
-                    'district' => 'Dhaka',
-                    'district_bn' => 'ঢাকা',
-                    'upazila_id' => 8,
-                    'upazila' => 'Dhanmondi',
-                    'upazila_bn' => 'ধানমন্ডি',
-                    'street' => 'Admin Road',
-                    'house' => 'A-1',
-                ]
-            );
-        }
+        UserAddress::query()->updateOrCreate(
+            ['user_id' => $admin->id],
+            [
+                'division_id' => 6,
+                'division' => 'Dhaka',
+                'division_bn' => 'ঢাকা',
+                'district_id' => 26,
+                'district' => 'Dhaka',
+                'district_bn' => 'ঢাকা',
+                'upazila_id' => 8,
+                'upazila' => 'Dhanmondi',
+                'upazila_bn' => 'ধানমন্ডি',
+                'street' => 'Admin Road',
+                'house' => 'A-1',
+            ]
+        );
     }
 
     private function seedUsers()
     {
         $names = [
             'Md Rahim Uddin', 'Nusrat Jahan', 'Abul Hossain', 'Shamima Akter', 'Sabbir Ahmed',
-            'Farzana Yasmin', 'Jahid Hasan', 'Mst Rina Begum', 'Tanvir Hossain', 'Rafiya Sultana',
+            'Farzana Yasmin', 'Jahid Hasan', 'Rina Begum', 'Tanvir Hossain', 'Rafiya Sultana',
             'Mehedi Hasan', 'Sharmin Ara', 'Fahim Chowdhury', 'Sadia Islam', 'Rashed Karim',
-            'Jannatul Ferdous', 'Imran Kabir', 'Nasrin Akter', 'Kamal Uddin', 'Tania Rahman',
-            'Mahmudul Hasan', 'Moumita Das', 'Arifur Rahman', 'Samia Nahar', 'Saiful Islam',
-            'Rumana Ahmed', 'Mizanur Rahman', 'Shaila Parvin', 'Rakib Hasan', 'Popy Akter',
-            'Shakil Ahmed', 'Laboni Khatun', 'Asif Iqbal', 'Mitu Rani', 'Biplob Kumar',
-            'Jui Akter', 'Anisur Rahman', 'Salma Begum', 'Parvez Mia', 'Afia Anjum',
-            'Belal Hossain', 'Dilruba Yasmin', 'Habibur Rahman', 'Maliha Tabassum', 'Rony Ahmed',
-            'Fariha Jannat', 'Kawsar Ali', 'Sanjida Islam', 'Sohanur Rahman', 'Nabila Afroz',
-            'Tarek Hasan', 'Ishrat Jahan', 'Samiul Islam', 'Mithila Rahman', 'Minhaz Uddin',
-            'Rukaiya Akter', 'Rasel Chowdhury', 'Sharmeen Sultana', 'Yasin Arafat', 'Purnima Das',
+            'Jannatul Ferdous', 'Imran Kabir', 'Nasrin Akter', 'Kamal Uddin',
         ];
 
         $occupations = [
@@ -130,168 +125,146 @@ class HighVolumeDemoSeeder extends Seeder
 
         $bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
-        $rows = [];
-        $now = now();
+        foreach ($names as $index => $name) {
+            $emailIndex = $index + 1;
 
-        for ($i = 1; $i <= 24; $i++) {
-            $rows[] = [
-                'name' => $names[$i - 1],
-                'email' => "user{$i}@gmail.com",
-                'phone' => '01' . str_pad((string) mt_rand(300000000, 999999999), 9, '0', STR_PAD_LEFT),
-                'date_of_birth' => now()->subYears(mt_rand(18, 70))->subDays(mt_rand(0, 364))->format('Y-m-d'),
-                'occupation' => $occupations[array_rand($occupations)],
-                'blood_group' => $bloodGroups[array_rand($bloodGroups)],
-                'gender' => collect(['male', 'female', 'other'])->random(),
-                'email_verified_at' => $now,
-                'password' => Hash::make('abcd1234'),
-                'role' => 'member',
-                'notification_settings' => json_encode([
-                    'reminders' => true,
-                    'updates' => true,
-                    'newsletter' => (bool) random_int(0, 1),
-                ]),
-                'remember_token' => Str::random(10),
-                'created_at' => $now->copy()->subDays(mt_rand(30, 1000)),
-                'updated_at' => $now,
-            ];
-        }
+            $user = User::query()->updateOrCreate(
+                ['email' => "user{$emailIndex}@gmail.com"],
+                [
+                    'name' => $name,
+                    'phone' => '01' . str_pad((string) mt_rand(300000000, 999999999), 9, '0', STR_PAD_LEFT),
+                    'date_of_birth' => now()->subYears(mt_rand(18, 70))->subDays(mt_rand(0, 364))->format('Y-m-d'),
+                    'occupation' => $occupations[array_rand($occupations)],
+                    'blood_group' => $bloodGroups[array_rand($bloodGroups)],
+                    'gender' => collect(['male', 'female', 'other'])->random(),
+                    'email_verified_at' => now(),
+                    'password' => Hash::make('abcd1234'),
+                    'role' => 'member',
+                    'is_active' => true,
+                    'notification_settings' => [
+                        'reminders' => true,
+                        'updates' => true,
+                        'newsletter' => (bool) random_int(0, 1),
+                    ],
+                    'remember_token' => Str::random(10),
+                ]
+            );
 
-        User::query()->insert($rows);
+            UserSetting::query()->updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'email_notifications' => true,
+                    'push_notifications' => true,
+                    'show_personal_info' => false,
+                    'show_diseases' => false,
+                    'show_chatbot' => true,
+                    'show_notification_badge' => true,
+                    'show_mail_badge' => true,
+                ]
+            );
 
-        $users = User::query()
-            ->where('email', 'like', 'user%@gmail.com')
-            ->orderBy('id')
-            ->get();
-
-        $settingsRows = [];
-        foreach ($users as $user) {
-            $settingsRows[] = [
-                'user_id' => $user->id,
-                'email_notifications' => true,
-                'push_notifications' => true,
-                'show_personal_info' => false,
-                'show_diseases' => false,
-                'show_chatbot' => true,
-                'show_notification_badge' => true,
-                'show_mail_badge' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
-        }
-
-        if ($settingsRows !== []) {
-            UserSetting::query()->upsert(
-                $settingsRows,
-                ['user_id'],
-                ['email_notifications', 'push_notifications', 'show_personal_info', 'show_diseases', 'show_chatbot', 'show_notification_badge', 'show_mail_badge', 'updated_at']
+            UserAddress::query()->updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'division_id' => 6,
+                    'division' => 'Dhaka',
+                    'division_bn' => 'ঢাকা',
+                    'district_id' => 26,
+                    'district' => 'Dhaka',
+                    'district_bn' => 'ঢাকা',
+                    'upazila_id' => 8,
+                    'upazila' => 'Dhanmondi',
+                    'upazila_bn' => 'ধানমন্ডি',
+                    'street' => 'Road ' . random_int(1, 60),
+                    'house' => 'House ' . random_int(1, 40),
+                ]
             );
         }
 
-        return $users;
+        return User::query()
+            ->where('role', 'member')
+            ->where('email', 'like', 'user%@gmail.com')
+            ->orderBy('id')
+            ->take(19)
+            ->get();
     }
 
     private function seedUserDiseases($users, $diseaseIds): void
     {
-        $userIds = $users->pluck('id')->values();
-        $maxPerUser = min(10, $diseaseIds->count());
-        $minPerUser = min(2, $maxPerUser);
+        foreach ($users as $index => $user) {
+            $isCore = $index < 7;
+            $attachCount = $isCore
+                ? min($diseaseIds->count(), random_int(5, 9))
+                : min($diseaseIds->count(), random_int(2, 5));
 
-        $targetCounts = [];
-        $assigned = [];
-        foreach ($userIds as $uid) {
-            $targetCounts[$uid] = random_int($minPerUser, $maxPerUser);
-            $assigned[$uid] = [];
-        }
+            $selectedDiseaseIds = $diseaseIds->shuffle()->take($attachCount)->values();
 
-        // Ensure all diseases are covered across the 60 users.
-        foreach ($diseaseIds as $diseaseId) {
-            $eligible = $userIds->filter(fn ($uid) => count($assigned[$uid]) < $targetCounts[$uid])->values();
-            $uid = $eligible->isNotEmpty()
-                ? $eligible->random()
-                : $userIds->random();
-
-            $assigned[$uid][$diseaseId] = true;
-        }
-
-        foreach ($userIds as $uid) {
-            $pool = $diseaseIds->shuffle()->values();
-            foreach ($pool as $diseaseId) {
-                if (count($assigned[$uid]) >= $targetCounts[$uid]) {
-                    break;
-                }
-                $assigned[$uid][$diseaseId] = true;
+            foreach ($selectedDiseaseIds as $diseaseId) {
+                UserDisease::query()->updateOrCreate(
+                    [
+                        'user_id' => $user->id,
+                        'disease_id' => $diseaseId,
+                    ],
+                    [
+                        'diagnosed_at' => now()->subDays(mt_rand(20, 2500))->format('Y-m-d'),
+                        'status' => collect(['active', 'recovered', 'chronic', 'managed'])->random(),
+                        'notes' => 'Seeded realistic disease history for demo users.',
+                    ]
+                );
             }
         }
-
-        $rows = [];
-        foreach ($assigned as $uid => $diseaseSet) {
-            foreach (array_keys($diseaseSet) as $diseaseId) {
-                $rows[] = [
-                    'user_id' => $uid,
-                    'disease_id' => $diseaseId,
-                    'diagnosed_at' => now()->subDays(mt_rand(30, 2500))->format('Y-m-d'),
-                    'status' => collect(['active', 'recovered', 'chronic', 'managed'])->random(),
-                    'notes' => 'Routine follow-up and care plan active.',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
-            }
-        }
-
-        UserDisease::query()->insert($rows);
     }
 
     private function seedHealthAndMedicineData($users): void
     {
-        $topUserIds = $users->pluck('id')->take(5)->all();
+        $coreUserIds = $users->take(7)->pluck('id')->all();
 
         foreach ($users as $user) {
-            $isTop = in_array($user->id, $topUserIds, true);
+            $isCore = in_array($user->id, $coreUserIds, true);
 
-            $addressCount = $isTop ? random_int(1, 2) : 1;
-            UserAddress::factory()->count($addressCount)->create(['user_id' => $user->id]);
-
-            $metricCount = $isTop ? random_int(25, 45) : random_int(8, 20);
+            $metricCount = $isCore ? random_int(35, 55) : random_int(8, 18);
             UserHealth::factory()->count($metricCount)->create(['user_id' => $user->id]);
 
-            $symptomCount = $isTop ? random_int(25, 45) : random_int(8, 20);
+            $symptomCount = $isCore ? random_int(30, 50) : random_int(8, 16);
             UserSymptom::factory()->count($symptomCount)->create(['user_id' => $user->id]);
 
-            $envCount = $isTop ? random_int(8, 18) : random_int(4, 10);
+            $uploadCount = $isCore ? random_int(10, 20) : random_int(3, 8);
+            Upload::factory()->count($uploadCount)->create(['user_id' => $user->id]);
+
             if (Schema::hasTable('environments') && Schema::hasTable('environment_metrics')) {
-                $environments = Environment::factory()->count($envCount)->create(['user_id' => $user->id]);
+                $environmentCount = $isCore ? random_int(8, 16) : random_int(2, 7);
+                $environments = Environment::factory()->count($environmentCount)->create(['user_id' => $user->id]);
+
                 foreach ($environments as $environment) {
-                    EnvironmentMetric::factory()->count($isTop ? random_int(2, 4) : random_int(1, 3))->create([
+                    EnvironmentMetric::factory()->count($isCore ? random_int(2, 4) : random_int(1, 2))->create([
                         'environment_id' => $environment->id,
                     ]);
                 }
             }
 
-            $uploadCount = $isTop ? random_int(8, 20) : random_int(4, 10);
-            Upload::factory()->count($uploadCount)->create(['user_id' => $user->id]);
-
-            $medicineCount = $isTop ? random_int(4, 8) : random_int(2, 5);
+            $medicineCount = $isCore ? random_int(4, 8) : random_int(1, 3);
             $medicines = Medicine::factory()->count($medicineCount)->create(['user_id' => $user->id]);
 
             foreach ($medicines as $medicine) {
-                $scheduleCount = $isTop ? random_int(2, 4) : random_int(1, 2);
+                $scheduleCount = $isCore ? random_int(2, 4) : random_int(1, 2);
                 $schedules = MedicineSchedule::factory()->count($scheduleCount)->create([
                     'medicine_id' => $medicine->id,
                 ]);
 
                 foreach ($schedules as $schedule) {
-                    $reminderCount = $isTop ? random_int(3, 6) : random_int(2, 4);
+                    $reminderCount = $isCore ? random_int(4, 8) : random_int(1, 3);
                     MedicineReminder::factory()->count($reminderCount)->create([
                         'schedule_id' => $schedule->id,
                     ]);
                 }
 
-                $logDays = $isTop ? random_int(14, 28) : random_int(7, 16);
+                $logDays = $isCore ? random_int(18, 35) : random_int(6, 14);
                 for ($d = 0; $d < $logDays; $d++) {
                     $date = now()->subDays($d + ($medicine->id % 10))->format('Y-m-d');
                     $scheduled = random_int(1, 6);
                     $taken = random_int(0, $scheduled);
-                    MedicineLog::query()->firstOrCreate(
+
+                    MedicineLog::query()->updateOrCreate(
                         [
                             'medicine_id' => $medicine->id,
                             'user_id' => $user->id,
@@ -308,113 +281,126 @@ class HighVolumeDemoSeeder extends Seeder
         }
     }
 
-    private function ensureMetricDefinitions(): void
+    private function seedCommunityData($users, $diseaseIds): void
     {
-        HealthMetric::seedDefaults();
-    }
+        $userIds = $users->pluck('id')->values();
+        $userCount = $userIds->count();
 
-    private function seedCommunityData($users, $diseaseIds): array
-    {
-        $topUserIds = $users->pluck('id')->take(5)->values();
-        $otherUserIds = $users->pluck('id')->slice(5)->values();
+        if ($userCount === 0) {
+            return;
+        }
 
+        $ownerCursor = 0;
+        $commenterCursor = 0;
         $posts = collect();
-        foreach ($users as $user) {
-            $isTop = $topUserIds->contains($user->id);
-            $postCount = $isTop ? random_int(7, 12) : random_int(1, 3);
+        $comments = collect();
 
-            for ($i = 0; $i < $postCount; $i++) {
+        foreach ($diseaseIds as $diseaseId) {
+            $postCountForDisease = random_int(3, 7);
+
+            for ($i = 0; $i < $postCountForDisease; $i++) {
+                $ownerId = $userIds[$ownerCursor % $userCount];
+                $ownerCursor++;
+
                 $post = Post::factory()->create([
-                    'user_id' => $user->id,
-                    'disease_id' => $diseaseIds->random(),
+                    'user_id' => $ownerId,
+                    'disease_id' => $diseaseId,
+                    'is_approved' => random_int(1, 100) <= 80,
+                    'is_reported' => random_int(1, 100) <= 8,
+                    'description' => fake()->paragraphs(random_int(2, 4), true),
+                    'created_at' => now()->subDays(random_int(0, 180))->subMinutes(random_int(0, 720)),
                 ]);
+
                 $posts->push($post);
             }
         }
 
-        $comments = collect();
-        $userIds = $users->pluck('id')->values();
-
         foreach ($posts as $post) {
-            $isTopPostOwner = $topUserIds->contains($post->user_id);
-            $commentCount = $isTopPostOwner ? random_int(3, 7) : random_int(0, 2);
+            // Pending (not approved) posts must not have any reactions, comments, or starred flags.
+            if (!$post->is_approved) {
+                continue;
+            }
 
+            $nonOwnerIds = $userIds->reject(fn ($id) => $id === $post->user_id)->values();
+            if ($nonOwnerIds->isEmpty()) {
+                continue;
+            }
+
+            $commentCount = random_int(2, 6);
             for ($i = 0; $i < $commentCount; $i++) {
-                $preferTopEngagers = random_int(1, 100) <= 80;
-                $commenterPool = $preferTopEngagers && $topUserIds->isNotEmpty()
-                    ? $topUserIds
-                    : $userIds;
-
-                $commenterId = $commenterPool
-                    ->reject(fn ($id) => $id === $post->user_id)
-                    ->values()
-                    ->whenEmpty(fn ($collection) => $userIds)
-                    ->random();
+                $commenterId = $nonOwnerIds[$commenterCursor % $nonOwnerIds->count()];
+                $commenterCursor++;
 
                 $comment = Comment::factory()->create([
                     'post_id' => $post->id,
                     'user_id' => $commenterId,
+                    'comment_details' => fake()->sentences(random_int(1, 3), true),
+                    'created_at' => now()->subDays(random_int(0, 150))->subMinutes(random_int(0, 600)),
                 ]);
+
                 $comments->push($comment);
             }
 
-            $possibleLikers = $userIds->reject(fn ($id) => $id === $post->user_id)->values();
-            $topLikers = $possibleLikers->intersect($topUserIds)->values()->shuffle();
-            $otherLikers = $possibleLikers->intersect($otherUserIds)->values()->shuffle();
+            $starUsers = $nonOwnerIds->shuffle()->take(random_int(0, 3))->values();
+            foreach ($starUsers as $starUserId) {
+                PostLike::query()->firstOrCreate(
+                    [
+                        'post_id' => $post->id,
+                        'user_id' => $starUserId,
+                    ],
+                    [
+                        'is_starred' => true,
+                    ]
+                );
+            }
 
-            $topLikeCount = min(
-                $topLikers->count(),
-                $isTopPostOwner ? random_int(2, 5) : random_int(1, 3)
-            );
-            $otherLikeCount = min(
-                $otherLikers->count(),
-                $isTopPostOwner ? random_int(0, 2) : random_int(0, 1)
-            );
+            $likePool = $nonOwnerIds->diff($starUsers)->values();
+            if ($likePool->isNotEmpty()) {
+                $likeCount = random_int(1, min(7, $likePool->count()));
+                $likeUsers = $likePool->shuffle()->take($likeCount);
 
-            $likers = $topLikers->take($topLikeCount)
-                ->merge($otherLikers->take($otherLikeCount))
-                ->shuffle()
-                ->values();
-
-            foreach ($likers as $likerId) {
-                PostLike::query()->firstOrCreate([
-                    'post_id' => $post->id,
-                    'user_id' => $likerId,
-                ]);
+                foreach ($likeUsers as $likeUserId) {
+                    PostLike::query()->firstOrCreate(
+                        [
+                            'post_id' => $post->id,
+                            'user_id' => $likeUserId,
+                        ],
+                        [
+                            'is_starred' => false,
+                        ]
+                    );
+                }
             }
         }
 
         foreach ($comments as $comment) {
-            $possibleLikers = $userIds->reject(fn ($id) => $id === $comment->user_id)->values();
-            $topLikers = $possibleLikers->intersect($topUserIds)->values()->shuffle();
-            $otherLikers = $possibleLikers->intersect($otherUserIds)->values()->shuffle();
-            $isTopCommentOwner = $topUserIds->contains($comment->user_id);
+            $nonCommenterIds = $userIds->reject(fn ($id) => $id === $comment->user_id)->values();
+            if ($nonCommenterIds->isEmpty()) {
+                continue;
+            }
 
-            $topLikeCount = min(
-                $topLikers->count(),
-                $isTopCommentOwner ? random_int(1, 4) : random_int(1, 2)
-            );
-            $otherLikeCount = min(
-                $otherLikers->count(),
-                $isTopCommentOwner ? random_int(0, 1) : random_int(0, 1)
-            );
+            $likeCount = random_int(0, min(4, $nonCommenterIds->count()));
+            $commentLikeUsers = $nonCommenterIds->shuffle()->take($likeCount);
 
-            $likers = $topLikers->take($topLikeCount)
-                ->merge($otherLikers->take($otherLikeCount))
-                ->shuffle()
-                ->values();
-
-            foreach ($likers as $likerId) {
+            foreach ($commentLikeUsers as $likeUserId) {
                 CommentLike::query()->firstOrCreate([
                     'comment_id' => $comment->id,
-                    'user_id' => $likerId,
+                    'user_id' => $likeUserId,
                 ]);
             }
         }
 
-        // Refresh counter columns.
-        $postCommentCounts = Comment::query()->selectRaw('post_id, COUNT(*) as c')->groupBy('post_id')->pluck('c', 'post_id');
-        $postLikeCounts = PostLike::query()->selectRaw('post_id, COUNT(*) as c')->groupBy('post_id')->pluck('c', 'post_id');
+        $postCommentCounts = Comment::query()
+            ->selectRaw('post_id, COUNT(*) as c')
+            ->groupBy('post_id')
+            ->pluck('c', 'post_id');
+
+        $postLikeCounts = PostLike::query()
+            ->where('is_starred', false)
+            ->selectRaw('post_id, COUNT(*) as c')
+            ->groupBy('post_id')
+            ->pluck('c', 'post_id');
+
         foreach ($posts as $post) {
             $post->update([
                 'comment_count' => (int) ($postCommentCounts[$post->id] ?? 0),
@@ -422,55 +408,96 @@ class HighVolumeDemoSeeder extends Seeder
             ]);
         }
 
-        $commentLikeCounts = CommentLike::query()->selectRaw('comment_id, COUNT(*) as c')->groupBy('comment_id')->pluck('c', 'comment_id');
+        $commentLikeCounts = CommentLike::query()
+            ->selectRaw('comment_id, COUNT(*) as c')
+            ->groupBy('comment_id')
+            ->pluck('c', 'comment_id');
+
         foreach ($comments as $comment) {
             $comment->update(['like_count' => (int) ($commentLikeCounts[$comment->id] ?? 0)]);
         }
-
-        return [$posts, $comments];
     }
 
     private function seedMailings($users): void
     {
-        $topUserIds = $users->pluck('id')->take(5)->values();
-        $otherUserIds = $users->pluck('id')->slice(5)->values();
-        $allUserIds = $users->pluck('id')->values();
+        $userIds = $users->pluck('id')->values();
+        if ($userIds->count() < 2) {
+            return;
+        }
 
-        $healthSubjects = [
-            'Blood pressure follow-up', 'Diabetes management reminder', 'Heart health check-in',
-            'Medication adherence support', 'Nutrition and hydration tips', 'Sleep and stress guidance',
-            'Asthma symptom update', 'Kidney function report reminder', 'Routine wellness consultation',
-            'Exercise and mobility check', 'Fever and symptom monitoring', 'Lab report interpretation',
+        $subjects = [
+            'Follow-up on your symptoms',
+            'Medication timing reminder',
+            'Weekly wellness plan',
+            'Diet and hydration check',
+            'Lab report discussion',
+            'Blood pressure tracking note',
+            'Community support update',
+            'Appointment preparation tips',
+            'Sleep and stress routine',
+            'Exercise progress check',
+            'Recovery milestone review',
+            'Preventive care suggestions',
+        ];
+
+        $messageOpeners = [
+            'I reviewed your recent health activity and wanted to share a quick update.',
+            'Your latest records show a pattern worth monitoring this week.',
+            'Thanks for sharing your logs. Here is a concise recommendation.',
+            'This message summarizes your current plan and next steps.',
+        ];
+
+        $messagePlans = [
+            'Please continue your medicines as prescribed and record each dose on time.',
+            'Maintain hydration and keep your sleep routine consistent for the next few days.',
+            'Track blood pressure and blood glucose twice daily and avoid skipped entries.',
+            'If any symptom worsens, contact your physician and seek urgent care if needed.',
+            'Focus on balanced meals and light physical activity unless advised otherwise.',
         ];
 
         $rows = [];
-        $totalMailings = 160;
+        $totalMailings = 260;
+        $senderCursor = 0;
 
-        for ($i = 1; $i <= $totalMailings; $i++) {
-            $isDraft = $i > 140;
+        for ($i = 0; $i < $totalMailings; $i++) {
+            $senderId = $userIds[$senderCursor % $userIds->count()];
+            $senderCursor++;
 
-            if ($isDraft) {
-                $senderId = $topUserIds->random();
-                $receiverId = random_int(1, 100) <= 70 ? null : $allUserIds->reject(fn ($id) => $id === $senderId)->random();
+            $roll = random_int(1, 100);
+            if ($roll <= 5) {
                 $status = 'draft';
+            } elseif ($roll <= 20) {
+                $status = 'archived';
+            } elseif ($roll <= 45) {
+                $status = 'read';
+            } elseif ($roll <= 70) {
+                $status = 'sent';
             } else {
-                $senderId = $i <= 110 ? $topUserIds->random() : $otherUserIds->random();
-                $receiverId = $allUserIds->reject(fn ($id) => $id === $senderId)->random();
-                $status = collect(['unread', 'read', 'archived', 'sent'])->random();
+                $status = 'unread';
             }
 
-            $createdAt = now()->subDays(random_int(0, 210))->subMinutes(random_int(0, 1440));
+            $receiverId = null;
+            if ($status !== 'draft') {
+                $receiverCandidates = $userIds->reject(fn ($id) => $id === $senderId)->values();
+                $receiverId = $receiverCandidates->isNotEmpty() ? $receiverCandidates->random() : null;
+            }
+
+            $isRead = in_array($status, ['read', 'archived', 'sent'], true);
+            $isStarred = random_int(1, 100) <= 14;
+            $createdAt = now()->subDays(random_int(0, 240))->subMinutes(random_int(0, 1400));
 
             $rows[] = [
                 'sender_id' => $senderId,
                 'receiver_id' => $receiverId,
-                'title' => $healthSubjects[array_rand($healthSubjects)] . ' #' . random_int(10, 999),
+                'title' => $subjects[array_rand($subjects)] . ' #' . random_int(100, 9999),
                 'message' => implode("\n\n", [
-                    'Dear patient, this is a health follow-up message regarding your recent condition and treatment plan.',
-                    'Please continue your prescribed medicines, maintain hydration, and track key metrics daily.',
-                    'If symptoms worsen, please contact your doctor or nearest hospital immediately.',
+                    $messageOpeners[array_rand($messageOpeners)],
+                    $messagePlans[array_rand($messagePlans)],
+                    $messagePlans[array_rand($messagePlans)],
                 ]),
                 'status' => $status,
+                'is_read' => $isRead,
+                'is_starred' => $isStarred,
                 'created_at' => $createdAt,
                 'updated_at' => $createdAt,
             ];
@@ -483,8 +510,12 @@ class HighVolumeDemoSeeder extends Seeder
 
     private function seedPushSubscriptions($users): void
     {
+        if (!Schema::hasTable('push_subscriptions')) {
+            return;
+        }
+
         $rows = [];
-        foreach ($users->take(18) as $user) {
+        foreach ($users->take(14) as $user) {
             $rows[] = [
                 'subscribable_type' => User::class,
                 'subscribable_id' => $user->id,
@@ -497,6 +528,8 @@ class HighVolumeDemoSeeder extends Seeder
             ];
         }
 
-        DB::table('push_subscriptions')->insert($rows);
+        foreach (array_chunk($rows, 500) as $chunk) {
+            DB::table('push_subscriptions')->insert($chunk);
+        }
     }
 }

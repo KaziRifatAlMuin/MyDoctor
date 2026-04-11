@@ -9,7 +9,7 @@
         <div class="col-lg-6 d-flex align-items-center justify-content-center p-5" style="background: #ffffff;">
             <div class="w-100" style="max-width: 500px;">
                 <div class="text-center mb-5">
-                    <img src="{{ asset('images/logos/applogo.jpg') }}" alt="My Doctor" height="60" class="mb-3">
+                    <img src="{{ asset('images/logos/applogo.png') }}" alt="My Doctor" height="60" class="mb-3">
                     <h2 class="fw-bold text-primary">Welcome Back</h2>
                     <p class="text-muted">Please login to your account</p>
                 </div>

@@ -43,8 +43,11 @@ class RegisterController extends Controller
 
         $user = $this->create($request->all());
 
-        // Auto login after registration (optional - remove if you want manual login)
-        auth()->login($user);
+        // Auto login after registration. Honor an optional "remember" checkbox if provided.
+        auth()->login($user, $request->filled('remember'));
+
+        // Regenerate session to prevent fixation after login
+        $request->session()->regenerate();
 
         return redirect()->to($this->resolveRedirectPath($request, $this->redirectTo));
     }

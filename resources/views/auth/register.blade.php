@@ -9,7 +9,7 @@
         <div class="col-lg-7 d-flex align-items-center justify-content-center p-5" style="background: #ffffff;">
             <div class="w-100" style="max-width: 700px;">
                 <div class="text-center mb-4">
-                    <img src="{{ asset('images/logos/applogo.jpg') }}" alt="My Doctor" height="60" class="mb-3">
+                    <img src="{{ asset('images/logos/applogo.png') }}" alt="My Doctor" height="60" class="mb-3">
                     <h2 class="fw-bold text-primary">Create Account</h2>
                     <p class="text-muted">Join My Doctor today and take control of your health</p>
                 </div>

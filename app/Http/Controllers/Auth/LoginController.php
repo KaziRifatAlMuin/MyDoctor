@@ -53,9 +53,14 @@ class LoginController extends Controller
     public function logout(Request $request)
     {
         Auth::logout();
+        // Invalidate session and regenerate CSRF token to be safe
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect('/');
+
+        // Also clear the session cookie to help browsers forget session id
+        $cookie = cookie()->forget(config('session.cookie'));
+
+        return redirect('/')->withCookies([$cookie]);
     }
 
     private function resolveRedirectPath(Request $request, string $fallback = '/'): string

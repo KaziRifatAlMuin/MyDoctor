@@ -2,20 +2,58 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
+    @php
+        $rawPageTitle = trim((string) View::yieldContent('title'));
+        if ($rawPageTitle === '') {
+            $segments = array_filter(request()->segments(), function ($s) {
+                return $s !== null && $s !== '' && !is_numeric($s);
+            });
+            if (!empty($segments)) {
+                $joined = implode(' ', $segments);
+                $rawPageTitle = \Illuminate\Support\Str::title(str_replace(['-', '_'], ' ', $joined));
+            } else {
+                $rawPageTitle = 'Home';
+            }
+        }
+
+        $normalizedPageTitle = preg_replace('/\s*-\s*My\s*Doctor\s*$/i', '', $rawPageTitle) ?? $rawPageTitle;
+        $normalizedPageTitle = preg_replace('/\s*-\s*MyDoctor\s*$/i', '', $normalizedPageTitle) ?? $normalizedPageTitle;
+        $normalizedPageTitle = trim($normalizedPageTitle);
+        $seoTitle = ($normalizedPageTitle !== '' ? $normalizedPageTitle : 'Home') . ' - MyDoctor';
+
+        $seoDescription = trim((string) View::yieldContent('meta_description', 'MyDoctor is a smart healthcare companion for tracking health metrics, medicine schedules, reminders, and community support.'));
+        $seoKeywords = trim((string) View::yieldContent('meta_keywords', 'MyDoctor, healthcare app, medicine reminder, health tracking, symptom tracking, disease management, Bangladesh health'));
+        $seoImage = trim((string) View::yieldContent('meta_image', asset('images/logos/applogo_white.jpg')));
+        $seoUrl = url()->current();
+    @endphp
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="vapid-public-key" content="{{ env('VAPID_PUBLIC_KEY') }}">
-    <link rel="icon" type="image/png" href="{{ asset('images/logos/applogo.png') }}">
-    <link rel="shortcut icon" href="{{ asset('images/logos/applogo.png') }}" type="image/x-icon">
-    <title>
-        @hasSection('title')
-            @yield('title') - {{ __('ui.meta.platform') }}
-        @else
-            {{ __('ui.meta.app_name') }} - {{ __('ui.meta.platform') }}
-        @endif
-    </title>
+    <title>{{ $seoTitle }}</title>
+    <meta name="description" content="{{ $seoDescription }}">
+    <meta name="keywords" content="{{ $seoKeywords }}">
+    <meta name="author" content="MyDoctor">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="{{ $seoUrl }}">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="MyDoctor">
+    <meta property="og:title" content="{{ $seoTitle }}">
+    <meta property="og:description" content="{{ $seoDescription }}">
+    <meta property="og:url" content="{{ $seoUrl }}">
+    <meta property="og:image" content="{{ $seoImage }}">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $seoTitle }}">
+    <meta name="twitter:description" content="{{ $seoDescription }}">
+    <meta name="twitter:image" content="{{ $seoImage }}">
+
+    <link rel="icon" type="image/jpeg" href="{{ asset('images/logos/applogo_white.jpg') }}">
+    <link rel="shortcut icon" href="{{ asset('images/logos/applogo_white.jpg') }}" type="image/jpeg">
+    <link rel="apple-touch-icon" href="{{ asset('images/logos/applogo_white.jpg') }}">
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
