@@ -41,7 +41,7 @@ class CommunityController extends Controller
                 'posts as latest_post_at' => function ($q) {
                     $q->where('is_approved', true);
                 }
-            ], 'created_at')
+            ], 'approved_at')
             ->when(!empty($userStarredDiseaseIds), function ($q) use ($userStarredDiseaseIds) {
                 $ids = implode(',', array_map('intval', $userStarredDiseaseIds));
                 $q->orderByRaw("CASE WHEN id IN ({$ids}) THEN 0 ELSE 1 END");
@@ -119,14 +119,14 @@ class CommunityController extends Controller
                 $query->where('disease_id', $diseaseId);
             }
 
-            // Prioritize posts matching the current user's diseases, then newest.
+            // Prioritize posts matching the current user's diseases, then newest by approval time.
             if (!empty($userStarredDiseaseIds)) {
                 $ids = implode(',', array_map('intval', $userStarredDiseaseIds));
                 $query->orderByRaw("CASE WHEN disease_id IN ({$ids}) THEN 0 ELSE 1 END");
             }
 
-            // Get paginated posts (10 per page)
-            $posts = $query->orderByDesc('created_at')->paginate(10);
+            // Order by approval time (most recently approved first), then fallback to creation time.
+            $posts = $query->orderByDesc('approved_at')->orderByDesc('created_at')->paginate(10);
             
             // Get all diseases with post counts for the filter sidebar
                         $diseases = Disease::withCount([
@@ -241,7 +241,7 @@ class CommunityController extends Controller
                 $query->where('disease_id', $diseaseId);
             }
 
-            $posts = $query->latest()->paginate(10)->withQueryString();
+            $posts = $query->orderByDesc('approved_at')->orderByDesc('created_at')->paginate(10)->withQueryString();
 
             $diseases = Disease::withCount([
                 'posts as posts_count' => function ($q) use ($userId) {
@@ -1145,7 +1145,13 @@ class CommunityController extends Controller
                 ], 403);
             }
 
-            $post->update(['is_approved' => true]);
+            $post->update([
+                'is_approved' => true,
+                'approved_at' => now(),
+            ]);
+
+            // Reload to ensure relations are fresh before notifying
+            $post->refresh();
             $this->notifyStarredDiseaseFollowers($post);
 
             return response()->json([

@@ -302,13 +302,17 @@ class HighVolumeDemoSeeder extends Seeder
                 $ownerId = $userIds[$ownerCursor % $userCount];
                 $ownerCursor++;
 
+                $createdAt = now()->subDays(random_int(0, 180))->subMinutes(random_int(0, 720));
+                $isApproved = random_int(1, 100) <= 80;
+
                 $post = Post::factory()->create([
                     'user_id' => $ownerId,
                     'disease_id' => $diseaseId,
-                    'is_approved' => random_int(1, 100) <= 80,
+                    'is_approved' => $isApproved,
+                    'approved_at' => $isApproved ? $createdAt : null,
                     'is_reported' => random_int(1, 100) <= 8,
                     'description' => fake()->paragraphs(random_int(2, 4), true),
-                    'created_at' => now()->subDays(random_int(0, 180))->subMinutes(random_int(0, 720)),
+                    'created_at' => $createdAt,
                 ]);
 
                 $posts->push($post);

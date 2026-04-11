@@ -19,12 +19,20 @@
         $normalizedPageTitle = preg_replace('/\s*-\s*My\s*Doctor\s*$/i', '', $rawPageTitle) ?? $rawPageTitle;
         $normalizedPageTitle = preg_replace('/\s*-\s*MyDoctor\s*$/i', '', $normalizedPageTitle) ?? $normalizedPageTitle;
         $normalizedPageTitle = trim($normalizedPageTitle);
-        $seoTitle = ($normalizedPageTitle !== '' ? $normalizedPageTitle : 'Home') . ' - MyDoctor';
 
-        $seoDescription = trim((string) View::yieldContent('meta_description', 'MyDoctor is a smart healthcare companion for tracking health metrics, medicine schedules, reminders, and community support.'));
+        // Site-wide SEO defaults. Use config('app.url') or fall back to the hosting domain provided.
+        $siteName = config('app.name', 'MyDoctor');
+        $siteBase = rtrim(config('app.url', env('APP_URL', 'https://mydoctor.rifatalmuin.com')), '/');
+
+        $seoTitle = ($normalizedPageTitle !== '' ? $normalizedPageTitle : 'Home') . ' - ' . $siteName;
+
+        $seoDescription = trim((string) View::yieldContent('meta_description', $siteName . ' is a smart healthcare companion for tracking health metrics, medicine schedules, reminders, and community support.'));
         $seoKeywords = trim((string) View::yieldContent('meta_keywords', 'MyDoctor, healthcare app, medicine reminder, health tracking, symptom tracking, disease management, Bangladesh health'));
-        $seoImage = trim((string) View::yieldContent('meta_image', asset('images/logos/applogo_white.jpg')));
-        $seoUrl = url()->current();
+
+        // Ensure meta image and canonical URL are absolute and use the configured site base as fallback.
+        $rawSeoImage = trim((string) View::yieldContent('meta_image', asset('images/logos/applogo_white.jpg')));
+        $seoImage = \Illuminate\Support\Str::startsWith($rawSeoImage, ['http://', 'https://']) ? $rawSeoImage : $siteBase . '/' . ltrim($rawSeoImage, '/');
+        $seoUrl = $siteBase . request()->getRequestUri();
     @endphp
 
     <meta charset="UTF-8">

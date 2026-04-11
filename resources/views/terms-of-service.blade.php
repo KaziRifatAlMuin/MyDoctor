@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Terms of Service - My Doctor')
+@section('title', 'Terms of Service')
 
 @section('content')
     <div class="legal-wrap">

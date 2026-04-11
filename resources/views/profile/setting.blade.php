@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Profile Settings - My Doctor')
+@section('title', 'Profile Settings')
 
 @push('styles')
     <style>

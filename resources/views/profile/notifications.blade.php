@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Notification Preferences - My Doctor')
+@section('title', 'Notification Preferences')
 
 @section('content')
 <div class="container py-4">

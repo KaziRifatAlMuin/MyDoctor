@@ -31,7 +31,11 @@
                 <div>
                     <h6 style="font-size: 15px; font-weight: 600; margin: 0; padding: 0; color: #1a1a1a;">{{ $displayName }}</h6>
                     <div style="display: flex; align-items: center; gap: 12px; font-size: 12px; color: #65676b; margin: 0; padding: 0;">
-                        <span><i class="far fa-clock me-1"></i>{{ $post->created_at->diffForHumans() }}</span>
+                        @if($post->approved_at)
+                            <span><i class="far fa-clock me-1"></i>{{ $post->approved_at->diffForHumans() }}</span>
+                        @else
+                            <span><i class="far fa-clock me-1"></i>{{ $post->created_at->diffForHumans() }}</span>
+                        @endif
                         @if($post->is_edited)
                             <span style="font-size:11px; font-weight:600; color:#65676b; background:#f0f2f5; border-radius:12px; padding:4px 8px;">Edited</span>
                         @endif

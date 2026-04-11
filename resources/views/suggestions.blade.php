@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Smart Suggestions - My Doctor')
+@section('title', 'Smart Suggestions')
 
 @push('styles')
     <style>

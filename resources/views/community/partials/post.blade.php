@@ -37,7 +37,11 @@
             <div class="user-info" style="min-width:0;flex:1;">
                 <h6 class="user-name" style="font-size:15px;font-weight:600;margin:0;padding:0;color:#1a1a1a;cursor:pointer;hover:color:#1877f2;text-decoration:underline;">{{ $displayName }}</h6>
                 <div class="post-meta" style="display:flex;align-items:center;gap:12px;font-size:12px;color:#65676b;margin:0;padding:0;flex-wrap:wrap;">
-                    <span class="post-time"><i class="far fa-clock me-1"></i>{{ $post->created_at->diffForHumans() }}</span>
+                    @if($post->approved_at)
+                        <span class="post-time"><i class="far fa-clock me-1"></i>{{ $post->approved_at->diffForHumans() }}</span>
+                    @else
+                        <span class="post-time"><i class="far fa-clock me-1"></i>{{ $post->created_at->diffForHumans() }}</span>
+                    @endif
                     <a href="{{ route('community.post.show', $post) }}" class="text-decoration-none" style="font-weight:600; color:#1877f2;">
                         Open Post
                     </a>
@@ -261,31 +265,58 @@
     </div>
 
     <!-- Post Action Buttons -->
-    <div class="post-action-buttons" style="display:flex;gap:8px;margin-top:12px;padding:0;">
-        @auth
-            @if(! $isAdmin)
-                <button class="post-action-btn like-btn {{ $userLiked ? 'liked' : '' }}" onclick="toggleLike({{ $post->id }},this)" id="like-btn-{{ $post->id }}" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#1a1a1a;font-size:14px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
-                    <i class="{{ $userLiked ? 'fas' : 'far' }} fa-heart"></i>
-                    <span class="like-count">{{ $post->like_count }}</span>
-                </button>
+    @php
+        // Detect admin pending posts listing by route name or passed flags
+        $isPendingAdminView = request()->routeIs('admin.community.posts.pending') || (isset($isAdminCommunity) && isset($isPendingPage) && $isAdminCommunity && $isPendingPage);
+    @endphp
 
+    <div class="post-action-buttons" style="display:flex;gap:8px;margin-top:12px;padding:0;">
+        @if($isPendingAdminView)
+            <button type="button" class="post-action-btn btn-preview" onclick="openPostModal({{ $post->id }})" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#1a1a1a;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;">
+                <i class="fas fa-eye"></i>
+                <span>Preview</span>
+            </button>
+
+            @auth
+                @if(Auth::user()->isAdmin())
+                    <button type="button" class="post-action-btn btn-approve" onclick="approvePost({{ $post->id }})" style="flex:1;padding:10px;border:none;border-radius:6px;background:#198754;color:white;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;">
+                        <i class="fas fa-check"></i>
+                        <span>Approve</span>
+                    </button>
+                    <button type="button" class="post-action-btn btn-reject" onclick="confirmDelete({{ $post->id }}, 'post')" style="flex:1;padding:10px;border:none;border-radius:6px;background:#dc3545;color:white;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;">
+                        <i class="fas fa-trash"></i>
+                        <span>Reject & Delete</span>
+                    </button>
+                @else
+                    <div class="post-action-btn" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#6b7280;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;">Pending moderation</div>
+                @endif
+            @endauth
+        @else
+            @auth
+                @if(! $isAdmin)
+                    <button class="post-action-btn like-btn {{ $userLiked ? 'liked' : '' }}" onclick="toggleLike({{ $post->id }},this)" id="like-btn-{{ $post->id }}" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#1a1a1a;font-size:14px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
+                        <i class="{{ $userLiked ? 'fas' : 'far' }} fa-heart"></i>
+                        <span class="like-count">{{ $post->like_count }}</span>
+                    </button>
+
+                @else
+                    <div class="post-action-btn" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f8f6ff;color:#4b5563;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;">
+                        <i class="far fa-heart"></i>
+                        <span class="like-count">{{ $post->like_count }}</span>
+                    </div>
+                @endif
             @else
-                <div class="post-action-btn" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f8f6ff;color:#4b5563;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;">
+                <a href="{{ route('login') }}" class="post-action-btn" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#1a1a1a;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
                     <i class="far fa-heart"></i>
                     <span class="like-count">{{ $post->like_count }}</span>
-                </div>
-            @endif
-        @else
-            <a href="{{ route('login') }}" class="post-action-btn" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#1a1a1a;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
-                <i class="far fa-heart"></i>
-                <span class="like-count">{{ $post->like_count }}</span>
-            </a>
-        @endauth
+                </a>
+            @endauth
 
-        <div class="post-action-btn" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#1a1a1a;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:default;">
-            <i class="far fa-comment"></i>
-            <span class="comment-count">{{ $post->comment_count > 0 ? 'Comments' : 'No comments' }}</span>
-        </div>
+            <div class="post-action-btn" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#1a1a1a;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:default;">
+                <i class="far fa-comment"></i>
+                <span class="comment-count">{{ $post->comment_count > 0 ? 'Comments' : 'No comments' }}</span>
+            </div>
+        @endif
     </div>
 
     <!-- Comments Section -->
