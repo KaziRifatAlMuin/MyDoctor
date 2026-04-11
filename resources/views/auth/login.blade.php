@@ -14,7 +14,7 @@
                     <p class="text-muted">Please login to your account</p>
                 </div>
 
-                <form method="POST" action="{{ route('login') }}">
+                <form method="POST" action="{{ route('login', [], false) }}">
                     @csrf
                     <input type="hidden" name="redirect" value="{{ request('redirect') }}">
 
@@ -77,7 +77,7 @@
                             </label>
                         </div>
                         @if (Route::has('password.request'))
-                            <a href="{{ route('password.request') }}" class="text-decoration-none text-primary">
+                            <a href="{{ route('password.request', [], false) }}" class="text-decoration-none text-primary">
                                 Forgot Password?
                             </a>
                         @endif
@@ -91,27 +91,11 @@
                         </button>
                     </div>
 
-                    <!-- Social Login -->
-                    <div class="text-center mb-4">
-                        <p class="text-muted mb-3">Or continue with</p>
-                        <div class="d-flex justify-content-center gap-3">
-                            <a href="#" class="btn btn-outline-danger btn-lg rounded-circle p-3" style="width: 60px; height: 60px;">
-                                <i class="fab fa-google fa-lg"></i>
-                            </a>
-                            <a href="#" class="btn btn-outline-primary btn-lg rounded-circle p-3" style="width: 60px; height: 60px;">
-                                <i class="fab fa-facebook-f fa-lg"></i>
-                            </a>
-                            <a href="#" class="btn btn-outline-info btn-lg rounded-circle p-3" style="width: 60px; height: 60px;">
-                                <i class="fab fa-twitter fa-lg"></i>
-                            </a>
-                        </div>
-                    </div>
-
                     <!-- Register Link -->
                     <div class="text-center">
                         <p class="text-muted mb-0">
                             Don't have an account? 
-                            <a href="{{ route('register') }}" class="text-primary fw-bold text-decoration-none">
+                            <a href="{{ route('register', [], false) }}" class="text-primary fw-bold text-decoration-none">
                                 Create Account <i class="fas fa-arrow-right ms-1"></i>
                             </a>
                         </p>

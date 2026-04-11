@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', __('ui.auto.Home'))
+@section('main_content_class', 'p-0')
 
 @section('content')
 @php
@@ -14,20 +15,21 @@
     ];
 
     $isAuthenticated = auth()->check();
-    $loginUrl = route('login');
+    $loginUrl = route('login', [], false);
     $protectUrl = static function (string $url) use ($isAuthenticated, $loginUrl): string {
         return $isAuthenticated ? $url : $loginUrl . '?redirect=' . urlencode($url);
     };
 
-    $communityUrl = $protectUrl(route('community.landing'));
-    $medicineReminderUrl = $protectUrl(route('medicine.reminders'));
-    $healthTrackingUrl = $protectUrl(route('health.tracking'));
-    $healthLogsUrl = $protectUrl(route('health') . '#logs');
-    $healthSymptomsUrl = $protectUrl(route('health.symptoms'));
-    $healthSuggestionsUrl = $protectUrl(route('health.suggestions'));
-    $healthTipsUrl = $protectUrl(route('health.tips'));
-    $ctaPrimaryUrl = $isAuthenticated ? route('health.tracking') : ($loginUrl . '?redirect=' . urlencode(route('dashboard')));
-    $ctaSecondaryUrl = $isAuthenticated ? route('community.home') : ($loginUrl . '?redirect=' . urlencode(route('community.home')));
+    $communityUrl = $protectUrl(route('community.landing', [], false));
+    $medicineReminderUrl = $protectUrl(route('medicine.reminders', [], false));
+    $healthTrackingUrl = $protectUrl(route('health', [], false));
+    $healthLogsUrl = $protectUrl(route('health', [], false) . '#logs');
+    $healthSymptomsUrl = $protectUrl(route('health', [], false) . '#symptomsPane');
+    $healthSuggestionsUrl = $protectUrl(route('suggestions', [], false));
+    $healthTipsUrl = $protectUrl(route('help', [], false));
+    $programsUrl = $protectUrl(route('appointments', [], false));
+    $ctaPrimaryUrl = $isAuthenticated ? route('health', [], false) : ($loginUrl . '?redirect=' . urlencode(route('dashboard', [], false)));
+    $ctaSecondaryUrl = $isAuthenticated ? route('community.home', [], false) : ($loginUrl . '?redirect=' . urlencode(route('community.home', [], false)));
 @endphp
 
 <div class="home-next">
@@ -164,10 +166,10 @@
                     @auth
                         <button onclick="toggleChatbot()" class="feature-neo feature-neo-link h-100 d-block w-100 border-0 text-start reveal-block" data-tilt-card>
                     @else
-                        <a href="{{ route('login') }}?redirect={{ urlencode(request()->fullUrl()) }}" class="feature-neo feature-neo-link h-100 d-block reveal-block" data-tilt-card>
+                        <a href="{{ route('login', [], false) }}?redirect={{ urlencode(request()->fullUrl()) }}" class="feature-neo feature-neo-link h-100 d-block reveal-block" data-tilt-card>
                     @endauth
                         <span class="feature-chip">AI</span>
-                        <div class="feature-icon"><i class="fas fa-robot"></i></div>
+                        <div class="feature-icon"><i class="fas fa-user-md"></i></div>
                         <h5>AI Health Assistant</h5>
                         <p>Ask symptom and condition questions instantly.</p>
                         <small class="feature-meta"><i class="fas fa-shield-alt me-1"></i>Safe, structured guidance</small>
@@ -210,11 +212,11 @@
 
                 <div class="col-md-6 col-xl-3">
                     <a href="{{ $healthTipsUrl }}" class="feature-neo feature-neo-link h-100 d-block reveal-block" data-tilt-card>
-                        <span class="feature-chip">Education</span>
-                        <div class="feature-icon"><i class="fas fa-lightbulb"></i></div>
-                        <h5>Health Tips</h5>
-                        <p>Daily guidance to maintain a healthier routine.</p>
-                        <small class="feature-meta"><i class="fas fa-seedling me-1"></i>Habits that actually stick</small>
+                        <span class="feature-chip">Help</span>
+                        <div class="feature-icon"><i class="fas fa-life-ring"></i></div>
+                        <h5>Help & Support</h5>
+                        <p>Find guides, FAQs and contact options for assistance.</p>
+                        <small class="feature-meta"><i class="fas fa-life-ring me-1"></i>Get help</small>
                     </a>
                 </div>
             </div>
@@ -227,30 +229,42 @@
                 <span class="section-kicker">How It Works</span>
                 <h2 class="section-title">Your wellness loop in four steps</h2>
             </div>
-            <div class="row g-3 g-md-4">
-                <div class="col-md-6 col-xl-3 reveal-block">
+            <div class="row g-3 g-md-4 journey-grid">
+                <div class="col-md-6 col-xl-3 reveal-block journey-step">
                     <div class="journey-card h-100">
+                        <div class="journey-badge journey-badge-profile" aria-hidden="true">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
                         <span class="journey-num">01</span>
                         <h6>Create profile</h6>
                         <p>Start in under a minute and set baseline details.</p>
                     </div>
                 </div>
-                <div class="col-md-6 col-xl-3 reveal-block">
+                <div class="col-md-6 col-xl-3 reveal-block journey-step">
                     <div class="journey-card h-100">
+                        <div class="journey-badge journey-badge-track" aria-hidden="true">
+                            <i class="fas fa-wave-square"></i>
+                        </div>
                         <span class="journey-num">02</span>
                         <h6>Track daily data</h6>
                         <p>Log metrics, symptoms, medicine intake, and files.</p>
                     </div>
                 </div>
-                <div class="col-md-6 col-xl-3 reveal-block">
+                <div class="col-md-6 col-xl-3 reveal-block journey-step">
                     <div class="journey-card h-100">
+                        <div class="journey-badge journey-badge-insights" aria-hidden="true">
+                            <i class="fas fa-brain"></i>
+                        </div>
                         <span class="journey-num">03</span>
                         <h6>Review insights</h6>
                         <p>Use trends and suggestions to optimize your routine.</p>
                     </div>
                 </div>
-                <div class="col-md-6 col-xl-3 reveal-block">
+                <div class="col-md-6 col-xl-3 reveal-block journey-step">
                     <div class="journey-card h-100">
+                        <div class="journey-badge journey-badge-consistency" aria-hidden="true">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
                         <span class="journey-num">04</span>
                         <h6>Improve consistency</h6>
                         <p>Rely on reminders and community motivation every day.</p>
@@ -282,19 +296,33 @@
 @push('styles')
 <style>
     .home-next {
-        --tone-bg: #f5fbfa;
+        /* use same purple gradient family as auth pages for accents */
+        --admin-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --tone-bg: #ffffff; /* make background light */
         --tone-surface: #ffffff;
-        --tone-main: #0f766e;
-        --tone-main-dark: #0b5e57;
-        --tone-accent: #0891b2;
-        --tone-text: #10393a;
-        --tone-muted: #4e7070;
-        --tone-border: rgba(15, 118, 110, 0.16);
-        background:
-            radial-gradient(circle at 10% 8%, rgba(16, 185, 129, 0.13), transparent 32%),
-            radial-gradient(circle at 90% 92%, rgba(14, 165, 233, 0.12), transparent 32%),
-            var(--tone-bg);
+        --tone-main: #4f46e5;
+        --tone-main-dark: #4b306a;
+        --tone-accent: #7c3aed;
+        --tone-text: #2b2a33;
+        --tone-muted: #6b7280;
+        --tone-border: rgba(111, 66, 193, 0.08);
+        background: var(--tone-bg);
         color: var(--tone-text);
+        min-height: 100vh;
+        width: 100%;
+        position: relative;
+        isolation: isolate;
+    }
+
+    .home-next::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+            radial-gradient(circle at 14% 12%, rgba(255, 255, 255, 0.22), transparent 34%),
+            radial-gradient(circle at 86% 88%, rgba(255, 255, 255, 0.18), transparent 34%);
+        pointer-events: none;
+        z-index: -1;
     }
 
     .hero-shell {
@@ -305,9 +333,10 @@
         position: relative;
         border-radius: 32px;
         padding: 2rem 1.25rem;
-        background: linear-gradient(130deg, rgba(7, 64, 61, 0.96), rgba(12, 94, 87, 0.92));
-        color: #e9fffc;
-        box-shadow: 0 24px 50px rgba(5, 51, 48, 0.25);
+        background: var(--tone-surface);
+        color: var(--tone-text);
+        box-shadow: 0 18px 40px rgba(75, 50, 120, 0.06);
+        border: 1px solid var(--tone-border);
         isolation: isolate;
     }
 
@@ -333,7 +362,7 @@
     .orb-a {
         width: 140px;
         height: 140px;
-        background: rgba(52, 211, 153, 0.45);
+        background: rgba(192, 132, 252, 0.46);
         top: -14px;
         left: 22px;
     }
@@ -341,7 +370,7 @@
     .orb-b {
         width: 190px;
         height: 190px;
-        background: rgba(45, 212, 191, 0.32);
+        background: rgba(168, 85, 247, 0.34);
         top: 20%;
         right: -30px;
         animation-delay: 1.4s;
@@ -350,7 +379,7 @@
     .orb-c {
         width: 120px;
         height: 120px;
-        background: rgba(14, 165, 233, 0.3);
+        background: rgba(129, 140, 248, 0.33);
         bottom: -30px;
         left: 35%;
         animation-delay: 0.6s;
@@ -363,15 +392,16 @@
         font-size: 0.78rem;
         letter-spacing: 0.11rem;
         text-transform: uppercase;
-        background: rgba(255, 255, 255, 0.12);
-        border: 1px solid rgba(255, 255, 255, 0.22);
+        background: rgba(118, 75, 162, 0.06);
+        border: 1px solid rgba(118, 75, 162, 0.12);
         border-radius: 999px;
         padding: 0.45rem 0.85rem;
+        color: var(--tone-main-dark);
     }
 
     .hero-kicker i {
         font-size: 0.48rem;
-        color: #6ee7d8;
+        color: var(--tone-main);
     }
 
     .hero-title {
@@ -382,34 +412,34 @@
     }
 
     .hero-subtitle {
-        color: rgba(224, 253, 249, 0.9);
+        color: var(--tone-main-dark);
         max-width: 58ch;
         font-size: 1rem;
     }
 
     .btn-teal {
-        background: linear-gradient(120deg, #34d399, #2dd4bf);
+        background: var(--admin-gradient);
         border: none;
-        color: #05312e;
+        color: #ffffff;
         font-weight: 700;
-        box-shadow: 0 10px 24px rgba(45, 212, 191, 0.28);
+        box-shadow: 0 10px 24px rgba(75, 0, 130, 0.35);
     }
 
     .btn-teal:hover {
-        color: #032726;
+        color: #ffffff;
         transform: translateY(-1px);
     }
 
     .btn-outline-teal {
-        border: 1px solid rgba(165, 243, 252, 0.65);
-        color: #e6fffb;
+        border: 1px solid rgba(255, 255, 255, 0.86);
+        color: #ffffff;
         font-weight: 600;
     }
 
     .btn-outline-teal:hover {
-        color: #083737;
-        background: #ccfbf1;
-        border-color: #ccfbf1;
+        color: #4b0082;
+        background: #ffffff;
+        border-color: #ffffff;
     }
 
     .hero-inline-stats {
@@ -419,8 +449,8 @@
     }
 
     .hero-inline-stat {
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(250, 250, 252, 1);
+        border: 1px solid var(--tone-border);
         border-radius: 14px;
         padding: 0.75rem 0.8rem;
     }
@@ -428,7 +458,7 @@
     .hero-inline-value {
         font-size: 1.2rem;
         font-weight: 800;
-        color: #a7f3d0;
+        color: var(--tone-main);
         line-height: 1;
     }
 
@@ -441,11 +471,11 @@
 
     .hero-insight-card {
         background: rgba(255, 255, 255, 0.9);
-        color: #113f3d;
+        color: #2f1a57;
         border-radius: 20px;
         padding: 1.1rem;
         border: 1px solid rgba(255, 255, 255, 0.8);
-        box-shadow: 0 14px 28px rgba(7, 64, 61, 0.2);
+        box-shadow: 0 14px 28px rgba(75, 29, 149, 0.2);
         transform-style: preserve-3d;
         transition: transform 220ms ease, box-shadow 220ms ease;
     }
@@ -459,8 +489,8 @@
     .badge-soft {
         font-size: 0.68rem;
         font-weight: 700;
-        color: #0f766e;
-        background: rgba(20, 184, 166, 0.16);
+        color: #6d28d9;
+        background: rgba(168, 85, 247, 0.18);
         border-radius: 999px;
         padding: 0.2rem 0.55rem;
     }
@@ -473,7 +503,7 @@
 
     .insight-kpi {
         background: #ffffff;
-        border: 1px solid rgba(8, 145, 178, 0.16);
+        border: 1px solid rgba(109, 40, 217, 0.16);
         border-radius: 12px;
         padding: 0.65rem;
     }
@@ -486,7 +516,7 @@
 
     .insight-kpi strong {
         font-size: 1.25rem;
-        color: #0f766e;
+        color: #6d28d9;
         font-weight: 800;
         line-height: 1;
     }
@@ -501,7 +531,7 @@
         width: 74px;
         height: 74px;
         border-radius: 50%;
-        background: conic-gradient(#0f766e calc(var(--adherence) * 1%), #d1f5f0 0);
+        background: conic-gradient(#7c3aed calc(var(--adherence) * 1%), #ede9fe 0);
         display: grid;
         place-items: center;
         position: relative;
@@ -521,7 +551,7 @@
         z-index: 1;
         font-weight: 800;
         font-size: 0.9rem;
-        color: #0f766e;
+        color: #6d28d9;
     }
 
     .ticker-wrap {
@@ -535,20 +565,20 @@
         border: 1px solid var(--tone-border);
         border-radius: 14px;
         padding: 0.7rem 0.85rem;
-        color: #194d4c;
+        color: #432b74;
         font-size: 0.86rem;
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        box-shadow: 0 8px 18px rgba(15, 118, 110, 0.08);
+        box-shadow: 0 8px 18px rgba(109, 40, 217, 0.1);
     }
 
     .ticker-item i {
-        color: #0f766e;
+        color: #6d28d9;
     }
 
     .ticker-item strong {
-        color: #0b5e57;
+        color: #4c1d95;
     }
 
     .section-head {
@@ -560,7 +590,7 @@
         font-size: 0.76rem;
         text-transform: uppercase;
         letter-spacing: 0.09rem;
-        color: #0d9488;
+        color: #7c3aed;
         font-weight: 700;
     }
 
@@ -569,16 +599,16 @@
         margin-bottom: 0;
         font-size: clamp(1.5rem, 3.2vw, 2.25rem);
         font-weight: 800;
-        color: #104a4b;
+        color: #3d1d73;
     }
 
     .feature-neo {
         position: relative;
         padding: 1rem 1rem 0.95rem;
         border-radius: 18px;
-        background: linear-gradient(165deg, rgba(255, 255, 255, 0.98), rgba(247, 254, 252, 0.95));
-        border: 1px solid rgba(15, 118, 110, 0.14);
-        box-shadow: 0 12px 30px rgba(15, 118, 110, 0.08);
+        background: linear-gradient(165deg, rgba(255, 255, 255, 0.99), rgba(250, 245, 255, 0.96));
+        border: 1px solid rgba(109, 40, 217, 0.16);
+        box-shadow: 0 12px 30px rgba(109, 40, 217, 0.1);
         overflow: hidden;
         transform-style: preserve-3d;
         transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
@@ -589,7 +619,7 @@
         position: absolute;
         inset: auto -10% -35% -10%;
         height: 110px;
-        background: radial-gradient(circle, rgba(45, 212, 191, 0.18), rgba(45, 212, 191, 0));
+        background: radial-gradient(circle, rgba(168, 85, 247, 0.2), rgba(168, 85, 247, 0));
         transition: opacity 220ms ease;
         opacity: 0;
         pointer-events: none;
@@ -598,8 +628,8 @@
     .feature-neo:hover,
     .feature-neo:focus-visible {
         transform: translateY(-5px);
-        box-shadow: 0 18px 36px rgba(15, 118, 110, 0.14);
-        border-color: rgba(15, 118, 110, 0.3);
+        box-shadow: 0 18px 36px rgba(109, 40, 217, 0.18);
+        border-color: rgba(109, 40, 217, 0.35);
     }
 
     .feature-neo:hover::after,
@@ -618,7 +648,7 @@
     }
 
     .feature-neo-link:focus-visible {
-        outline: 3px solid rgba(15, 118, 110, 0.25);
+        outline: 3px solid rgba(109, 40, 217, 0.28);
         outline-offset: 2px;
     }
 
@@ -628,9 +658,9 @@
         font-size: 0.7rem;
         text-transform: uppercase;
         letter-spacing: 0.08rem;
-        color: #0f766e;
+        color: #6d28d9;
         font-weight: 700;
-        background: rgba(15, 118, 110, 0.09);
+        background: rgba(109, 40, 217, 0.11);
         border-radius: 999px;
         padding: 0.25rem 0.6rem;
     }
@@ -641,10 +671,18 @@
         border-radius: 12px;
         display: grid;
         place-items: center;
-        background: linear-gradient(130deg, #14b8a6, #0ea5e9);
+        background: var(--admin-gradient);
         color: #ffffff;
         margin-bottom: 0.8rem;
-        box-shadow: 0 8px 18px rgba(14, 165, 233, 0.26);
+        box-shadow: 0 8px 18px rgba(168, 85, 247, 0.28);
+    }
+
+    .feature-icon-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 8px;
+        display: block;
     }
 
     .feature-neo h5 {
@@ -661,27 +699,97 @@
     }
 
     .feature-meta {
-        color: #0f766e;
+        color: #6d28d9;
         font-size: 0.76rem;
         font-weight: 600;
     }
 
     .journey-zone {
-        background: linear-gradient(180deg, rgba(226, 250, 245, 0.65), rgba(245, 251, 250, 0.65));
+        background: linear-gradient(180deg, rgba(243, 232, 255, 0.72), rgba(248, 245, 255, 0.72));
+    }
+
+    .journey-grid {
+        position: relative;
+    }
+
+    .journey-step {
+        position: relative;
+    }
+
+    .journey-step::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        right: -40px;
+        width: 80px;
+        height: 10px;
+        border-radius: 6px;
+        background: linear-gradient(90deg, rgba(118,75,162,0.12), rgba(118,75,162,0.95), rgba(102,126,234,0.12));
+        box-shadow: 0 6px 18px rgba(118,75,162,0.12);
+    }
+
+    .journey-step:last-child::after {
+        display: none;
     }
 
     .journey-card {
-        background: #ffffff;
-        border: 1px solid rgba(15, 118, 110, 0.14);
-        border-radius: 16px;
-        padding: 1rem;
-        box-shadow: 0 10px 24px rgba(15, 118, 110, 0.08);
+        background: transparent; /* remove square background */
+        border: none;
+        border-radius: 22px;
+        padding: 1.15rem 0.75rem;
+        box-shadow: none;
         transition: transform 220ms ease, box-shadow 220ms ease;
+        text-align: center;
     }
 
     .journey-card:hover {
         transform: translateY(-4px);
-        box-shadow: 0 16px 30px rgba(15, 118, 110, 0.14);
+        box-shadow: 0 16px 30px rgba(109, 40, 217, 0.16);
+    }
+
+    .journey-badge {
+        width: 132px;
+        height: 132px;
+        margin: 0 auto 0.9rem;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        color: #ffffff;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 22px 44px rgba(109, 40, 217, 0.28);
+        border: 4px solid rgba(255,255,255,0.06);
+    }
+
+    .journey-badge::before {
+        content: "";
+        position: absolute;
+        inset: 7px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.45);
+    }
+
+    .journey-badge i {
+        position: relative;
+        z-index: 1;
+        font-size: 2.4rem;
+    }
+
+    .journey-badge-profile {
+        background: radial-gradient(circle at 30% 20%, #8b5cf6, #667eea 52%, #4f46e5 100%);
+    }
+
+    .journey-badge-track {
+        background: radial-gradient(circle at 30% 20%, #a855f7, #7c3aed 52%, #5b21b6 100%);
+    }
+
+    .journey-badge-insights {
+        background: radial-gradient(circle at 30% 20%, #7c3aed, #6366f1 52%, #4f46e5 100%);
+    }
+
+    .journey-badge-consistency {
+        background: radial-gradient(circle at 30% 20%, #667eea, #764ba2 52%, #5b21b6 100%);
     }
 
     .journey-num {
@@ -693,29 +801,29 @@
         justify-content: center;
         font-weight: 800;
         color: #ffffff;
-        background: linear-gradient(130deg, #0f766e, #0891b2);
+        background: var(--admin-gradient);
         margin-bottom: 0.7rem;
     }
 
     .journey-card h6 {
         font-size: 0.98rem;
         margin-bottom: 0.3rem;
-        color: #12494a;
+        color: var(--tone-main-dark);
         font-weight: 700;
     }
 
     .journey-card p {
         margin: 0;
         font-size: 0.85rem;
-        color: #4d7171;
+        color: #5f5872;
     }
 
     .cta-panel {
-        background: linear-gradient(120deg, #0f766e, #0e7490);
+        background: var(--admin-gradient);
         border-radius: 26px;
         padding: clamp(1.4rem, 4vw, 2.6rem);
-        color: #ecfeff;
-        box-shadow: 0 22px 44px rgba(10, 78, 83, 0.24);
+        color: #f7f3ff;
+        box-shadow: 0 22px 44px rgba(76, 29, 149, 0.26);
     }
 
     .cta-panel h2 {
@@ -758,6 +866,10 @@
     }
 
     @media (max-width: 991.98px) {
+        .journey-step::after {
+            display: none;
+        }
+
         .hero-panel {
             padding: 1.5rem 1rem;
             border-radius: 24px;

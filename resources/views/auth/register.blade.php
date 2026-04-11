@@ -14,7 +14,7 @@
                     <p class="text-muted">Join My Doctor today and take control of your health</p>
                 </div>
 
-                <form method="POST" action="{{ route('register') }}">
+                <form method="POST" action="{{ route('register', [], false) }}">
                     @csrf
                     <input type="hidden" name="redirect" value="{{ request('redirect') }}">
 
@@ -268,8 +268,8 @@
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" name="terms" id="terms" required>
                             <label class="form-check-label text-muted" for="terms">
-                                I agree to the <a href="#" class="text-primary text-decoration-none">Terms of Service</a> and 
-                                <a href="#" class="text-primary text-decoration-none">Privacy Policy</a>
+                                I agree to the <a href="{{ route('terms.service', [], false) }}" target="_blank" rel="noopener" class="text-primary text-decoration-none">Terms of Service</a> and 
+                                <a href="{{ route('privacy.policy', [], false) }}" target="_blank" rel="noopener" class="text-primary text-decoration-none">Privacy Policy</a>
                             </label>
                         </div>
                     </div>
@@ -286,7 +286,7 @@
                     <div class="text-center">
                         <p class="text-muted mb-0">
                             Already have an account? 
-                            <a href="{{ route('login') }}" class="text-primary fw-bold text-decoration-none">
+                            <a href="{{ route('login', [], false) }}" class="text-primary fw-bold text-decoration-none">
                                 Login here <i class="fas fa-arrow-right ms-1"></i>
                             </a>
                         </p>
@@ -361,7 +361,7 @@
         }
 
         const locale = document.documentElement.lang?.startsWith('bn') ? 'bn' : 'en';
-        const apiBase = '{{ url('/geo/v2.0') }}';
+        const apiBase = '/geo/v2.0';
         const divisionPlaceholder = locale === 'bn' ? 'বিভাগ নির্বাচন করুন' : 'Select Division';
         const districtPlaceholder = locale === 'bn' ? 'জেলা নির্বাচন করুন' : 'Select District';
         const upazilaPlaceholder = locale === 'bn' ? 'উপজেলা নির্বাচন করুন' : 'Select Upazila';
@@ -371,11 +371,77 @@
         const currentDistrictId = divisionSelect.dataset.currentDistrictId || '';
         const currentUpazilaId = divisionSelect.dataset.currentUpazilaId || '';
 
+        const localDivisions = [
+            { id: 1, name: 'Chattogram', bn_name: 'চট্টগ্রাম' },
+            { id: 2, name: 'Rajshahi', bn_name: 'রাজশাহী' },
+            { id: 3, name: 'Khulna', bn_name: 'খুলনা' },
+            { id: 4, name: 'Barishal', bn_name: 'বরিশাল' },
+            { id: 5, name: 'Sylhet', bn_name: 'সিলেট' },
+            { id: 6, name: 'Dhaka', bn_name: 'ঢাকা' },
+            { id: 7, name: 'Rangpur', bn_name: 'রংপুর' },
+            { id: 8, name: 'Mymensingh', bn_name: 'ময়মনসিংহ' },
+        ];
+
+        const localDistricts = [
+            { id: 26, division_id: 6, name: 'Dhaka', bn_name: 'ঢাকা' },
+            { id: 30, division_id: 6, name: 'Faridpur', bn_name: 'ফরিদপুর' },
+            { id: 15, division_id: 1, name: 'Chattogram', bn_name: 'চট্টগ্রাম' },
+            { id: 22, division_id: 1, name: 'Cumilla', bn_name: 'কুমিল্লা' },
+            { id: 69, division_id: 2, name: 'Rajshahi', bn_name: 'রাজশাহী' },
+            { id: 76, division_id: 2, name: 'Pabna', bn_name: 'পাবনা' },
+            { id: 47, division_id: 3, name: 'Khulna', bn_name: 'খুলনা' },
+            { id: 10, division_id: 3, name: 'Bagerhat', bn_name: 'বাগেরহাট' },
+            { id: 6, division_id: 4, name: 'Barishal', bn_name: 'বরিশাল' },
+            { id: 9, division_id: 4, name: 'Bhola', bn_name: 'ভোলা' },
+            { id: 60, division_id: 5, name: 'Sylhet', bn_name: 'সিলেট' },
+            { id: 64, division_id: 5, name: 'Sunamganj', bn_name: 'সুনামগঞ্জ' },
+            { id: 85, division_id: 7, name: 'Rangpur', bn_name: 'রংপুর' },
+            { id: 77, division_id: 7, name: 'Panchagarh', bn_name: 'পঞ্চগড়' },
+            { id: 61, division_id: 8, name: 'Mymensingh', bn_name: 'ময়মনসিংহ' },
+            { id: 39, division_id: 8, name: 'Jamalpur', bn_name: 'জামালপুর' },
+        ];
+
+        const localUpazilas = [
+            { id: 8, district_id: 26, name: 'Dhanmondi', bn_name: 'ধানমন্ডি' },
+            { id: 10, district_id: 26, name: 'Mirpur', bn_name: 'মিরপুর' },
+            { id: 401, district_id: 30, name: 'Faridpur Sadar', bn_name: 'ফরিদপুর সদর' },
+            { id: 91, district_id: 22, name: 'Kotwali', bn_name: 'কোতোয়ালি' },
+            { id: 194, district_id: 15, name: 'Pahartali', bn_name: 'পাহাড়তলী' },
+            { id: 501, district_id: 69, name: 'Rajshahi Sadar', bn_name: 'রাজশাহী সদর' },
+            { id: 511, district_id: 76, name: 'Pabna Sadar', bn_name: 'পাবনা সদর' },
+            { id: 521, district_id: 47, name: 'Khalishpur', bn_name: 'খালিশপুর' },
+            { id: 531, district_id: 10, name: 'Bagerhat Sadar', bn_name: 'বাগেরহাট সদর' },
+            { id: 541, district_id: 6, name: 'Barishal Sadar', bn_name: 'বরিশাল সদর' },
+            { id: 551, district_id: 9, name: 'Bhola Sadar', bn_name: 'ভোলা সদর' },
+            { id: 561, district_id: 64, name: 'Sunamganj Sadar', bn_name: 'সুনামগঞ্জ সদর' },
+            { id: 571, district_id: 60, name: 'Sylhet Sadar', bn_name: 'সিলেট সদর' },
+            { id: 581, district_id: 85, name: 'Rangpur Sadar', bn_name: 'রংপুর সদর' },
+            { id: 591, district_id: 77, name: 'Panchagarh Sadar', bn_name: 'পঞ্চগড় সদর' },
+            { id: 601, district_id: 61, name: 'Mymensingh Sadar', bn_name: 'ময়মনসিংহ সদর' },
+            { id: 611, district_id: 39, name: 'Jamalpur Sadar', bn_name: 'জামালপুর সদর' },
+        ];
+
         const toList = (payload) => Array.isArray(payload) ? payload : (payload?.data || payload?.result || []);
         const getId = (item) => item?.id ?? item?.division_id ?? item?.district_id ?? item?.upazila_id ?? null;
         const getEn = (item) => item?.name ?? item?.division ?? item?.district ?? item?.upazila ?? item?.upazilla ?? item?.name_en ?? '';
         const getBn = (item) => item?.bn_name ?? item?.bn ?? item?.name_bn ?? item?.bangla ?? '';
         const labelOf = (item) => locale === 'bn' ? (getBn(item) || getEn(item)) : getEn(item);
+        const byDivision = (divisionId) => localDistricts.filter((d) => String(d.division_id) === String(divisionId));
+        const byDistrict = (districtId) => localUpazilas.filter((u) => String(u.district_id) === String(districtId));
+
+        const fetchRows = async (path, fallbackRows = []) => {
+            try {
+                const response = await fetch(`${apiBase}/${path}`, { headers: { 'Accept': 'application/json' } });
+                if (!response.ok) {
+                    return fallbackRows;
+                }
+                const payload = await response.json();
+                const rows = toList(payload);
+                return rows.length ? rows : fallbackRows;
+            } catch (e) {
+                return fallbackRows;
+            }
+        };
 
         const setDivisionMeta = (item) => {
             divisionIdInput.value = getId(item) ?? '';
@@ -430,16 +496,12 @@
         };
 
         const loadUpazilas = async (districtId, selectedUpazilaName, selectedUpazilaId) => {
-            const response = await fetch(`${apiBase}/upazilas/${districtId}`);
-            const payload = await response.json();
-            const rows = toList(payload);
+            const rows = await fetchRows(`upazilas/${districtId}`, byDistrict(districtId));
             renderUpazilas(rows, selectedUpazilaName, selectedUpazilaId);
         };
 
         try {
-            const divisionsResponse = await fetch(`${apiBase}/divisions`);
-            const divisionsPayload = await divisionsResponse.json();
-            const divisions = toList(divisionsPayload);
+            const divisions = await fetchRows('divisions', localDivisions);
 
             divisionSelect.innerHTML = `<option value="">${divisionPlaceholder}</option>`;
 
@@ -458,9 +520,7 @@
 
             const selectedDivisionId = divisionSelect.selectedOptions[0]?.dataset.id;
             if (selectedDivisionId) {
-                const districtsResponse = await fetch(`${apiBase}/districts/${selectedDivisionId}`);
-                const districtsPayload = await districtsResponse.json();
-                const districtRows = toList(districtsPayload);
+                const districtRows = await fetchRows(`districts/${selectedDivisionId}`, byDivision(selectedDivisionId));
                 renderDistricts(districtRows, currentDistrict, currentDistrictId, currentUpazila, currentUpazilaId);
             }
 
@@ -477,9 +537,8 @@
                     return;
                 }
 
-                const districtsResponse = await fetch(`${apiBase}/districts/${divisionId}`);
-                const districtsPayload = await districtsResponse.json();
-                renderDistricts(toList(districtsPayload), '', '', '', '');
+                const districts = await fetchRows(`districts/${divisionId}`, byDivision(divisionId));
+                renderDistricts(districts, '', '', '', '');
             });
 
             districtSelect.addEventListener('change', async function() {

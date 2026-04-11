@@ -1011,6 +1011,7 @@
             height: 40px;
             border-radius: 10px;
             object-fit: cover;
+            filter: brightness(0) invert(1);
         }
 
         .footer-text {
@@ -2087,7 +2088,7 @@
             <nav class="banner-nav">
                 <!-- Logo -->
                 <div class="banner-logo">
-                    <img src="{{ asset('images/logos/applogo.png') }}" alt="My Doctor Logo">
+                    <img src="{{ asset('images/logos/applogo.png') }}" alt="MyDoctor Logo">
                 </div>
 
                 <!-- Navigation Menu -->
@@ -2145,21 +2146,21 @@
                             </li>
                         @endauth
                         <li class="banner-nav-item">
-                            <a href="{{ auth()->check() ? route('medicine.index') : route('login') . '?redirect=' . urlencode(route('medicine.index')) }}"
+                            <a href="{{ auth()->check() ? route('medicine.index', [], false) : route('login', [], false) . '?redirect=' . urlencode(route('medicine.index', [], false)) }}"
                                 class="banner-nav-link {{ request()->routeIs('medicine*') ? 'active' : '' }}"
                                 title="{{ auth()->check() ? '' : __('ui.nav.login_required') }}">
                                 {{ __('ui.nav.medicine') }}
                             </a>
                         </li>
                         <li class="banner-nav-item">
-                            <a href="{{ auth()->check() ? route('health') : route('login') . '?redirect=' . urlencode(route('health')) }}"
+                            <a href="{{ auth()->check() ? route('health', [], false) : route('login', [], false) . '?redirect=' . urlencode(route('health', [], false)) }}"
                                 class="banner-nav-link {{ request()->routeIs('health*') ? 'active' : '' }}"
                                 title="{{ auth()->check() ? '' : __('ui.nav.login_required') }}">
                                 {{ __('ui.nav.health') }}
                             </a>
                         </li>
                         <li class="banner-nav-item">
-                            <a href="{{ auth()->check() ? route('community.home') : route('login') . '?redirect=' . urlencode(route('community.home')) }}"
+                            <a href="{{ auth()->check() ? route('community.home', [], false) : route('login', [], false) . '?redirect=' . urlencode(route('community.home', [], false)) }}"
                                 class="banner-nav-link {{ request()->routeIs('community*') ? 'active' : '' }}"
                                 title="{{ auth()->check() ? '' : __('ui.nav.login_required') }}">
                                 {{ __('ui.nav.community') }}
@@ -2167,7 +2168,7 @@
                         </li>
                         @auth
                             <li class="banner-nav-item">
-                                <a href="{{ auth()->check() ? route('suggestions') : route('login') . '?redirect=' . urlencode(route('suggestions')) }}"
+                                <a href="{{ auth()->check() ? route('suggestions', [], false) : route('login', [], false) . '?redirect=' . urlencode(route('suggestions', [], false)) }}"
                                     class="banner-nav-link {{ request()->routeIs('suggestions') ? 'active' : '' }}"
                                     title="{{ auth()->check() ? '' : __('ui.nav.login_required') }}">
                                     {{ __('ui.nav.suggestions') }}
@@ -2249,9 +2250,9 @@
                             <span class="toggle-knob" aria-hidden="true"></span>
                         </a>
                         <span class="nav-user-name">
-                            <a href="{{ route('login') }}" style="text-decoration:none;color:inherit;">{{ __('ui.menu.login') }}</a>
+                            <a href="{{ route('login', [], false) }}" style="text-decoration:none;color:inherit;">{{ __('ui.menu.login') }}</a>
                             /
-                            <a href="{{ route('register') }}" style="text-decoration:none;color:inherit;">{{ __('ui.menu.register') }}</a>
+                            <a href="{{ route('register', [], false) }}" style="text-decoration:none;color:inherit;">{{ __('ui.menu.register') }}</a>
                         </span>
                     @endguest
 
@@ -2314,11 +2315,11 @@
                                 </form>
                             @else
                                 <!-- GUEST USER MENU -->
-                                <a href="{{ route('login') }}" class="dropdown-item-custom">
+                                <a href="{{ route('login', [], false) }}" class="dropdown-item-custom">
                                     <i class="fas fa-sign-in-alt me-2"></i>{{ __('ui.menu.login') }}
                                 </a>
 
-                                <a href="{{ route('register') }}" class="dropdown-item-custom">
+                                <a href="{{ route('register', [], false) }}" class="dropdown-item-custom">
                                     <i class="fas fa-user-plus me-2"></i>{{ __('ui.menu.register') }}
                                 </a>
                             @endauth
@@ -2342,11 +2343,11 @@
 
                                 @guest
                                     <div class="d-flex gap-3 flex-wrap">
-                                        <a href="{{ route('login') }}?redirect={{ urlencode(route('dashboard')) }}"
+                                        <a href="{{ route('login', [], false) }}?redirect={{ urlencode(route('dashboard', [], false)) }}"
                                             class="btn btn-light btn-lg rounded-pill px-5 py-3 fw-semibold">
                                             Get Started <i class="fas fa-arrow-right ms-2"></i>
                                         </a>
-                                        <a href="{{ route('login') }}?redirect={{ urlencode(request()->fullUrl()) }}"
+                                        <a href="{{ route('login', [], false) }}?redirect={{ urlencode(request()->fullUrl()) }}"
                                             class="btn btn-outline-light btn-lg rounded-pill px-5 py-3 fw-semibold">
                                             <i class="fas fa-user-md me-2"></i>Ask MyDoctor AI
                                         </a>
@@ -2559,8 +2560,8 @@
                 <!-- About Section -->
                 <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
                     <div class="footer-logo mb-3">
-                        <img src="{{ asset('images/logos/applogo.png') }}" alt="My Doctor" height="40">
-                        <span class="fw-bold text-white ms-2">My Doctor</span>
+                        <img src="{{ asset('images/logos/applogo.png') }}" alt="MyDoctor" height="40">
+                        <span class="fw-bold text-white ms-2">MyDoctor</span>
                     </div>
                     <p class="footer-text">
                         Your complete healthcare companion. Track health metrics, get medicine reminders, consult AI,
@@ -2618,7 +2619,7 @@
             <div class="row align-items-center">
                 <div class="col-md-6 text-center text-md-start">
                     <p class="copyright mb-0">
-                        &copy; {{ date('Y') }} My Doctor. All rights reserved. | Making healthcare simple
+                        &copy; {{ date('Y') }} MyDoctor. All rights reserved. | Making healthcare simple
                     </p>
                 </div>
                 <div class="col-md-6 text-center text-md-end">
@@ -3787,7 +3788,7 @@ window.openVideoModal = function(type, source, isReel = false) {
         function toggleChatbot() {
             const modal = document.getElementById('chatbotModal');
             if (!modal) {
-                window.location.href = '{{ route('login') }}?redirect=' + encodeURIComponent(window.location.href);
+                window.location.href = '{{ route('login', [], false) }}?redirect=' + encodeURIComponent(window.location.href);
                 return;
             }
             modal.classList.toggle('show');

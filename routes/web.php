@@ -277,15 +277,29 @@ Route::middleware('auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::prefix('health')->name('health.')->group(function () {
-    Route::view('/hospitals', 'health.hospitals')->name('hospitals');
-    Route::view('/tips', 'health.tips')->name('tips');
+    Route::get('/hospitals', function () {
+        return redirect()->route('help');
+    })->name('hospitals');
+    Route::get('/tips', function () {
+        return redirect()->route('help');
+    })->name('tips');
     
     Route::middleware('auth')->group(function () {
-        Route::view('/records', 'health.records')->name('records');
-        Route::view('/tracking', 'health.tracking')->name('tracking');
-        Route::view('/consultation', 'health.consultation')->name('consultation');
-        Route::view('/symptoms', 'health.symptoms')->name('symptoms');
-        Route::view('/suggestions', 'health.suggestions')->name('suggestions');
+        Route::get('/records', function () {
+            return redirect(route('health', [], false) . '#logs');
+        })->name('records');
+        Route::get('/tracking', function () {
+            return redirect(route('health', [], false) . '#metrics');
+        })->name('tracking');
+        Route::get('/consultation', function () {
+            return redirect()->route('help');
+        })->name('consultation');
+        Route::get('/symptoms', function () {
+            return redirect(route('health', [], false) . '#symptomsPane');
+        })->name('symptoms');
+        Route::get('/suggestions', function () {
+            return redirect()->route('suggestions');
+        })->name('suggestions');
     });
 });
 
