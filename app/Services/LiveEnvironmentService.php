@@ -40,9 +40,14 @@ class LiveEnvironmentService
         $weather = $this->fetchWeather($coords['lat'], $coords['lon']);
         $air = $this->fetchAirQuality($coords['lat'], $coords['lon']);
         $insights = $this->buildWeatherInsights($weather);
-        $llmAdvisory = $this->generateLlmAdvisory($user, $weather, $air, $insights);
+        $healthContext = $this->buildHealthContext($user);
+        $season = $this->bangladeshSeasonContext();
+        $location = $this->locationLabel($address);
+        $llmAdvisory = $this->generateLlmAdvisory($weather, $air, $insights, $healthContext, $season, $location);
         if ($llmAdvisory !== null) {
             $insights['advisory'] = $llmAdvisory;
+        } else {
+            $insights['advisory'] = $this->buildFallbackPersonalizedAdvisory($weather, $air, $insights, $healthContext, $season);
         }
 
         if (!$weather && !$air) {
@@ -56,7 +61,7 @@ class LiveEnvironmentService
 
         return [
             'available' => true,
-            'location_label' => $this->locationLabel($address),
+            'location_label' => $location,
             'updated_at' => now(),
             'weather' => $weather,
             'air' => $air,
@@ -315,15 +320,22 @@ class LiveEnvironmentService
         ];
     }
 
-    private function generateLlmAdvisory(User $user, ?array $weather, ?array $air, array $insights): ?string
+    private function generateLlmAdvisory(
+        ?array $weather,
+        ?array $air,
+        array $insights,
+        array $healthContext,
+        array $season,
+        string $location
+    ): ?string
     {
         if (!$weather && !$air) {
             return null;
         }
 
-        $healthContext = $this->buildHealthContext($user);
         $payload = [
-            'location' => $this->locationLabel($user->address),
+            'location' => $location,
+            'bangladesh_season' => $season,
             'weather' => [
                 'condition' => $weather['weather_text'] ?? null,
                 'temperature_c' => $weather['temperature_c'] ?? null,
@@ -348,10 +360,16 @@ class LiveEnvironmentService
             ],
         ];
 
-        $prompt = "You are MyDoctor AI. Write a short, practical health advisory in exactly 2-3 lines. "
-            . "Use current weather and air data plus the user's diseases and recent symptoms. "
-            . "Avoid diagnosis and panic language. Be specific and actionable for today. "
-            . "Do not use markdown, bullets, titles, or numbering.\n\n"
+        $prompt = "You are MyDoctor AI for Bangladesh users. "
+            . "Write exactly 2 or 3 bullet points in Bangla for a daily health advisory. "
+            . "Every bullet must be practical and actionable for today. "
+            . "Use all relevant factors from data: current weather condition, rain chance, temperature feel, "
+            . "Bangladesh seasonal context, and user diseases/symptoms if present. "
+            . "If a disease or symptom name is in English, write it as Bangla name followed by English in bracket, e.g. এট্রিয়াল ফাইব্রিলেশন (Atrial Fibrillation). "
+            . "Each bullet should connect at least two factors (example: heat + diabetes, rain + asthma, monsoon + joint pain). "
+            . "Avoid diagnosis, fear language, and generic advice. "
+            . "Output format rules: "
+            . "(1) only bullets, (2) each line must start with '- ', (3) no heading/title, (4) no extra text before/after bullets, (5) add markdown bold for key factors (season, temperature/rain/AQI, disease/symptom name, and action words).\n\n"
             . "DATA:\n" . json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         $googleKey = (string) config('services.google.api_key', '');
@@ -489,66 +507,190 @@ class LiveEnvironmentService
     private function normalizeAdvisoryText(string $text): string
     {
         $text = trim(str_replace(["\r\n", "\r"], "\n", $text));
-        $text = preg_replace('/^[\-*\d\.\)\s]+/m', '', $text) ?? $text;
         $lines = array_values(array_filter(array_map('trim', explode("\n", $text)), fn($line) => $line !== ''));
 
         if (count($lines) === 0) {
-            return "Weather-aware health advisory is unavailable right now.\nPlease check again in a moment for updated guidance.";
+            return "- আজ আবহাওয়া ও বায়ুর তথ্য সম্পূর্ণ পাওয়া যায়নি, তাই বাইরে গেলে সতর্ক থাকুন।\n- আপনার বর্তমান উপসর্গ ও রোগের ওষুধ নিয়মমতো নিন এবং পানি পান করুন।";
+        }
+
+        if (count($lines) === 1) {
+            $parts = preg_split('/(?<=[\.!\?।])\s+/', $lines[0]) ?: [$lines[0]];
+            $parts = array_values(array_filter(array_map('trim', $parts), fn($line) => $line !== ''));
+            $lines = count($parts) >= 2 ? $parts : [$lines[0], 'আজ শরীরের অবস্থা দেখে কাজের চাপ কমিয়ে বিশ্রাম নিন।'];
         }
 
         if (count($lines) > 3) {
             $lines = array_slice($lines, 0, 3);
         }
 
-        if (count($lines) === 1) {
-            // Try to split a long single paragraph into 2 lines for readability.
-            $parts = preg_split('/(?<=[\.!\?])\s+/', $lines[0]) ?: [$lines[0]];
-            $parts = array_values(array_filter(array_map('trim', $parts)));
-            if (count($parts) >= 2) {
-                $lines = array_slice($parts, 0, 3);
-            } else {
-                // Force 2 lines by splitting the single line into two balanced chunks.
-                $words = preg_split('/\s+/', $lines[0]) ?: [];
-                $words = array_values(array_filter($words, fn($w) => trim((string) $w) !== ''));
-                if (count($words) >= 6) {
-                    $mid = (int) ceil(count($words) / 2);
-                    $first = trim(implode(' ', array_slice($words, 0, $mid)));
-                    $second = trim(implode(' ', array_slice($words, $mid)));
-                    $lines = [$first, $second];
-                } else {
-                    $lines[] = 'Monitor your symptoms and follow your prescribed care plan today.';
-                }
-            }
+        $lines = array_map(function (string $line) {
+            $line = trim((string) preg_replace('/^[\-*•\d\.\)\s]+/', '', $line));
+            return $line === '' ? '' : '- ' . $line;
+        }, $lines);
+
+        $lines = array_values(array_filter($lines, fn($line) => $line !== ''));
+
+        if (count($lines) < 2) {
+            $lines[] = '- আজকের আবহাওয়া অনুযায়ী পানি পান, বিশ্রাম এবং নিয়মিত ওষুধে অগ্রাধিকার দিন।';
         }
 
-        if (count($lines) === 2 && mb_strlen($lines[0] . ' ' . $lines[1]) > 240) {
-            // If two lines are still too dense, split into three short lines.
-            $combined = trim($lines[0] . ' ' . $lines[1]);
-            $words = preg_split('/\s+/', $combined) ?: [];
-            $chunk = (int) max(1, ceil(count($words) / 3));
-            $lines = [
-                trim(implode(' ', array_slice($words, 0, $chunk))),
-                trim(implode(' ', array_slice($words, $chunk, $chunk))),
-                trim(implode(' ', array_slice($words, $chunk * 2))),
-            ];
-            $lines = array_values(array_filter($lines, fn($line) => $line !== ''));
+        if (count($lines) > 3) {
+            $lines = array_slice($lines, 0, 3);
         }
+
+        $lines = array_map(function (string $line) {
+            $map = [
+                "Cushing's Syndrome" => "কুশিংস সিন্ড্রোম (Cushing's Syndrome)",
+                'Atrial Fibrillation' => 'এট্রিয়াল ফাইব্রিলেশন (Atrial Fibrillation)',
+                'Chickenpox' => 'চিকেনপক্স (Chickenpox)',
+                'Productive Cough' => 'কফসহ কাশি (Productive Cough)',
+                'Irregular Menstruation' => 'অনিয়মিত মাসিক (Irregular Menstruation)',
+                'Hair Loss' => 'চুল পড়া (Hair Loss)',
+                'Dry Mouth' => 'মুখ শুকানো (Dry Mouth)',
+                'Spinning Sensation' => 'মাথা ঘোরা (Spinning Sensation)',
+            ];
+
+            foreach ($map as $en => $bnEn) {
+                $line = preg_replace('/\b' . preg_quote($en, '/') . '\b/u', $bnEn, $line) ?? $line;
+            }
+
+            $line = preg_replace('/\b(\d+(?:\.\d+)?)\s*(bpm|°C|%)\b/u', '**$1 $2**', $line) ?? $line;
+            $line = preg_replace('/\bAQI\b/u', '**AQI**', $line) ?? $line;
+
+            return $line;
+        }, $lines);
 
         return implode("\n", $lines);
     }
 
+    private function bangladeshSeasonContext(): array
+    {
+        $month = (int) now()->month;
+
+        return match (true) {
+            in_array($month, [3, 4, 5], true) => [
+                'season_en' => 'Pre-monsoon summer',
+                'season_bn' => 'গ্রীষ্ম (বর্ষার আগে)',
+            ],
+            in_array($month, [6, 7, 8, 9], true) => [
+                'season_en' => 'Monsoon',
+                'season_bn' => 'বর্ষাকাল',
+            ],
+            in_array($month, [10, 11], true) => [
+                'season_en' => 'Post-monsoon transition',
+                'season_bn' => 'বর্ষা-পরবর্তী সময়',
+            ],
+            default => [
+                'season_en' => 'Cool and dry season',
+                'season_bn' => 'শীত ও শুষ্ক মৌসুম',
+            ],
+        };
+    }
+
+    private function buildFallbackPersonalizedAdvisory(
+        ?array $weather,
+        ?array $air,
+        array $insights,
+        array $healthContext,
+        array $season
+    ): string {
+        $temp = is_numeric($weather['feels_like_c'] ?? null)
+            ? (float) $weather['feels_like_c']
+            : (is_numeric($weather['temperature_c'] ?? null) ? (float) $weather['temperature_c'] : null);
+        $rainProbability = is_numeric($weather['rain_probability_pct'] ?? null) ? (float) $weather['rain_probability_pct'] : null;
+        $rainLikely = (bool) ($insights['rain_likely'] ?? false);
+        $aqi = is_numeric($air['us_aqi'] ?? null) ? (float) $air['us_aqi'] : null;
+        $seasonBn = (string) ($season['season_bn'] ?? 'বর্তমান মৌসুম');
+
+        $diseaseName = data_get($healthContext, 'active_diseases.0.name');
+        $symptomName = data_get($healthContext, 'recent_symptoms.0.name');
+
+        $line1 = $rainLikely
+            ? "- **{$seasonBn}** সময়ে বৃষ্টির সম্ভাবনা **" . (is_null($rainProbability) ? 'উল্লেখযোগ্য' : (int) round($rainProbability) . "%") . "**। বাইরে গেলে **ছাতা** রাখুন এবং ভিজে কাপড়ে বেশি সময় থাকবেন না।"
+            : "- **{$seasonBn}** সময়ে এখন তাৎক্ষণিক ভারী বৃষ্টির শক্ত ইঙ্গিত নেই, তবে হঠাৎ আবহাওয়া বদলাতে পারে তাই বাইরে গেলে **হালকা সুরক্ষা** সাথে রাখুন।";
+
+        if ($temp !== null && $temp >= 33) {
+            $line2 = "- অনুভূত তাপমাত্রা প্রায় **" . round($temp, 1) . "°C**, তাই দুপুরে সরাসরি রোদ এড়িয়ে **পানি ও ওআরএস** বাড়ান।";
+        } elseif ($temp !== null && $temp <= 16) {
+            $line2 = "- তাপমাত্রা তুলনামূলক কম (প্রায় **" . round($temp, 1) . "°C**), তাই ঠান্ডা-সংবেদনশীল হলে স্তরভিত্তিক পোশাক ও গরম পানি নিন।";
+        } else {
+            $line2 = "- তাপমাত্রা মাঝারি থাকলেও ক্লান্তি কমাতে কাজের ফাঁকে **পানি পান** ও **ছোট বিরতি** বজায় রাখুন।";
+        }
+
+        if ($diseaseName || $symptomName) {
+            $healthRef = $diseaseName ? $this->medicalNameBnWithEn((string) $diseaseName) : $this->medicalNameBnWithEn((string) $symptomName);
+            $airHint = ($aqi !== null && $aqi > 100)
+                ? "**AQI** কিছুটা বেশি, তাই **ধুলো-ধোঁয়া এড়িয়ে মাস্ক** ব্যবহার করুন"
+                : "বাইরে গেলে ধুলো-ধোঁয়া এড়িয়ে চলুন";
+            $line3 = "- আপনার **{$healthRef}** বিবেচনায় {$airHint}, এবং আজ উপসর্গ বাড়লে **ওষুধের সময়সূচি** মেনে বিশ্রাম নিন।";
+        } else {
+            $line3 = ($aqi !== null && $aqi > 100)
+                ? "- বায়ুর মান অনুকূলে নয় (**AQI " . (int) round($aqi) . "**), তাই দীর্ঘক্ষণ বাইরে ব্যায়াম না করে ঘরের ভেতর হালকা কার্যকলাপ করুন।"
+                : "- আজকের আবহাওয়া ও বায়ুর অবস্থায় **হালকা ব্যায়াম**, **পর্যাপ্ত পানি** এবং **নিয়মিত ঘুম** বজায় রাখুন।";
+        }
+
+        return implode("\n", [$line1, $line2, $line3]);
+    }
+
+    private function medicalNameBnWithEn(string $name): string
+    {
+        $name = trim($name);
+        if ($name === '') {
+            return 'উপসর্গ';
+        }
+
+        if (preg_match('/[\x{0980}-\x{09FF}]/u', $name)) {
+            return $name;
+        }
+
+        $map = [
+            "Cushing's Syndrome" => 'কুশিংস সিন্ড্রোম',
+            'Atrial Fibrillation' => 'এট্রিয়াল ফাইব্রিলেশন',
+            'Chickenpox' => 'চিকেনপক্স',
+            'Productive Cough' => 'কফসহ কাশি',
+            'Irregular Menstruation' => 'অনিয়মিত মাসিক',
+            'Hair Loss' => 'চুল পড়া',
+            'Dry Mouth' => 'মুখ শুকানো',
+            'Spinning Sensation' => 'মাথা ঘোরা',
+        ];
+
+        foreach ($map as $en => $bn) {
+            if (strcasecmp($name, $en) === 0) {
+                return "{$bn} ({$en})";
+            }
+        }
+
+        return $name;
+    }
+
     private function fetchAirQuality(float $lat, float $lon): ?array
     {
-        $response = Http::timeout(8)
-            ->retry(1, 150)
-            ->get('https://air-quality-api.open-meteo.com/v1/air-quality', [
-                'latitude' => $lat,
-                'longitude' => $lon,
-                'current' => 'pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,ozone,us_aqi,european_aqi',
-                'timezone' => 'auto',
+        try {
+            $response = Http::timeout(8)
+                ->retry(1, 150)
+                ->get('https://air-quality-api.open-meteo.com/v1/air-quality', [
+                    'latitude' => $lat,
+                    'longitude' => $lon,
+                    'current' => 'pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,ozone,us_aqi,european_aqi',
+                    'timezone' => 'auto',
+                ]);
+        } catch (\Throwable $e) {
+            Log::warning('LiveEnvironmentService: air-quality request failed', [
+                'lat' => $lat,
+                'lon' => $lon,
+                'error' => $e->getMessage(),
             ]);
 
+            return null;
+        }
+
         if (!$response->successful()) {
+            Log::debug('LiveEnvironmentService: air-quality non-success response', [
+                'status' => $response->status(),
+                'lat' => $lat,
+                'lon' => $lon,
+            ]);
+
             return null;
         }
 

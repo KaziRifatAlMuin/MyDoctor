@@ -948,9 +948,26 @@
 
                             <div class="live-env-item mt-2">
                                 <div class="live-env-label">Condition Advisory</div>
-                                <div class="live-env-meta" style="font-size:0.84rem;color:#374151;">
-                                    {!! nl2br(e($insights['advisory'] ?? 'No advisory available.')) !!}
-                                </div>
+                                <div class="live-env-meta" style="font-size:0.84rem;color:#374151;" id="liveEnvAdvisory"></div>
+
+                                @push('scripts')
+                                <script>
+                                    document.addEventListener('DOMContentLoaded', function(){
+                                        try {
+                                            const advisory = @json($insights['advisory'] ?? 'No advisory available.');
+                                            const target = document.getElementById('liveEnvAdvisory');
+                                            if (!target) return;
+                                            if (typeof renderChatbotMarkup === 'function') {
+                                                target.innerHTML = renderChatbotMarkup(advisory);
+                                            } else {
+                                                target.innerHTML = (advisory || 'No advisory available.').replace(/\n/g, '<br>');
+                                            }
+                                        } catch (e) {
+                                            // ignore
+                                        }
+                                    });
+                                </script>
+                                @endpush
                             </div>
                         @endif
                     </div>

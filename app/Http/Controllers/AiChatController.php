@@ -608,7 +608,7 @@ class AiChatController extends Controller
         $total = count($diseases) + count($symptoms) + count($metrics) + count($medicines);
 
         if ($total === 0) {
-            return 'I checked your records and could not find any saved diseases, symptoms, health metrics, or medicines yet. Please add health entries in the app first, then ask again.';
+            return 'আপনার রেকর্ডে এখনো কোনো রোগ, উপসর্গ, স্বাস্থ্য মেট্রিক বা ওষুধের তথ্য পাওয়া যায়নি। আগে অ্যাপে স্বাস্থ্য তথ্য যোগ করুন, তারপর আবার জিজ্ঞেস করুন।';
         }
 
         // For rich data, let the LLM compose a better narrative unless deterministic fallback is requested.
@@ -620,44 +620,47 @@ class AiChatController extends Controller
 
         if ($diseases !== []) {
             $labels = array_map(function (array $d): string {
-                $name   = (string) ($d['disease'] ?? 'Unknown disease');
+                $nameRaw = (string) ($d['disease'] ?? 'Unknown disease');
+                $name = $this->medicalNameBnWithEn($nameRaw);
                 $status = (string) ($d['status'] ?? 'unknown');
                 $date   = !empty($d['diagnosed_at']) ? ', diagnosed ' . $d['diagnosed_at'] : '';
-                return "{$name} ({$status}{$date})";
+                return "**{$name}** ({$status}{$date})";
             }, array_slice($diseases, 0, 3));
-            $parts[] = '**Diseases:** ' . implode(', ', $labels) . '.';
+            $parts[] = '**রোগের অবস্থা:** ' . implode(', ', $labels) . '।';
         }
 
         if ($symptoms !== []) {
             $labels = array_map(function (array $s): string {
-                $name = (string) ($s['symptom'] ?? 'Unknown symptom');
+                $nameRaw = (string) ($s['symptom'] ?? 'Unknown symptom');
+                $name = $this->medicalNameBnWithEn($nameRaw);
                 $sev  = $s['severity_level'] ?? null;
-                return $sev !== null ? "{$name} (severity {$sev}/10)" : $name;
+                return $sev !== null ? "**{$name}** (তীব্রতা {$sev}/10)" : "**{$name}**";
             }, array_slice($symptoms, 0, 5));
-            $parts[] = '**Recent symptoms:** ' . implode(', ', $labels) . '.';
+            $parts[] = '**সাম্প্রতিক উপসর্গ:** ' . implode(', ', $labels) . '।';
         }
 
         if ($medicines !== []) {
             $labels = array_map(fn(array $m): string => (string) ($m['medicine_name'] ?? 'Unknown'), array_slice($medicines, 0, 5));
-            $parts[] = '**Medicines:** ' . implode(', ', $labels) . '.';
+            $parts[] = '**ওষুধ:** ' . implode(', ', $labels) . '।';
         }
 
         if ($metrics !== []) {
             $labels = array_map(function (array $m): string {
-                $type  = (string) ($m['metric_type'] ?? 'metric');
+                $typeRaw  = (string) ($m['metric_type'] ?? 'metric');
+                $type = $this->metricNameBn($typeRaw);
                 $value = $m['value'] ?? null;
                 if (is_array($value)) {
                     $value = json_encode($value, JSON_UNESCAPED_UNICODE);
                 }
-                $display = (is_string($value) || is_numeric($value)) ? (string) $value : 'recorded';
-                return "{$type}: {$display}";
+                $display = (is_string($value) || is_numeric($value)) ? (string) $value : 'রেকর্ড করা আছে';
+                return "**{$type}**: **{$display}**";
             }, array_slice($metrics, 0, 5));
-            $parts[] = '**Health metrics:** ' . implode('; ', $labels) . '.';
+            $parts[] = '**স্বাস্থ্য মেট্রিক:** ' . implode('; ', $labels) . '।';
         }
 
         if ($forceDetailed) {
             $parts[] = sprintf(
-                '**Summary:** %d disease record(s), %d symptom record(s), %d medicine record(s), and %d health metric record(s) found.',
+                '**সারাংশ:** %dটি রোগের রেকর্ড, %dটি উপসর্গের রেকর্ড, %dটি ওষুধের রেকর্ড এবং %dটি স্বাস্থ্য মেট্রিক রেকর্ড পাওয়া গেছে।',
                 count($diseases),
                 count($symptoms),
                 count($medicines),
@@ -665,7 +668,7 @@ class AiChatController extends Controller
             );
         }
 
-        $parts[] = "\n*This is based on your saved records and is not a medical diagnosis. Please consult a licensed doctor for clinical advice.*";
+        $parts[] = "\n*এটি আপনার সংরক্ষিত তথ্যভিত্তিক সারাংশ, চিকিৎসা নির্ণয় নয়। চিকিৎসা পরামর্শের জন্য নিবন্ধিত চিকিৎসকের সাথে যোগাযোগ করুন।*";
 
         return implode("\n", $parts);
     }
@@ -1085,24 +1088,25 @@ class AiChatController extends Controller
 
         $sqlSource = implode("\n", $queries);
 
-        $question = "Risk about my disease and symptoms and my current health condition suggestions should be there along with 2-3 points.\n"
-            . "Use ONLY my current authenticated records and no other users.\n"
+        $question = "আমার রোগ, উপসর্গ এবং বর্তমান স্বাস্থ্য অবস্থার ঝুঁকি বিশ্লেষণসহ সংক্ষিপ্ত পরামর্শ দিন।\n"
+            . "শুধু আমার authenticated রেকর্ড ব্যবহার করবেন, অন্য কারও তথ্য নয়।\n"
             . "Current user id: {$userId}\n"
             . "Current user email: {$userEmail}\n"
-            . "First focus on my diseases (2-3 lines), then my symptoms and trend (3-4 lines).\n"
-            . "Then provide exactly 4-5 personalized suggestions based on my diseases, symptoms, and health metrics.";
+            . "প্রথমে আমার রোগ নিয়ে ২-৩ লাইন, তারপর উপসর্গ ও ট্রেন্ড নিয়ে ৩-৪ লাইন লিখুন।\n"
+            . "এরপর আমার রোগ, উপসর্গ ও স্বাস্থ্য মেট্রিক অনুযায়ী ঠিক ৪-৫টি ব্যক্তিগত পরামর্শ দিন।";
 
         // Enforce strict output formatting instructions for the LLM to follow.
-        $formatInstruction = "\n\nStrict format required:"
-            . "\n- Add a short heading."
-            . "\n- Add **Diseases** section with 2-3 concise bullets grounded in my disease records."
-            . "\n- Add **Symptoms and Metrics Trend** section with 2-3 concise bullets grounded in my symptoms and health metrics."
-            . "\n- Add **Smart Suggestions** section with exactly 4 or 5 bullet points."
-            . "\n- Each suggestion must be practical and personalized to my retrieved data."
-            . "\n- Do NOT use numbered labels like Tip 1/Tip 2."
-            . "\n- Use markdown bolding where useful, especially for key risks/actions."
-            . "\n- Keep tone concise and useful."
-            . "\nDo not include other users' data.";
+        $formatInstruction = "\n\nকঠোর ফরম্যাট নির্দেশনা:"
+            . "\n- পুরো উত্তর অবশ্যই বাংলায় লিখতে হবে।"
+            . "\n- শুরুতে একটি ছোট শিরোনাম দিন।"
+            . "\n- **রোগের অবস্থা** শিরোনামে রোগভিত্তিক ২-৩টি বুলেট দিন।"
+            . "\n- **উপসর্গ ও মেট্রিক প্রবণতা** শিরোনামে উপসর্গ/মেট্রিকভিত্তিক ২-৩টি বুলেট দিন।"
+            . "\n- **স্মার্ট পরামর্শ** শিরোনামে ঠিক ৪ বা ৫টি বুলেট পয়েন্ট দিন।"
+            . "\n- পরামর্শগুলো অবশ্যই ব্যবহারযোগ্য, ব্যক্তিগত এবং আমার ডেটা-ভিত্তিক হবে।"
+            . "\n- Tip 1/Tip 2 ধরনের নম্বরিং ব্যবহার করবেন না।"
+            . "\n- প্রয়োজনমতো markdown bold (**...**) ব্যবহার করতে পারেন।"
+            . "\n- ভাষা সংক্ষিপ্ত, পরিষ্কার ও কার্যকর রাখুন।"
+            . "\nঅন্য কোনো ব্যবহারকারীর তথ্য যুক্ত করবেন না।";
 
         $question = $question . $formatInstruction;
 
@@ -1115,7 +1119,7 @@ class AiChatController extends Controller
         if ($apiKey === '' && $googleKey === '') {
             try {
                 $local = $this->buildPersonalHealthReply($snapshot, true);
-                $reply = $this->formatStructuredReply($local ?? 'I could not generate a summary right now.');
+                $reply = $local ?? 'এই মুহূর্তে সারাংশ তৈরি করা যায়নি।';
                 $fallback = $this->buildFallbackSmartSuggestions($snapshot);
                 if (count($fallback) >= 4) {
                     $reply = $this->appendSmartSuggestionsSection($reply, array_slice($fallback, 0, 4));
@@ -1166,7 +1170,8 @@ class AiChatController extends Controller
         if ($final !== null) {
             // For Suggestions page summary, return the model output directly so
             // the requested sections are shown without generic wrappers.
-            $reply = $this->cleanAboutMeResponse($final);
+            $reply = $this->normalizeBanglaSummaryHeadings($this->cleanAboutMeResponse($final));
+            $reply = $this->normalizeMedicalTermsInBanglaText($reply);
             $llmSuggestions = $this->generateLlmSmartSuggestions($snapshot, $apiKey, $googleKey, $baseUrl, $models);
             if (count($llmSuggestions) < 4) {
                 $llmSuggestions = $this->buildFallbackSmartSuggestions($snapshot);
@@ -1180,7 +1185,7 @@ class AiChatController extends Controller
         try {
             $local = $this->buildPersonalHealthReply($snapshot, true);
             if ($local !== null) {
-                $reply = $this->formatStructuredReply($local);
+                $reply = $local;
                 // Keep fallback fast/reliable when LLM summary already failed.
                 $llmSuggestions = $this->buildFallbackSmartSuggestions($snapshot);
                 $reply = $this->appendSmartSuggestionsSection($reply, array_slice($llmSuggestions, 0, 4));
@@ -1283,6 +1288,10 @@ class AiChatController extends Controller
                 $icon = 'fa-lightbulb';
             }
 
+            $title = $this->normalizeBanglaSuggestionTitle($title);
+            $message = $this->normalizeMedicalTermsInBanglaText($message);
+            $message = $this->enhanceBoldingInBanglaText($message);
+
             $normalized[] = [
                 'title' => $title,
                 'message' => $message,
@@ -1307,18 +1316,19 @@ class AiChatController extends Controller
         array $models
     ): array {
         $json = json_encode($snapshot, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-        $system = 'You are MyDoctor AI assistant. '
+        $system = 'You are MyDoctor AI assistant for Bangla output. '
             . 'Use ONLY the provided JSON user records. '
             . 'Return STRICT JSON only: an array of 4 or 5 objects. '
             . 'Each object must include: title, message, category, color, icon. '
-            . 'title: concise and useful. '
-            . 'message: practical and personalized, include bold markdown where useful using **text**. '
+            . 'title and message MUST be in Bangla (Bengali). '
+            . 'Medical condition names may remain in English if needed, but sentence structure must be Bangla. '
+            . 'message must be practical and personalized; include markdown bold where useful using **text**. '
             . 'category must be one of: Metric Alert, Adherence, Symptom, Condition, Lifestyle, Wellness. '
             . 'color must be one of: danger, warning, info, success, primary. '
             . 'icon must be a Font Awesome icon class name like fa-heartbeat or fa-pills. '
             . 'Do NOT use numbered labels like Tip 1/Tip 2. '
             . 'Do NOT include any markdown wrapper or explanation outside JSON.';
-        $userPrompt = "User data JSON:\n{$json}\n\nReturn the JSON array now.";
+        $userPrompt = "ব্যবহারকারীর ডেটা JSON:\n{$json}\n\nএখন শুধু JSON array রিটার্ন করুন।";
 
         $modelRaw = null;
 
@@ -1381,12 +1391,12 @@ class AiChatController extends Controller
     private function appendSmartSuggestionsSection(string $summaryText, array $suggestions): string
     {
         $content = trim($summaryText);
-        $content = preg_replace('/\n\*\*Smart Suggestions\*\*[\s\S]*$/i', '', $content) ?? $content;
+        $content = preg_replace('/\n(?:\*\*)?(?:Smart Suggestions|স্মার্ট পরামর্শ)(?:\*\*)?\s*:?\s*[\s\S]*$/iu', '', $content) ?? $content;
         $content = trim($content);
 
         $bullets = [];
         foreach ($suggestions as $s) {
-            $title = trim((string) ($s['title'] ?? 'Suggestion'));
+            $title = trim((string) ($s['title'] ?? 'পরামর্শ'));
             $message = trim((string) ($s['message'] ?? ''));
             if ($title === '' || $message === '') {
                 continue;
@@ -1398,7 +1408,132 @@ class AiChatController extends Controller
             return $content;
         }
 
-        return $content . "\n\n**Smart Suggestions**\n" . implode("\n", array_slice($bullets, 0, 4));
+        return $content . "\n\n**স্মার্ট পরামর্শ**\n" . implode("\n", array_slice($bullets, 0, 4));
+    }
+
+    private function normalizeBanglaSummaryHeadings(string $text): string
+    {
+        $normalized = trim($text);
+
+        $map = [
+            '/\*\*\s*Your Health Overview\s*\*\*/i' => '**আপনার স্বাস্থ্য প্রোফাইল**',
+            '/^\s*Your Health Overview\s*:?\s*$/im' => 'আপনার স্বাস্থ্য প্রোফাইল',
+            '/\*\*\s*Diseases\s*\*\*/i' => '**রোগের অবস্থা**',
+            '/^\s*Diseases\s*:?\s*$/im' => 'রোগের অবস্থা',
+            '/\*\*\s*Symptoms\s+and\s+Metrics\s+Trend\s*\*\*/i' => '**উপসর্গ ও মেট্রিক প্রবণতা**',
+            '/^\s*Symptoms\s+and\s+Metrics\s+Trend\s*:?\s*$/im' => 'উপসর্গ ও মেট্রিক প্রবণতা',
+            '/\*\*\s*Smart Suggestions\s*\*\*/i' => '**স্মার্ট পরামর্শ**',
+            '/^\s*Smart Suggestions\s*:?\s*$/im' => 'স্মার্ট পরামর্শ',
+            '/\*\*\s*Advice based on weather([^*]*)\*\*/i' => '**আবহাওয়া ভিত্তিক পরামর্শ$1**',
+            '/^\s*Advice based on weather(.*)$/im' => 'আবহাওয়া ভিত্তিক পরামর্শ$1',
+        ];
+
+        foreach ($map as $pattern => $replacement) {
+            $normalized = preg_replace($pattern, $replacement, $normalized) ?? $normalized;
+        }
+
+        return $normalized;
+    }
+
+    private function medicalNameBnWithEn(string $name): string
+    {
+        $name = trim($name);
+        if ($name === '') {
+            return 'অজানা';
+        }
+
+        if (preg_match('/[\x{0980}-\x{09FF}]/u', $name)) {
+            return $name;
+        }
+
+        $map = [
+            "Cushing's Syndrome" => 'কুশিংস সিন্ড্রোম',
+            'Atrial Fibrillation' => 'এট্রিয়াল ফাইব্রিলেশন',
+            'Chickenpox' => 'চিকেনপক্স',
+            'Productive Cough' => 'কফসহ কাশি',
+            'Irregular Menstruation' => 'অনিয়মিত মাসিক',
+            'Hair Loss' => 'চুল পড়া',
+            'Dry Mouth' => 'মুখ শুকানো',
+            'Spinning Sensation' => 'মাথা ঘোরা',
+            'Dizziness' => 'মাথা ঘোরা',
+            'Fever' => 'জ্বর',
+        ];
+
+        foreach ($map as $en => $bn) {
+            if (strcasecmp($name, $en) === 0) {
+                return "{$bn} ({$en})";
+            }
+        }
+
+        return $name;
+    }
+
+    private function metricNameBn(string $metric): string
+    {
+        $metric = trim($metric);
+        $map = [
+            'heart_rate' => 'হার্ট রেট (heart_rate)',
+            'blood_pressure' => 'রক্তচাপ (blood_pressure)',
+            'blood_glucose' => 'রক্তে শর্করা (blood_glucose)',
+            'body_weight' => 'ওজন (body_weight)',
+            'temperature' => 'তাপমাত্রা (temperature)',
+            'oxygen_saturation' => 'অক্সিজেন স্যাচুরেশন (oxygen_saturation)',
+            'cholesterol' => 'কোলেস্টেরল (cholesterol)',
+            'creatinine' => 'ক্রিয়েটিনিন (creatinine)',
+            'hemoglobin' => 'হিমোগ্লোবিন (hemoglobin)',
+        ];
+
+        $key = strtolower($metric);
+        return $map[$key] ?? $metric;
+    }
+
+    private function normalizeBanglaSuggestionTitle(string $title): string
+    {
+        $title = trim($title);
+        $map = [
+            'High Heart Rate Detected' => 'উচ্চ হার্ট রেট শনাক্ত',
+            'Productive Cough Reported' => 'কফসহ কাশি রিপোর্ট হয়েছে',
+            'Atrial Fibrillation Management' => 'এট্রিয়াল ফাইব্রিলেশন ব্যবস্থাপনা',
+            'Medication Reminder' => 'ওষুধ গ্রহণের রিমাইন্ডার',
+            'Elevated Body Temperature' => 'উচ্চ তাপমাত্রা শনাক্ত',
+            'Abnormal Hemoglobin Level' => 'অস্বাভাবিক হিমোগ্লোবিন মাত্রা',
+        ];
+
+        foreach ($map as $en => $bn) {
+            if (strcasecmp($title, $en) === 0) {
+                return $bn;
+            }
+        }
+
+        return $title;
+    }
+
+    private function normalizeMedicalTermsInBanglaText(string $text): string
+    {
+        $map = [
+            "Cushing's Syndrome" => "কুশিংস সিন্ড্রোম (Cushing's Syndrome)",
+            'Atrial Fibrillation' => 'এট্রিয়াল ফাইব্রিলেশন (Atrial Fibrillation)',
+            'Chickenpox' => 'চিকেনপক্স (Chickenpox)',
+            'Productive Cough' => 'কফসহ কাশি (Productive Cough)',
+            'Irregular Menstruation' => 'অনিয়মিত মাসিক (Irregular Menstruation)',
+            'Hair Loss' => 'চুল পড়া (Hair Loss)',
+            'Dry Mouth' => 'মুখ শুকানো (Dry Mouth)',
+            'Spinning Sensation' => 'মাথা ঘোরা (Spinning Sensation)',
+        ];
+
+        foreach ($map as $en => $bnEn) {
+            $pattern = '/\b' . preg_quote($en, '/') . '\b/u';
+            $text = preg_replace($pattern, $bnEn, $text) ?? $text;
+        }
+
+        return $text;
+    }
+
+    private function enhanceBoldingInBanglaText(string $text): string
+    {
+        $text = preg_replace('/\b(\d+(?:\.\d+)?)\s*(bpm|°C|mmHg|mg\/dL|g\/dL|%)\b/u', '**$1 $2**', $text) ?? $text;
+        $text = preg_replace('/\b(heart_rate|blood_pressure|blood_glucose|body_weight|temperature|oxygen_saturation|cholesterol|creatinine|hemoglobin)\b/u', '**$1**', $text) ?? $text;
+        return $text;
     }
 
     private function buildFallbackSmartSuggestions(array $snapshot): array
@@ -1411,10 +1546,10 @@ class AiChatController extends Controller
         $metrics = array_slice((array) ($snapshot['health_metrics'] ?? []), 0, 2);
 
         if ($diseases !== []) {
-            $names = implode(', ', array_map(fn($d) => (string) ($d['disease'] ?? 'Unknown'), $diseases));
+            $names = implode(', ', array_map(fn($d) => $this->medicalNameBnWithEn((string) ($d['disease'] ?? 'অজানা')), $diseases));
             $suggestions[] = [
-                'title' => 'Condition-focused follow-up',
-                'message' => "Based on your records, **{$names}** should be reviewed regularly. Keep tracking symptoms and share changes during your next consultation.",
+                'title' => 'রোগভিত্তিক ফলো-আপ',
+                'message' => "আপনার রেকর্ড অনুযায়ী **{$names}** নিয়মিত পর্যবেক্ষণে রাখা প্রয়োজন। উপসর্গের পরিবর্তন নোট করে পরবর্তী ফলো-আপে চিকিৎসককে জানান।",
                 'category' => 'Condition',
                 'color' => 'warning',
                 'icon' => 'fa-notes-medical',
@@ -1422,10 +1557,10 @@ class AiChatController extends Controller
         }
 
         if ($symptoms !== []) {
-            $names = implode(', ', array_map(fn($s) => (string) ($s['symptom'] ?? 'Symptom'), $symptoms));
+            $names = implode(', ', array_map(fn($s) => $this->medicalNameBnWithEn((string) ($s['symptom'] ?? 'উপসর্গ')), $symptoms));
             $suggestions[] = [
-                'title' => 'Track symptom trend daily',
-                'message' => "Your recent symptoms include **{$names}**. Logging timing and severity consistently can help identify triggers and recovery patterns.",
+                'title' => 'প্রতিদিন উপসর্গ ট্র্যাক করুন',
+                'message' => "সাম্প্রতিক উপসর্গের মধ্যে **{$names}** রয়েছে। সময় ও তীব্রতা নিয়মিত লিখে রাখলে ট্রিগার এবং উন্নতির ধারা বোঝা সহজ হবে।",
                 'category' => 'Symptom',
                 'color' => 'danger',
                 'icon' => 'fa-thermometer-half',
@@ -1433,10 +1568,10 @@ class AiChatController extends Controller
         }
 
         if ($medicines !== []) {
-            $names = implode(', ', array_map(fn($m) => (string) ($m['medicine_name'] ?? 'Medicine'), $medicines));
+            $names = implode(', ', array_map(fn($m) => (string) ($m['medicine_name'] ?? 'ওষুধ'), $medicines));
             $suggestions[] = [
-                'title' => 'Improve medicine consistency',
-                'message' => "You are taking **{$names}**. Use reminder timing and a fixed daily routine to reduce missed doses.",
+                'title' => 'ওষুধ গ্রহণে ধারাবাহিকতা',
+                'message' => "আপনি **{$names}** সেবন করছেন। রিমাইন্ডার ও নির্দিষ্ট রুটিন মেনে চললে ডোজ মিস হওয়ার ঝুঁকি কমবে।",
                 'category' => 'Adherence',
                 'color' => 'info',
                 'icon' => 'fa-pills',
@@ -1444,10 +1579,10 @@ class AiChatController extends Controller
         }
 
         if ($metrics !== []) {
-            $names = implode(', ', array_map(fn($m) => (string) ($m['metric_type'] ?? 'metric'), $metrics));
+            $names = implode(', ', array_map(fn($m) => (string) ($m['metric_type'] ?? 'মেট্রিক'), $metrics));
             $suggestions[] = [
-                'title' => 'Review key health metrics',
-                'message' => "Recent metrics like **{$names}** should be monitored on a fixed schedule to catch early changes.",
+                'title' => 'গুরুত্বপূর্ণ মেট্রিক পর্যবেক্ষণ',
+                'message' => "**{$names}** সহ গুরুত্বপূর্ণ মেট্রিক নির্দিষ্ট সময়সূচিতে মাপলে পরিবর্তন দ্রুত ধরা যায়।",
                 'category' => 'Metric Alert',
                 'color' => 'primary',
                 'icon' => 'fa-chart-line',
@@ -1455,8 +1590,8 @@ class AiChatController extends Controller
         }
 
         $suggestions[] = [
-            'title' => 'Daily recovery routine',
-            'message' => 'Support recovery with **consistent sleep, hydration, light activity, and stress control**. These habits improve long-term stability across most conditions.',
+            'title' => 'দৈনিক পুনরুদ্ধার রুটিন',
+            'message' => '**নিয়মিত ঘুম, পর্যাপ্ত পানি, হালকা ব্যায়াম ও মানসিক চাপ নিয়ন্ত্রণ** দীর্ঘমেয়াদে বেশিরভাগ অবস্থায় স্থিতি উন্নত করে।',
             'category' => 'Lifestyle',
             'color' => 'success',
             'icon' => 'fa-leaf',
@@ -1464,8 +1599,8 @@ class AiChatController extends Controller
 
         while (count($suggestions) < 4) {
             $suggestions[] = [
-                'title' => 'Preventive care reminder',
-                'message' => 'Plan a routine follow-up to review your latest records and adjust your care plan safely with your clinician.',
+                'title' => 'প্রতিরোধমূলক ফলো-আপ স্মরণ',
+                'message' => 'সাম্প্রতিক রেকর্ড পর্যালোচনার জন্য নিয়মিত ফলো-আপ পরিকল্পনা করুন, যাতে চিকিৎসকের সাথে নিরাপদভাবে কেয়ার প্ল্যান আপডেট করা যায়।',
                 'category' => 'Wellness',
                 'color' => 'primary',
                 'icon' => 'fa-user-md',

@@ -527,6 +527,8 @@
     <script>
         const AI_SUMMARY_USER_ID = {{ (int) $user->id }};
         const AI_SUMMARY_USER_EMAIL = @json((string) $user->email);
+        const WEATHER_ADVICE_TEXT = @json((string) ($weatherAdvice ?? ''));
+        const WEATHER_ADVICE_LOCATION = @json((string) ($weatherAdviceLocation ?? ''));
         const AI_SUMMARY_CACHE_KEY = `mydoctor.ai_summary_cache.v1.user.${AI_SUMMARY_USER_ID}`;
         const AI_SUMMARY_LAST_ACTIVE_KEY = 'mydoctor.ai_last_active_user';
 
@@ -645,7 +647,9 @@
                 let finalReply = reply;
                 const llmSuggestions = await fetchLlmSuggestionsForSummary();
                 if (Array.isArray(llmSuggestions) && llmSuggestions.length >= 4) {
-                    finalReply = composeSummaryWithSuggestions(reply, llmSuggestions.slice(0, 5));
+                    finalReply = composeSummaryWithSuggestions(reply, llmSuggestions.slice(0, 5), WEATHER_ADVICE_TEXT, WEATHER_ADVICE_LOCATION);
+                } else {
+                    finalReply = composeSummaryWithSuggestions(reply, [], WEATHER_ADVICE_TEXT, WEATHER_ADVICE_LOCATION);
                 }
 
                 if (response.ok) {
@@ -685,19 +689,43 @@
             }
         }
 
-        function composeSummaryWithSuggestions(summaryText, suggestions) {
+        function composeSummaryWithSuggestions(summaryText, suggestions, weatherAdvice, weatherLocation) {
             let content = (summaryText || '').trim();
 
             // Remove any existing smart suggestions section to avoid duplication.
-            content = content.replace(/\n\*\*Smart Suggestions\*\*[\s\S]*$/i, '').trim();
+            content = content.replace(/\n(?:\*\*)?(?:Smart Suggestions|স্মার্ট পরামর্শ)(?:\*\*)?\s*:?\s*[\s\S]*$/iu, '').trim();
+            content = content.replace(/\n(?:\*\*)?(?:Advice based on weather|আবহাওয়া ভিত্তিক পরামর্শ)(?:\*\*)?\s*:?\s*[\s\S]*$/iu, '').trim();
 
-            const bullets = suggestions.map((s) => {
-                const title = (s.title || 'Suggestion').trim();
-                const message = (s.message || '').trim();
-                return `- **${title}**: ${message}`;
-            }).join('\n');
+            let appended = '';
 
-            return `${content}\n\n**Smart Suggestions**\n${bullets}`;
+            if (Array.isArray(suggestions) && suggestions.length > 0) {
+                const bullets = suggestions.map((s) => {
+                    const title = (s.title || 'পরামর্শ').trim();
+                    const message = (s.message || '').trim();
+                    return `- **${title}**: ${message}`;
+                }).join('\n');
+                appended += `\n\n**স্মার্ট পরামর্শ**\n${bullets}`;
+            }
+
+            const adviceRaw = (weatherAdvice || '').trim();
+            if (adviceRaw !== '') {
+                const adviceLines = adviceRaw
+                    .split(/\r?\n/)
+                    .map(l => l.trim())
+                    .filter(Boolean)
+                    .slice(0, 3);
+                if (adviceLines.length > 0) {
+                    const locationSuffix = (weatherLocation || '').trim() ? ` (${weatherLocation.trim()})` : '';
+                    const adviceBullets = adviceLines
+                        .map(line => line.replace(/^[\-*•\d\.\)\s]+/, '').trim())
+                        .filter(Boolean)
+                        .map(line => `- ${line}`)
+                        .join('\n');
+                    appended += `\n\n**আবহাওয়া ভিত্তিক পরামর্শ${locationSuffix}:**\n${adviceBullets}`;
+                }
+            }
+
+            return `${content}${appended}`.trim();
         }
 
         async function loadLlmSmartSuggestions() {
@@ -800,21 +828,22 @@
                     continue;
                 }
 
-                if (line.startsWith('## ')) {
+                if (/^#{2,4}\s+/.test(line)) {
                     if (inList) {
                         html += '</ul>';
                         inList = false;
                     }
-                    html += `<h3>${emphasizeLine(line.substring(3))}</h3>`;
+                    html += `<h3>${emphasizeLine(line.replace(/^#{2,4}\s+/, ''))}</h3>`;
                     continue;
                 }
 
-                if (line.startsWith('- ')) {
+                if (line.startsWith('- ') || line.startsWith('* ') || /^\d+\.\s+/.test(line)) {
                     if (!inList) {
                         html += '<ul>';
                         inList = true;
                     }
-                    html += `<li>${emphasizeLine(line.substring(2))}</li>`;
+                    const cleaned = line.replace(/^(-|\*|\d+\.)\s+/, '');
+                    html += `<li>${emphasizeLine(cleaned)}</li>`;
                     continue;
                 }
 

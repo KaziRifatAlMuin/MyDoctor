@@ -4009,6 +4009,87 @@ window.openVideoModal = function(type, source, isReel = false) {
                 .replace(/'/g, "&#039;");
         }
 
+        // Render a lightweight markdown-like subset: headings, lists, bold
+        function renderChatbotMarkup(text) {
+            const escaped = escapeHtml(text);
+            const lines = escaped.split(/\r?\n/);
+            let html = '';
+            let inList = false;
+
+            for (const rawLine of lines) {
+                const line = rawLine.trim();
+
+                if (line === '') {
+                    if (inList) {
+                        html += '</ul>';
+                        inList = false;
+                    }
+                    continue;
+                }
+
+                if (/^#{2,4}\s+/.test(line)) {
+                    if (inList) {
+                        html += '</ul>';
+                        inList = false;
+                    }
+                    html += `<h3>${emphasizeLine(line.replace(/^#{2,4}\s+/, ''))}</h3>`;
+                    continue;
+                }
+
+                if (line.startsWith('- ') || line.startsWith('* ') || /^\d+\.\s+/.test(line)) {
+                    if (!inList) {
+                        html += '<ul>';
+                        inList = true;
+                    }
+                    const cleaned = line.replace(/^(-|\*|\d+\.)\s+/, '');
+                    html += `<li>${emphasizeLine(cleaned)}</li>`;
+                    continue;
+                }
+
+                if (inList) {
+                    html += '</ul>';
+                    inList = false;
+                }
+
+                html += `<p>${emphasizeLine(line)}</p>`;
+            }
+
+            if (inList) {
+                html += '</ul>';
+            }
+
+            return html || '<p class="mb-0">No content.</p>';
+        }
+
+        function emphasizeLine(input) {
+            let line = input.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+            // Make the full leading label before the first colon bold.
+            line = line.replace(/^\s*([^:<>]{2,120})\s*:\s*(.*)$/i, (m, label, rest) => {
+                return `<strong>${label.trim()}:</strong> ${rest}`;
+            });
+
+            const keywordPattern = /\b(summary|details|suggestions|tips|overview|condition|health|symptom|symptoms|disease|diseases|medicine|medicines|metric|metrics|adherence|warning|urgent|improve|monitor|doctor|exercise|sleep|hydration|stress|chronic|active|managed|severity|diagnosed|risk|risks|trend|blood\s+pressure|glucose|heart\s+rate|bmi|eczema|conjunctivitis|tachycardia)\b/gi;
+            const valuePattern = /\b(\d+\/?\d*\s*(?:mg\/dL|mmhg|bpm|%)?)\b/gi;
+
+            const firstColon = line.indexOf(':');
+            if (firstColon !== -1) {
+                const head = line.slice(0, firstColon + 1);
+                let tail = line.slice(firstColon + 1);
+                tail = tail.replace(keywordPattern, '<strong>$1</strong>');
+                tail = tail.replace(valuePattern, '<strong>$1</strong>');
+                line = head + tail;
+            } else {
+                line = line.replace(keywordPattern, '<strong>$1</strong>');
+            }
+
+            if (!/<strong>/.test(line)) {
+                line = line.replace(/^((?:\w+\s+){1,3}\w+)/, '<strong>$1</strong>');
+            }
+
+            return line;
+        }
+
         // Start periodic updates
         let notificationInterval;
 
@@ -4236,10 +4317,8 @@ window.openVideoModal = function(type, source, isReel = false) {
                 messageDiv.style.textAlign = 'left';
                 messageDiv.style.margin = '10px 0';
 
-                // Format bot response with line breaks and bold text
-                let formattedText = escapeHtml(text);
-                formattedText = formattedText.replace(/\n/g, '<br>');
-                formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                // Format bot response using markdown-like renderer (lists, bold, headings)
+                let formattedText = renderChatbotMarkup(text);
 
                 messageDiv.innerHTML = `
                     <div class="bot-message-row">

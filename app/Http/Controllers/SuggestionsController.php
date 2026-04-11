@@ -9,13 +9,17 @@ use App\Models\UserSymptom;
 use App\Models\Medicine;
 use App\Models\MedicineLog;
 use App\Models\UserDisease;
+use App\Services\LiveEnvironmentService;
 
 class SuggestionsController extends Controller
 {
-    public function index()
+    public function index(LiveEnvironmentService $liveEnvironmentService)
     {
         $user = Auth::user();
         $this->ensureMetricDefinitions();
+        $liveEnvironment = $liveEnvironmentService->forUser($user);
+        $weatherAdvice = data_get($liveEnvironment, 'insights.advisory');
+        $weatherAdviceLocation = data_get($liveEnvironment, 'location_label');
 
         // Latest metrics by type
         $latestMetrics = UserHealth::with('healthMetric')
@@ -58,7 +62,7 @@ class SuggestionsController extends Controller
 
         return view('suggestions', compact(
             'user', 'suggestions', 'latestMetrics', 'recentSymptoms',
-            'activeConditions', 'adherenceRate', 'medicines'
+            'activeConditions', 'adherenceRate', 'medicines', 'weatherAdvice', 'weatherAdviceLocation'
         ));
     }
 
