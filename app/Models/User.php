@@ -22,10 +22,6 @@ class User extends Authenticatable
         'blood_group',
         'gender',
         'password',
-        'email_notifications',
-        'push_notifications',
-        'show_personal_info',
-        'show_diseases',
         'notification_settings',
     ];
 
@@ -38,12 +34,23 @@ class User extends Authenticatable
         'date_of_birth' => 'date',
         'email_verified_at' => 'datetime',
         'password'           => 'hashed',
-        'email_notifications' => 'boolean',
-        'push_notifications' => 'boolean',
-        'show_personal_info' => 'boolean',
-        'show_diseases' => 'boolean',
         'notification_settings' => 'array',
     ];
+
+    protected static function booted(): void
+    {
+        static::created(function (User $user): void {
+            $user->setting()->firstOrCreate([], [
+                'email_notifications' => true,
+                'push_notifications' => true,
+                'show_personal_info' => false,
+                'show_diseases' => false,
+                'show_chatbot' => true,
+                'show_notification_badge' => true,
+                'show_mail_badge' => true,
+            ]);
+        });
+    }
 
     /**
      * Route notifications for Web Push
@@ -149,7 +156,7 @@ class User extends Authenticatable
      */
     public function wantsEmailNotifications(): bool
     {
-        return $this->email_notifications ?? true;
+        return (bool) $this->setting->email_notifications;
     }
 
     /**
@@ -157,7 +164,7 @@ class User extends Authenticatable
      */
     public function wantsPushNotifications(): bool
     {
-        return $this->push_notifications ?? true;
+        return (bool) $this->setting->push_notifications;
     }
 
     /**
@@ -183,9 +190,11 @@ class User extends Authenticatable
      */
     public function toggleEmailNotifications(): bool
     {
-        $this->email_notifications = !$this->email_notifications;
-        $this->save();
-        return $this->email_notifications;
+        $setting = $this->setting()->firstOrCreate([]);
+        $setting->email_notifications = !$setting->email_notifications;
+        $setting->save();
+
+        return (bool) $setting->email_notifications;
     }
 
     /**
@@ -193,9 +202,24 @@ class User extends Authenticatable
      */
     public function togglePushNotifications(): bool
     {
-        $this->push_notifications = !$this->push_notifications;
-        $this->save();
-        return $this->push_notifications;
+        $setting = $this->setting()->firstOrCreate([]);
+        $setting->push_notifications = !$setting->push_notifications;
+        $setting->save();
+
+        return (bool) $setting->push_notifications;
+    }
+
+    public function setting()
+    {
+        return $this->hasOne(UserSetting::class)->withDefault([
+            'email_notifications' => true,
+            'push_notifications' => true,
+            'show_personal_info' => false,
+            'show_diseases' => false,
+            'show_chatbot' => true,
+            'show_notification_badge' => true,
+            'show_mail_badge' => true,
+        ]);
     }
 
     // Health relationships

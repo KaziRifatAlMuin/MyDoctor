@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\User;
+use App\Models\UserSetting;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;  
@@ -25,14 +26,30 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => Hash::make('abcd1234'),
             'remember_token' => Str::random(10),
-            'email_notifications' => fake()->boolean(),
-            'push_notifications' => fake()->boolean(),
-            'notification_settings' => json_encode([
+            'notification_settings' => [
                 'reminders' => fake()->boolean(),
                 'updates' => fake()->boolean(),
                 'newsletter' => fake()->boolean(),
-            ]),
+            ],
         ];
+    }
+
+    public function configure(): static
+    {
+        return $this->afterCreating(function (User $user): void {
+            UserSetting::query()->firstOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'email_notifications' => true,
+                    'push_notifications' => true,
+                    'show_personal_info' => false,
+                    'show_diseases' => false,
+                    'show_chatbot' => true,
+                    'show_notification_badge' => true,
+                    'show_mail_badge' => true,
+                ]
+            );
+        });
     }
 
     public function unverified(): static

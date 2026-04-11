@@ -18,6 +18,7 @@ use App\Models\Symptom;
 use App\Models\UserSymptom;
 use App\Models\Upload;
 use App\Models\User;
+use App\Models\UserSetting;
 use App\Models\UserAddress;
 use App\Models\UserDisease;
 use App\Models\UserHealth;
@@ -59,8 +60,6 @@ class HighVolumeDemoSeeder extends Seeder
                 'email_verified_at' => now(),
                 'password' => Hash::make('abcd1234'),
                 'role' => 'admin',
-                'email_notifications' => true,
-                'push_notifications' => true,
                 'notification_settings' => [
                     'reminders' => true,
                     'updates' => true,
@@ -69,6 +68,22 @@ class HighVolumeDemoSeeder extends Seeder
                 'remember_token' => Str::random(10),
             ]
         );
+
+        $admin = User::query()->where('email', 'admin@mydoctor.com')->first();
+        if ($admin) {
+            UserSetting::query()->updateOrCreate(
+                ['user_id' => $admin->id],
+                [
+                    'email_notifications' => true,
+                    'push_notifications' => true,
+                    'show_personal_info' => false,
+                    'show_diseases' => false,
+                    'show_chatbot' => false,
+                    'show_notification_badge' => true,
+                    'show_mail_badge' => true,
+                ]
+            );
+        }
     }
 
     private function seedUsers()
@@ -110,8 +125,6 @@ class HighVolumeDemoSeeder extends Seeder
                 'email_verified_at' => $now,
                 'password' => Hash::make('abcd1234'),
                 'role' => 'member',
-                'email_notifications' => true,
-                'push_notifications' => true,
                 'notification_settings' => json_encode([
                     'reminders' => true,
                     'updates' => true,
@@ -125,10 +138,36 @@ class HighVolumeDemoSeeder extends Seeder
 
         User::query()->insert($rows);
 
-        return User::query()
+        $users = User::query()
             ->where('email', 'like', 'user%@gmail.com')
             ->orderBy('id')
             ->get();
+
+        $settingsRows = [];
+        foreach ($users as $user) {
+            $settingsRows[] = [
+                'user_id' => $user->id,
+                'email_notifications' => true,
+                'push_notifications' => true,
+                'show_personal_info' => false,
+                'show_diseases' => false,
+                'show_chatbot' => true,
+                'show_notification_badge' => true,
+                'show_mail_badge' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }
+
+        if ($settingsRows !== []) {
+            UserSetting::query()->upsert(
+                $settingsRows,
+                ['user_id'],
+                ['email_notifications', 'push_notifications', 'show_personal_info', 'show_diseases', 'show_chatbot', 'show_notification_badge', 'show_mail_badge', 'updated_at']
+            );
+        }
+
+        return $users;
     }
 
     private function seedUserDiseases($users, $diseaseIds): void

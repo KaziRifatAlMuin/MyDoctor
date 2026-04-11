@@ -38,6 +38,10 @@
                 </div>
                 
                 <div class="card-body p-4">
+                    @php
+                        $settings = $user->setting;
+                    @endphp
+
                     @if(session('success'))
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
                             <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
@@ -61,7 +65,7 @@
                                 <div class="form-check form-switch mb-3">
                                     <input class="form-check-input" type="checkbox" 
                                            name="push_notifications" id="push_notifications" 
-                                           value="1" {{ $user->push_notifications ? 'checked' : '' }}>
+                                         value="1" {{ $settings->push_notifications ? 'checked' : '' }}>
                                     <label class="form-check-label fw-bold" for="push_notifications">
                                         Enable Push Notifications
                                     </label>
@@ -71,7 +75,7 @@
                                 </div>
 
                                 <div id="pushStatus" class="mt-3 small">
-                                    @if($user->push_notifications)
+                                    @if($settings->push_notifications)
                                         <span class="text-success">
                                             <i class="fas fa-check-circle"></i> Push notifications are enabled
                                         </span>
@@ -92,7 +96,7 @@
                                 <div class="form-check form-switch mb-3">
                                     <input class="form-check-input" type="checkbox" 
                                            name="email_notifications" id="email_notifications" 
-                                           value="1" {{ $user->email_notifications ? 'checked' : '' }}>
+                                         value="1" {{ $settings->email_notifications ? 'checked' : '' }}>
                                     <label class="form-check-label fw-bold" for="email_notifications">
                                         Enable Email Notifications
                                     </label>
@@ -125,9 +129,9 @@
                                         <div class="card-body">
                                             <div class="form-check form-switch mb-3">
                                                 <input class="form-check-input" type="checkbox"
-                                                       name="chatbot_bubble" id="chatbot_bubble"
-                                                       value="1" {{ ($chatbotBubbleEnabled ?? true) ? 'checked' : '' }}>
-                                                <label class="form-check-label fw-bold" for="chatbot_bubble">
+                                                          name="show_chatbot" id="show_chatbot"
+                                                          value="1" {{ $settings->show_chatbot ? 'checked' : '' }}>
+                                                <label class="form-check-label fw-bold" for="show_chatbot">
                                                     Show Chatbot Bubble (floating assistant)
                                                 </label>
                                                 <p class="text-muted small mt-1">
@@ -172,7 +176,7 @@
         document.cookie = name + "=" + (value || "")  + expires + "; path=/";
     }
 
-    document.getElementById('chatbot_bubble')?.addEventListener('change', function() {
+    document.getElementById('show_chatbot')?.addEventListener('change', function() {
         const enabled = this.checked ? '1' : '0';
         setCookie('chatbot_bubble_enabled', enabled, 365);
         if (typeof window.updateChatbotVisibility === 'function') {

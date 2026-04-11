@@ -54,7 +54,7 @@
                                     <i class="fas fa-id-card me-2 text-primary"></i>Personal Information
                                 </h5>
 
-                                @if ($user->show_personal_info)
+                                @if ($user->setting->show_personal_info)
                                     <div style="margin-top:0.85rem; display:grid; gap:0.55rem;">
                                         <div style="background:#f5f8ff; border:1px solid #dfe9fb; border-radius:10px; padding:0.65rem 0.75rem;">
                                             <small style="display:block; color:#7a8aa8;">Occupation</small>
@@ -64,10 +64,18 @@
                                             <small style="display:block; color:#9f6b6b;">Blood Group</small>
                                             <strong style="color:#7e1f1f;">{{ $user->blood_group ?: 'Not specified' }}</strong>
                                         </div>
+                                        <div style="background:#f8fff3; border:1px solid #deefcd; border-radius:10px; padding:0.65rem 0.75rem;">
+                                            <small style="display:block; color:#6e8755;">Phone Number</small>
+                                            <strong style="color:#3e5e24;">{{ $user->phone ?: 'Not specified' }}</strong>
+                                        </div>
+                                        <div style="background:#f6f8ff; border:1px solid #d6defa; border-radius:10px; padding:0.65rem 0.75rem;">
+                                            <small style="display:block; color:#5e6797;">Date of Birth</small>
+                                            <strong style="color:#253374;">{{ optional($user->date_of_birth)->format('M d, Y') ?: 'Not specified' }}</strong>
+                                        </div>
                                     </div>
                                 @else
                                     <p style="margin:0.9rem 0 0; color:#6a7992; font-size:0.9rem; line-height:1.5;">
-                                        This member has not granted permission to display personal information publicly.
+                                        This member has not granted permission to display additional personal details publicly.
                                     </p>
                                 @endif
                             </div>
@@ -79,7 +87,7 @@
                                     <i class="fas fa-notes-medical me-2 text-success"></i>Disease Visibility
                                 </h5>
 
-                                @if ($user->show_diseases)
+                                @if ($user->setting->show_diseases)
                                     @php
                                         $publicDiseases = $user->userDiseases ?? collect();
                                     @endphp

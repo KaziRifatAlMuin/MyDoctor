@@ -14,11 +14,15 @@ class ProfileSettingsPrivacyTest extends TestCase
 
     public function test_settings_update_persists_public_visibility_permissions(): void
     {
-        $user = User::factory()->create([
+        $user = User::factory()->create();
+        $user->setting()->update([
             'email_notifications' => false,
             'push_notifications' => false,
             'show_personal_info' => false,
             'show_diseases' => false,
+            'show_chatbot' => false,
+            'show_notification_badge' => false,
+            'show_mail_badge' => false,
         ]);
 
         $response = $this->actingAs($user)->put(route('profile.setting.update'), [
@@ -26,7 +30,9 @@ class ProfileSettingsPrivacyTest extends TestCase
             'push_notifications' => '1',
             'show_personal_info' => '1',
             // show_diseases intentionally omitted to verify false handling
-            'chatbot_bubble' => '1',
+            'show_chatbot' => '1',
+            'show_notification_badge' => '1',
+            'show_mail_badge' => '1',
             'reminder_before_minutes' => 15,
         ]);
 
@@ -34,11 +40,15 @@ class ProfileSettingsPrivacyTest extends TestCase
         $response->assertCookie('chatbot_bubble_enabled', '1');
 
         $user->refresh();
+        $user->load('setting');
 
-        $this->assertTrue($user->email_notifications);
-        $this->assertTrue($user->push_notifications);
-        $this->assertTrue($user->show_personal_info);
-        $this->assertFalse($user->show_diseases);
+        $this->assertTrue($user->setting->email_notifications);
+        $this->assertTrue($user->setting->push_notifications);
+        $this->assertTrue($user->setting->show_personal_info);
+        $this->assertFalse($user->setting->show_diseases);
+        $this->assertTrue($user->setting->show_chatbot);
+        $this->assertTrue($user->setting->show_notification_badge);
+        $this->assertTrue($user->setting->show_mail_badge);
         $this->assertSame(15, (int) ($user->notification_settings['reminder_before_minutes'] ?? 0));
     }
 
@@ -49,6 +59,8 @@ class ProfileSettingsPrivacyTest extends TestCase
         $user = User::factory()->create([
             'occupation' => 'Software Engineer',
             'blood_group' => 'B+',
+        ]);
+        $user->setting()->update([
             'show_personal_info' => false,
             'show_diseases' => false,
         ]);
@@ -61,12 +73,12 @@ class ProfileSettingsPrivacyTest extends TestCase
 
         $hiddenResponse = $this->get(route('users.show', $user));
         $hiddenResponse->assertOk();
-        $hiddenResponse->assertSee('has not granted permission to display personal information publicly', false);
+        $hiddenResponse->assertSee('has not granted permission to display additional personal details publicly', false);
         $hiddenResponse->assertSee('has not granted permission to display disease information publicly', false);
         $hiddenResponse->assertDontSee('Software Engineer');
         $hiddenResponse->assertDontSee('Diabetes');
 
-        $user->update([
+        $user->setting()->update([
             'show_personal_info' => true,
             'show_diseases' => true,
         ]);

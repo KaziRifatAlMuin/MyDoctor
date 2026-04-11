@@ -136,6 +136,10 @@
                         @csrf
                         @method('PUT')
 
+                        @php
+                            $settings = $userSetting;
+                        @endphp
+
                         <div class="settings-grid">
                             <div class="settings-card">
                                 <h5><i class="fas fa-envelope text-primary me-2"></i>Email Alerts</h5>
@@ -143,7 +147,7 @@
                                 <div class="form-check form-switch mt-2 mb-2">
                                     <input class="form-check-input" type="checkbox" name="email_notifications"
                                         id="email_notifications" value="1"
-                                        {{ $user->email_notifications ? 'checked' : '' }}>
+                                        {{ $settings->email_notifications ? 'checked' : '' }}>
                                     <label class="form-check-label fw-semibold" for="email_notifications">Enable Email Alerts</label>
                                 </div>
                                 <label class="form-label small fw-semibold mb-1">Reminder Timing</label>
@@ -160,7 +164,7 @@
                                 <p class="settings-help">Receive instant browser push notifications.</p>
                                 <div class="form-check form-switch mt-2 mb-0">
                                     <input class="form-check-input" type="checkbox" name="push_notifications"
-                                        id="push_notifications" value="1" {{ $user->push_notifications ? 'checked' : '' }}>
+                                        id="push_notifications" value="1" {{ $settings->push_notifications ? 'checked' : '' }}>
                                     <label class="form-check-label fw-semibold" for="push_notifications">Enable Push Alerts</label>
                                 </div>
                             </div>
@@ -168,14 +172,33 @@
                             @if (!$user->isAdmin())
                                 <div class="settings-card">
                                     <h5><i class="fas fa-comments text-info me-2"></i>Chatbot Bubble</h5>
-                                    <p class="settings-help">Show or hide floating AI assistant bubble with cookie-based preference.</p>
+                                    <p class="settings-help">Show or hide the floating AI assistant bubble across your account.</p>
                                     <div class="form-check form-switch mt-2 mb-0">
-                                        <input class="form-check-input" type="checkbox" name="chatbot_bubble" id="chatbot_bubble"
-                                            value="1" {{ $chatbotBubbleEnabled ?? true ? 'checked' : '' }}>
-                                        <label class="form-check-label fw-semibold" for="chatbot_bubble">Show Chatbot Bubble</label>
+                                        <input class="form-check-input" type="checkbox" name="show_chatbot" id="show_chatbot"
+                                            value="1" {{ $settings->show_chatbot ? 'checked' : '' }}>
+                                        <label class="form-check-label fw-semibold" for="show_chatbot">Show Chatbot Bubble</label>
                                     </div>
                                 </div>
                             @endif
+
+                            <div class="settings-card">
+                                <h5><i class="fas fa-tags text-secondary me-2"></i>Badge Visibility</h5>
+                                <p class="settings-help mb-2">Control whether unread badges appear in the top navigation.</p>
+
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" name="show_notification_badge"
+                                        id="show_notification_badge" value="1" {{ $settings->show_notification_badge ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-semibold" for="show_notification_badge">Show Notification Badge</label>
+                                </div>
+                                <p class="settings-help mt-0 mb-2">If disabled, the bell badge count will stay hidden even when you have unread notifications.</p>
+
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" name="show_mail_badge"
+                                        id="show_mail_badge" value="1" {{ $settings->show_mail_badge ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-semibold" for="show_mail_badge">Show Mail Badge</label>
+                                </div>
+                                <p class="settings-help mt-0 mb-0">If disabled, unread mailbox count badges remain hidden in navbar and dropdown.</p>
+                            </div>
 
                             <div class="settings-card">
                                 <h5><i class="fas fa-user-shield text-warning me-2"></i>Public Profile Permissions</h5>
@@ -183,14 +206,14 @@
 
                                 <div class="form-check form-switch mb-2">
                                     <input class="form-check-input" type="checkbox" name="show_personal_info"
-                                        id="show_personal_info" value="1" {{ $user->show_personal_info ? 'checked' : '' }}>
+                                        id="show_personal_info" value="1" {{ $settings->show_personal_info ? 'checked' : '' }}>
                                     <label class="form-check-label fw-semibold" for="show_personal_info">Show Personal Info</label>
                                 </div>
-                                <p class="settings-help mt-0 mb-2">If enabled, public visitors can see your occupation and blood group.</p>
+                                <p class="settings-help mt-0 mb-2">If enabled, visitors can see more personal profile details: occupation, blood group, phone number, and date of birth.</p>
 
                                 <div class="form-check form-switch mb-2">
                                     <input class="form-check-input" type="checkbox" name="show_diseases" id="show_diseases"
-                                        value="1" {{ $user->show_diseases ? 'checked' : '' }}>
+                                        value="1" {{ $settings->show_diseases ? 'checked' : '' }}>
                                     <label class="form-check-label fw-semibold" for="show_diseases">Show Disease History</label>
                                 </div>
                                 <p class="settings-help mt-0 mb-0">If enabled, public visitors can see your listed disease names and status.</p>
@@ -201,7 +224,7 @@
                             <h6><i class="fas fa-file-contract me-1"></i>Consent & Terms Acknowledgement</h6>
                             <ul>
                                 <li>By turning ON a public permission, you agree that the selected information is visible on your public profile.</li>
-                                <li>"Show Personal Info" exposes occupation and blood group only.</li>
+                                <li>"Show Personal Info" exposes occupation, blood group, phone, and date of birth.</li>
                                 <li>"Show Disease History" exposes your disease names and disease status only.</li>
                                 <li>You can turn these permissions OFF anytime from this settings page.</li>
                             </ul>
@@ -230,7 +253,7 @@
                 document.cookie = name + "=" + (value || "") + expires + "; path=/";
             }
 
-            document.getElementById('chatbot_bubble')?.addEventListener('change', function() {
+            document.getElementById('show_chatbot')?.addEventListener('change', function() {
                 const enabled = this.checked ? '1' : '0';
                 setCookie('chatbot_bubble_enabled', enabled, 365);
                 if (typeof window.updateChatbotVisibility === 'function') {

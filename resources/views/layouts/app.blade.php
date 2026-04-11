@@ -2077,6 +2077,10 @@
             $dashboardRoute = $isAdminNav ? route('admin.dashboard') : route('dashboard');
             $profileDashboardRoute = auth()->check() ? route('dashboard') : route('home');
             $canUseChatbot = !auth()->check() || !auth()->user()->isAdmin();
+            $activeUserSettings = auth()->check() ? auth()->user()->setting : null;
+            $showNotificationBadge = $activeUserSettings?->show_notification_badge ?? true;
+            $showMailBadge = $activeUserSettings?->show_mail_badge ?? true;
+            $showChatbotBubble = $activeUserSettings?->show_chatbot ?? true;
         @endphp
         <div class="{{ request()->routeIs('home') ? 'banner' : 'page-nav-bar' }} {{ $navThemeClass }}">
             <!-- Navigation on Banner -->
@@ -2194,7 +2198,7 @@
                         <!-- Mailbox -->
                         <a href="{{ route('profile.mailbox') }}" class="mailbox-bell" id="mailboxBell" title="{{ __('ui.nav.mailbox') }}">
                             <i class="fas fa-envelope"></i>
-                            <span class="badge" id="mailboxCount" style="display: {{ $unreadMailCount > 0 ? 'inline-block' : 'none' }};">
+                            <span class="badge" id="mailboxCount" style="display: {{ $showMailBadge && $unreadMailCount > 0 ? 'inline-block' : 'none' }};">
                                 {{ $unreadMailCount }}
                             </span>
                         </a>
@@ -3987,6 +3991,17 @@ window.openVideoModal = function(type, source, isReel = false) {
             const badge = document.getElementById('notificationCount');
             const bell = document.getElementById('notificationBell');
             const badge2 = document.getElementById('notificationCountBadge');
+            if (!badge) return;
+
+            const allowBadge = @json((bool) ($showNotificationBadge ?? true));
+            if (!allowBadge) {
+                badge.style.display = 'none';
+                if (badge2) {
+                    badge2.style.display = 'none';
+                }
+                return;
+            }
+
             const previousCount = parseInt(badge.textContent) || 0;
             
             if (count > 0) {
@@ -3994,7 +4009,7 @@ window.openVideoModal = function(type, source, isReel = false) {
                 badge.style.display = 'inline-block';
                 
                 // Shake bell if new notification arrived
-                if (count > previousCount) {
+                if (bell && count > previousCount) {
                     bell.classList.add('shake');
                     setTimeout(() => bell.classList.remove('shake'), 500);
                 }
@@ -4015,6 +4030,12 @@ window.openVideoModal = function(type, source, isReel = false) {
         function updateMailboxCount(count) {
             const badge = document.getElementById('mailboxCount');
             if (!badge) return;
+
+            const allowBadge = @json((bool) ($showMailBadge ?? true));
+            if (!allowBadge) {
+                badge.style.display = 'none';
+                return;
+            }
 
             if (count > 0) {
                 badge.textContent = count;
@@ -4095,6 +4116,7 @@ window.openVideoModal = function(type, source, isReel = false) {
         let isTyping = false;
         let conversationHistory = [];
         let chatbotPromptTimeout;
+        const allowChatbotBubble = @json((bool) ($showChatbotBubble ?? true));
 
         // Cookie helpers
         function setCookie(name, value, days) {
@@ -4130,6 +4152,11 @@ window.openVideoModal = function(type, source, isReel = false) {
         }
 
         function initializeChatbotPromptSetting() {
+            if (!allowChatbotBubble) {
+                updateChatbotVisibility(false);
+                return;
+            }
+
             const saved = getCookie('chatbot_bubble_enabled');
             const enabled = saved === null ? '1' : saved; // default enabled
 
@@ -4140,6 +4167,11 @@ window.openVideoModal = function(type, source, isReel = false) {
         function startChatbotPromptCycle() {
             const chatbotIcon = document.getElementById('chatbotIcon');
             if (!chatbotIcon) return;
+
+            if (!allowChatbotBubble) {
+                chatbotIcon.classList.remove('glow-pulse', 'show-tooltip');
+                return;
+            }
 
             if (chatbotPromptTimeout) {
                 clearTimeout(chatbotPromptTimeout);
