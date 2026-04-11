@@ -410,6 +410,65 @@
             padding: 1rem 1.5rem;
         }
 
+        /* Improve admin edit-user modal ergonomics */
+        #editUserModal .modal-dialog {
+            margin-top: 4vh;
+            margin-bottom: 1rem;
+        }
+
+        #editUserModal .modal-content {
+            max-height: 92vh;
+            overflow: hidden;
+        }
+
+        #editUserModal .modal-body {
+            max-height: calc(92vh - 150px);
+            overflow-y: auto;
+        }
+
+        #editUserModal .modal-footer {
+            position: sticky;
+            bottom: 0;
+            background: #fff;
+            z-index: 2;
+        }
+
+        /* Red cross close button for Edit User modal */
+        #editUserModal .modal-header .btn-close {
+            background-color: #ffffff;
+            border: 1px solid rgba(229, 62, 62, 0.16);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            opacity: 1;
+            color: #e53e3e;
+            --bs-btn-close-color: #e53e3e;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+        }
+
+        #editUserModal .modal-header .btn-close:hover {
+            background-color: #fff5f5;
+        }
+
+        /* Ensure the explicit × inside the button is visible and red */
+        #editUserModal .modal-header .btn-close .close-x {
+            font-size: 18px;
+            color: #e53e3e;
+            line-height: 1;
+            display: inline-block;
+            transform: translateY(-1px);
+            pointer-events: none;
+        }
+
+        #editUserModal .modal-footer .btn {
+            min-width: 130px;
+            font-weight: 600;
+        }
+
         .form-control,
         .form-select,
         textarea {
@@ -820,13 +879,15 @@
 
     {{-- Edit User Modal --}}
     <div class="modal fade" id="editUserModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">
                         <i class="fas fa-user-edit me-2"></i>Edit User Profile
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                        <span class="close-x" aria-hidden="true">&times;</span>
+                    </button>
                 </div>
                 <form action="{{ route('users.update', $user->id) }}" method="POST" class="user-update-form">
                     @csrf

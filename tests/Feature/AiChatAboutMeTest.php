@@ -42,8 +42,8 @@ class AiChatAboutMeTest extends TestCase
 
         $reply = (string) $response->json('reply');
 
-        $this->assertStringContainsString('## MyDoctor AI Response', $reply);
-        $this->assertStringContainsString('**Smart Suggestions**', $reply);
+        $this->assertStringContainsString('**স্মার্ট পরামর্শ**', $reply);
+        $this->assertStringContainsString('আপনার রেকর্ডে এখনো কোনো রোগ', $reply);
         Http::assertNothingSent();
     }
 
@@ -159,7 +159,8 @@ class AiChatAboutMeTest extends TestCase
 
         $reply = (string) $response->json('reply');
 
-        $this->assertStringContainsString('## MyDoctor AI Response', $reply);
+        $this->assertStringContainsString('**রোগের অবস্থা:**', $reply);
+        $this->assertStringContainsString('**স্মার্ট পরামর্শ**', $reply);
         $this->assertStringContainsString('Fallback Disease', $reply);
         $this->assertStringContainsString('fallback_symptom', $reply);
     }
