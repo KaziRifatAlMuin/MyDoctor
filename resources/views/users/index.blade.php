@@ -88,6 +88,10 @@
                                     {{-- Name --}}
                                     <h5 style="font-size: 1.1rem; font-weight: 700; color: #2d3748; margin: 0.5rem 0;">{{ $user->name }}</h5>
 
+                                    @php
+                                        $canShowPersonalInfo = (auth()->check() && auth()->user()->isAdmin()) || ($user->setting?->show_personal_info ?? false);
+                                    @endphp
+
                                     {{-- Role Badge --}}
                                     <div style="margin: 0.75rem 0;">
                                         @if ($user->role === 'admin')
@@ -114,15 +118,17 @@
                                         @endif
                                     </div>
 
-                                    <div style="font-size: 0.82rem; color: #51617e; margin-bottom: 0.45rem;">
-                                        <i class="fas fa-person me-1"></i>
-                                        {{ $user->gender ? ucfirst($user->gender) : 'Gender not set' }}
-                                    </div>
+                                    @if ($canShowPersonalInfo)
+                                        <div style="font-size: 0.82rem; color: #51617e; margin-bottom: 0.45rem;">
+                                            <i class="fas fa-person me-1"></i>
+                                            {{ $user->gender ? ucfirst($user->gender) : 'Not provided' }}
+                                        </div>
 
-                                    <div style="font-size: 0.82rem; color: #51617e; margin-bottom: 0.75rem;">
-                                        <i class="fas fa-location-dot me-1"></i>
-                                        {{ $user->address?->display_upazila ?: 'Not set' }}, {{ $user->address?->display_district ?: 'Not set' }}
-                                    </div>
+                                        <div style="font-size: 0.82rem; color: #51617e; margin-bottom: 0.75rem;">
+                                            <i class="fas fa-location-dot me-1"></i>
+                                            {{ $user->address?->display_upazila ?: 'Not set' }}, {{ $user->address?->display_district ?: 'Not set' }}
+                                        </div>
+                                    @endif
 
                                     {{-- Join Info --}}
                                     <div style="font-size: 0.85rem; color: #718096; margin-top: auto; padding-top: 1rem; border-top: 1px solid #e0e0e0; margin-bottom: 1rem;">

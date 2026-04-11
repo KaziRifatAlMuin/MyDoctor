@@ -48,13 +48,13 @@
 
                 <div style="padding: 1.4rem 1.4rem 1.6rem;">
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <div style="background:#fff; border:1px solid #e7eefb; border-radius:14px; padding:1rem; height:100%; box-shadow:0 8px 18px rgba(10,55,130,0.05);">
-                                <h5 style="margin:0; color:#0f2f6b; font-weight:700; font-size:1rem;">
-                                    <i class="fas fa-id-card me-2 text-primary"></i>Personal Information
-                                </h5>
+                        @if ($user->setting->show_personal_info)
+                            <div class="col-md-6">
+                                <div style="background:#fff; border:1px solid #e7eefb; border-radius:14px; padding:1rem; height:100%; box-shadow:0 8px 18px rgba(10,55,130,0.05);">
+                                    <h5 style="margin:0; color:#0f2f6b; font-weight:700; font-size:1rem;">
+                                        <i class="fas fa-id-card me-2 text-primary"></i>Personal Information
+                                    </h5>
 
-                                @if ($user->setting->show_personal_info)
                                     <div style="margin-top:0.85rem; display:grid; gap:0.55rem;">
                                         <div style="background:#f5f8ff; border:1px solid #dfe9fb; border-radius:10px; padding:0.65rem 0.75rem;">
                                             <small style="display:block; color:#7a8aa8;">Occupation</small>
@@ -74,22 +74,18 @@
                                         </div>
                                         <div style="background:#eef7ff; border:1px solid #d5e9ff; border-radius:10px; padding:0.65rem 0.75rem;">
                                             <small style="display:block; color:#4c6f90;">Gender</small>
-                                            <strong style="color:#224f78;">{{ $user->gender ? ucfirst($user->gender) : 'Not specified' }}</strong>
+                                            <strong style="color:#224f78;">{{ $user->gender ? ucfirst($user->gender) : 'Not provided' }}</strong>
                                         </div>
                                         <div style="background:#f7fff7; border:1px solid #d9efd9; border-radius:10px; padding:0.65rem 0.75rem;">
                                             <small style="display:block; color:#517c51;">Address</small>
-                                            <strong style="color:#305a30;">{{ $user->address?->display_address ?? 'Not set' }}</strong>
+                                            <strong style="color:#305a30;">{{ $user->address?->display_upazila ?: 'Not set' }}, {{ $user->address?->display_district ?: 'Not set' }}</strong>
                                         </div>
                                     </div>
-                                @else
-                                    <p style="margin:0.9rem 0 0; color:#6a7992; font-size:0.9rem; line-height:1.5;">
-                                        This member has not granted permission to display additional personal details publicly.
-                                    </p>
-                                @endif
+                                </div>
                             </div>
-                        </div>
+                        @endif
 
-                        <div class="col-md-6">
+                        <div class="col-md-{{ $user->setting->show_personal_info ? '6' : '12' }}">
                             <div style="background:#fff; border:1px solid #e7eefb; border-radius:14px; padding:1rem; height:100%; box-shadow:0 8px 18px rgba(10,55,130,0.05);">
                                 <h5 style="margin:0; color:#0f2f6b; font-weight:700; font-size:1rem;">
                                     <i class="fas fa-notes-medical me-2 text-success"></i>Disease Visibility

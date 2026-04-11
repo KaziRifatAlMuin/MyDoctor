@@ -16,7 +16,7 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::query()->with('address');
+        $query = User::query()->with(['address', 'setting']);
         
         // Apply search filter
         if ($request->filled('search')) {

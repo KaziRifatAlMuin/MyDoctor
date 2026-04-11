@@ -60,6 +60,12 @@ class ProfileSettingsPrivacyTest extends TestCase
             'occupation' => 'Software Engineer',
             'blood_group' => 'B+',
         ]);
+        $user->address()->updateOrCreate([], [
+            'district' => 'Sunamganj',
+            'upazila' => 'Sadar',
+            'street' => 'Nona Fall',
+            'house' => '2878',
+        ]);
         $user->setting()->update([
             'show_personal_info' => false,
             'show_diseases' => false,
@@ -73,9 +79,11 @@ class ProfileSettingsPrivacyTest extends TestCase
 
         $hiddenResponse = $this->get(route('users.show', $user));
         $hiddenResponse->assertOk();
-        $hiddenResponse->assertSee('has not granted permission to display additional personal details publicly', false);
+        $hiddenResponse->assertDontSee('Personal Information');
         $hiddenResponse->assertSee('has not granted permission to display disease information publicly', false);
         $hiddenResponse->assertDontSee('Software Engineer');
+        $hiddenResponse->assertDontSee('Sadar');
+        $hiddenResponse->assertDontSee('Sunamganj');
         $hiddenResponse->assertDontSee('Diabetes');
 
         $user->setting()->update([
@@ -87,6 +95,10 @@ class ProfileSettingsPrivacyTest extends TestCase
         $visibleResponse->assertOk();
         $visibleResponse->assertSee('Software Engineer');
         $visibleResponse->assertSee('B+');
+        $visibleResponse->assertSee('Sadar');
+        $visibleResponse->assertSee('Sunamganj');
+        $visibleResponse->assertDontSee('Nona Fall');
+        $visibleResponse->assertDontSee('2878');
         $visibleResponse->assertSee('Diabetes');
         $visibleResponse->assertSee('(Managed)');
     }

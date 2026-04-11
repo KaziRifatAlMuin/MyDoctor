@@ -209,7 +209,7 @@
                                         id="show_personal_info" value="1" {{ $settings->show_personal_info ? 'checked' : '' }}>
                                     <label class="form-check-label fw-semibold" for="show_personal_info">Show Personal Info</label>
                                 </div>
-                                <p class="settings-help mt-0 mb-2">If enabled, visitors can see more personal profile details: occupation, blood group, phone number, and date of birth.</p>
+                                <p class="settings-help mt-0 mb-2">If enabled, visitors can see: date of birth, phone number, occupation, blood group, gender, and address (district + upazila only). Street and house are never shown publicly.</p>
 
                                 <div class="form-check form-switch mb-2">
                                     <input class="form-check-input" type="checkbox" name="show_diseases" id="show_diseases"
@@ -224,7 +224,8 @@
                             <h6><i class="fas fa-file-contract me-1"></i>Consent & Terms Acknowledgement</h6>
                             <ul>
                                 <li>By turning ON a public permission, you agree that the selected information is visible on your public profile.</li>
-                                <li>"Show Personal Info" exposes occupation, blood group, phone, and date of birth.</li>
+                                <li>"Show Personal Info" exposes date of birth, phone number, occupation, blood group, gender, and address (district + upazila only).</li>
+                                <li>Street and house are always private and are never shown in public profile views.</li>
                                 <li>"Show Disease History" exposes your disease names and disease status only.</li>
                                 <li>You can turn these permissions OFF anytime from this settings page.</li>
                             </ul>
