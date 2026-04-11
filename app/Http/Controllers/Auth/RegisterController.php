@@ -46,7 +46,7 @@ class RegisterController extends Controller
         // Auto login after registration (optional - remove if you want manual login)
         auth()->login($user);
 
-        return redirect($this->redirectTo);
+        return redirect()->to($this->resolveRedirectPath($request, $this->redirectTo));
     }
 
     /**
@@ -58,18 +58,19 @@ class RegisterController extends Controller
             'Name' => ['required', 'string', 'max:255'],
             'Email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'redirect' => ['nullable', 'string', 'max:2048'],
             'Phone' => ['nullable', 'string', 'max:20'],
             'DateOfBirth' => ['nullable', 'date'],
             'Occupation' => ['nullable', 'string', 'max:255'],
             'BloodGroup' => ['nullable', 'string', 'in:A+,A-,B+,B-,AB+,AB-,O+,O-'],
-            'Gender' => ['nullable', 'in:male,female,other'],
-            'DivisionId' => ['nullable', 'integer'],
-            'Division' => ['nullable', 'string', 'max:255'],
+            'Gender' => ['required', 'in:male,female,other'],
+            'DivisionId' => ['required', 'integer'],
+            'Division' => ['required', 'string', 'max:255'],
             'DivisionBn' => ['nullable', 'string', 'max:255'],
-            'DistrictId' => ['nullable', 'integer'],
+            'DistrictId' => ['required', 'integer'],
             'District' => ['required', 'string', 'max:255'],
             'DistrictBn' => ['nullable', 'string', 'max:255'],
-            'UpazilaId' => ['nullable', 'integer'],
+            'UpazilaId' => ['required', 'integer'],
             'Upazila' => ['required', 'string', 'max:255'],
             'UpazilaBn' => ['nullable', 'string', 'max:255'],
             'Street' => ['nullable', 'string', 'max:255'],
@@ -108,5 +109,36 @@ class RegisterController extends Controller
         ]);
 
         return $user;
+    }
+
+    private function resolveRedirectPath(Request $request, string $fallback = '/'): string
+    {
+        $redirect = (string) ($request->input('redirect') ?? $request->query('redirect') ?? '');
+        if ($redirect === '') {
+            return $fallback;
+        }
+
+        if (str_starts_with($redirect, '/')) {
+            return $redirect;
+        }
+
+        $parts = parse_url($redirect);
+        if (!is_array($parts)) {
+            return $fallback;
+        }
+
+        if (isset($parts['host']) && strcasecmp((string) $parts['host'], $request->getHost()) !== 0) {
+            return $fallback;
+        }
+
+        $path = (string) ($parts['path'] ?? '/');
+        if (isset($parts['query'])) {
+            $path .= '?' . $parts['query'];
+        }
+        if (isset($parts['fragment'])) {
+            $path .= '#' . $parts['fragment'];
+        }
+
+        return $path !== '' ? $path : $fallback;
     }
 }

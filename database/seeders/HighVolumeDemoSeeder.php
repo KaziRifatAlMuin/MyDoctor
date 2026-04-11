@@ -57,6 +57,7 @@ class HighVolumeDemoSeeder extends Seeder
                 'date_of_birth' => now()->subYears(32)->format('Y-m-d'),
                 'occupation' => 'Administrator',
                 'blood_group' => 'O+',
+                'gender' => 'male',
                 'email_verified_at' => now(),
                 'password' => Hash::make('abcd1234'),
                 'role' => 'admin',
@@ -81,6 +82,23 @@ class HighVolumeDemoSeeder extends Seeder
                     'show_chatbot' => false,
                     'show_notification_badge' => true,
                     'show_mail_badge' => true,
+                ]
+            );
+
+            UserAddress::query()->updateOrCreate(
+                ['user_id' => $admin->id],
+                [
+                    'division_id' => 6,
+                    'division' => 'Dhaka',
+                    'division_bn' => 'ঢাকা',
+                    'district_id' => 26,
+                    'district' => 'Dhaka',
+                    'district_bn' => 'ঢাকা',
+                    'upazila_id' => 8,
+                    'upazila' => 'Dhanmondi',
+                    'upazila_bn' => 'ধানমন্ডি',
+                    'street' => 'Admin Road',
+                    'house' => 'A-1',
                 ]
             );
         }
@@ -122,6 +140,7 @@ class HighVolumeDemoSeeder extends Seeder
                 'date_of_birth' => now()->subYears(mt_rand(18, 70))->subDays(mt_rand(0, 364))->format('Y-m-d'),
                 'occupation' => $occupations[array_rand($occupations)],
                 'blood_group' => $bloodGroups[array_rand($bloodGroups)],
+                'gender' => collect(['male', 'female', 'other'])->random(),
                 'email_verified_at' => $now,
                 'password' => Hash::make('abcd1234'),
                 'role' => 'member',

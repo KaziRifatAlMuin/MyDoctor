@@ -67,13 +67,13 @@ class User extends Authenticatable
             ]);
 
             $user->address()->firstOrCreate([], [
-                'division_id' => null,
+                'division_id' => 0,
                 'division' => 'Not set',
                 'division_bn' => null,
-                'district_id' => null,
+                'district_id' => 0,
                 'district' => 'Not set',
                 'district_bn' => null,
-                'upazila_id' => null,
+                'upazila_id' => 0,
                 'upazila' => 'Not set',
                 'upazila_bn' => null,
                 'street' => null,
@@ -255,13 +255,13 @@ class User extends Authenticatable
     public function address()
     {
         return $this->hasOne(UserAddress::class)->withDefault([
-            'division_id' => null,
+            'division_id' => 0,
             'division' => 'Not set',
             'division_bn' => null,
-            'district_id' => null,
+            'district_id' => 0,
             'district' => 'Not set',
             'district_bn' => null,
-            'upazila_id' => null,
+            'upazila_id' => 0,
             'upazila' => 'Not set',
             'upazila_bn' => null,
             'street' => null,

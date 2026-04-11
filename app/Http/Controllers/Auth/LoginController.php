@@ -31,6 +31,7 @@ class LoginController extends Controller
         $request->validate([
             'email' => 'required|email',  // Changed from 'Email' to 'email'
             'password' => 'required|string',
+            'redirect' => 'nullable|string|max:2048',
         ]);
 
         // Attempt login with lowercase 'email' to match database column
@@ -41,7 +42,7 @@ class LoginController extends Controller
             
             $request->session()->regenerate();
             
-            return redirect('/');
+            return redirect()->to($this->resolveRedirectPath($request, $this->redirectTo));
         }
 
         return back()->withErrors([
@@ -55,5 +56,36 @@ class LoginController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect('/');
+    }
+
+    private function resolveRedirectPath(Request $request, string $fallback = '/'): string
+    {
+        $redirect = (string) ($request->input('redirect') ?? $request->query('redirect') ?? '');
+        if ($redirect === '') {
+            return $fallback;
+        }
+
+        if (str_starts_with($redirect, '/')) {
+            return $redirect;
+        }
+
+        $parts = parse_url($redirect);
+        if (!is_array($parts)) {
+            return $fallback;
+        }
+
+        if (isset($parts['host']) && strcasecmp((string) $parts['host'], $request->getHost()) !== 0) {
+            return $fallback;
+        }
+
+        $path = (string) ($parts['path'] ?? '/');
+        if (isset($parts['query'])) {
+            $path .= '?' . $parts['query'];
+        }
+        if (isset($parts['fragment'])) {
+            $path .= '#' . $parts['fragment'];
+        }
+
+        return $path !== '' ? $path : $fallback;
     }
 }

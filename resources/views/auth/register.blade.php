@@ -16,6 +16,7 @@
 
                 <form method="POST" action="{{ route('register') }}">
                     @csrf
+                    <input type="hidden" name="redirect" value="{{ request('redirect') }}">
 
                     <div class="row">
                         <!-- Name Field -->
@@ -141,12 +142,12 @@
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label for="Gender" class="form-label fw-semibold">Gender</label>
+                            <label for="Gender" class="form-label fw-semibold">Gender <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white border-end-0">
                                     <i class="fas fa-person text-primary"></i>
                                 </span>
-                                <select class="form-control border-start-0 @error('Gender') is-invalid @enderror" id="Gender" name="Gender">
+                                <select class="form-control border-start-0 @error('Gender') is-invalid @enderror" id="Gender" name="Gender" required>
                                     <option value="">Select Gender</option>
                                     <option value="male" {{ old('Gender') == 'male' ? 'selected' : '' }}>Male</option>
                                     <option value="female" {{ old('Gender') == 'female' ? 'selected' : '' }}>Female</option>
@@ -162,8 +163,8 @@
                             @php
                                 $isBnLocale = str_starts_with((string) app()->getLocale(), 'bn');
                             @endphp
-                            <label for="Division" class="form-label fw-semibold">Division</label>
-                            <select id="Division" class="form-control" data-current-division-id="{{ old('DivisionId') }}" data-current-district-id="{{ old('DistrictId') }}" data-current-upazila-id="{{ old('UpazilaId') }}" data-current-district="{{ old('District') }}" data-current-upazila="{{ old('Upazila') }}">
+                            <label for="Division" class="form-label fw-semibold">Division <span class="text-danger">*</span></label>
+                            <select id="Division" class="form-control @error('Division') is-invalid @enderror" data-current-division-id="{{ old('DivisionId') }}" data-current-district-id="{{ old('DistrictId') }}" data-current-upazila-id="{{ old('UpazilaId') }}" data-current-district="{{ old('District') }}" data-current-upazila="{{ old('Upazila') }}" required>
                                 @if (old('Division'))
                                     <option value="{{ old('Division') }}" data-id="{{ old('DivisionId') }}" data-bn="{{ old('DivisionBn') }}" selected>{{ $isBnLocale ? (old('DivisionBn') ?: old('Division')) : old('Division') }}</option>
                                 @else
@@ -173,6 +174,12 @@
                             <input type="hidden" id="DivisionId" name="DivisionId" value="{{ old('DivisionId') }}">
                             <input type="hidden" id="DivisionEn" name="Division" value="{{ old('Division') }}">
                             <input type="hidden" id="DivisionBn" name="DivisionBn" value="{{ old('DivisionBn') }}">
+                            @error('Division')
+                                <span class="text-danger small">{{ $message }}</span>
+                            @enderror
+                            @error('DivisionId')
+                                <span class="text-danger small d-block">{{ $message }}</span>
+                            @enderror
                         </div>
 
                         <div class="col-md-6 mb-3">

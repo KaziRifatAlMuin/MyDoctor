@@ -79,19 +79,19 @@ class AdminManagementController extends Controller
             'role' => $validated['role'],
             'phone' => $validated['phone'] ?? null,
             'occupation' => $validated['occupation'] ?? null,
-            'gender' => $validated['gender'] ?? null,
+            'gender' => $validated['gender'] ?? 'other',
             'is_active' => (bool) ($validated['is_active'] ?? true),
             'email_verified_at' => now(),
         ]);
 
         $user->address()->updateOrCreate([], [
-            'division_id' => $validated['division_id'] ?? null,
+            'division_id' => $validated['division_id'] ?? 0,
             'division' => $validated['division'] ?? 'Not set',
             'division_bn' => $validated['division_bn'] ?? null,
-            'district_id' => $validated['district_id'] ?? null,
+            'district_id' => $validated['district_id'] ?? 0,
             'district' => $validated['district'] ?? 'Not set',
             'district_bn' => $validated['district_bn'] ?? null,
-            'upazila_id' => $validated['upazila_id'] ?? null,
+            'upazila_id' => $validated['upazila_id'] ?? 0,
             'upazila' => $validated['upazila'] ?? 'Not set',
             'upazila_bn' => $validated['upazila_bn'] ?? null,
             'street' => $validated['street'] ?? null,
@@ -145,7 +145,7 @@ class AdminManagementController extends Controller
             'role' => $validated['role'],
             'phone' => $validated['phone'] ?? null,
             'occupation' => $validated['occupation'] ?? null,
-            'gender' => $validated['gender'] ?? null,
+            'gender' => $validated['gender'] ?? ($user->gender ?? 'other'),
             'is_active' => (bool) ($validated['is_active'] ?? true),
         ];
 
@@ -156,13 +156,13 @@ class AdminManagementController extends Controller
         $user->update($updateData);
 
         $user->address()->updateOrCreate([], [
-            'division_id' => $validated['division_id'] ?? ($user->address?->division_id ?? null),
+            'division_id' => $validated['division_id'] ?? ($user->address?->division_id ?? 0),
             'division' => $validated['division'] ?? ($user->address?->division ?? 'Not set'),
             'division_bn' => $validated['division_bn'] ?? ($user->address?->division_bn ?? null),
-            'district_id' => $validated['district_id'] ?? ($user->address?->district_id ?? null),
+            'district_id' => $validated['district_id'] ?? ($user->address?->district_id ?? 0),
             'district' => $validated['district'] ?? ($user->address?->district ?? 'Not set'),
             'district_bn' => $validated['district_bn'] ?? ($user->address?->district_bn ?? null),
-            'upazila_id' => $validated['upazila_id'] ?? ($user->address?->upazila_id ?? null),
+            'upazila_id' => $validated['upazila_id'] ?? ($user->address?->upazila_id ?? 0),
             'upazila' => $validated['upazila'] ?? ($user->address?->upazila ?? 'Not set'),
             'upazila_bn' => $validated['upazila_bn'] ?? ($user->address?->upazila_bn ?? null),
             'street' => $validated['street'] ?? null,

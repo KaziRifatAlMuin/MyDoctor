@@ -15,14 +15,14 @@ return new class extends Migration
         Schema::create('user_addresses', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->unsignedSmallInteger('division_id')->nullable();
-            $table->string('division')->nullable();
+            $table->unsignedSmallInteger('division_id');
+            $table->string('division');
             $table->string('division_bn')->nullable();
-            $table->unsignedSmallInteger('district_id')->nullable();
-            $table->string('district')->nullable();
+            $table->unsignedSmallInteger('district_id');
+            $table->string('district');
             $table->string('district_bn')->nullable();
-            $table->unsignedSmallInteger('upazila_id')->nullable();
-            $table->string('upazila')->nullable();
+            $table->unsignedSmallInteger('upazila_id');
+            $table->string('upazila');
             $table->string('upazila_bn')->nullable();
             $table->string('street')->nullable();
             $table->string('house')->nullable();
@@ -41,14 +41,14 @@ return new class extends Migration
                 if (! $exists) {
                     DB::table('user_addresses')->insert([
                         'user_id' => $user->id,
-                        'division_id' => null,
-                        'division' => null,
+                        'division_id' => 0,
+                        'division' => 'Not set',
                         'division_bn' => null,
-                        'district_id' => null,
-                        'district' => null,
+                        'district_id' => 0,
+                        'district' => 'Not set',
                         'district_bn' => null,
-                        'upazila_id' => null,
-                        'upazila' => null,
+                        'upazila_id' => 0,
+                        'upazila' => 'Not set',
                         'upazila_bn' => null,
                         'street' => null,
                         'house' => null,

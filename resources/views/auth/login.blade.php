@@ -16,6 +16,7 @@
 
                 <form method="POST" action="{{ route('login') }}">
                     @csrf
+                    <input type="hidden" name="redirect" value="{{ request('redirect') }}">
 
                     <!-- Email Field - FIXED: Changed name to lowercase 'email' -->
                     <div class="mb-4">

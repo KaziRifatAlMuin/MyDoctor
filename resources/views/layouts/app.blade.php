@@ -2165,13 +2165,15 @@
                                 {{ __('ui.nav.community') }}
                             </a>
                         </li>
-                        <li class="banner-nav-item">
-                            <a href="{{ auth()->check() ? route('suggestions') : route('login') . '?redirect=' . urlencode(route('suggestions')) }}"
-                                class="banner-nav-link {{ request()->routeIs('suggestions') ? 'active' : '' }}"
-                                title="{{ auth()->check() ? '' : __('ui.nav.login_required') }}">
-                                {{ __('ui.nav.suggestions') }}
-                            </a>
-                        </li>
+                        @auth
+                            <li class="banner-nav-item">
+                                <a href="{{ auth()->check() ? route('suggestions') : route('login') . '?redirect=' . urlencode(route('suggestions')) }}"
+                                    class="banner-nav-link {{ request()->routeIs('suggestions') ? 'active' : '' }}"
+                                    title="{{ auth()->check() ? '' : __('ui.nav.login_required') }}">
+                                    {{ __('ui.nav.suggestions') }}
+                                </a>
+                            </li>
+                        @endauth
                         <li class="banner-nav-item">
                             <a href="{{ route('help') }}"
                                 class="banner-nav-link {{ request()->routeIs('help*') ? 'active' : '' }}">
@@ -2330,9 +2332,9 @@
                 <div class="banner position-relative overflow-hidden">
                     <!-- Banner Content with Container Layout -->
                     <div class="container position-relative z-3 py-5">
-                        <div class="row min-vh-50 align-items-center justify-content-center">
+                        <div class="row min-vh-50 align-items-center justify-content-start">
                             <!-- Left Column - Text and Buttons -->
-                            <div class="col-lg-9 text-white text-center">
+                            <div class="col-lg-9 text-white text-start">
                                 <h1 class="display-3 fw-bold mt-5 pt-4 mb-4">Your Health,<br>Our <span
                                         class="text-warning">Priority</span></h1>
                                 <p class="lead mb-4">Experience healthcare reimagined with AI-powered insights, medicine
@@ -2342,23 +2344,23 @@
                                     <div class="d-flex gap-3 flex-wrap">
                                         <a href="{{ route('login') }}?redirect={{ urlencode(route('dashboard')) }}"
                                             class="btn btn-light btn-lg rounded-pill px-5 py-3 fw-semibold">
-                                            Login to Start <i class="fas fa-arrow-right ms-2"></i>
+                                            Get Started <i class="fas fa-arrow-right ms-2"></i>
                                         </a>
                                         <a href="{{ route('login') }}?redirect={{ urlencode(request()->fullUrl()) }}"
                                             class="btn btn-outline-light btn-lg rounded-pill px-5 py-3 fw-semibold">
-                                            <i class="fas fa-robot me-2"></i>Ask AI
+                                            <i class="fas fa-user-md me-2"></i>Ask MyDoctor AI
                                         </a>
                                     </div>
                                 @else
                                     <div class="d-flex gap-3">
                                         <a href="{{ route('dashboard') }}"
                                             class="btn btn-light btn-lg rounded-pill px-5 py-3 fw-semibold">
-                                            Dashboard <i class="fas fa-arrow-right ms-2"></i>
+                                            Get Started <i class="fas fa-arrow-right ms-2"></i>
                                         </a>
                                         @if (!auth()->user()->isAdmin())
                                             <button onclick="toggleChatbot()"
                                                 class="btn btn-outline-light btn-lg rounded-pill px-5 py-3 fw-semibold">
-                                                <i class="fas fa-robot me-2"></i>Ask AI
+                                                <i class="fas fa-user-md me-2"></i>Ask MyDoctor AI
                                             </button>
                                         @endif
                                     </div>

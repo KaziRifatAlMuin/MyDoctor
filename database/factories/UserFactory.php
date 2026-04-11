@@ -51,8 +51,12 @@ class UserFactory extends Factory
             UserAddress::query()->firstOrCreate(
                 ['user_id' => $user->id],
                 [
+                    'division_id' => fake()->numberBetween(1, 8),
+                    'division' => fake()->randomElement(['Dhaka', 'Chattogram', 'Rajshahi', 'Khulna', 'Barishal', 'Sylhet', 'Rangpur', 'Mymensingh']),
                     'district' => fake()->randomElement(['Dhaka', 'Chattogram', 'Rajshahi', 'Khulna', 'Sylhet', 'Barishal', 'Rangpur', 'Mymensingh']),
+                    'district_id' => fake()->numberBetween(1, 64),
                     'upazila' => fake()->randomElement(['Mirpur', 'Uttara', 'Gulshan', 'Dhanmondi', 'Kotwali', 'Pahartali']),
+                    'upazila_id' => fake()->numberBetween(1, 500),
                     'street' => fake()->streetName(),
                     'house' => fake()->buildingNumber(),
                 ]

@@ -210,14 +210,14 @@ class UserController extends Controller
         $user->update($validated);
 
         $user->address()->updateOrCreate([], [
-            'division_id' => $validated['division_id'] ?? ($user->address?->division_id ?? null),
+            'division_id' => $validated['division_id'] ?? ($user->address?->division_id ?? 0),
             'division' => $validated['division'] ?? ($user->address?->division ?? 'Not set'),
             'division_bn' => $validated['division_bn'] ?? ($user->address?->division_bn ?? null),
-            'district_id' => $validated['district_id'] ?? ($user->address?->district_id ?? null),
-            'district' => $validated['district'],
+            'district_id' => $validated['district_id'] ?? ($user->address?->district_id ?? 0),
+            'district' => $validated['district'] ?? ($user->address?->district ?? 'Not set'),
             'district_bn' => $validated['district_bn'] ?? ($user->address?->district_bn ?? null),
-            'upazila_id' => $validated['upazila_id'] ?? ($user->address?->upazila_id ?? null),
-            'upazila' => $validated['upazila'],
+            'upazila_id' => $validated['upazila_id'] ?? ($user->address?->upazila_id ?? 0),
+            'upazila' => $validated['upazila'] ?? ($user->address?->upazila ?? 'Not set'),
             'upazila_bn' => $validated['upazila_bn'] ?? ($user->address?->upazila_bn ?? null),
             'street' => $validated['street'] ?? null,
             'house' => $validated['house'] ?? null,
