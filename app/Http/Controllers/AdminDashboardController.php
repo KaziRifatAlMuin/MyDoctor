@@ -7,15 +7,24 @@ use Illuminate\Support\Str;
 use App\Models\User;
 use App\Models\Post;
 use App\Models\Comment;
-use App\Models\Medicine;
-use App\Models\MedicineReminder;
-use App\Models\MedicineSchedule;
-use App\Models\HealthMetric;
-use App\Models\UserSymptom;
+use App\Models\CommentLike;
 use App\Models\Disease;
+use App\Models\HealthMetric;
+use App\Models\UserHealth;
+use App\Models\Mailing;
+use App\Models\Medicine;
+use App\Models\MedicineLog;
+use App\Models\MedicineReminder;
+use App\Models\Notification;
+use App\Models\PostLike;
+use App\Models\Symptom;
+use App\Models\Upload;
 use App\Models\UserDisease;
+use App\Models\UserSymptom;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class AdminDashboardController extends Controller
 {
@@ -26,53 +35,35 @@ class AdminDashboardController extends Controller
 
     public function index(Request $request)
     {
-        // Default sort: admins first (role='admin'), then by ID
-        $query = User::query();
-        
-        // Order by role (admin first) then by ID
-        $query->orderByRaw("CASE WHEN role = 'admin' THEN 0 ELSE 1 END")
-              ->orderBy('id', 'asc');
-        
-        $users = $query->paginate(50);
-        
-        // Get statistics for the dashboard
         $stats = $this->getDashboardStats();
-        $recent_activities = $this->getRecentActivities();
-        $recentUsersList = $this->getRecentUsers(6);
+        $recentActivities = $this->getRecentActivities(8);
         $latestDiseaseRecords = UserDisease::with(['user', 'disease'])
             ->latest()
-            ->take(8)
+            ->take(6)
             ->get();
         $latestMedicines = Medicine::with(['user', 'activeSchedule'])
             ->latest()
-            ->take(8)
+            ->take(6)
             ->get();
-        $latestMetrics = HealthMetric::with('user')
+        $latestMetrics = UserHealth::with(['user', 'healthMetric'])
+            ->latest('recorded_at')
+            ->take(6)
+            ->get();
+        $pendingPosts = Post::with(['user', 'disease'])
+            ->where('is_approved', false)
             ->latest()
-            ->take(8)
+            ->take(5)
             ->get();
-        
-        // Get user statistics
-        $adminCount = User::where('role', 'admin')->count();
-        $memberCount = User::where('role', 'member')->count();
-        $recentUsers = User::whereDate('created_at', '>=', Carbon::now()->subWeek())->count();
-
-        // Add to stats array
-        $stats['admin_count'] = $adminCount;
-        $stats['member_count'] = $memberCount;
-        $stats['recent_users'] = $recentUsers;
+        $navigationCards = $this->getNavigationCards();
 
         return view('admin.dashboard', compact(
-            'stats', 
-            'recent_activities',
-            'users',
-            'adminCount',
-            'memberCount',
-            'recentUsers',
-            'recentUsersList',
+            'stats',
+            'recentActivities',
             'latestDiseaseRecords',
             'latestMedicines',
-            'latestMetrics'
+            'latestMetrics',
+            'pendingPosts',
+            'navigationCards'
         ));
     }
 
@@ -104,38 +95,101 @@ class AdminDashboardController extends Controller
     private function getDashboardStats()
     {
         $today = Carbon::today();
+        $weekAgo = Carbon::now()->subDays(7);
+        $monthAgo = Carbon::now()->subDays(30);
+        $adminCount = User::where('role', 'admin')->count();
+        $memberCount = User::where('role', 'member')->count();
+        $databaseSummary = $this->getDatabaseSummary();
         
         return [
-            // User statistics
-            'total_users' => User::count(),
-            'new_users_today' => User::whereDate('created_at', $today)->count(),
-            
-            // Community statistics
-            'total_posts' => Post::count(),
-            'total_comments' => Comment::count(),
-            
-            // Medical statistics
-            'total_medicines' => Medicine::count(),
-            // Count reminders whose parent schedule is active
+            'users' => [
+                'total' => User::count(),
+                'admins' => $adminCount,
+                'members' => $memberCount,
+                'new_today' => User::whereDate('created_at', $today)->count(),
+                'new_this_week' => User::whereDate('created_at', '>=', $weekAgo)->count(),
+                'new_this_month' => User::whereDate('created_at', '>=', $monthAgo)->count(),
+            ],
+            'community' => [
+                'posts' => Post::count(),
+                'pending_posts' => Post::where('is_approved', false)->count(),
+                'approved_posts' => Post::where('is_approved', true)->count(),
+                'approved_today' => Post::where('is_approved', true)->whereDate('updated_at', $today)->count(),
+                'comments' => Comment::count(),
+                'post_likes' => PostLike::count(),
+                'comment_likes' => CommentLike::count(),
+            ],
+            'medical' => [
+                'medicines' => Medicine::count(),
+                'medicine_logs' => MedicineLog::count(),
+                'health_metrics' => UserHealth::count(),
+                'user_symptoms' => UserSymptom::count(),
+                'user_diseases' => UserDisease::count(),
+                'reference_diseases' => Disease::count(),
+                'reference_symptoms' => Symptom::count(),
+            ],
+            'engagement' => [
+                'notifications' => Notification::count(),
+                'mailings' => Mailing::count(),
+                'uploads' => Upload::count(),
+            ],
+            'operations' => [
             'active_reminders' => MedicineReminder::whereHas('schedule', function($q) {
                 $q->where('is_active', true);
             })->count(),
-            'total_health_metrics' => HealthMetric::count(),
-            'recent_metrics' => HealthMetric::whereDate('created_at', '>=', $today->subDays(7))->count(),
-            'total_symptoms' => UserSymptom::count(),
-            'total_diseases' => Disease::count(),
-            
-            // System statistics
-            'storage_usage' => $this->getStorageUsage(),
-            'pending_jobs' => $this->getPendingJobsCount(),
+                'new_metrics_this_week' => UserHealth::whereDate('created_at', '>=', $weekAgo)->count(),
+                'new_logs_this_week' => MedicineLog::whereDate('created_at', '>=', $weekAgo)->count(),
+            ],
+            'database' => $databaseSummary,
         ];
     }
 
-    private function getRecentUsers($limit = 10)
+    private function getNavigationCards(): array
     {
-        return User::latest()
-            ->take($limit)
-            ->get();
+        return [
+            [
+                'title' => 'User Management',
+                'description' => 'Review accounts, role distribution, and member access.',
+                'icon' => 'fa-users-cog',
+                'route' => route('admin.users.index'),
+                'accent' => 'accent-users',
+            ],
+            [
+                'title' => 'Disease Catalog',
+                'description' => 'Manage diseases with public-facing detail links.',
+                'icon' => 'fa-virus',
+                'route' => route('admin.diseases.index'),
+                'accent' => 'accent-diseases',
+            ],
+            [
+                'title' => 'Symptoms Catalog',
+                'description' => 'Maintain symptom entries with linked public pages.',
+                'icon' => 'fa-stethoscope',
+                'route' => route('admin.symptoms.index'),
+                'accent' => 'accent-symptoms',
+            ],
+            [
+                'title' => 'Health Metrics Catalog',
+                'description' => 'Define custom metric names and fields for user tracking.',
+                'icon' => 'fa-heartbeat',
+                'route' => route('admin.health.index'),
+                'accent' => 'accent-public',
+            ],
+            [
+                'title' => 'Public Diseases',
+                'description' => 'Open the public diseases directory as visitors see it.',
+                'icon' => 'fa-earth-asia',
+                'route' => route('public.diseases.index'),
+                'accent' => 'accent-public',
+            ],
+            [
+                'title' => 'Public Symptoms',
+                'description' => 'Open the public symptoms directory and verify navigation.',
+                'icon' => 'fa-globe',
+                'route' => route('public.symptoms.index'),
+                'accent' => 'accent-public',
+            ],
+        ];
     }
 
     private function getRecentActivities($limit = 5)
@@ -197,26 +251,41 @@ class AdminDashboardController extends Controller
         return $activities->sortByDesc('time')->take($limit)->values();
     }
 
-    private function getStorageUsage()
+    private function getDatabaseSummary(): array
     {
         try {
-            // Simple estimation for storage usage
-            // In a real application, you would implement proper storage monitoring
-            $storageUsage = rand(30, 70); // Random between 30-70% for demo
-            return $storageUsage;
-        } catch (\Exception $e) {
-            return 0;
-        }
-    }
+            $tables = Schema::getTableListing();
+            $tableRows = [];
+            $totalRecords = 0;
 
-    private function getPendingJobsCount()
-    {
-        try {
-            // In a real application, you would check your queue system
-            // For now, return a mock value
-            return rand(0, 10);
+            foreach ($tables as $table) {
+                try {
+                    $rows = (int) DB::table($table)->count();
+                } catch (\Throwable $exception) {
+                    $rows = 0;
+                }
+
+                $tableRows[] = [
+                    'name' => $table,
+                    'rows' => $rows,
+                ];
+
+                $totalRecords += $rows;
+            }
+
+            usort($tableRows, fn ($a, $b) => $b['rows'] <=> $a['rows']);
+
+            return [
+                'tables_count' => count($tables),
+                'total_records' => $totalRecords,
+                'largest_tables' => array_slice($tableRows, 0, 8),
+            ];
         } catch (\Exception $e) {
-            return 0;
+            return [
+                'tables_count' => 0,
+                'total_records' => 0,
+                'largest_tables' => [],
+            ];
         }
     }
 
@@ -233,7 +302,7 @@ class AdminDashboardController extends Controller
             'posts' => Post::where('user_id', $user->id)->count(),
             'comments' => Comment::where('user_id', $user->id)->count(),
             'medicines' => Medicine::where('user_id', $user->id)->count(),
-            'health_metrics' => HealthMetric::where('user_id', $user->id)->count(),
+            'health_metrics' => UserHealth::where('user_id', $user->id)->count(),
             'active_reminders' => MedicineReminder::whereHas('schedule', function($q) use ($user) {
                 $q->whereHas('medicine', function($q) use ($user) {
                     $q->where('user_id', $user->id);
@@ -278,8 +347,9 @@ class AdminDashboardController extends Controller
         }
         
         // Recent health metrics
-        $recentMetrics = HealthMetric::where('user_id', $user->id)
-            ->latest()
+        $recentMetrics = UserHealth::with('healthMetric')
+            ->where('user_id', $user->id)
+            ->latest('recorded_at')
             ->take(2)
             ->get();
             
@@ -287,7 +357,7 @@ class AdminDashboardController extends Controller
             $recentActivities->push([
                 'title' => 'Recorded health data',
                 'description' => ucfirst($metric->metric_type ?? 'Health metric'),
-                'time' => $metric->created_at->diffForHumans(),
+                'time' => $metric->recorded_at?->diffForHumans() ?? $metric->created_at->diffForHumans(),
                 'icon' => 'fa-heartbeat',
                 'color' => 'danger'
             ]);

@@ -12,11 +12,17 @@ use App\Http\Controllers\MedicineScheduleController;
 use App\Http\Controllers\MedicineReminderController;
 use App\Http\Controllers\MedicineLogController;
 use App\Http\Controllers\SuggestionsController;
-use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CommunityController;
 use App\Http\Controllers\AiChatController;
 use App\Http\Controllers\PublicHealthController;
+use App\Http\Controllers\AdminManagementController;
+use App\Http\Controllers\GeoController;
 use App\Models\Disease;
+use App\Models\MedicineReminder;
+use App\Models\Post;
+use App\Models\Symptom;
+use App\Models\Upload;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 
@@ -29,7 +35,25 @@ use Illuminate\Http\Request;
 
 // Home
 Route::get('/', function () {
-    return view('home');
+    if (auth()->check() && auth()->user()->isAdmin()) {
+        return redirect()->route('admin.dashboard');
+    }
+
+    $totalReminders = MedicineReminder::query()->count();
+    $takenReminders = MedicineReminder::query()->where('status', 'taken')->count();
+
+    $homeStats = [
+        'active_users' => User::query()->where('role', '!=', 'admin')->count(),
+        'approved_posts' => Post::query()->where('is_approved', true)->count(),
+        'total_uploads' => Upload::query()->count(),
+        'health_catalog' => Disease::query()->count() + Symptom::query()->count(),
+        'reminder_adherence' => $totalReminders > 0
+            ? (int) round(($takenReminders / $totalReminders) * 100)
+            : 0,
+        'total_reminders' => $totalReminders,
+    ];
+
+    return view('home', compact('homeStats'));
 })->name('home');
 
 // Main navigation pages
@@ -46,6 +70,16 @@ Route::view('/sitemap', 'sitemap')->name('sitemap');
 Route::view('/appointments', 'appointments')->name('appointments');
 Route::view('/pharmacy/nearby', 'pharmacy.nearby')->name('pharmacy.nearby');
 Route::view('/emergency', 'emergency')->name('emergency');
+
+// Local proxy for BD Geo API v2 endpoints (same-origin, no CORS issues in forms)
+Route::prefix('geo/v2.0')->group(function () {
+    Route::get('/divisions', [GeoController::class, 'divisions']);
+    Route::get('/districts', [GeoController::class, 'districtsAll']);
+    Route::get('/districts/{divisionId}', [GeoController::class, 'districtsByDivision'])->whereNumber('divisionId');
+    Route::get('/upazilas', [GeoController::class, 'upazilasAll']);
+    Route::get('/upazilas/{districtId}', [GeoController::class, 'upazilasByDistrict'])->whereNumber('districtId');
+    Route::get('/unions/{upazilaId}', [GeoController::class, 'unionsByUpazila'])->whereNumber('upazilaId');
+});
 
 Route::get('/language/{locale}', function (string $locale) {
     if (!in_array($locale, ['en', 'bn'], true)) {
@@ -89,6 +123,13 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/home', function () {
+        if (auth()->user()?->isAdmin()) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        return redirect()->route('home');
+    });
     
     // Profile
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
@@ -132,7 +173,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/health/disease', [HealthController::class, 'storeDisease'])->name('health.disease.store');
     Route::post('/health/upload', [HealthController::class, 'storeUpload'])->name('health.upload.store');
     Route::put('/health/metric/{healthMetric}', [HealthController::class, 'updateMetric'])->name('health.metric.update');
-    Route::get('/health/metric/{healthMetric}', function (\App\Models\HealthMetric $healthMetric) {
+    Route::get('/health/metric/{healthMetric}', function (\App\Models\UserHealth $healthMetric) {
         if (auth()->user()?->isAdmin()) {
             return redirect()->route('admin.users.show', $healthMetric->user_id);
         }
@@ -188,6 +229,7 @@ Route::middleware('auth')->prefix('notifications')->name('notifications.')->grou
     // AI Chatbot
     Route::post('/chatbot/message', [AiChatController::class, 'message'])->name('chatbot.message');
     Route::post('/chatbot/about-me', [AiChatController::class, 'aboutMe'])->name('chatbot.about_me');
+    Route::post('/chatbot/smart-suggestions', [AiChatController::class, 'smartSuggestions'])->name('chatbot.smart_suggestions');
 
     // Email verification
     Route::post('/email/verification-notification', function (\Illuminate\Http\Request $request) {
@@ -235,15 +277,29 @@ Route::middleware('auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::prefix('health')->name('health.')->group(function () {
-    Route::view('/hospitals', 'health.hospitals')->name('hospitals');
-    Route::view('/tips', 'health.tips')->name('tips');
+    Route::get('/hospitals', function () {
+        return redirect()->route('help');
+    })->name('hospitals');
+    Route::get('/tips', function () {
+        return redirect()->route('help');
+    })->name('tips');
     
     Route::middleware('auth')->group(function () {
-        Route::view('/records', 'health.records')->name('records');
-        Route::view('/tracking', 'health.tracking')->name('tracking');
-        Route::view('/consultation', 'health.consultation')->name('consultation');
-        Route::view('/symptoms', 'health.symptoms')->name('symptoms');
-        Route::view('/suggestions', 'health.suggestions')->name('suggestions');
+        Route::get('/records', function () {
+            return redirect(route('health', [], false) . '#logs');
+        })->name('records');
+        Route::get('/tracking', function () {
+            return redirect(route('health', [], false) . '#metrics');
+        })->name('tracking');
+        Route::get('/consultation', function () {
+            return redirect()->route('help');
+        })->name('consultation');
+        Route::get('/symptoms', function () {
+            return redirect(route('health', [], false) . '#symptomsPane');
+        })->name('symptoms');
+        Route::get('/suggestions', function () {
+            return redirect()->route('suggestions');
+        })->name('suggestions');
     });
 });
 
@@ -256,7 +312,8 @@ Route::prefix('community')->name('community.')->group(function () {
     // Page routes (return HTML)
     Route::get('/', [CommunityController::class, 'home'])->name('home');
     Route::get('/posts', [CommunityController::class, 'postsIndex'])->name('posts.index');
-    Route::get('/post/{post}', [CommunityController::class, 'showPost'])->name('post.show');
+    Route::get('/post/{post}', [CommunityController::class, 'showPost'])->whereNumber('post')->name('post.show');
+    Route::get('/posts/{post}', [CommunityController::class, 'showPost'])->whereNumber('post')->name('posts.show');
     Route::get('/disease/{disease}/posts', [CommunityController::class, 'diseasePosts'])->name('disease.posts');
 
     Route::get('/landing', [CommunityController::class, 'landing'])->name('landing');
@@ -265,9 +322,10 @@ Route::prefix('community')->name('community.')->group(function () {
     })->name('index');
     Route::get('/posts/starred', [CommunityController::class, 'starredPosts'])->name('posts.starred');
     Route::get('/posts/pending', [CommunityController::class, 'pendingPosts'])->name('posts.pending');
-    Route::get('/posts/{post}', function (\App\Models\Post $post) {
-        return redirect()->route('community.post.show', $post);
-    })->name('posts.show');
+    // Legacy alias kept for compatibility
+    Route::get('/forum/posts/{post}', function (\App\Models\Post $post) {
+        return redirect()->route('community.posts.show', $post);
+    });
     
     // MODAL POST - CRITICAL FOR DYNAMIC RELOADS
     Route::get('/modal-post/{post}', [CommunityController::class, 'modalPost'])->name('modal.post');
@@ -278,22 +336,25 @@ Route::prefix('community')->name('community.')->group(function () {
     Route::get('/posts/{post}/comments/more', [CommunityController::class, 'loadMoreComments'])->name('posts.comments.more');
     
     // Post CRUD - MATCHES YOUR JAVASCRIPT EXACTLY
-    Route::post('/posts', [CommunityController::class, 'storePost'])->name('posts.store');
-    Route::post('/posts/{post}/update', [CommunityController::class, 'updatePost'])->name('posts.update');  // ← POST not PATCH
-    Route::post('/posts/{post}/delete', [CommunityController::class, 'destroyPost'])->name('posts.destroy');
-    Route::post('/posts/{post}/like', [CommunityController::class, 'togglePostLike'])->name('posts.like');
-    Route::post('/posts/{post}/star', [CommunityController::class, 'togglePostStar'])->name('posts.star');
-    Route::post('/posts/{post}/report', [CommunityController::class, 'reportPost'])->name('posts.report');
-    Route::post('/posts/{post}/approve', [CommunityController::class, 'approvePost'])->name('posts.approve');
+    Route::middleware('auth')->group(function () {
+        Route::post('/posts', [CommunityController::class, 'storePost'])->name('posts.store');
+        Route::patch('/posts/{post}', [CommunityController::class, 'updatePost'])->name('posts.update');
+        Route::delete('/posts/{post}', [CommunityController::class, 'destroyPost'])->name('posts.destroy');
+        Route::put('/posts/{post}/likes', [CommunityController::class, 'togglePostLike'])->name('posts.like');
+        Route::put('/posts/{post}/star', [CommunityController::class, 'togglePostStar'])->name('posts.star');
+        Route::put('/diseases/{disease}/star', [CommunityController::class, 'toggleDiseaseStar'])->name('diseases.star');
+        Route::post('/posts/{post}/report', [CommunityController::class, 'reportPost'])->name('posts.report');
+        Route::patch('/posts/{post}/approve', [CommunityController::class, 'approvePost'])->name('posts.approve');
+
+        Route::post('/posts/{post}/comments', [CommunityController::class, 'storeComment'])->name('comments.store');
+        Route::patch('/comments/{comment}', [CommunityController::class, 'updateComment'])->name('comments.update');
+        Route::delete('/comments/{comment}', [CommunityController::class, 'destroyComment'])->name('comments.destroy');
+        Route::put('/comments/{comment}/likes', [CommunityController::class, 'toggleCommentLike'])->name('comments.like');
+    });
     
     // User details for modals
     Route::get('/user/{userId}', [CommunityController::class, 'getUserDetails'])->name('user.details');
     
-    // Comment CRUD - MATCHES JAVASCRIPT
-    Route::post('/posts/{post}/comments', [CommunityController::class, 'storeComment'])->name('comments.store');
-    Route::post('/comments/{comment}/update', [CommunityController::class, 'updateComment'])->name('comments.update');
-    Route::post('/comments/{comment}/delete', [CommunityController::class, 'destroyComment'])->name('comments.destroy');
-    Route::post('/comments/{comment}/like', [CommunityController::class, 'toggleCommentLike'])->name('comments.like');
 });
 
 /*
@@ -354,8 +415,41 @@ Route::middleware(['auth', 'admin'])->patch('/user/{user}', [App\Http\Controller
 */
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/users', [AdminManagementController::class, 'usersIndex'])->name('users.index');
+    Route::post('/users', [AdminManagementController::class, 'usersStore'])->name('users.store');
+    Route::patch('/users/{user}', [AdminManagementController::class, 'usersUpdate'])->name('users.update');
+    Route::patch('/users/{user}/toggle-active', [AdminManagementController::class, 'usersToggleActive'])->name('users.toggle-active');
+    Route::delete('/users/{user}', [AdminManagementController::class, 'usersDestroy'])->name('users.destroy');
+
+    Route::get('/diseases', [AdminManagementController::class, 'diseasesIndex'])->name('diseases.index');
+    Route::post('/diseases', [AdminManagementController::class, 'diseasesStore'])->name('diseases.store');
+    Route::patch('/diseases/{disease}', [AdminManagementController::class, 'diseasesUpdate'])->name('diseases.update');
+    Route::delete('/diseases/{disease}', [AdminManagementController::class, 'diseasesDestroy'])->name('diseases.destroy');
+
+    Route::get('/symptoms', [AdminManagementController::class, 'symptomsIndex'])->name('symptoms.index');
+    Route::get('/symtoms', function () {
+        return redirect()->route('admin.symptoms.index');
+    })->name('symtoms.index');
+    Route::post('/symptoms', [AdminManagementController::class, 'symptomsStore'])->name('symptoms.store');
+    Route::patch('/symptoms/{symptom}', [AdminManagementController::class, 'symptomsUpdate'])->name('symptoms.update');
+    Route::delete('/symptoms/{symptom}', [AdminManagementController::class, 'symptomsDestroy'])->name('symptoms.destroy');
+
+    Route::get('/health', [AdminManagementController::class, 'metricsIndex'])->name('health.index');
+    Route::post('/health', [AdminManagementController::class, 'metricsStore'])->name('health.store');
+    Route::get('/metrics/{healthMetric}', [AdminManagementController::class, 'metricsShow'])->name('metrics.show');
+    Route::patch('/metrics/{healthMetric}', [AdminManagementController::class, 'metricsUpdate'])->name('metrics.update');
+    Route::delete('/metrics/{healthMetric}', [AdminManagementController::class, 'metricsDestroy'])->name('metrics.destroy');
+
+    Route::prefix('community')->name('community.')->group(function () {
+        Route::get('/posts', [CommunityController::class, 'adminPostsIndex'])->name('posts.index');
+        Route::get('/posts/pending', [CommunityController::class, 'adminPendingPosts'])->name('posts.pending');
+        Route::patch('/posts/{post}/approve', [CommunityController::class, 'approvePost'])->name('posts.approve');
+        Route::delete('/posts/{post}', [CommunityController::class, 'destroyPost'])->name('posts.destroy');
+        Route::get('/modal-post/{post}', [CommunityController::class, 'modalPost'])->name('modal.post');
+        Route::get('/user/{userId}', [CommunityController::class, 'getUserDetails'])->name('user.details');
+    });
+
     Route::get('/user/{user}', [App\Http\Controllers\UserController::class, 'show'])->name('users.show');
-    Route::patch('/users/{user}', [App\Http\Controllers\AdminDashboardController::class, 'updateUser'])->name('users.update');
     
     // Future admin routes
     Route::get('/medical', [App\Http\Controllers\AdminDashboardController::class, 'medical'])->name('medical.index');
@@ -370,14 +464,21 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 */
 Route::middleware(['auth', 'admin'])->prefix('api/users')->group(function () {
     Route::get('{id}', function ($id) {
-        $user = \App\Models\User::findOrFail($id);
+        $user = \App\Models\User::with('address')->findOrFail($id);
         return response()->json($user->only([
-            'id', 'name', 'email', 'phone', 'occupation', 'blood_group', 'date_of_birth', 'picture', 'role', 'email_verified_at'
-        ]));
+            'id', 'name', 'email', 'phone', 'occupation', 'blood_group', 'date_of_birth', 'picture', 'role', 'gender', 'is_active', 'email_verified_at'
+        ]) + [
+            'address' => [
+                'district' => $user->address?->district,
+                'upazila' => $user->address?->upazila,
+                'street' => $user->address?->street,
+                'house' => $user->address?->house,
+            ],
+        ]);
     });
     
     Route::get('{id}/medical', function ($id) {
-        $user = \App\Models\User::with(['medicines.activeSchedule', 'userDiseases.disease', 'healthMetrics'])->findOrFail($id);
+        $user = \App\Models\User::with(['medicines.activeSchedule', 'userDiseases.disease', 'healthMetrics.healthMetric'])->findOrFail($id);
         return response()->json([
             'medicines' => $user->medicines->map(fn($m) => [
                 'id' => $m->id,

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Starred - My Doctor')
+@section('title', 'Starred')
 @section('main_content_class', 'main-content main-content--wide')
 
 <style>

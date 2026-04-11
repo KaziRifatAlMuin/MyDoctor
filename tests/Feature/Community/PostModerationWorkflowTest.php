@@ -81,7 +81,7 @@ class PostModerationWorkflowTest extends TestCase
         $admin = User::factory()->create(['role' => 'admin']);
         $post = Post::factory()->create(['is_approved' => false]);
 
-        $response = $this->actingAs($admin)->post("/community/posts/{$post->id}/approve");
+        $response = $this->actingAs($admin)->patch("/community/posts/{$post->id}/approve");
 
         $response->assertStatus(200);
         $response->assertJson([
@@ -125,7 +125,7 @@ class PostModerationWorkflowTest extends TestCase
             'is_edited' => false,
         ]);
 
-        $response = $this->actingAs($owner)->post("/community/posts/{$post->id}/update", [
+        $response = $this->actingAs($owner)->patch("/community/posts/{$post->id}", [
             'description' => 'Updated text',
         ]);
 

@@ -2,20 +2,66 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
+    @php
+        $rawPageTitle = trim((string) View::yieldContent('title'));
+        if ($rawPageTitle === '') {
+            $segments = array_filter(request()->segments(), function ($s) {
+                return $s !== null && $s !== '' && !is_numeric($s);
+            });
+            if (!empty($segments)) {
+                $joined = implode(' ', $segments);
+                $rawPageTitle = \Illuminate\Support\Str::title(str_replace(['-', '_'], ' ', $joined));
+            } else {
+                $rawPageTitle = 'Home';
+            }
+        }
+
+        $normalizedPageTitle = preg_replace('/\s*-\s*My\s*Doctor\s*$/i', '', $rawPageTitle) ?? $rawPageTitle;
+        $normalizedPageTitle = preg_replace('/\s*-\s*MyDoctor\s*$/i', '', $normalizedPageTitle) ?? $normalizedPageTitle;
+        $normalizedPageTitle = trim($normalizedPageTitle);
+
+        // Site-wide SEO defaults. Use config('app.url') or fall back to the hosting domain provided.
+        $siteName = config('app.name', 'MyDoctor');
+        $siteBase = rtrim(config('app.url', env('APP_URL', 'https://mydoctor.rifatalmuin.com')), '/');
+
+        $seoTitle = ($normalizedPageTitle !== '' ? $normalizedPageTitle : 'Home') . ' - ' . $siteName;
+
+        $seoDescription = trim((string) View::yieldContent('meta_description', $siteName . ' is a smart healthcare companion for tracking health metrics, medicine schedules, reminders, and community support.'));
+        $seoKeywords = trim((string) View::yieldContent('meta_keywords', 'MyDoctor, healthcare app, medicine reminder, health tracking, symptom tracking, disease management, Bangladesh health'));
+
+        // Ensure meta image and canonical URL are absolute and use the configured site base as fallback.
+        $rawSeoImage = trim((string) View::yieldContent('meta_image', asset('images/logos/applogo_white.jpg')));
+        $seoImage = \Illuminate\Support\Str::startsWith($rawSeoImage, ['http://', 'https://']) ? $rawSeoImage : $siteBase . '/' . ltrim($rawSeoImage, '/');
+        $seoUrl = $siteBase . request()->getRequestUri();
+    @endphp
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="vapid-public-key" content="{{ env('VAPID_PUBLIC_KEY') }}">
-    <link rel="icon" type="image/png" href="{{ asset('images/logos/applogo.png') }}">
-    <link rel="shortcut icon" href="{{ asset('images/logos/applogo.png') }}" type="image/x-icon">
-    <title>
-        @hasSection('title')
-            @yield('title') - {{ __('ui.meta.platform') }}
-        @else
-            {{ __('ui.meta.app_name') }} - {{ __('ui.meta.platform') }}
-        @endif
-    </title>
+    <title>{{ $seoTitle }}</title>
+    <meta name="description" content="{{ $seoDescription }}">
+    <meta name="keywords" content="{{ $seoKeywords }}">
+    <meta name="author" content="MyDoctor">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="{{ $seoUrl }}">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="MyDoctor">
+    <meta property="og:title" content="{{ $seoTitle }}">
+    <meta property="og:description" content="{{ $seoDescription }}">
+    <meta property="og:url" content="{{ $seoUrl }}">
+    <meta property="og:image" content="{{ $seoImage }}">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $seoTitle }}">
+    <meta name="twitter:description" content="{{ $seoDescription }}">
+    <meta name="twitter:image" content="{{ $seoImage }}">
+
+    <link rel="icon" type="image/jpeg" href="{{ asset('images/logos/applogo_white.jpg') }}">
+    <link rel="shortcut icon" href="{{ asset('images/logos/applogo_white.jpg') }}" type="image/jpeg">
+    <link rel="apple-touch-icon" href="{{ asset('images/logos/applogo_white.jpg') }}">
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -95,9 +141,9 @@
         }
 
         .nav-theme-admin .banner-nav {
-            background: linear-gradient(135deg, #5b2b88 0%, #7b3fb4 100%);
+            background: linear-gradient(135deg, #4b0082 0%, #7a3fb8 40%, #9b59ff 100%);
             border-bottom: none;
-            box-shadow: 0 2px 10px rgba(91, 43, 136, 0.35);
+            box-shadow: 0 4px 18px rgba(75, 0, 130, 0.35);
         }
 
         /* Logo Styles */
@@ -109,6 +155,11 @@
         .banner-logo img {
             width: 100%;
             height: auto;
+        }
+
+        /* Admin: make logo appear white on purple navbar */
+        .nav-theme-admin .banner-logo img {
+            filter: brightness(0) invert(1) saturate(0.8);
         }
 
         /* Navigation Menu */
@@ -675,7 +726,7 @@
             cursor: pointer;
             box-shadow: 0 5px 25px rgba(102, 126, 234, 0.4);
             transition: all 0.3s ease;
-            z-index: 1000;
+            z-index: 1102;
             border: 3px solid white;
         }
 
@@ -745,7 +796,7 @@
             border-radius: 20px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
             display: none;
-            z-index: 999;
+            z-index: 1101;
             overflow: hidden;
             flex-direction: column;
         }
@@ -1006,6 +1057,7 @@
             height: 40px;
             border-radius: 10px;
             object-fit: cover;
+            filter: brightness(0) invert(1);
         }
 
         .footer-text {
@@ -2069,60 +2121,113 @@
         @php
             $isAdminNav = auth()->check() && auth()->user()->isAdmin();
             $navThemeClass = $isAdminNav ? 'nav-theme-admin' : 'nav-theme-regular';
+            $dashboardRoute = $isAdminNav ? route('admin.dashboard') : route('dashboard');
+            $profileDashboardRoute = auth()->check() ? route('dashboard') : route('home');
+            $canUseChatbot = auth()->check() && !auth()->user()->isAdmin();
+            $activeUserSettings = auth()->check() ? auth()->user()->setting : null;
+            $showNotificationBadge = $activeUserSettings?->show_notification_badge ?? true;
+            $showMailBadge = $activeUserSettings?->show_mail_badge ?? true;
+            $showChatbotBubble = $activeUserSettings?->show_chatbot ?? true;
         @endphp
         <div class="{{ request()->routeIs('home') ? 'banner' : 'page-nav-bar' }} {{ $navThemeClass }}">
             <!-- Navigation on Banner -->
             <nav class="banner-nav">
                 <!-- Logo -->
                 <div class="banner-logo">
-                    <img src="{{ asset('images/logos/applogo.png') }}" alt="My Doctor Logo">
+                    <img src="{{ asset('images/logos/applogo.png') }}" alt="MyDoctor Logo">
                 </div>
 
                 <!-- Navigation Menu -->
                 <ul class="banner-nav-menu">
-                    <li class="banner-nav-item">
-                        <a href="{{ route('home') }}"
-                            class="banner-nav-link {{ request()->routeIs('home') ? 'active' : '' }}">
-                            {{ __('ui.nav.home') }}
-                        </a>
-                    </li>
-                    @auth
+                    @if ($isAdminNav)
                         <li class="banner-nav-item">
-                            <a href="{{ route('dashboard') }}"
-                                class="banner-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                                {{ __('ui.nav.dashboard') }}
+                            <a href="{{ route('admin.dashboard') }}"
+                                class="banner-nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                                Dashboard
                             </a>
                         </li>
-                    @endauth
-                    <li class="banner-nav-item">
-                        <a href="{{ route('medicine.index') }}"
-                            class="banner-nav-link {{ request()->routeIs('medicine*') ? 'active' : '' }}">
-                            {{ __('ui.nav.medicine') }}
-                        </a>
-                    </li>
-                    <li class="banner-nav-item">
-                        <a href="{{ route('health') }}"
-                            class="banner-nav-link {{ request()->routeIs('health*') ? 'active' : '' }}">
-                            {{ __('ui.nav.health') }}
-                        </a>
-                    </li>
-                    <li class="banner-nav-item">
-                        <a href="{{ route('community.landing') }}"
-                            class="banner-nav-link {{ request()->routeIs('community*') ? 'active' : '' }}">
-                            {{ __('ui.nav.community') }}
-                        </a>
-                    </li>
-                    <li class="banner-nav-item">
-                        <a href="{{ route('suggestions') }}" class="banner-nav-link {{ request()->routeIs('suggestions') ? 'active' : '' }}">
-                            {{ __('ui.nav.suggestions') }}
-                        </a>
-                    </li>
-                    <li class="banner-nav-item">
-                        <a href="{{ route('help') }}"
-                            class="banner-nav-link {{ request()->routeIs('help*') ? 'active' : '' }}">
-                            {{ __('ui.nav.help') }}
-                        </a>
-                    </li>
+                        <li class="banner-nav-item">
+                            <a href="{{ route('admin.users.index') }}"
+                                class="banner-nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                                Users
+                            </a>
+                        </li>
+                        <li class="banner-nav-item">
+                            <a href="{{ route('admin.diseases.index') }}"
+                                class="banner-nav-link {{ request()->routeIs('admin.diseases.*') ? 'active' : '' }}">
+                                Diseases
+                            </a>
+                        </li>
+                        <li class="banner-nav-item">
+                            <a href="{{ route('admin.symptoms.index') }}"
+                                class="banner-nav-link {{ request()->routeIs('admin.symptoms.*') ? 'active' : '' }}">
+                                Symptoms
+                            </a>
+                        </li>
+                        <li class="banner-nav-item">
+                            <a href="{{ route('admin.health.index') }}"
+                                class="banner-nav-link {{ request()->routeIs('admin.health.*') || request()->routeIs('admin.metrics.*') ? 'active' : '' }}">
+                                Health
+                            </a>
+                        </li>
+                        <li class="banner-nav-item">
+                            <a href="{{ route('admin.community.posts.index') }}"
+                                class="banner-nav-link {{ request()->routeIs('admin.community.*') ? 'active' : '' }}">
+                                Community
+                            </a>
+                        </li>
+                    @else
+                        <li class="banner-nav-item">
+                            <a href="{{ route('home') }}"
+                                class="banner-nav-link {{ request()->routeIs('home') ? 'active' : '' }}">
+                                {{ __('ui.nav.home') }}
+                            </a>
+                        </li>
+                        @auth
+                            <li class="banner-nav-item">
+                                <a href="{{ $dashboardRoute }}"
+                                    class="banner-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                                    {{ __('ui.nav.dashboard') }}
+                                </a>
+                            </li>
+                        @endauth
+                        <li class="banner-nav-item">
+                            <a href="{{ auth()->check() ? route('medicine.index', [], false) : route('login', [], false) . '?redirect=' . urlencode(route('medicine.index', [], false)) }}"
+                                class="banner-nav-link {{ request()->routeIs('medicine*') ? 'active' : '' }}"
+                                title="{{ auth()->check() ? '' : __('ui.nav.login_required') }}">
+                                {{ __('ui.nav.medicine') }}
+                            </a>
+                        </li>
+                        <li class="banner-nav-item">
+                            <a href="{{ auth()->check() ? route('health', [], false) : route('login', [], false) . '?redirect=' . urlencode(route('health', [], false)) }}"
+                                class="banner-nav-link {{ request()->routeIs('health*') ? 'active' : '' }}"
+                                title="{{ auth()->check() ? '' : __('ui.nav.login_required') }}">
+                                {{ __('ui.nav.health') }}
+                            </a>
+                        </li>
+                        <li class="banner-nav-item">
+                            <a href="{{ auth()->check() ? route('community.home', [], false) : route('login', [], false) . '?redirect=' . urlencode(route('community.home', [], false)) }}"
+                                class="banner-nav-link {{ request()->routeIs('community*') ? 'active' : '' }}"
+                                title="{{ auth()->check() ? '' : __('ui.nav.login_required') }}">
+                                {{ __('ui.nav.community') }}
+                            </a>
+                        </li>
+                        @auth
+                            <li class="banner-nav-item">
+                                <a href="{{ auth()->check() ? route('suggestions', [], false) : route('login', [], false) . '?redirect=' . urlencode(route('suggestions', [], false)) }}"
+                                    class="banner-nav-link {{ request()->routeIs('suggestions') ? 'active' : '' }}"
+                                    title="{{ auth()->check() ? '' : __('ui.nav.login_required') }}">
+                                    {{ __('ui.nav.suggestions') }}
+                                </a>
+                            </li>
+                        @endauth
+                        <li class="banner-nav-item">
+                            <a href="{{ route('help') }}"
+                                class="banner-nav-link {{ request()->routeIs('help*') ? 'active' : '' }}">
+                                {{ __('ui.nav.help') }}
+                            </a>
+                        </li>
+                    @endif
                 </ul>
 
                 <!-- Right Side Navigation (Notifications + User Menu) -->
@@ -2147,34 +2252,38 @@
                         <!-- Mailbox -->
                         <a href="{{ route('profile.mailbox') }}" class="mailbox-bell" id="mailboxBell" title="{{ __('ui.nav.mailbox') }}">
                             <i class="fas fa-envelope"></i>
-                            <span class="badge" id="mailboxCount" style="display: {{ $unreadMailCount > 0 ? 'inline-block' : 'none' }};">
+                            <span class="badge" id="mailboxCount" style="display: {{ $showMailBadge && $unreadMailCount > 0 ? 'inline-block' : 'none' }};">
                                 {{ $unreadMailCount }}
                             </span>
                         </a>
 
-                        <!-- Notifications -->
-                        <div class="notification-bell" id="notificationBell" onclick="toggleNotificationDropdown()">
-                            <i class="fas fa-bell"></i>
-                            <span class="badge" id="notificationCount" style="display: none;">0</span>
-                        </div>
-
-                        <span class="nav-user-name">{{ auth()->user()->name }}</span>
-
-                        <!-- Notification Dropdown -->
-                        <div class="notification-dropdown" id="notificationDropdown">
-                            <div class="notification-header">
-                                <h6>{{ __('ui.nav.notifications') }}</h6>
-                                <button onclick="markAllNotificationsRead()">{{ __('ui.nav.mark_all_read') }}</button>
+                        @if (! $isAdminNav)
+                            <!-- Notifications -->
+                            <div class="notification-bell" id="notificationBell" onclick="toggleNotificationDropdown()">
+                                <i class="fas fa-bell"></i>
+                                <span class="badge" id="notificationCount" style="display: none;">0</span>
                             </div>
-                            <div class="notification-list" id="notificationList">
-                                <div class="notification-empty">
-                                    <p>{{ __('ui.nav.no_notifications') }}</p>
+
+                            <span class="nav-user-name">{{ auth()->user()->name }}</span>
+
+                            <!-- Notification Dropdown -->
+                            <div class="notification-dropdown" id="notificationDropdown">
+                                <div class="notification-header">
+                                    <h6>{{ __('ui.nav.notifications') }}</h6>
+                                    <button onclick="markAllNotificationsRead()">{{ __('ui.nav.mark_all_read') }}</button>
+                                </div>
+                                <div class="notification-list" id="notificationList">
+                                    <div class="notification-empty">
+                                        <p>{{ __('ui.nav.no_notifications') }}</p>
+                                    </div>
+                                </div>
+                                <div class="notification-footer">
+                                    <a href="{{ route('notifications.index') }}">{{ __('ui.nav.view_all_notifications') }}</a>
                                 </div>
                             </div>
-                            <div class="notification-footer">
-                                <a href="{{ route('notifications.index') }}">{{ __('ui.nav.view_all_notifications') }}</a>
-                            </div>
-                        </div>
+                        @else
+                            <span class="nav-user-name">{{ auth()->user()->name }}</span>
+                        @endif
                     @endauth
 
                     @guest
@@ -2186,11 +2295,16 @@
                             <span class="toggle-label toggle-label-bn">BN</span>
                             <span class="toggle-knob" aria-hidden="true"></span>
                         </a>
+                        <span class="nav-user-name">
+                            <a href="{{ route('login', [], false) }}" style="text-decoration:none;color:inherit;">{{ __('ui.menu.login') }}</a>
+                            /
+                            <a href="{{ route('register', [], false) }}" style="text-decoration:none;color:inherit;">{{ __('ui.menu.register') }}</a>
+                        </span>
                     @endguest
 
                     <!-- User Circle Menu -->
                     <div class="user-menu" id="userMenu">
-                        <div class="user-circle" onclick="toggleUserDropdown()">
+                        <div class="user-circle" onclick="toggleUserDropdown()" title="{{ auth()->check() ? auth()->user()->name : __('ui.menu.guest') }}">
                             @auth
                                 @if (auth()->user()->picture)
                                     <img src="{{ asset('storage/' . auth()->user()->picture) }}"
@@ -2199,7 +2313,7 @@
                                     <span>{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
                                 @endif
                             @else
-                                <span>G</span>
+                                <span>?</span>
                             @endauth
                         </div>
 
@@ -2211,18 +2325,22 @@
                                     <p>{{ auth()->user()->email }}</p>
                                 </div>
 
-                                <a href="{{ route('dashboard') }}" class="dropdown-item-custom">
-                                    <i class="fas fa-tachometer-alt me-2"></i>{{ __('ui.nav.dashboard') }}
-                                </a>
+                                @if (! auth()->user()->isAdmin())
+                                    <a href="{{ $profileDashboardRoute }}" class="dropdown-item-custom">
+                                        <i class="fas fa-tachometer-alt me-2"></i>{{ __('ui.nav.dashboard') }}
+                                    </a>
+                                @endif
 
                                 <a href="{{ route('profile') }}" class="dropdown-item-custom">
                                     <i class="fas fa-user me-2"></i>{{ __('ui.menu.profile') }}
                                 </a>
 
-                                <a href="{{ route('notifications.index') }}" class="dropdown-item-custom" id="notification-link">
-                                    <i class="fas fa-bell me-2"></i>{{ __('ui.nav.notifications') }}
-                                    <span class="notification-badge" id="notificationCountBadge" style="display: none;">0</span>
-                                </a>
+                                @if (! auth()->user()->isAdmin())
+                                    <a href="{{ route('notifications.index') }}" class="dropdown-item-custom" id="notification-link">
+                                        <i class="fas fa-bell me-2"></i>{{ __('ui.nav.notifications') }}
+                                        <span class="notification-badge" id="notificationCountBadge" style="display: none;">0</span>
+                                    </a>
+                                @endif
 
                                 <a href="{{ route('profile.mailbox') }}" class="dropdown-item-custom">
                                     <i class="fas fa-envelope me-2"></i>{{ __('ui.nav.mailbox') }}
@@ -2232,14 +2350,6 @@
                                 <a href="{{ route('profile.setting') }}" class="dropdown-item-custom">
                                     <i class="fas fa-cog me-2"></i>{{ __('ui.menu.settings') }}
                                 </a>
-
-                                <!-- Admin Dashboard Link -->
-                                @if (auth()->user()->isAdmin())
-                                    <div class="divider"></div>
-                                    <a href="{{ route('admin.dashboard') }}" class="dropdown-item-custom">
-                                        <i class="fas fa-user-shield me-2"></i>{{ __('ui.menu.admin_dashboard') }}
-                                    </a>
-                                @endif
 
                                 <div class="divider"></div>
                                 <form method="POST" action="{{ route('logout') }}">
@@ -2251,11 +2361,11 @@
                                 </form>
                             @else
                                 <!-- GUEST USER MENU -->
-                                <a href="{{ route('login') }}" class="dropdown-item-custom">
+                                <a href="{{ route('login', [], false) }}" class="dropdown-item-custom">
                                     <i class="fas fa-sign-in-alt me-2"></i>{{ __('ui.menu.login') }}
                                 </a>
 
-                                <a href="{{ route('register') }}" class="dropdown-item-custom">
+                                <a href="{{ route('register', [], false) }}" class="dropdown-item-custom">
                                     <i class="fas fa-user-plus me-2"></i>{{ __('ui.menu.register') }}
                                 </a>
                             @endauth
@@ -2269,79 +2379,39 @@
                 <div class="banner position-relative overflow-hidden">
                     <!-- Banner Content with Container Layout -->
                     <div class="container position-relative z-3 py-5">
-                        <div class="row min-vh-50 align-items-center">
+                        <div class="row min-vh-50 align-items-center justify-content-start">
                             <!-- Left Column - Text and Buttons -->
-                            <div class="col-lg-7 text-white">
+                            <div class="col-lg-9 text-white text-start">
                                 <h1 class="display-3 fw-bold mt-5 pt-4 mb-4">Your Health,<br>Our <span
                                         class="text-warning">Priority</span></h1>
                                 <p class="lead mb-4">Experience healthcare reimagined with AI-powered insights, medicine
                                     reminders, and community support.</p>
 
                                 @guest
-                                    <div class="d-flex gap-3">
-                                        <a href="{{ route('register') }}"
+                                    <div class="d-flex gap-3 flex-wrap">
+                                        <a href="{{ route('login', [], false) }}?redirect={{ urlencode(route('dashboard', [], false)) }}"
                                             class="btn btn-light btn-lg rounded-pill px-5 py-3 fw-semibold">
                                             Get Started <i class="fas fa-arrow-right ms-2"></i>
                                         </a>
-                                        <button onclick="toggleChatbot()"
+                                        <a href="{{ route('login', [], false) }}?redirect={{ urlencode(request()->fullUrl()) }}"
                                             class="btn btn-outline-light btn-lg rounded-pill px-5 py-3 fw-semibold">
-                                            <i class="fas fa-robot me-2"></i>Ask AI
-                                        </button>
+                                            <i class="fas fa-user-md me-2"></i>Ask MyDoctor AI
+                                        </a>
                                     </div>
                                 @else
                                     <div class="d-flex gap-3">
                                         <a href="{{ route('dashboard') }}"
                                             class="btn btn-light btn-lg rounded-pill px-5 py-3 fw-semibold">
-                                            Dashboard <i class="fas fa-arrow-right ms-2"></i>
+                                            Get Started <i class="fas fa-arrow-right ms-2"></i>
                                         </a>
-                                        <button onclick="toggleChatbot()"
-                                            class="btn btn-outline-light btn-lg rounded-pill px-5 py-3 fw-semibold">
-                                            <i class="fas fa-robot me-2"></i>Ask AI
-                                        </button>
+                                        @if (!auth()->user()->isAdmin())
+                                            <button onclick="toggleChatbot()"
+                                                class="btn btn-outline-light btn-lg rounded-pill px-5 py-3 fw-semibold">
+                                                <i class="fas fa-user-md me-2"></i>Ask MyDoctor AI
+                                            </button>
+                                        @endif
                                     </div>
                                 @endguest
-                            </div>
-
-                            <!-- Right Column - Statistics with Icons -->
-                            <div class="col-lg-5 mt-5 pt-4 text-white">
-                                <div class="row g-4">
-                                    <div class="col-6">
-                                        <div class="stat-card text-center p-3">
-                                            <div class="stat-icon mb-2">
-                                                <i class="fas fa-users fa-3x text-warning"></i>
-                                            </div>
-                                            <h3 class="text-white mb-0">50K+</h3>
-                                            <small class="text-white-50">Active Users</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="stat-card text-center p-3">
-                                            <div class="stat-icon mb-2">
-                                                <i class="fas fa-file-medical fa-3x text-warning"></i>
-                                            </div>
-                                            <h3 class="text-white mb-0">10K+</h3>
-                                            <small class="text-white-50">Health Records</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="stat-card text-center p-3">
-                                            <div class="stat-icon mb-2">
-                                                <i class="fas fa-clock fa-3x text-warning"></i>
-                                            </div>
-                                            <h3 class="text-white mb-0">24/7</h3>
-                                            <small class="text-white-50">AI Support</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="stat-card text-center p-3">
-                                            <div class="stat-icon mb-2">
-                                                <i class="fas fa-user-md fa-3x text-warning"></i>
-                                            </div>
-                                            <h3 class="text-white mb-0">100+</h3>
-                                            <small class="text-white-50">Doctors</small>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -2354,42 +2424,44 @@
             @yield('content')
         </main>
 
-        <!-- Chatbot Icon -->
-        <div class="chatbot-icon" id="chatbotIcon" onclick="toggleChatbot()">
-            <i class="fas fa-user-md"></i>
-            <span class="chatbot-tooltip">Ask me about health!</span>
-        </div>
-
-        <!-- Chatbot Modal -->
-        <div class="chatbot-modal" id="chatbotModal">
-            <div class="chatbot-header">
-                <h5><i class="fas fa-user-md me-2"></i>Health Assistant</h5>
-                <button onclick="toggleChatbot()"><i class="fas fa-times"></i></button>
+        @if ($canUseChatbot)
+            <!-- Chatbot Icon -->
+            <div class="chatbot-icon" id="chatbotIcon" onclick="toggleChatbot()">
+                <i class="fas fa-user-md"></i>
+                <span class="chatbot-tooltip">Ask me about health!</span>
             </div>
 
-            <!-- Disclaimer Banner -->
-            <div class="bg-warning bg-opacity-10 p-2 text-center small" style="border-bottom: 1px solid #dee2e6;">
-                <i class="fas fa-exclamation-triangle text-warning me-1"></i>
-                AI-powered health information - consult a doctor for medical advice
-            </div>
+            <!-- Chatbot Modal -->
+            <div class="chatbot-modal" id="chatbotModal">
+                <div class="chatbot-header">
+                    <h5><i class="fas fa-user-md me-2"></i>MyDoctor AI</h5>
+                    <button onclick="toggleChatbot()"><i class="fas fa-times"></i></button>
+                </div>
 
-            <!-- Chatbot settings moved to profile page (cookie-controlled) -->
+                <!-- Disclaimer Banner -->
+                <div class="bg-warning bg-opacity-10 p-2 text-center small" style="border-bottom: 1px solid #dee2e6;">
+                    <i class="fas fa-exclamation-triangle text-warning me-1"></i>
+                    AI-powered health information - consult a doctor for medical advice
+                </div>
 
-            <div class="chatbot-messages" id="chatMessages">
-                <div style="text-align: center; color: #718096; padding: 20px;">
-                    <i class="fas fa-user-md fa-3x mb-3" style="color: #667eea;"></i>
-                    <p>Hello! I'm your AI health assistant.<br>How can I help you today?</p>
-                    <small class="text-muted d-block mt-2">
-                        <i class="fas fa-info-circle me-1"></i>
-                        Ask about symptoms, medicines, diet, exercise, or general health tips
-                    </small>
+                <!-- Chatbot settings moved to profile page (cookie-controlled) -->
+
+                <div class="chatbot-messages" id="chatMessages">
+                    <div style="text-align: center; color: #718096; padding: 20px;">
+                        <i class="fas fa-user-md fa-3x mb-3" style="color: #667eea;"></i>
+                        <p>Hello! I'm MyDoctor AI, your personal health assistant.<br>How can I help you today?</p>
+                        <small class="text-muted d-block mt-2">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Ask about symptoms, diet, exercise, or general health tips
+                        </small>
+                    </div>
+                </div>
+                <div class="chatbot-input">
+                    <input type="text" placeholder="Type your health question..." id="chatInput">
+                    <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
                 </div>
             </div>
-            <div class="chatbot-input">
-                <input type="text" placeholder="Type your health question..." id="chatInput">
-                <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
-            </div>
-        </div>
+        @endif
     </div>
 
     <!-- ==================== ALL MODALS ==================== -->
@@ -2534,8 +2606,8 @@
                 <!-- About Section -->
                 <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
                     <div class="footer-logo mb-3">
-                        <img src="{{ asset('images/logos/applogo.png') }}" alt="My Doctor" height="40">
-                        <span class="fw-bold text-white ms-2">My Doctor</span>
+                        <img src="{{ asset('images/logos/applogo.png') }}" alt="MyDoctor" height="40">
+                        <span class="fw-bold text-white ms-2">MyDoctor</span>
                     </div>
                     <p class="footer-text">
                         Your complete healthcare companion. Track health metrics, get medicine reminders, consult AI,
@@ -2593,7 +2665,7 @@
             <div class="row align-items-center">
                 <div class="col-md-6 text-center text-md-start">
                     <p class="copyright mb-0">
-                        &copy; {{ date('Y') }} My Doctor. All rights reserved. | Making healthcare simple
+                        &copy; {{ date('Y') }} MyDoctor. All rights reserved. | Making healthcare simple
                     </p>
                 </div>
                 <div class="col-md-6 text-center text-md-end">
@@ -2650,6 +2722,10 @@
         };
 
         // ==================== POST MODAL FUNCTIONS ====================
+        window.getCommunityBasePath = function() {
+            return window.location.pathname.startsWith('/admin/community') ? '/admin/community' : '/community';
+        };
+
         window.openPostModal = function(postId) {
             const modalBody = document.getElementById('postModalBody');
             if (!modalBody) {
@@ -2670,7 +2746,7 @@
             postModal.show();
             
             // Fetch the post HTML
-            fetch(`/community/modal-post/${postId}`)
+            fetch(`${window.getCommunityBasePath()}/modal-post/${postId}`)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Post is deleted or cannot be loaded');
@@ -2751,7 +2827,7 @@ window.submitModalComment = async function(event, postId) {
     submitBtn.innerHTML = '<span class="spinner-small"></span>';
 
     try {
-        const res = await fetch(`/community/posts/${postId}/comments`, {
+        const res = await fetch(`${window.getCommunityBasePath()}/posts/${postId}/comments`, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
@@ -3004,7 +3080,7 @@ window.clearModalCommentFile = function(postId) {
             }
 
             try {
-                const response = await fetch(`/community/posts/${postId}/comments`, {
+                const response = await fetch(`${window.getCommunityBasePath()}/posts/${postId}/comments`, {
                     method: "POST",
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
@@ -3066,8 +3142,8 @@ window.clearModalCommentFile = function(postId) {
         // ==================== LIKE FUNCTIONS ====================
         window.toggleLike = async function(postId, button) {
             try {
-                const response = await fetch(`/community/posts/${postId}/like`, {
-                    method: "POST",
+                const response = await fetch(`${window.getCommunityBasePath()}/posts/${postId}/likes`, {
+                    method: "PUT",
                     headers: {
                         "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
                         "Accept": "application/json",
@@ -3095,17 +3171,6 @@ window.clearModalCommentFile = function(postId) {
                         icon.style.color = "inherit";
                     }
 
-                    if (!data.liked) {
-                        const starButtons = document.querySelectorAll(`[id="star-btn-${postId}"]`);
-                        starButtons.forEach((starBtn) => {
-                            const starIcon = starBtn.querySelector('i');
-                            starBtn.classList.remove('starred');
-                            if (starIcon) {
-                                starIcon.classList.remove('fas', 'text-warning');
-                                starIcon.classList.add('far');
-                            }
-                        });
-                    }
                 }
             } catch (err) {
                 console.error("Like error:", err);
@@ -3116,8 +3181,8 @@ window.clearModalCommentFile = function(postId) {
             if (!button) return;
 
             try {
-                const response = await fetch(`/community/posts/${postId}/star`, {
-                    method: "POST",
+                const response = await fetch(`${window.getCommunityBasePath()}/posts/${postId}/star`, {
+                    method: "PUT",
                     headers: {
                         "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
                         "Accept": "application/json",
@@ -3146,23 +3211,13 @@ window.clearModalCommentFile = function(postId) {
                         }
                     });
 
-                    if (data.liked) {
-                        const likeButtons = document.querySelectorAll(`[id="like-btn-${postId}"]`);
-                        likeButtons.forEach((likeBtn) => {
-                            const likeIcon = likeBtn.querySelector('i');
-                            const likeCount = likeBtn.querySelector('.like-count');
-
-                            likeBtn.classList.add('liked');
-                            if (likeIcon) {
-                                likeIcon.classList.remove('far');
-                                likeIcon.classList.add('fas');
-                                likeIcon.style.color = '#dc3545';
-                            }
-                            if (likeCount && typeof data.count !== 'undefined') {
-                                likeCount.textContent = data.count;
-                            }
-                        });
-                    }
+                    const likeButtons = document.querySelectorAll(`[id="like-btn-${postId}"]`);
+                    likeButtons.forEach((likeBtn) => {
+                        const likeCount = likeBtn.querySelector('.like-count');
+                        if (likeCount && typeof data.count !== 'undefined') {
+                            likeCount.textContent = data.count;
+                        }
+                    });
 
                     if (typeof window.showToast === 'function' && data.message) {
                         window.showToast(data.message, 'success');
@@ -3180,8 +3235,8 @@ window.clearModalCommentFile = function(postId) {
 
         window.toggleCommentLike = async function(commentId, button) {
             try {
-                const response = await fetch(`/community/comments/${commentId}/like`, {
-                    method: "POST",
+                const response = await fetch(`${window.getCommunityBasePath()}/comments/${commentId}/likes`, {
+                    method: "PUT",
                     headers: {
                         "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
                         "Accept": "application/json",
@@ -3319,7 +3374,7 @@ window.clearModalCommentFile = function(postId) {
             const userModal = new bootstrap.Modal(userModalEl);
             userModal.show();
             
-            fetch(`/community/user/${userId}`)
+            fetch(`${window.getCommunityBasePath()}/user/${userId}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -3556,9 +3611,10 @@ window.openVideoModal = function(type, source, isReel = false) {
                 confirmDeleteBtn.addEventListener('click', function() {
                     if (!window.deleteId || !window.deleteType) return;
 
+                    const basePath = window.getCommunityBasePath();
                     const url = window.deleteType === 'post'
-                        ? `/community/posts/${window.deleteId}/delete`
-                        : `/community/comments/${window.deleteId}/delete`;
+                        ? `${basePath}/posts/${window.deleteId}`
+                        : `${basePath}/comments/${window.deleteId}`;
 
                     const deleteBtn = this;
                     const originalText = deleteBtn.innerHTML;
@@ -3566,7 +3622,7 @@ window.openVideoModal = function(type, source, isReel = false) {
                     deleteBtn.innerHTML = '<span class="spinner-small me-2"></span> Deleting...';
 
                     fetch(url, {
-                        method: 'POST',
+                        method: 'DELETE',
                         headers: {
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                             'Accept': 'application/json'
@@ -3644,9 +3700,10 @@ window.openVideoModal = function(type, source, isReel = false) {
                         return;
                     }
 
+                    const basePath = window.getCommunityBasePath();
                     const url = window.currentEditType === 'post'
-                        ? `/community/posts/${window.currentEditId}/update`
-                        : `/community/comments/${window.currentEditId}/update`;
+                        ? `${basePath}/posts/${window.currentEditId}`
+                        : `${basePath}/comments/${window.currentEditId}`;
 
                     const saveBtn = this;
                     const originalText = saveBtn.innerHTML;
@@ -3654,7 +3711,7 @@ window.openVideoModal = function(type, source, isReel = false) {
                     saveBtn.innerHTML = '<span class="spinner-small me-2"></span> Saving...';
 
                     fetch(url, {
-                        method: 'POST',
+                        method: 'PATCH',
                         headers: {
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                             'Accept': 'application/json',
@@ -3746,34 +3803,40 @@ window.openVideoModal = function(type, source, isReel = false) {
         function toggleUserDropdown() {
             const dropdown = document.getElementById('userDropdown');
             dropdown.classList.toggle('show');
-            
-            // Close notification dropdown if open
+
+            // Close notification dropdown if open (guarded)
             const notifDropdown = document.getElementById('notificationDropdown');
-            if (notifDropdown.classList.contains('show')) {
+            if (notifDropdown && notifDropdown.classList.contains('show')) {
                 notifDropdown.classList.remove('show');
             }
         }
 
+        @if (! $isAdminNav)
         // Notification dropdown toggle
         function toggleNotificationDropdown() {
             const dropdown = document.getElementById('notificationDropdown');
+            if (!dropdown) return;
             dropdown.classList.toggle('show');
-            
+
             // Close user dropdown if open
             const userDropdown = document.getElementById('userDropdown');
-            if (userDropdown.classList.contains('show')) {
+            if (userDropdown && userDropdown.classList.contains('show')) {
                 userDropdown.classList.remove('show');
             }
-            
+
             // Load notifications if dropdown is opened
             if (dropdown.classList.contains('show')) {
                 loadNotifications();
             }
         }
 
-        // Chatbot toggle
+        // Chatbot toggle: if chatbot modal not present (guest), redirect to login
         function toggleChatbot() {
             const modal = document.getElementById('chatbotModal');
+            if (!modal) {
+                window.location.href = '{{ route('login', [], false) }}?redirect=' + encodeURIComponent(window.location.href);
+                return;
+            }
             modal.classList.toggle('show');
         }
 
@@ -3837,6 +3900,7 @@ window.openVideoModal = function(type, source, isReel = false) {
                     </div>
                 `;
             });
+
         }
 
         // Update notification dropdown
@@ -3926,6 +3990,17 @@ window.openVideoModal = function(type, source, isReel = false) {
             const badge = document.getElementById('notificationCount');
             const bell = document.getElementById('notificationBell');
             const badge2 = document.getElementById('notificationCountBadge');
+            if (!badge) return;
+
+            const allowBadge = @json((bool) ($showNotificationBadge ?? true));
+            if (!allowBadge) {
+                badge.style.display = 'none';
+                if (badge2) {
+                    badge2.style.display = 'none';
+                }
+                return;
+            }
+
             const previousCount = parseInt(badge.textContent) || 0;
             
             if (count > 0) {
@@ -3933,7 +4008,7 @@ window.openVideoModal = function(type, source, isReel = false) {
                 badge.style.display = 'inline-block';
                 
                 // Shake bell if new notification arrived
-                if (count > previousCount) {
+                if (bell && count > previousCount) {
                     bell.classList.add('shake');
                     setTimeout(() => bell.classList.remove('shake'), 500);
                 }
@@ -3955,6 +4030,12 @@ window.openVideoModal = function(type, source, isReel = false) {
             const badge = document.getElementById('mailboxCount');
             if (!badge) return;
 
+            const allowBadge = @json((bool) ($showMailBadge ?? true));
+            if (!allowBadge) {
+                badge.style.display = 'none';
+                return;
+            }
+
             if (count > 0) {
                 badge.textContent = count;
                 badge.style.display = 'inline-block';
@@ -3972,6 +4053,87 @@ window.openVideoModal = function(type, source, isReel = false) {
                 .replace(/>/g, "&gt;")
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
+        }
+
+        // Render a lightweight markdown-like subset: headings, lists, bold
+        function renderChatbotMarkup(text) {
+            const escaped = escapeHtml(text);
+            const lines = escaped.split(/\r?\n/);
+            let html = '';
+            let inList = false;
+
+            for (const rawLine of lines) {
+                const line = rawLine.trim();
+
+                if (line === '') {
+                    if (inList) {
+                        html += '</ul>';
+                        inList = false;
+                    }
+                    continue;
+                }
+
+                if (/^#{2,4}\s+/.test(line)) {
+                    if (inList) {
+                        html += '</ul>';
+                        inList = false;
+                    }
+                    html += `<h3>${emphasizeLine(line.replace(/^#{2,4}\s+/, ''))}</h3>`;
+                    continue;
+                }
+
+                if (line.startsWith('- ') || line.startsWith('* ') || /^\d+\.\s+/.test(line)) {
+                    if (!inList) {
+                        html += '<ul>';
+                        inList = true;
+                    }
+                    const cleaned = line.replace(/^(-|\*|\d+\.)\s+/, '');
+                    html += `<li>${emphasizeLine(cleaned)}</li>`;
+                    continue;
+                }
+
+                if (inList) {
+                    html += '</ul>';
+                    inList = false;
+                }
+
+                html += `<p>${emphasizeLine(line)}</p>`;
+            }
+
+            if (inList) {
+                html += '</ul>';
+            }
+
+            return html || '<p class="mb-0">No content.</p>';
+        }
+
+        function emphasizeLine(input) {
+            let line = input.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+            // Make the full leading label before the first colon bold.
+            line = line.replace(/^\s*([^:<>]{2,120})\s*:\s*(.*)$/i, (m, label, rest) => {
+                return `<strong>${label.trim()}:</strong> ${rest}`;
+            });
+
+            const keywordPattern = /\b(summary|details|suggestions|tips|overview|condition|health|symptom|symptoms|disease|diseases|medicine|medicines|metric|metrics|adherence|warning|urgent|improve|monitor|doctor|exercise|sleep|hydration|stress|chronic|active|managed|severity|diagnosed|risk|risks|trend|blood\s+pressure|glucose|heart\s+rate|bmi|eczema|conjunctivitis|tachycardia)\b/gi;
+            const valuePattern = /\b(\d+\/?\d*\s*(?:mg\/dL|mmhg|bpm|%)?)\b/gi;
+
+            const firstColon = line.indexOf(':');
+            if (firstColon !== -1) {
+                const head = line.slice(0, firstColon + 1);
+                let tail = line.slice(firstColon + 1);
+                tail = tail.replace(keywordPattern, '<strong>$1</strong>');
+                tail = tail.replace(valuePattern, '<strong>$1</strong>');
+                line = head + tail;
+            } else {
+                line = line.replace(keywordPattern, '<strong>$1</strong>');
+            }
+
+            if (!/<strong>/.test(line)) {
+                line = line.replace(/^((?:\w+\s+){1,3}\w+)/, '<strong>$1</strong>');
+            }
+
+            return line;
         }
 
         // Start periodic updates
@@ -4007,6 +4169,7 @@ window.openVideoModal = function(type, source, isReel = false) {
                 }
             }, 30000);
         }
+        @endif
 
         // Close dropdowns when clicking outside
         window.onclick = function(event) {
@@ -4033,6 +4196,7 @@ window.openVideoModal = function(type, source, isReel = false) {
         let isTyping = false;
         let conversationHistory = [];
         let chatbotPromptTimeout;
+        const allowChatbotBubble = @json((bool) ($showChatbotBubble ?? true));
 
         // Cookie helpers
         function setCookie(name, value, days) {
@@ -4068,6 +4232,11 @@ window.openVideoModal = function(type, source, isReel = false) {
         }
 
         function initializeChatbotPromptSetting() {
+            if (!allowChatbotBubble) {
+                updateChatbotVisibility(false);
+                return;
+            }
+
             const saved = getCookie('chatbot_bubble_enabled');
             const enabled = saved === null ? '1' : saved; // default enabled
 
@@ -4078,6 +4247,11 @@ window.openVideoModal = function(type, source, isReel = false) {
         function startChatbotPromptCycle() {
             const chatbotIcon = document.getElementById('chatbotIcon');
             if (!chatbotIcon) return;
+
+            if (!allowChatbotBubble) {
+                chatbotIcon.classList.remove('glow-pulse', 'show-tooltip');
+                return;
+            }
 
             if (chatbotPromptTimeout) {
                 clearTimeout(chatbotPromptTimeout);
@@ -4141,9 +4315,27 @@ window.openVideoModal = function(type, source, isReel = false) {
                 const data = await response.json();
                 removeTypingIndicator();
 
-                const reply = typeof data.reply === 'string' && data.reply.trim() !== ''
-                    ? data.reply
-                    : 'I could not generate a reply right now. Please try again.';
+                let reply = null;
+                if (response.ok && typeof data.reply === 'string' && data.reply.trim() !== '') {
+                    reply = data.reply;
+                } else {
+                    if (typeof data.reply === 'string' && data.reply.trim() !== '') {
+                        reply = data.reply;
+                    } else if (typeof data.message === 'string' && data.message.trim() !== '') {
+                        reply = data.message;
+                    } else if (data.errors && typeof data.errors === 'object') {
+                        const first = Object.values(data.errors)[0];
+                        if (Array.isArray(first) && first.length) {
+                            reply = first[0];
+                        } else if (typeof first === 'string') {
+                            reply = first;
+                        }
+                    }
+                }
+
+                if (!reply) {
+                    reply = 'I could not generate a reply right now. Please try again.';
+                }
 
                 addMessage(reply, 'bot');
                 conversationHistory.push({ role: 'assistant', content: reply });
@@ -4171,10 +4363,8 @@ window.openVideoModal = function(type, source, isReel = false) {
                 messageDiv.style.textAlign = 'left';
                 messageDiv.style.margin = '10px 0';
 
-                // Format bot response with line breaks and bold text
-                let formattedText = escapeHtml(text);
-                formattedText = formattedText.replace(/\n/g, '<br>');
-                formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                // Format bot response using markdown-like renderer (lists, bold, headings)
+                let formattedText = renderChatbotMarkup(text);
 
                 messageDiv.innerHTML = `
                     <div class="bot-message-row">
@@ -4235,9 +4425,11 @@ window.openVideoModal = function(type, source, isReel = false) {
         // Make functions global
         window.toggleEmailQuick = toggleEmailQuick;
         window.togglePushQuick = togglePushQuick;
-        window.toggleNotificationDropdown = toggleNotificationDropdown;
-        window.markAllNotificationsRead = markAllNotificationsRead;
-        window.handleNotificationClick = handleNotificationClick;
+        @if (! $isAdminNav)
+            window.toggleNotificationDropdown = toggleNotificationDropdown;
+            window.markAllNotificationsRead = markAllNotificationsRead;
+            window.handleNotificationClick = handleNotificationClick;
+        @endif
         window.toggleChatbot = toggleChatbot;
         window.sendMessage = sendMessage;
         window.addMessage = addMessage;
@@ -4385,25 +4577,36 @@ window.openVideoModal = function(type, source, isReel = false) {
             startChatbotPromptCycle();
 
             if ('{{ Auth::check() }}' === '1') {
-                // Load initial navbar counts
-                Promise.all([
-                    fetch('/notifications/unread-count', {
-                        headers: {
-                            'Accept': 'application/json'
-                        }
-                    }).then(res => res.json()),
+                // Load mailbox count (notifications hidden for admin)
+                @if (! $isAdminNav)
+                    // Load initial navbar counts
+                    Promise.all([
+                        fetch('/notifications/unread-count', {
+                            headers: {
+                                'Accept': 'application/json'
+                            }
+                        }).then(res => res.json()),
+                        fetch('/profile/mailbox/unread-count', {
+                            headers: {
+                                'Accept': 'application/json'
+                            }
+                        }).then(res => res.json()),
+                    ])
+                    .then(([notificationData, mailboxData]) => {
+                        updateNotificationCount(notificationData.count || 0);
+                        updateMailboxCount(mailboxData.count || 0);
+                        startNotificationUpdates();
+                    })
+                    .catch(err => console.error('Error loading initial counts:', err));
+                @else
                     fetch('/profile/mailbox/unread-count', {
                         headers: {
                             'Accept': 'application/json'
                         }
-                    }).then(res => res.json()),
-                ])
-                .then(([notificationData, mailboxData]) => {
-                    updateNotificationCount(notificationData.count || 0);
-                    updateMailboxCount(mailboxData.count || 0);
-                    startNotificationUpdates();
-                })
-                .catch(err => console.error('Error loading initial counts:', err));
+                    }).then(res => res.json())
+                    .then(data => updateMailboxCount(data.count || 0))
+                    .catch(err => console.error('Error updating mailbox count:', err));
+                @endif
             }
         });
         

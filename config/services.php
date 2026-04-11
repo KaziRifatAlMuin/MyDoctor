@@ -47,14 +47,24 @@ return [
     'openrouter' => [
         'api_key' => env('OPENROUTER_API_KEY'),
         'base_url' => env('OPENROUTER_BASE_URL', 'https://openrouter.ai/api/v1'),
-        'model' => env('AI_CHAT_MODEL', 'qwen/qwen3.6-plus:free'),
+        'model' => env('AI_CHAT_MODEL', 'google/gemini-2.0-flash-001'),
         'fallback_models' => array_values(array_filter([
-            env('AI_CHAT_FALLBACK_MODEL_1', 'qwen/qwen3-coder:free'),
-            env('AI_CHAT_FALLBACK_MODEL_2', 'nvidia/nemotron-3-super-120b-a12b:free'),
-            env('AI_CHAT_FALLBACK_MODEL_3', 'google/gemma-3n-e4b-it:free'),
+            env('AI_CHAT_FALLBACK_MODEL_1', 'openai/gpt-4o-mini'),
+            env('AI_CHAT_FALLBACK_MODEL_2', 'anthropic/claude-3.5-haiku'),
+            env('AI_CHAT_FALLBACK_MODEL_3', 'meta-llama/llama-3.1-70b-instruct'),
         ])),
         'site_url' => env('OPENROUTER_SITE_URL', env('APP_URL', 'http://localhost')),
         'app_name' => env('OPENROUTER_APP_NAME', env('APP_NAME', 'MyDoctor')),
+    ],
+
+    'google' => [
+        'api_key' => env('GOOGLE_API_KEY'),
+        'model' => env('GOOGLE_MODEL', 'gemini-1.5-flash'),
+        'fallback_models' => array_values(array_filter([
+            env('GOOGLE_FALLBACK_MODEL_1', 'gemini-1.5-flash-latest'),
+            env('GOOGLE_FALLBACK_MODEL_2', 'gemini-1.5-pro'),
+            env('GOOGLE_FALLBACK_MODEL_3', 'gemini-2.0-flash'),
+        ])),
     ],
 
 ];

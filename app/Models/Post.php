@@ -15,6 +15,7 @@ class Post extends Model
         'disease_id',
         'description',
         'is_anonymous',
+        'approved_at',
         'is_approved',
         'is_edited',
         'is_reported',
@@ -32,6 +33,7 @@ class Post extends Model
         'is_approved' => 'boolean',
         'is_edited' => 'boolean',
         'is_reported' => 'boolean',
+        'approved_at' => 'datetime',
         'like_count' => 'integer',
         'comment_count' => 'integer',
         'file_size' => 'integer',
@@ -71,7 +73,7 @@ class Post extends Model
     public function isLikedBy($user)
     {
         if (!$user) return false;
-        return $this->likes()->where('user_id', $user->id)->exists();
+        return $this->likes()->where('user_id', $user->id)->where('is_starred', false)->exists();
     }
 
     /**

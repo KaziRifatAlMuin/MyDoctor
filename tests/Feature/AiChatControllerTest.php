@@ -71,7 +71,7 @@ class AiChatControllerTest extends TestCase
     }
 
     #[Test]
-    public function personal_health_queries_fall_back_to_database_when_ai_is_unavailable(): void
+    public function personal_health_queries_return_service_unavailable_when_ai_is_unavailable(): void
     {
         $user = User::factory()->create();
 
@@ -110,12 +110,48 @@ class AiChatControllerTest extends TestCase
             ->postJson(route('chatbot.message'), [
                 'message' => 'Tell me about my diseases and symptoms',
             ])
-            ->assertOk();
+            ->assertStatus(503);
 
         $reply = (string) $response->json('reply');
 
-        $this->assertStringContainsString('Hypertension', $reply);
-        $this->assertStringContainsString('Headache', $reply);
+        $this->assertStringContainsString('OPENROUTER_API_KEY or GOOGLE_API_KEY', $reply);
+        Http::assertNothingSent();
+    }
+
+    #[Test]
+    public function banglish_personal_health_query_returns_service_unavailable_when_ai_is_unavailable(): void
+    {
+        $user = User::factory()->create();
+
+        $disease = Disease::factory()->create([
+            'disease_name' => 'Diabetes',
+        ]);
+
+        UserDisease::factory()->create([
+            'user_id' => $user->id,
+            'disease_id' => $disease->id,
+            'status' => 'active',
+            'diagnosed_at' => now()->toDateString(),
+        ]);
+
+        config([
+            'services.openrouter.api_key' => '',
+            'services.google.api_key' => '',
+            'chatbot.enable_text_to_sql' => true,
+            'chatbot.read_connection' => config('database.default'),
+        ]);
+
+        Http::fake();
+
+        $response = $this->actingAs($user)
+            ->postJson(route('chatbot.message'), [
+                'message' => 'amr health kmn?',
+            ])
+            ->assertStatus(503);
+
+        $reply = (string) $response->json('reply');
+
+        $this->assertStringContainsString('OPENROUTER_API_KEY or GOOGLE_API_KEY', $reply);
         Http::assertNothingSent();
     }
 
@@ -225,5 +261,125 @@ class AiChatControllerTest extends TestCase
         $this->assertStringContainsString('Fallback model response', $reply);
 
         Http::assertSentCount(2);
+    }
+
+    #[Test]
+    public function wellness_prompt_returns_provider_error_when_ai_providers_fail(): void
+    {
+        $user = User::factory()->create();
+
+        config([
+            'services.openrouter.api_key' => 'test-key',
+            'services.google.api_key' => 'test-google-key',
+            'services.google.model' => 'gemini-1.5-flash',
+            'services.google.fallback_models' => [],
+            'services.openrouter.model' => 'primary-model',
+            'services.openrouter.fallback_models' => ['fallback-model'],
+        ]);
+
+        Http::fake([
+            'https://generativelanguage.googleapis.com/*' => Http::response(['error' => 'unavailable'], 500),
+            'https://openrouter.ai/*' => Http::response(['error' => 'upstream down'], 503),
+            '*' => Http::response(['error' => 'unexpected'], 500),
+        ]);
+
+        $response = $this->actingAs($user)
+            ->postJson(route('chatbot.message'), [
+                'message' => 'kivabe fit hobo',
+            ])
+            ->assertStatus(502);
+
+        $reply = (string) $response->json('reply');
+        $this->assertStringContainsString('could not reach the ai service', strtolower($reply));
+    }
+
+    #[Test]
+    public function emotional_prompt_returns_provider_error_when_ai_providers_fail(): void
+    {
+        $user = User::factory()->create();
+
+        config([
+            'services.openrouter.api_key' => 'test-key',
+            'services.google.api_key' => 'test-google-key',
+            'services.google.model' => 'gemini-1.5-flash',
+            'services.google.fallback_models' => [],
+            'services.openrouter.model' => 'primary-model',
+            'services.openrouter.fallback_models' => ['fallback-model'],
+        ]);
+
+        Http::fake([
+            'https://generativelanguage.googleapis.com/*' => Http::response(['error' => 'unavailable'], 500),
+            'https://openrouter.ai/*' => Http::response(['error' => 'upstream down'], 503),
+            '*' => Http::response(['error' => 'unexpected'], 500),
+        ]);
+
+        $response = $this->actingAs($user)
+            ->postJson(route('chatbot.message'), [
+                'message' => 'amr mon kharap',
+            ])
+            ->assertStatus(502);
+
+        $reply = (string) $response->json('reply');
+        $this->assertStringContainsString('could not reach the ai service', strtolower($reply));
+    }
+
+    #[Test]
+    public function diet_prompt_returns_provider_error_when_ai_providers_fail(): void
+    {
+        $user = User::factory()->create();
+
+        config([
+            'services.openrouter.api_key' => 'test-key',
+            'services.google.api_key' => 'test-google-key',
+            'services.google.model' => 'gemini-1.5-flash',
+            'services.google.fallback_models' => [],
+            'services.openrouter.model' => 'primary-model',
+            'services.openrouter.fallback_models' => ['fallback-model'],
+        ]);
+
+        Http::fake([
+            'https://generativelanguage.googleapis.com/*' => Http::response(['error' => 'unavailable'], 500),
+            'https://openrouter.ai/*' => Http::response(['error' => 'upstream down'], 503),
+            '*' => Http::response(['error' => 'unexpected'], 500),
+        ]);
+
+        $response = $this->actingAs($user)
+            ->postJson(route('chatbot.message'), [
+                'message' => 'diet chart dao',
+            ])
+            ->assertStatus(502);
+
+        $reply = (string) $response->json('reply');
+        $this->assertStringContainsString('could not reach the ai service', strtolower($reply));
+    }
+
+    #[Test]
+    public function short_tips_prompt_returns_provider_error_when_ai_providers_fail(): void
+    {
+        $user = User::factory()->create();
+
+        config([
+            'services.openrouter.api_key' => 'test-key',
+            'services.google.api_key' => 'test-google-key',
+            'services.google.model' => 'gemini-1.5-flash',
+            'services.google.fallback_models' => [],
+            'services.openrouter.model' => 'primary-model',
+            'services.openrouter.fallback_models' => ['fallback-model'],
+        ]);
+
+        Http::fake([
+            'https://generativelanguage.googleapis.com/*' => Http::response(['error' => 'unavailable'], 500),
+            'https://openrouter.ai/*' => Http::response(['error' => 'upstream down'], 503),
+            '*' => Http::response(['error' => 'unexpected'], 500),
+        ]);
+
+        $response = $this->actingAs($user)
+            ->postJson(route('chatbot.message'), [
+                'message' => 'tips dao',
+            ])
+            ->assertStatus(502);
+
+        $reply = (string) $response->json('reply');
+        $this->assertStringContainsString('could not reach the ai service', strtolower($reply));
     }
 }

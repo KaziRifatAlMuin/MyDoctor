@@ -29,6 +29,18 @@ class ProfileController extends Controller
             'phone'         => 'nullable|string|max:20',
             'occupation'    => 'nullable|string|max:255',
             'blood_group'   => 'nullable|in:A+,A-,B+,B-,AB+,AB-,O+,O-',
+            'gender'        => 'nullable|in:male,female,other',
+            'division_id'   => 'nullable|integer',
+            'division'      => 'nullable|string|max:255',
+            'division_bn'   => 'nullable|string|max:255',
+            'district_id'   => 'nullable|integer',
+            'district'      => 'required|string|max:255',
+            'district_bn'   => 'nullable|string|max:255',
+            'upazila_id'    => 'nullable|integer',
+            'upazila'       => 'required|string|max:255',
+            'upazila_bn'    => 'nullable|string|max:255',
+            'street'        => 'nullable|string|max:255',
+            'house'         => 'nullable|string|max:255',
         ]);
 
         $user = Auth::user();
@@ -37,7 +49,24 @@ class ProfileController extends Controller
         $user->phone = $request->input('phone');
         $user->occupation = $request->input('occupation');
         $user->blood_group = $request->input('blood_group');
+        $user->gender = $request->has('gender') ? $request->input('gender') : $user->gender;
         $user->save();
+
+        $address = $user->address()->first();
+
+        $user->address()->updateOrCreate([], [
+            'division_id' => $request->input('division_id', $address?->division_id ?? 0),
+            'division' => $request->input('division', $address?->division ?? 'Not set'),
+            'division_bn' => $request->input('division_bn', $address?->division_bn),
+            'district_id' => $request->input('district_id', $address?->district_id ?? 0),
+            'district' => $request->input('district', $address?->district ?? 'Not set'),
+            'district_bn' => $request->input('district_bn', $address?->district_bn),
+            'upazila_id' => $request->input('upazila_id', $address?->upazila_id ?? 0),
+            'upazila' => $request->input('upazila', $address?->upazila ?? 'Not set'),
+            'upazila_bn' => $request->input('upazila_bn', $address?->upazila_bn),
+            'street' => $request->input('street', $address?->street),
+            'house' => $request->input('house', $address?->house),
+        ]);
 
         return redirect()->route('profile')->with('success', 'Profile updated successfully.');
     }

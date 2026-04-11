@@ -13,13 +13,8 @@ return new class extends Migration
     {
         Schema::create('health_metrics', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->string('metric_type');
-            $table->dateTime('recorded_at');
-            $table->json('value');
-            $table->timestamps();
-
-            $table->index(['user_id', 'metric_type', 'recorded_at']);
+            $table->string('metric_name')->unique();
+            $table->json('fields');
         });
     }
 

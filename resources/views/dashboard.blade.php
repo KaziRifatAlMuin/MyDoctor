@@ -347,6 +347,40 @@
         gap: 8px;
     }
 
+    .live-env-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.75rem;
+        margin-top: 0.9rem;
+    }
+
+    .live-env-item {
+        background: #f8f9fb;
+        border: 1px solid #edf2f7;
+        border-radius: 14px;
+        padding: 0.72rem 0.78rem;
+    }
+
+    .live-env-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #718096;
+        margin-bottom: 0.2rem;
+    }
+
+    .live-env-value {
+        font-size: 1rem;
+        font-weight: 800;
+        color: #2d3748;
+        line-height: 1.25;
+    }
+
+    .live-env-meta {
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+
     /* ── Adherence Ring ── */
     .adherence-ring-wrap {
         position: relative;
@@ -726,6 +760,7 @@
         .health-score-inner { width: 70px; height: 70px; }
         .health-score-value { font-size: 1.5rem; }
         .hero-flex-wrap { flex-direction: column; }
+        .live-env-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
 
     /* ── Fade-in-up for cards ── */
@@ -820,6 +855,127 @@
         </div>
 
         {{-- ══════════════════════════════════════════════════════
+             LIVE ENVIRONMENT + WEATHER (Address-Based)
+        ══════════════════════════════════════════════════════ --}}
+        <div class="row g-4 mb-4">
+            <div class="col-12 fade-in-up delay-1">
+                <div class="dash-card">
+                    <div class="dash-card-header">
+                        <h6><i class="fas fa-cloud-sun"></i> Live Environment & Weather</h6>
+                        <span class="badge bg-light text-muted" style="font-size:0.68rem;">{{ $liveEnvironment['location_label'] ?? 'Location not set' }}</span>
+                    </div>
+                    <div class="dash-card-body">
+                        @if(!($liveEnvironment['available'] ?? false))
+                            <div class="text-center py-3" style="color:#a0aec0;">
+                                <i class="fas fa-map-marker-alt fa-2x mb-2" style="color:#cbd5e0;"></i>
+                                <p class="mb-1" style="font-size:0.9rem;">{{ $liveEnvironment['message'] ?? 'Live data unavailable right now.' }}</p>
+                                <a href="{{ route('profile') }}" class="dash-card-link justify-content-center">Update your address <i class="fas fa-arrow-right"></i></a>
+                            </div>
+                        @else
+                            @php
+                                $weather = $liveEnvironment['weather'] ?? null;
+                                $air = $liveEnvironment['air'] ?? null;
+                                $insights = $liveEnvironment['insights'] ?? [];
+                            @endphp
+
+                            <div class="d-flex align-items-center justify-content-between flex-wrap" style="gap:0.6rem;">
+                                <div class="fw-semibold" style="color:#374151;">
+                                    <i class="fas fa-location-dot me-1 text-primary"></i>{{ $liveEnvironment['location_label'] ?? 'Bangladesh' }}
+                                </div>
+                                <div class="live-env-meta">
+                                    <i class="fas fa-clock me-1"></i>Updated {{ isset($liveEnvironment['updated_at']) ? \Carbon\Carbon::parse($liveEnvironment['updated_at'])->diffForHumans() : 'just now' }}
+                                </div>
+                            </div>
+
+                            <div class="live-env-grid">
+                                <div class="live-env-item">
+                                    <div class="live-env-label">Condition</div>
+                                    <div class="live-env-value">{{ $weather['weather_text'] ?? 'N/A' }}</div>
+                                </div>
+                                <div class="live-env-item">
+                                    <div class="live-env-label">Temperature</div>
+                                    <div class="live-env-value">{{ isset($weather['temperature_c']) ? round($weather['temperature_c']) . '°C' : 'N/A' }}</div>
+                                </div>
+                                <div class="live-env-item">
+                                    <div class="live-env-label">Humidity</div>
+                                    <div class="live-env-value">{{ isset($weather['humidity']) ? round($weather['humidity']) . '%' : 'N/A' }}</div>
+                                </div>
+                                <div class="live-env-item">
+                                    <div class="live-env-label">US AQI</div>
+                                    <div class="live-env-value">{{ isset($air['us_aqi']) ? round($air['us_aqi']) : 'N/A' }}</div>
+                                    <div class="live-env-meta">{{ $air['us_aqi_label'] ?? 'Unavailable' }}</div>
+                                </div>
+                            </div>
+
+                            <div class="live-env-grid" style="margin-top:0.6rem;">
+                                <div class="live-env-item">
+                                    <div class="live-env-label">Rain Outlook</div>
+                                    <div class="live-env-value">
+                                        {{ ($insights['rain_likely'] ?? null) === null ? 'N/A' : (($insights['rain_likely'] ?? false) ? 'Likely Rain' : 'No Rain Signal') }}
+                                    </div>
+                                    @if(isset($weather['rain_probability_pct']) && $weather['rain_probability_pct'] !== null)
+                                        <div class="live-env-meta">Chance: {{ round($weather['rain_probability_pct']) }}%</div>
+                                    @endif
+                                </div>
+                                <div class="live-env-item">
+                                    <div class="live-env-label">Temperature Feel</div>
+                                    <div class="live-env-value">{{ $insights['temperature_label'] ?? 'Unavailable' }}</div>
+                                    @if(isset($weather['temp_min_c']) && isset($weather['temp_max_c']) && $weather['temp_min_c'] !== null && $weather['temp_max_c'] !== null)
+                                        <div class="live-env-meta">Today: {{ round($weather['temp_min_c']) }}°C - {{ round($weather['temp_max_c']) }}°C</div>
+                                    @endif
+                                </div>
+                                <div class="live-env-item">
+                                    <div class="live-env-label">Feels Like</div>
+                                    <div class="live-env-value">{{ isset($weather['feels_like_c']) ? round($weather['feels_like_c']) . '°C' : 'N/A' }}</div>
+                                </div>
+                                <div class="live-env-item">
+                                    <div class="live-env-label">Wind</div>
+                                    <div class="live-env-value">{{ isset($weather['wind_kmh']) ? round($weather['wind_kmh']) . ' km/h' : 'N/A' }}</div>
+                                </div>
+                                <div class="live-env-item">
+                                    <div class="live-env-label">PM2.5</div>
+                                    <div class="live-env-value">{{ isset($air['pm2_5']) ? round($air['pm2_5'], 1) . ' µg/m³' : 'N/A' }}</div>
+                                </div>
+                                <div class="live-env-item">
+                                    <div class="live-env-label">PM10</div>
+                                    <div class="live-env-value">{{ isset($air['pm10']) ? round($air['pm10'], 1) . ' µg/m³' : 'N/A' }}</div>
+                                </div>
+                            </div>
+
+                            <div class="live-env-meta mt-2">
+                                Data source: {{ $liveEnvironment['source'] ?? 'External API' }}
+                            </div>
+
+                            <div class="live-env-item mt-2">
+                                <div class="live-env-label">Condition Advisory</div>
+                                <div class="live-env-meta" style="font-size:0.84rem;color:#374151;" id="liveEnvAdvisory"></div>
+
+                                @push('scripts')
+                                <script>
+                                    document.addEventListener('DOMContentLoaded', function(){
+                                        try {
+                                            const advisory = @json($insights['advisory'] ?? 'No advisory available.');
+                                            const target = document.getElementById('liveEnvAdvisory');
+                                            if (!target) return;
+                                            if (typeof renderChatbotMarkup === 'function') {
+                                                target.innerHTML = renderChatbotMarkup(advisory);
+                                            } else {
+                                                target.innerHTML = (advisory || 'No advisory available.').replace(/\n/g, '<br>');
+                                            }
+                                        } catch (e) {
+                                            // ignore
+                                        }
+                                    });
+                                </script>
+                                @endpush
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- ══════════════════════════════════════════════════════
              QUICK ACTIONS
         ══════════════════════════════════════════════════════ --}}
         <div class="quick-actions-row fade-in-up delay-1">
@@ -827,6 +983,16 @@
                 <i class="fas fa-bolt"></i> Quick Actions
             </div>
             <div class="row g-2">
+                @if(!auth()->check() || !auth()->user()->isAdmin())
+                    <div class="col-6 col-md-3 col-xl">
+                        <a href="javascript:void(0)" onclick="toggleChatbot()" class="quick-action-card">
+                            <div class="quick-action-icon qa-icon-indigo">
+                                <i class="fas fa-user-md"></i>
+                            </div>
+                            <div class="quick-action-label">MyDoctor AI</div>
+                        </a>
+                    </div>
+                @endif
                 <div class="col-6 col-md-3 col-xl">
                     <a href="{{ route('health') }}#metrics" class="quick-action-card">
                         <div class="quick-action-icon qa-icon-purple">

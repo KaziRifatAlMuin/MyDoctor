@@ -2,10 +2,13 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class LanguageSwitchTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_language_route_sets_bangla_locale_in_session(): void
     {
         $response = $this->from('/')->get('/language/bn');

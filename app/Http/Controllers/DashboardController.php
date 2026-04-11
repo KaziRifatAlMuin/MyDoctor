@@ -4,28 +4,40 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
 use App\Models\HealthMetric;
+use App\Models\UserHealth;
 use App\Models\MedicineReminder;
 use App\Models\UserSymptom;
 use App\Models\Medicine;
 use App\Models\MedicineLog;
 use App\Models\UserDisease;
 use App\Models\Upload;
+use App\Services\LiveEnvironmentService;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(LiveEnvironmentService $liveEnvironmentService)
     {
         $user = Auth::user();
 
+        if ($user?->isAdmin()) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        $metricDefinitions = $this->ensureMetricDefinitions();
+        $metricConfig = $this->buildMetricConfig($metricDefinitions);
+        $liveEnvironment = $liveEnvironmentService->forUser($user);
+
         // Health metrics summary
-        $healthMetrics = HealthMetric::where('user_id', $user->id)
+        $healthMetrics = UserHealth::with('healthMetric')
+            ->where('user_id', $user->id)
             ->orderByDesc('recorded_at')
             ->limit(50)
-            ->get();
+            ->get()
+            ->filter(fn(UserHealth $record) => $record->healthMetric !== null)
+            ->values();
 
-        $metricsByType  = $healthMetrics->groupBy('metric_type');
+        $metricsByType  = $healthMetrics->groupBy(fn(UserHealth $record) => $record->metric_type ?? 'unknown');
         $latestMetrics  = $metricsByType->map(fn($group) => $group->first());
-        $metricConfig   = config('health.metric_types');
 
         // Recent symptoms
         $symptoms = UserSymptom::where('user_id', $user->id)
@@ -63,7 +75,7 @@ class DashboardController extends Controller
         $reportCount       = Upload::where('user_id', $user->id)->where('type', 'report')->count();
 
         // Recent activity (last 7 days)
-        $recentMetricsCount  = HealthMetric::where('user_id', $user->id)
+        $recentMetricsCount  = UserHealth::where('user_id', $user->id)
             ->where('recorded_at', '>=', now()->subDays(7))->count();
         $recentSymptomsCount = UserSymptom::where('user_id', $user->id)
             ->where('recorded_at', '>=', now()->subDays(7))->count();
@@ -139,7 +151,8 @@ class DashboardController extends Controller
             'todayReminders',
             'recentUploads',
             'healthScore',
-            'metricTrends'
+            'metricTrends',
+            'liveEnvironment'
         ));
     }
 
@@ -164,5 +177,28 @@ class DashboardController extends Controller
         $score -= min(15, $activeConditions->count() * 5);
 
         return max(0, min(100, $score));
+    }
+
+    private function ensureMetricDefinitions()
+    {
+        HealthMetric::seedDefaults();
+        return HealthMetric::query()->orderBy('metric_name')->get();
+    }
+
+    private function buildMetricConfig($definitions): array
+    {
+        $config = [];
+        foreach ($definitions as $definition) {
+            $metricName = (string) $definition->metric_name;
+            $fields = array_values((array) $definition->fields);
+            $config[$metricName] = [
+                'en' => ucwords(str_replace('_', ' ', $metricName)),
+                'bn' => '',
+                'unit' => '',
+                'fields' => $fields,
+            ];
+        }
+
+        return $config;
     }
 }

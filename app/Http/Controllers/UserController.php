@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use App\Models\HealthMetric;
+use App\Models\UserHealth;
 use App\Models\User;
 use Carbon\Carbon;
 
@@ -14,7 +16,7 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::query();
+        $query = User::query()->with(['address', 'setting']);
         
         // Apply search filter
         if ($request->filled('search')) {
@@ -49,7 +51,9 @@ class UserController extends Controller
      */
     public function publicShow(User $user)
     {
-        if ($user->show_diseases) {
+        $user->load(['setting', 'address']);
+
+        if ($user->setting->show_diseases) {
             $user->load(['userDiseases' => function ($query) {
                 $query->with('disease')->latest();
             }]);
@@ -68,15 +72,21 @@ class UserController extends Controller
             abort(403, 'Access denied. Admin privileges required.');
         }
         
+        $user->load('address');
+        $metricDefinitions = $this->ensureMetricDefinitions();
+
         // Load all health data for the user (same as HealthController)
-        $healthMetrics = \App\Models\HealthMetric::where('user_id', $user->id)
+        $healthMetrics = UserHealth::with('healthMetric')
+            ->where('user_id', $user->id)
             ->orderByDesc('recorded_at')
             ->limit(50)
-            ->get();
+            ->get()
+            ->filter(fn(UserHealth $record) => $record->healthMetric !== null)
+            ->values();
 
-        $metricsByType = $healthMetrics->groupBy('metric_type');
+        $metricsByType = $healthMetrics->groupBy(fn(UserHealth $record) => $record->metric_type ?? 'unknown');
         $latestMetrics = $metricsByType->map(fn($group) => $group->first());
-        $metricConfig = config('health.metric_types');
+        $metricConfig = $this->buildMetricConfig($metricDefinitions);
 
         // Symptoms
         $symptoms = \App\Models\UserSymptom::where('user_id', $user->id)
@@ -170,6 +180,18 @@ class UserController extends Controller
             'date_of_birth' => 'nullable|date|before:today',
             'gender' => 'nullable|in:male,female,other',
             'role' => 'required|in:admin,member',
+            'is_active' => 'nullable|boolean',
+            'division_id' => 'nullable|integer',
+            'division' => 'nullable|string|max:255',
+            'division_bn' => 'nullable|string|max:255',
+            'district_id' => 'nullable|integer',
+            'district' => 'nullable|string|max:255',
+            'district_bn' => 'nullable|string|max:255',
+            'upazila_id' => 'nullable|integer',
+            'upazila' => 'nullable|string|max:255',
+            'upazila_bn' => 'nullable|string|max:255',
+            'street' => 'nullable|string|max:255',
+            'house' => 'nullable|string|max:255',
         ]);
 
         // Prevent admin from removing their own admin access
@@ -179,9 +201,63 @@ class UserController extends Controller
             ])->withInput();
         }
 
+        if ($user->id === auth()->id() && isset($validated['is_active']) && ! (bool) $validated['is_active']) {
+            return back()->withErrors([
+                'is_active' => 'You cannot deactivate your own account.',
+            ])->withInput();
+        }
+
         $user->update($validated);
+
+        $user->address()->updateOrCreate([], [
+            'division_id' => $validated['division_id'] ?? ($user->address?->division_id ?? 0),
+            'division' => $validated['division'] ?? ($user->address?->division ?? 'Not set'),
+            'division_bn' => $validated['division_bn'] ?? ($user->address?->division_bn ?? null),
+            'district_id' => $validated['district_id'] ?? ($user->address?->district_id ?? 0),
+            'district' => $validated['district'] ?? ($user->address?->district ?? 'Not set'),
+            'district_bn' => $validated['district_bn'] ?? ($user->address?->district_bn ?? null),
+            'upazila_id' => $validated['upazila_id'] ?? ($user->address?->upazila_id ?? 0),
+            'upazila' => $validated['upazila'] ?? ($user->address?->upazila ?? 'Not set'),
+            'upazila_bn' => $validated['upazila_bn'] ?? ($user->address?->upazila_bn ?? null),
+            'street' => $validated['street'] ?? null,
+            'house' => $validated['house'] ?? null,
+        ]);
 
         $redirectTab = request()->input('redirect_tab', 'overview');
         return back()->with('success', "{$user->name} was updated successfully.")->withFragment($redirectTab);
+    }
+
+    private function ensureMetricDefinitions()
+    {
+        HealthMetric::seedDefaults();
+        return HealthMetric::query()->orderBy('metric_name')->get();
+    }
+
+    private function buildMetricConfig($definitions): array
+    {
+        $config = [];
+        foreach ($definitions as $definition) {
+            $metricName = (string) $definition->metric_name;
+            $fields = array_values((array) $definition->fields);
+            $config[$metricName] = [
+                'en' => ucwords(str_replace('_', ' ', $metricName)),
+                'bn' => '',
+                'unit' => '',
+                'fields' => $fields,
+                'js_fields' => collect($fields)->values()->map(function (string $field, int $index): array {
+                    return [
+                        'name' => 'value_' . $index,
+                        'field_key' => $field,
+                        'label' => $field,
+                        'placeholder' => 'Enter ' . $field,
+                        'min' => 0,
+                        'max' => 100000,
+                        'step' => '0.01',
+                    ];
+                })->all(),
+            ];
+        }
+
+        return $config;
     }
 }

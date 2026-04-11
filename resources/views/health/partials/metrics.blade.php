@@ -1,5 +1,5 @@
 {{-- ── Metrics Tab ── --}}
-@php $metricConfig = config('health.metric_types'); @endphp
+@php $metricConfig = $metricConfig ?? config('health.metric_types'); @endphp
 @if ($metricsByType->isEmpty())
     <div class="health-card">
         <div class="health-card-body">

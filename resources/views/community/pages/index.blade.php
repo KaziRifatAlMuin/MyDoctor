@@ -1366,6 +1366,8 @@ body {
 @php
     $isStarredPage = $isStarredPage ?? false;
     $isPendingPage = $isPendingPage ?? false;
+    $isAdminCommunity = $isAdminCommunity ?? false;
+    $pendingPreviewPosts = $pendingPreviewPosts ?? collect();
 @endphp
 
 <div class="community-container">
@@ -1375,10 +1377,10 @@ body {
             <div>
                 <h1 style="font-size: 28px; font-weight: 700; margin-bottom: 5px;">
                     <i class="fas {{ $isPendingPage ? 'fa-hourglass-half' : ($isStarredPage ? 'fa-star' : 'fa-users') }} me-3" style="color: {{ $isPendingPage ? '#ff9800' : ($isStarredPage ? '#f7b500' : '#1877f2') }};"></i>
-                    {{ $isPendingPage ? 'Pending Posts' : ($isStarredPage ? 'Starred Posts' : 'Community Forum') }}
+                    {{ $isPendingPage ? 'Pending Posts' : ($isStarredPage ? 'Starred Posts' : ($isAdminCommunity ? 'Admin Community Moderation' : 'Community Forum')) }}
                 </h1>
                 <p style="color: #65676b; margin: 0;">
-                    {{ $isPendingPage ? 'Your posts waiting for admin approval' : ($isStarredPage ? 'Your saved posts in one focused feed' : 'Connect with others, share experiences, and get support') }}
+                    {{ $isPendingPage ? ($isAdminCommunity ? 'Posts awaiting approval. Approve to publish, or delete to reject.' : 'Your posts waiting for admin approval') : ($isStarredPage ? 'Your saved posts in one focused feed' : ($isAdminCommunity ? 'View and manage community posts with approval workflow.' : 'Connect with others, share experiences, and get support')) }}
                 </p>
             </div>
             <div style="display:flex; align-items:center; gap:10px;">
@@ -1394,10 +1396,12 @@ body {
                     <i class="fas fa-th-large me-2"></i>Disease Cards
                 </a>
                 @auth
-                    <a href="{{ $isStarredPage ? route('community.posts.index') : route('community.posts.starred') }}" class="btn btn-sm {{ $isStarredPage ? 'btn-outline-primary' : 'btn-warning' }} rounded-pill ms-1 d-inline-flex align-items-center" style="white-space:nowrap;">
-                        <i class="fas fa-star me-2"></i>{{ $isStarredPage ? 'All Posts' : 'Starred Posts' }}
-                    </a>
-                    <a href="{{ $isPendingPage ? route('community.posts.index') : route('community.posts.pending') }}" class="btn btn-sm {{ $isPendingPage ? 'btn-outline-primary' : 'btn-outline-warning' }} rounded-pill ms-1 d-inline-flex align-items-center" style="white-space:nowrap;">
+                    @if(! $isAdminCommunity)
+                        <a href="{{ $isStarredPage ? route('community.posts.index') : route('community.posts.starred') }}" class="btn btn-sm {{ $isStarredPage ? 'btn-outline-primary' : 'btn-warning' }} rounded-pill ms-1 d-inline-flex align-items-center" style="white-space:nowrap;">
+                            <i class="fas fa-star me-2"></i>{{ $isStarredPage ? 'All Posts' : 'Starred Posts' }}
+                        </a>
+                    @endif
+                    <a href="{{ $isPendingPage ? ($isAdminCommunity ? route('admin.community.posts.index') : route('community.posts.index')) : ($isAdminCommunity ? route('admin.community.posts.pending') : route('community.posts.pending')) }}" class="btn btn-sm {{ $isPendingPage ? 'btn-outline-primary' : 'btn-outline-warning' }} rounded-pill ms-1 d-inline-flex align-items-center" style="white-space:nowrap;">
                         <i class="fas fa-hourglass-half me-2"></i>{{ $isPendingPage ? 'All Posts' : 'Pending Posts' }}
                     </a>
                 @endauth
@@ -1456,8 +1460,57 @@ body {
         <!-- Main Content -->
         <div class="main-content">
             <div class="content-wrapper">
+                @if($isAdminCommunity && ! $isPendingPage)
+                    <div class="filter-card" style="margin-bottom: 20px; border: 1px solid #e7d5ff; box-shadow: 0 8px 20px rgba(122, 63, 184, 0.12);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom: 12px;">
+                            <h5 class="filter-title" style="margin:0; color:#5b21b6;">
+                                <i class="fas fa-shield-check me-2" style="color:#7a3fb8;"></i>
+                                Post Approval Queue
+                            </h5>
+                            <a href="{{ route('admin.community.posts.pending') }}" class="btn btn-sm btn-outline-warning rounded-pill">
+                                <i class="fas fa-list me-1"></i>View All Pending
+                            </a>
+                        </div>
+
+                        @if($pendingPreviewPosts->isEmpty())
+                            <div style="background:#faf5ff; border:1px dashed #d8b4fe; border-radius:10px; padding:14px; color:#6b21a8;">
+                                No pending posts right now. Everything is up to date.
+                            </div>
+                        @else
+                            <div style="display:grid; gap:10px;">
+                                @foreach($pendingPreviewPosts as $pendingPost)
+                                    <div style="background:#faf5ff; border:1px solid #e9d5ff; border-radius:10px; padding:12px;">
+                                        <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
+                                            <div>
+                                                <div style="font-weight:600; color:#4c1d95;">{{ $pendingPost->is_anonymous ? 'Anonymous Member' : $pendingPost->user->name }}</div>
+                                                <div style="font-size:12px; color:#6d28d9; margin-top:2px;">{{ optional($pendingPost->disease)->disease_name ?? 'General' }} • {{ $pendingPost->created_at->diffForHumans() }}</div>
+                                            </div>
+                                            <span class="badge text-bg-warning">Pending</span>
+                                        </div>
+                                        <div style="margin-top:8px; color:#2b2b2b; font-size:14px; line-height:1.4;">
+                                            {{ \Illuminate\Support\Str::limit($pendingPost->description, 140) }}
+                                        </div>
+                                        <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="openPostModal({{ $pendingPost->id }})">
+                                                <i class="fas fa-eye me-1"></i>Preview
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-success" onclick="approvePost({{ $pendingPost->id }})">
+                                                <i class="fas fa-check me-1"></i>Approve
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-danger" onclick="confirmDelete({{ $pendingPost->id }}, 'post')">
+                                                <i class="fas fa-trash me-1"></i>Reject & Delete
+                                            </button>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                @endif
+
                 <!-- Create Post -->
                 @auth
+                    @if(! $isAdminCommunity)
                     <!-- Clickable Create Post Box -->
                     <div class="create-post-trigger" onclick="openCreatePostModal()">
                         <div class="trigger-avatar">
@@ -1572,6 +1625,7 @@ body {
                             </div>
                         </div>
                     </div>
+                    @endif
                 @endauth
 
                 @guest
@@ -1593,7 +1647,7 @@ body {
                 <!-- Posts Feed -->
                 <div id="postsFeed">
                     @forelse($posts as $post)
-                        @include('community.partials.post', ['post' => $post])
+                        @include('community.partials.post', ['post' => $post, 'adminReadOnlyCommunity' => $isAdminCommunity])
                     @empty
                         <div style="text-align: center; padding: 60px 20px; background: white; border-radius: 12px;">
                             <i class="fas fa-comments fa-4x mb-3" style="color: #adb5bd;"></i>
@@ -1926,11 +1980,13 @@ document.getElementById('createPostModal')?.addEventListener('hidden.bs.modal', 
 
 // ==================== FILTER ====================
 function filterByDisease(diseaseId) {
-    const baseRoute = @json($isPendingPage ? route('community.posts.pending') : ($isStarredPage ? route('community.posts.starred') : route('community.posts.index')));
+    const baseRoute = @json($isAdminCommunity
+        ? ($isPendingPage ? route('admin.community.posts.pending') : route('admin.community.posts.index'))
+        : ($isPendingPage ? route('community.posts.pending') : ($isStarredPage ? route('community.posts.starred') : route('community.posts.index'))));
     if (diseaseId === 'all') {
         window.location.href = baseRoute;
     } else {
-        if (!@json($isPendingPage || $isStarredPage)) {
+        if (!@json($isPendingPage || $isStarredPage || $isAdminCommunity)) {
             window.location.href = '/community/disease/' + diseaseId + '/posts';
             return;
         }
@@ -1960,8 +2016,9 @@ function reportPost(postId) {
 }
 
 function approvePost(postId) {
-    fetch(`/community/posts/${postId}/approve`, {
-        method: 'POST',
+    const approveBase = @json($isAdminCommunity ? '/admin/community/posts/' : '/community/posts/');
+    fetch(`${approveBase}${postId}/approve`, {
+        method: 'PATCH',
         headers: {
             'X-CSRF-TOKEN': csrfToken,
             'Accept': 'application/json',

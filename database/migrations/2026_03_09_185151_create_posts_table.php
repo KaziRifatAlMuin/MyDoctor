@@ -15,6 +15,7 @@ return new class extends Migration
             $table->text('description');
             $table->boolean('is_anonymous')->default(false);
             $table->boolean('is_approved')->default(false);
+            $table->timestamp('approved_at')->nullable();
             $table->boolean('is_edited')->default(false);
             $table->boolean('is_reported')->default(false);
             $table->string('file_path')->nullable();

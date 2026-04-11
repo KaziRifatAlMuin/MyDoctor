@@ -60,8 +60,7 @@ class PostCreationTest extends TestCase
 
         $response->assertStatus(401);
         $response->assertJson([
-            'success' => false,
-            'message' => 'Please login to create a post'
+            'message' => 'Unauthenticated.',
         ]);
     }
 

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Sent - My Doctor')
+@section('title', 'Sent')
 @section('main_content_class', 'main-content main-content--wide')
 
 <!-- Gmail-like Custom Styles -->
