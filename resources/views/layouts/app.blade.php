@@ -2157,7 +2157,7 @@
                             </a>
                         </li>
                         <li class="banner-nav-item">
-                            <a href="{{ route('community.landing') }}"
+                            <a href="{{ route('community.home') }}"
                                 class="banner-nav-link {{ request()->routeIs('community*') ? 'active' : '' }}">
                                 {{ __('ui.nav.community') }}
                             </a>
@@ -3154,17 +3154,6 @@ window.clearModalCommentFile = function(postId) {
                         icon.style.color = "inherit";
                     }
 
-                    if (!data.liked) {
-                        const starButtons = document.querySelectorAll(`[id="star-btn-${postId}"]`);
-                        starButtons.forEach((starBtn) => {
-                            const starIcon = starBtn.querySelector('i');
-                            starBtn.classList.remove('starred');
-                            if (starIcon) {
-                                starIcon.classList.remove('fas', 'text-warning');
-                                starIcon.classList.add('far');
-                            }
-                        });
-                    }
                 }
             } catch (err) {
                 console.error("Like error:", err);
@@ -3205,23 +3194,13 @@ window.clearModalCommentFile = function(postId) {
                         }
                     });
 
-                    if (data.liked) {
-                        const likeButtons = document.querySelectorAll(`[id="like-btn-${postId}"]`);
-                        likeButtons.forEach((likeBtn) => {
-                            const likeIcon = likeBtn.querySelector('i');
-                            const likeCount = likeBtn.querySelector('.like-count');
-
-                            likeBtn.classList.add('liked');
-                            if (likeIcon) {
-                                likeIcon.classList.remove('far');
-                                likeIcon.classList.add('fas');
-                                likeIcon.style.color = '#dc3545';
-                            }
-                            if (likeCount && typeof data.count !== 'undefined') {
-                                likeCount.textContent = data.count;
-                            }
-                        });
-                    }
+                    const likeButtons = document.querySelectorAll(`[id="like-btn-${postId}"]`);
+                    likeButtons.forEach((likeBtn) => {
+                        const likeCount = likeBtn.querySelector('.like-count');
+                        if (likeCount && typeof data.count !== 'undefined') {
+                            likeCount.textContent = data.count;
+                        }
+                    });
 
                     if (typeof window.showToast === 'function' && data.message) {
                         window.showToast(data.message, 'success');

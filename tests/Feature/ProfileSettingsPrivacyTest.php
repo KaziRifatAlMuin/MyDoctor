@@ -77,7 +77,9 @@ class ProfileSettingsPrivacyTest extends TestCase
             'status' => 'managed',
         ]);
 
-        $hiddenResponse = $this->get(route('users.show', $user));
+        $viewer = User::factory()->create();
+
+        $hiddenResponse = $this->actingAs($viewer)->get(route('users.show', $user));
         $hiddenResponse->assertOk();
         $hiddenResponse->assertDontSee('Personal Information');
         $hiddenResponse->assertSee('has not granted permission to display disease information publicly', false);
@@ -91,7 +93,7 @@ class ProfileSettingsPrivacyTest extends TestCase
             'show_diseases' => true,
         ]);
 
-        $visibleResponse = $this->get(route('users.show', $user));
+        $visibleResponse = $this->actingAs($viewer)->get(route('users.show', $user));
         $visibleResponse->assertOk();
         $visibleResponse->assertSee('Software Engineer');
         $visibleResponse->assertSee('B+');

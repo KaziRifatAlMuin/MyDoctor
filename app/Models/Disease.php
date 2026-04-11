@@ -40,6 +40,12 @@ class Disease extends Model
         return $this->hasMany(UserDisease::class);
     }
 
+    public function starredByUsers()
+    {
+        return $this->belongsToMany(User::class, 'user_starred_diseases')
+            ->withTimestamps();
+    }
+
     public function symptoms()
     {
         return $this->belongsToMany(Symptom::class, 'disease_symptoms')

@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\PostLike;
 use App\Models\CommentLike;
 use App\Models\Notification;
+use App\Models\UserStarredDisease;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -27,8 +28,8 @@ class CommunityController extends Controller
             return redirect()->route('admin.community.posts.index');
         }
 
-        $userDiseaseIds = Auth::check()
-            ? Auth::user()->userDiseases()->pluck('disease_id')->all()
+        $userStarredDiseaseIds = Auth::check()
+            ? Auth::user()->starredDiseases()->pluck('disease_id')->all()
             : [];
 
         $diseases = Disease::withCount([
@@ -41,8 +42,8 @@ class CommunityController extends Controller
                     $q->where('is_approved', true);
                 }
             ], 'created_at')
-            ->when(!empty($userDiseaseIds), function ($q) use ($userDiseaseIds) {
-                $ids = implode(',', array_map('intval', $userDiseaseIds));
+            ->when(!empty($userStarredDiseaseIds), function ($q) use ($userStarredDiseaseIds) {
+                $ids = implode(',', array_map('intval', $userStarredDiseaseIds));
                 $q->orderByRaw("CASE WHEN id IN ({$ids}) THEN 0 ELSE 1 END");
             })
             ->orderByDesc('latest_post_at')
@@ -52,7 +53,7 @@ class CommunityController extends Controller
         $totalPosts = Post::where('is_approved', true)->count();
         $totalDiseases = $diseases->count();
 
-        return view('community.pages.home', compact('diseases', 'totalPosts', 'totalDiseases'));
+        return view('community.pages.home', compact('diseases', 'totalPosts', 'totalDiseases', 'userStarredDiseaseIds'));
     }
 
     /**
@@ -101,14 +102,16 @@ class CommunityController extends Controller
             $isAdminCommunity = (bool) $request->boolean('admin_community', false)
                 && Auth::check()
                 && Auth::user()->isAdmin();
-            $userDiseaseIds = Auth::check()
-                ? Auth::user()->userDiseases()->pluck('disease_id')->all()
+            $userStarredDiseaseIds = Auth::check()
+                ? Auth::user()->starredDiseases()->pluck('disease_id')->all()
                 : [];
             
             // Build the posts query with eager loading
             $query = Post::with(['user', 'disease', 'comments' => function($q) {
                 $q->with('user')->latest()->limit(3);
-                        }])->withCount(['likes as likes_count'])
+                        }])->withCount(['likes as likes_count' => function ($q) {
+                            $q->where('is_starred', false);
+                        }])
                             ->where('is_approved', true);
 
             // Apply disease filter if selected
@@ -117,8 +120,8 @@ class CommunityController extends Controller
             }
 
             // Prioritize posts matching the current user's diseases, then newest.
-            if (!empty($userDiseaseIds)) {
-                $ids = implode(',', array_map('intval', $userDiseaseIds));
+            if (!empty($userStarredDiseaseIds)) {
+                $ids = implode(',', array_map('intval', $userStarredDiseaseIds));
                 $query->orderByRaw("CASE WHEN disease_id IN ({$ids}) THEN 0 ELSE 1 END");
             }
 
@@ -502,8 +505,18 @@ class CommunityController extends Controller
             $diseaseId = $request->get('disease');
             
             $query = Post::with(['user', 'disease'])
-                ->withCount(['likes as likes_count'])
+                ->withCount(['likes as likes_count' => function ($q) {
+                    $q->where('is_starred', false);
+                }])
                 ->where('is_approved', true);
+
+            if (Auth::check() && !Auth::user()->isAdmin()) {
+                $userStarredDiseaseIds = Auth::user()->starredDiseases()->pluck('disease_id')->all();
+                if (!empty($userStarredDiseaseIds)) {
+                    $ids = implode(',', array_map('intval', $userStarredDiseaseIds));
+                    $query->orderByRaw("CASE WHEN disease_id IN ({$ids}) THEN 0 ELSE 1 END");
+                }
+            }
 
             if ($diseaseId && $diseaseId !== 'all') {
                 $query->where('disease_id', $diseaseId);
@@ -536,7 +549,7 @@ class CommunityController extends Controller
                         'id' => $post->disease->id,
                         'name' => $post->disease->disease_name,
                     ] : null,
-                    'user_liked' => Auth::check() ? $post->likes()->where('user_id', Auth::id())->exists() : false,
+                    'user_liked' => Auth::check() ? $post->likes()->where('user_id', Auth::id())->where('is_starred', false)->exists() : false,
                     'is_owner' => Auth::check() && $post->user_id === Auth::id(),
                 ];
             });
@@ -966,30 +979,35 @@ class CommunityController extends Controller
                                     ->where('user_id', $user->id)
                                     ->first();
 
-            if ($existingLike) {
-                $existingLike->delete();
-                // Make sure like_count doesn't go below 0
-                if ($post->like_count > 0) {
-                    $post->decrement('like_count');
-                }
-                $post->refresh();
-                $liked = false;
-                $starred = false;
-                
-                // Remove notification when unliked
-                $this->removeNotification($post, $user, 'like');
-                
-            } else {
+            if (!$existingLike) {
                 PostLike::create([
                     'post_id' => $post->id,
                     'user_id' => $user->id,
                     'is_starred' => false,
                 ]);
-                $post->increment('like_count');
-                $post->refresh();
                 $liked = true;
                 $starred = false;
+            } else {
+                if ($existingLike->is_starred) {
+                    $existingLike->is_starred = false;
+                    $existingLike->save();
+                    $liked = true;
+                    $starred = false;
+                } else {
+                    $existingLike->delete();
+                    $liked = false;
+                    $starred = false;
+                    $this->removeNotification($post, $user, 'like');
+                }
             }
+
+            $likeCount = PostLike::query()
+                ->where('post_id', $post->id)
+                ->where('is_starred', false)
+                ->count();
+
+            $post->update(['like_count' => $likeCount]);
+            $post->refresh();
 
             return response()->json([
                 'success' => true,
@@ -1038,27 +1056,27 @@ class CommunityController extends Controller
                     'is_starred' => true,
                 ]);
 
-                $post->increment('like_count');
-                $post->refresh();
-
                 return response()->json([
                     'success' => true,
                     'starred' => true,
-                    'liked' => true,
-                    'count' => max(0, $post->like_count),
+                    'liked' => false,
+                    'count' => max(0, PostLike::query()->where('post_id', $post->id)->where('is_starred', false)->count()),
                     'message' => 'Post starred successfully.',
                 ]);
             }
 
             $postLike->is_starred = !$postLike->is_starred;
             $postLike->save();
-            $post->refresh();
+
+            if (!$postLike->is_starred) {
+                $postLike->delete();
+            }
 
             return response()->json([
                 'success' => true,
                 'starred' => (bool) $postLike->is_starred,
-                'liked' => true,
-                'count' => max(0, $post->like_count),
+                'liked' => false,
+                'count' => max(0, PostLike::query()->where('post_id', $post->id)->where('is_starred', false)->count()),
                 'message' => $postLike->is_starred ? 'Post starred successfully.' : 'Post removed from starred.',
             ]);
         } catch (\Exception $e) {
@@ -1128,6 +1146,7 @@ class CommunityController extends Controller
             }
 
             $post->update(['is_approved' => true]);
+            $this->notifyStarredDiseaseFollowers($post);
 
             return response()->json([
                 'success' => true,
@@ -1173,6 +1192,94 @@ class CommunityController extends Controller
         } catch (\Exception $e) {
             Log::error('Failed to remove notification: ' . $e->getMessage());
         }
+    }
+
+    protected function notifyStarredDiseaseFollowers(Post $post): void
+    {
+        try {
+            if (!$post->disease_id) {
+                return;
+            }
+
+            $post->loadMissing(['disease', 'user']);
+
+            $targetUserIds = UserStarredDisease::query()
+                ->where('disease_id', $post->disease_id)
+                ->where('user_id', '!=', $post->user_id)
+                ->pluck('user_id')
+                ->unique()
+                ->values();
+
+            if ($targetUserIds->isEmpty()) {
+                return;
+            }
+
+            $preview = strlen((string) $post->description) > 60
+                ? substr((string) $post->description, 0, 60) . '...'
+                : (string) $post->description;
+
+            foreach ($targetUserIds as $targetUserId) {
+                Notification::create([
+                    'user_id' => $targetUserId,
+                    'from_user_id' => $post->user_id,
+                    'type' => 'starred_disease_post',
+                    'notifiable_type' => Post::class,
+                    'notifiable_id' => $post->id,
+                    'message' => "New post in your starred disease: " . ($post->disease?->disease_name ?? 'Unknown Disease'),
+                    'data' => [
+                        'post_id' => $post->id,
+                        'disease_id' => $post->disease_id,
+                        'disease_name' => $post->disease?->disease_name,
+                        'post_preview' => $preview,
+                    ],
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::error('Failed to notify starred disease followers: ' . $e->getMessage());
+        }
+    }
+
+    public function toggleDiseaseStar(Request $request, Disease $disease)
+    {
+        if (!Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please login to star diseases',
+            ], 401);
+        }
+
+        if (Auth::user()->isAdmin()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Admin accounts are view-only in community.',
+            ], 403);
+        }
+
+        $existing = UserStarredDisease::query()
+            ->where('user_id', Auth::id())
+            ->where('disease_id', $disease->id)
+            ->first();
+
+        if ($existing) {
+            $existing->delete();
+
+            return response()->json([
+                'success' => true,
+                'starred' => false,
+                'message' => 'Disease removed from starred.',
+            ]);
+        }
+
+        UserStarredDisease::create([
+            'user_id' => Auth::id(),
+            'disease_id' => $disease->id,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'starred' => true,
+            'message' => 'Disease starred successfully.',
+        ]);
     }
 
     /**

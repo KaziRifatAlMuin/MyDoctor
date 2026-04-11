@@ -56,6 +56,11 @@
             @if($post->is_edited)
                 <span style="font-size:11px; font-weight:600; color:#65676b; background:#f0f2f5; border-radius:12px; padding:4px 8px;">Edited</span>
             @endif
+            @if($isAuthenticated && ! $isAdmin)
+                <button class="post-menu-btn {{ $userStarred ? 'starred' : '' }}" id="star-btn-{{ $post->id }}" onclick="toggleStar({{ $post->id }}, this)" title="{{ $userStarred ? 'Remove star' : 'Star this post' }}" style="width:34px;height:34px;border:none;border-radius:50%;background:#f0f2f5;color:#65676b;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;">
+                    <i class="{{ $userStarred ? 'fas text-warning' : 'far' }} fa-star"></i>
+                </button>
+            @endif
             <button class="post-menu-btn" onclick="togglePostMenu({{ $post->id }})" title="More options" style="width:34px;height:34px;border:none;border-radius:50%;background:#f0f2f5;color:#65676b;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;">
                 <i class="fas fa-ellipsis-v"></i>
             </button>
@@ -264,11 +269,6 @@
                     <span class="like-count">{{ $post->like_count }}</span>
                 </button>
 
-                @if(! $isAdmin)
-                    <button class="post-action-btn star-btn {{ $userStarred ? 'starred' : '' }}" onclick="toggleStar({{ $post->id }},this)" id="star-btn-{{ $post->id }}" style="flex:0 0 auto;min-width:48px;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#1a1a1a;font-size:14px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;" title="{{ $userStarred ? 'Remove star' : 'Star this post' }}">
-                        <i class="{{ $userStarred ? 'fas text-warning' : 'far' }} fa-star"></i>
-                    </button>
-                @endif
             @else
                 <div class="post-action-btn" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f8f6ff;color:#4b5563;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;">
                     <i class="far fa-heart"></i>

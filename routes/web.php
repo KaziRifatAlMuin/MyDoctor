@@ -309,6 +309,7 @@ Route::prefix('community')->name('community.')->group(function () {
         Route::delete('/posts/{post}', [CommunityController::class, 'destroyPost'])->name('posts.destroy');
         Route::put('/posts/{post}/likes', [CommunityController::class, 'togglePostLike'])->name('posts.like');
         Route::put('/posts/{post}/star', [CommunityController::class, 'togglePostStar'])->name('posts.star');
+        Route::put('/diseases/{disease}/star', [CommunityController::class, 'toggleDiseaseStar'])->name('diseases.star');
         Route::post('/posts/{post}/report', [CommunityController::class, 'reportPost'])->name('posts.report');
         Route::patch('/posts/{post}/approve', [CommunityController::class, 'approvePost'])->name('posts.approve');
 

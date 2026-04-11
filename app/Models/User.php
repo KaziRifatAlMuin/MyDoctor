@@ -314,6 +314,17 @@ class User extends Authenticatable
                     ->withTimestamps();
     }
 
+    public function starredDiseases()
+    {
+        return $this->belongsToMany(Disease::class, 'user_starred_diseases')
+            ->withTimestamps();
+    }
+
+    public function userStarredDiseases()
+    {
+        return $this->hasMany(UserStarredDisease::class);
+    }
+
     // Community relationships
     public function posts()
     {
