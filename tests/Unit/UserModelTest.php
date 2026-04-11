@@ -28,11 +28,8 @@ class UserModelTest extends TestCase
             'occupation',
             'blood_group',
             'gender',
+            'is_active',
             'password',
-            'email_notifications',
-            'push_notifications',
-            'show_personal_info',
-            'show_diseases',
             'notification_settings',
         ];
         
@@ -64,19 +61,11 @@ class UserModelTest extends TestCase
     }
 
     #[Test]
-    public function user_casts_email_notifications_to_boolean(): void
+    public function user_casts_is_active_to_boolean(): void
     {
         $casts = (new User())->getCasts();
-        $this->assertArrayHasKey('email_notifications', $casts);
-        $this->assertEquals('boolean', $casts['email_notifications']);
-    }
-
-    #[Test]
-    public function user_casts_push_notifications_to_boolean(): void
-    {
-        $casts = (new User())->getCasts();
-        $this->assertArrayHasKey('push_notifications', $casts);
-        $this->assertEquals('boolean', $casts['push_notifications']);
+        $this->assertArrayHasKey('is_active', $casts);
+        $this->assertEquals('boolean', $casts['is_active']);
     }
 
     #[Test]

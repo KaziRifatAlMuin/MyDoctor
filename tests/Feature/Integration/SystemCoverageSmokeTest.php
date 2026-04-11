@@ -203,7 +203,7 @@ class SystemCoverageSmokeTest extends TestCase
 
         $post = Post::where('user_id', $user->id)->latest()->firstOrFail();
         $this->actingAs($user)
-            ->postJson(route('community.posts.like', $post), [])
+            ->putJson(route('community.posts.like', $post), [])
             ->assertOk()
             ->assertJson([
                 'success' => true,

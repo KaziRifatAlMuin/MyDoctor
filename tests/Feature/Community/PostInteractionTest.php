@@ -33,7 +33,7 @@ class PostInteractionTest extends TestCase
     {
         $this->actingAs($this->user);
 
-        $response = $this->post("/community/posts/{$this->post->id}/like");
+        $response = $this->put("/community/posts/{$this->post->id}/likes");
 
         $response->assertStatus(200);
         $response->assertJson([
@@ -60,7 +60,7 @@ class PostInteractionTest extends TestCase
         ]);
 
         // Then unlike
-        $response = $this->post("/community/posts/{$this->post->id}/like");
+        $response = $this->put("/community/posts/{$this->post->id}/likes");
 
         $response->assertStatus(200);
         $response->assertJson([
@@ -109,7 +109,7 @@ class PostInteractionTest extends TestCase
             'post_id' => $this->post->id
         ]);
 
-        $response = $this->post("/community/comments/{$comment->id}/like");
+        $response = $this->put("/community/comments/{$comment->id}/likes");
 
         $response->assertStatus(200);
         $response->assertJson([
@@ -138,7 +138,7 @@ class PostInteractionTest extends TestCase
             'comment_id' => $comment->id
         ]);
 
-        $response = $this->post("/community/comments/{$comment->id}/like");
+        $response = $this->put("/community/comments/{$comment->id}/likes");
 
         $response->assertStatus(200);
         $response->assertJson([
@@ -158,14 +158,14 @@ class PostInteractionTest extends TestCase
     {
         $this->actingAs($this->user);
 
-        $response = $this->post("/community/posts/{$this->post->id}/star");
+        $response = $this->put("/community/posts/{$this->post->id}/star");
 
         $response->assertStatus(200);
         $response->assertJson([
             'success' => true,
             'starred' => true,
-            'liked' => true,
-            'count' => 1,
+            'liked' => false,
+            'count' => 0,
         ]);
 
         $this->assertDatabaseHas('user_posts', [

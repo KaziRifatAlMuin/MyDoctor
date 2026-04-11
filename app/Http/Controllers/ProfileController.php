@@ -49,21 +49,23 @@ class ProfileController extends Controller
         $user->phone = $request->input('phone');
         $user->occupation = $request->input('occupation');
         $user->blood_group = $request->input('blood_group');
-        $user->gender = $request->input('gender');
+        $user->gender = $request->has('gender') ? $request->input('gender') : $user->gender;
         $user->save();
 
+        $address = $user->address()->first();
+
         $user->address()->updateOrCreate([], [
-            'division_id' => $request->input('division_id'),
-            'division' => $request->input('division'),
-            'division_bn' => $request->input('division_bn'),
-            'district_id' => $request->input('district_id'),
-            'district' => $request->input('district'),
-            'district_bn' => $request->input('district_bn'),
-            'upazila_id' => $request->input('upazila_id'),
-            'upazila' => $request->input('upazila'),
-            'upazila_bn' => $request->input('upazila_bn'),
-            'street' => $request->input('street'),
-            'house' => $request->input('house'),
+            'division_id' => $request->input('division_id', $address?->division_id ?? 0),
+            'division' => $request->input('division', $address?->division ?? 'Not set'),
+            'division_bn' => $request->input('division_bn', $address?->division_bn),
+            'district_id' => $request->input('district_id', $address?->district_id ?? 0),
+            'district' => $request->input('district', $address?->district ?? 'Not set'),
+            'district_bn' => $request->input('district_bn', $address?->district_bn),
+            'upazila_id' => $request->input('upazila_id', $address?->upazila_id ?? 0),
+            'upazila' => $request->input('upazila', $address?->upazila ?? 'Not set'),
+            'upazila_bn' => $request->input('upazila_bn', $address?->upazila_bn),
+            'street' => $request->input('street', $address?->street),
+            'house' => $request->input('house', $address?->house),
         ]);
 
         return redirect()->route('profile')->with('success', 'Profile updated successfully.');

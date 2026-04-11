@@ -1408,6 +1408,11 @@ class CommunityController extends Controller
                 ],
                 'message' => 'Comment updated successfully!'
             ]);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You can only edit your own comments'
+            ], 403);
         } catch (\Exception $e) {
             Log::error('Update Comment Error: ' . $e->getMessage());
             return response()->json([
@@ -1454,6 +1459,11 @@ class CommunityController extends Controller
                 'comment_count' => $post->fresh()->comment_count,
                 'message' => 'Comment deleted successfully!'
             ]);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You can only delete your own comments'
+            ], 403);
         } catch (\Exception $e) {
             Log::error('Destroy Comment Error: ' . $e->getMessage());
             return response()->json([

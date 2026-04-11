@@ -19,9 +19,14 @@ class CriticalSchemaIntegrityTest extends TestCase
     #[Test]
     public function newly_added_health_tables_have_critical_columns(): void
     {
-        $this->assertTrue(Schema::hasTable('environments'));
-        $this->assertTrue(Schema::hasColumns('environments', [
-            'user_id', 'location_name', 'latitude', 'longitude', 'recorded_at', 'weather_condition',
+        $this->assertTrue(Schema::hasTable('health_metrics'));
+        $this->assertTrue(Schema::hasColumns('health_metrics', [
+            'metric_name', 'fields',
+        ]));
+
+        $this->assertTrue(Schema::hasTable('user_health'));
+        $this->assertTrue(Schema::hasColumns('user_health', [
+            'user_id', 'health_metric_id', 'value', 'recorded_at',
         ]));
 
         $this->assertTrue(Schema::hasTable('medicine_reminders'));
