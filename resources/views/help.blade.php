@@ -288,6 +288,13 @@
 @endpush
 
 @section('content')
+    @php
+        $isAuthenticated = auth()->check();
+        $loginUrl = route('login');
+        $protectUrl = static function (string $url) use ($isAuthenticated, $loginUrl): string {
+            return $isAuthenticated ? $url : $loginUrl . '?redirect=' . urlencode($url);
+        };
+    @endphp
     <div class="help-section">
         <div class="container" style="max-width: 1140px;">
 
@@ -295,17 +302,7 @@
             <div class="help-hero">
                 <h2><i class="fas fa-question-circle me-2"></i>How can we help you?</h2>
                 <p>Find answers to common questions, guides, and support</p>
-                <div class="help-search">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" id="helpSearchInput" placeholder="Search for help topics..." autocomplete="off">
-                </div>
-                @if(!auth()->check() || !auth()->user()->isAdmin())
-                    <div class="mt-3" style="text-align:center;">
-                        <button onclick="toggleChatbot()" class="btn btn-sm btn-light" style="border-radius:12px;border:1px solid rgba(0,0,0,0.06);">
-                            <i class="fas fa-user-md me-1"></i> Ask MyDoctor AI
-                        </button>
-                    </div>
-                @endif
+                {{-- search and Ask AI moved below, just above General Questions --}}
             </div>
 
             {{-- Quick Links --}}
@@ -358,6 +355,27 @@
                 {{-- FAQ Column --}}
                 <div class="col-lg-8">
 
+                    {{-- Search + Ask AI (moved here: just above General FAQ) --}}
+                    <div class="d-flex flex-column flex-md-row align-items-center justify-content-between mb-3">
+                        <div class="help-search me-md-3" style="flex:1; max-width:560px;">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" id="helpSearchInput" placeholder="Search for help topics..." autocomplete="off" class="form-control">
+                        </div>
+                        <div class="mt-3 mt-md-0 ms-md-3" style="white-space:nowrap;">
+                            @if(!auth()->check() || !auth()->user()->isAdmin())
+                                @auth
+                                    <button onclick="toggleChatbot()" class="btn btn-sm btn-light" style="border-radius:12px;border:1px solid rgba(0,0,0,0.06);">
+                                        <i class="fas fa-user-md me-1"></i> Ask MyDoctor AI
+                                    </button>
+                                @else
+                                    <a href="{{ route('login') }}?redirect={{ urlencode(request()->fullUrl()) }}" class="btn btn-sm btn-light" style="border-radius:12px;border:1px solid rgba(0,0,0,0.06);">
+                                        <i class="fas fa-user-md me-1"></i> Ask MyDoctor AI
+                                    </a>
+                                @endauth
+                            @endif
+                        </div>
+                    </div>
+
                     {{-- General FAQ --}}
                     <div class="faq-card searchable-item" id="faq-general">
                         <div class="faq-card-header">
@@ -393,6 +411,22 @@
                                         <div class="accordion-body">Absolutely. Your data is stored securely and is only
                                             accessible to you. We use industry-standard encryption and never share your
                                             health information with third parties.</div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item searchable-item">
+                                    <h2 class="accordion-header"><button class="accordion-button collapsed" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#g4">Do I need medical knowledge to use MyDoctor?</button>
+                                    </h2>
+                                    <div id="g4" class="accordion-collapse collapse" data-bs-parent="#accGeneral">
+                                        <div class="accordion-body">No. The platform is designed for everyday users. Most actions are guided with simple forms, clear labels, and easy-to-read summaries. If you are unsure where to start, follow the step-by-step guide on this page.</div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item searchable-item">
+                                    <h2 class="accordion-header"><button class="accordion-button collapsed" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#g5">Does MyDoctor replace a doctor visit?</button>
+                                    </h2>
+                                    <div id="g5" class="accordion-collapse collapse" data-bs-parent="#accGeneral">
+                                        <div class="accordion-body">No. MyDoctor helps you organize and understand your health data, but it does not replace professional diagnosis or emergency care. Always consult a licensed physician for medical decisions.</div>
                                     </div>
                                 </div>
                             </div>
@@ -446,6 +480,20 @@
                                             symptoms, conditions, and medicine adherence to provide personalized health
                                             recommendations. For example, if your blood pressure is high, you'll get
                                             specific dietary and lifestyle tips.</div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item searchable-item">
+                                    <h2 class="accordion-header"><button class="accordion-button collapsed"
+                                            type="button" data-bs-toggle="collapse" data-bs-target="#h5">How often should I log my health metrics?</button></h2>
+                                    <div id="h5" class="accordion-collapse collapse" data-bs-parent="#accHealth">
+                                        <div class="accordion-body">For stable monitoring, log key metrics at the same time each day or as advised by your doctor. Consistency improves trend analysis and helps Smart Suggestions generate better recommendations.</div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item searchable-item">
+                                    <h2 class="accordion-header"><button class="accordion-button collapsed"
+                                            type="button" data-bs-toggle="collapse" data-bs-target="#h6">Can I view my progress over time?</button></h2>
+                                    <div id="h6" class="accordion-collapse collapse" data-bs-parent="#accHealth">
+                                        <div class="accordion-body">Yes. Your recorded data is shown as history and trends in the Health dashboard. You can compare readings by date, identify patterns, and share a summary with your physician during consultation.</div>
                                     </div>
                                 </div>
                             </div>
@@ -504,6 +552,22 @@
                                             filter by date range and specific medicines before exporting.</div>
                                     </div>
                                 </div>
+                                <div class="accordion-item searchable-item">
+                                    <h2 class="accordion-header"><button class="accordion-button collapsed"
+                                            type="button" data-bs-toggle="collapse" data-bs-target="#m5">What should I do if I miss a dose?</button></h2>
+                                    <div id="m5" class="accordion-collapse collapse"
+                                        data-bs-parent="#accMedicine">
+                                        <div class="accordion-body">Mark it as "Missed" in your log so your adherence stays accurate. Do not double-dose unless your doctor has explicitly advised it. Use reminder timing adjustments to prevent repeated misses.</div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item searchable-item">
+                                    <h2 class="accordion-header"><button class="accordion-button collapsed"
+                                            type="button" data-bs-toggle="collapse" data-bs-target="#m6">Can I set multiple reminder times for one medicine?</button></h2>
+                                    <div id="m6" class="accordion-collapse collapse"
+                                        data-bs-parent="#accMedicine">
+                                        <div class="accordion-body">Yes. You can configure schedules based on your prescription, including multiple doses per day. This is useful for morning-evening medications or interval-based plans.</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -533,6 +597,13 @@
                                         <div class="accordion-body">Yes! Go to the <strong>Reports</strong> tab in the
                                             Health Dashboard. Upload lab results, X-rays, or other medical documents. Add
                                             notes and summaries for quick reference during doctor visits.</div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item searchable-item">
+                                    <h2 class="accordion-header"><button class="accordion-button collapsed"
+                                            type="button" data-bs-toggle="collapse" data-bs-target="#u3">Which file formats are supported?</button></h2>
+                                    <div id="u3" class="accordion-collapse collapse" data-bs-parent="#accUploads">
+                                        <div class="accordion-body">For best compatibility, use clear JPG or PNG images for prescriptions and report snapshots. Keep file size reasonable and avoid blurry captures so text can be reviewed later.</div>
                                     </div>
                                 </div>
                             </div>
@@ -575,6 +646,20 @@
                                         <div class="accordion-body">Yes, go to <strong>My Profile</strong> and scroll to
                                             the password section. Enter your current password and your new password to
                                             update it securely.</div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item searchable-item">
+                                    <h2 class="accordion-header"><button class="accordion-button collapsed"
+                                            type="button" data-bs-toggle="collapse" data-bs-target="#a4">How do I manage privacy settings?</button></h2>
+                                    <div id="a4" class="accordion-collapse collapse" data-bs-parent="#accAccount">
+                                        <div class="accordion-body">Open <strong>Profile → Settings</strong> and adjust profile visibility options. You can control what appears publicly and keep personal information private unless you explicitly consent.</div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item searchable-item">
+                                    <h2 class="accordion-header"><button class="accordion-button collapsed"
+                                            type="button" data-bs-toggle="collapse" data-bs-target="#a5">Can I switch language between English and Bangla?</button></h2>
+                                    <div id="a5" class="accordion-collapse collapse" data-bs-parent="#accAccount">
+                                        <div class="accordion-body">Yes. Use the language toggle in the top navigation bar. The interface updates instantly so you can choose whichever language is easier for your daily use.</div>
                                     </div>
                                 </div>
                             </div>
@@ -641,6 +726,24 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="guide-card">
+                                <div class="d-flex align-items-start gap-3">
+                                    <div class="guide-step">6</div>
+                                    <div>
+                                        <div class="guide-title">Review Weekly Trends</div>
+                                        <p class="guide-desc">Open your dashboard at least once a week to review metric trends and adherence performance.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="guide-card">
+                                <div class="d-flex align-items-start gap-3">
+                                    <div class="guide-step">7</div>
+                                    <div>
+                                        <div class="guide-title">Share During Checkups</div>
+                                        <p class="guide-desc">Use your logs and uploaded reports during doctor visits for faster and clearer consultation.</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -678,23 +781,23 @@
                             <h6><i class="fas fa-link me-2"></i>Useful Links</h6>
                         </div>
                         <div class="summary-card-body">
-                            <a href="{{ route('health') }}" class="d-block text-decoration-none mb-2"
+                            <a href="{{ $protectUrl(route('health')) }}" class="d-block text-decoration-none mb-2"
                                 style="font-size: 0.85rem; color: #667eea;">
                                 <i class="fas fa-heartbeat me-2"></i>Health Dashboard
                             </a>
-                            <a href="{{ route('medicine.reminders') }}" class="d-block text-decoration-none mb-2"
+                            <a href="{{ $protectUrl(route('medicine.reminders')) }}" class="d-block text-decoration-none mb-2"
                                 style="font-size: 0.85rem; color: #667eea;">
                                 <i class="fas fa-bell me-2"></i>Medicine Reminders
                             </a>
-                            <a href="{{ route('suggestions') }}" class="d-block text-decoration-none mb-2"
+                            <a href="{{ $protectUrl(route('suggestions')) }}" class="d-block text-decoration-none mb-2"
                                 style="font-size: 0.85rem; color: #667eea;">
                                 <i class="fas fa-lightbulb me-2"></i>Smart Suggestions
                             </a>
-                            <a href="{{ route('dashboard') }}" class="d-block text-decoration-none mb-2"
+                            <a href="{{ $protectUrl(route('dashboard')) }}" class="d-block text-decoration-none mb-2"
                                 style="font-size: 0.85rem; color: #667eea;">
                                 <i class="fas fa-tachometer-alt me-2"></i>Dashboard
                             </a>
-                            <a href="{{ route('community.landing') }}" class="d-block text-decoration-none"
+                            <a href="{{ $protectUrl(route('community.landing')) }}" class="d-block text-decoration-none"
                                 style="font-size: 0.85rem; color: #667eea;">
                                 <i class="fas fa-users me-2"></i>Community
                             </a>

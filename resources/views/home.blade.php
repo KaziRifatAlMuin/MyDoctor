@@ -3,117 +3,155 @@
 @section('title', __('ui.auto.Home'))
 
 @section('content')
+@php
+    $homeStats = $homeStats ?? [
+        'active_users' => 0,
+        'approved_posts' => 0,
+        'total_uploads' => 0,
+        'health_catalog' => 0,
+        'reminder_adherence' => 0,
+        'total_reminders' => 0,
+    ];
+
+    $isAuthenticated = auth()->check();
+    $loginUrl = route('login');
+    $protectUrl = static function (string $url) use ($isAuthenticated, $loginUrl): string {
+        return $isAuthenticated ? $url : $loginUrl . '?redirect=' . urlencode($url);
+    };
+
+    $communityUrl = $protectUrl(route('community.landing'));
+    $medicineReminderUrl = $protectUrl(route('medicine.reminders'));
+    $healthTrackingUrl = $protectUrl(route('health.tracking'));
+    $healthLogsUrl = $protectUrl(route('health') . '#logs');
+    $healthSymptomsUrl = $protectUrl(route('health.symptoms'));
+    $healthSuggestionsUrl = $protectUrl(route('health.suggestions'));
+    $healthTipsUrl = $protectUrl(route('health.tips'));
+    $ctaPrimaryUrl = $isAuthenticated ? route('health.tracking') : ($loginUrl . '?redirect=' . urlencode(route('dashboard')));
+    $ctaSecondaryUrl = $isAuthenticated ? route('community.home') : ($loginUrl . '?redirect=' . urlencode(route('community.home')));
+@endphp
+
+<section class="py-4 py-md-5">
+    <div class="container">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <div>
+                <h2 class="fw-bold text-primary mb-1">Everything You Need in One Place</h2>
+                <p class="text-muted mb-0">Comprehensive healthcare tools designed for your wellness journey</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ $ctaPrimaryUrl }}" class="btn btn-primary rounded-pill px-4">
+                    <i class="fas fa-heartbeat me-2"></i>{{ $isAuthenticated ? 'Open Dashboard' : 'Login to Continue' }}
+                </a>
+                <a href="{{ $ctaSecondaryUrl }}" class="btn btn-outline-primary rounded-pill px-4">
+                    <i class="fas fa-users me-2"></i>{{ $isAuthenticated ? 'Visit Community' : 'Login for Community' }}
+                </a>
+            </div>
+        </div>
 
 
 <!-- Section 3: Features with Illustrations -->
 <section class="py-5">
     <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="fw-bold text-primary">Everything You Need in One Place</h2>
-            <p class="text-muted">Comprehensive healthcare tools designed for your wellness journey</p>
-        </div>
-        
-        <div class="row g-4">
+        <div class="row g-3">
             <!-- Community Posting -->
             <div class="col-md-6 col-lg-4">
-                <div class="feature-card-modern text-center p-4 h-100">
+                <a href="{{ $communityUrl }}" class="feature-card-modern feature-card-link text-center p-3 h-100 d-block">
                     <div class="feature-image mb-4">
-                        <img src="{{ asset('images/com.jpg') }}" alt="Community illustration showing people connecting" class="img-fluid" style="height: 150px; object-fit: contain;">
+                        <img src="{{ asset('images/com.jpg') }}" alt="Community illustration showing people connecting" class="img-fluid" style="height: 110px; object-fit: contain;">
                     </div>
-                    <h4>Community Posting</h4>
-                    <p class="text-muted">Connect with others sharing similar health experiences</p>
-                    <a href="{{ route('community.landing') }}" class="btn btn-outline-primary rounded-pill px-4">Learn More</a>
-                </div>
+                    <h5 class="mb-2">Community Posting</h5>
+                    <p class="text-muted mb-0">Connect with others sharing similar health experiences</p>
+                </a>
             </div>
             
             <!-- Medicine Reminder -->
             <div class="col-md-6 col-lg-4">
-                <div class="feature-card-modern text-center p-4 h-100">
+                <a href="{{ $medicineReminderUrl }}" class="feature-card-modern feature-card-link text-center p-3 h-100 d-block">
                     <div class="feature-image mb-4">
-                        <img src="{{ asset('images/med.jpg') }}" alt="Medicine reminder illustration with clock and pills" class="img-fluid" style="height: 150px; object-fit: contain;">
+                        <img src="{{ asset('images/med.jpg') }}" alt="Medicine reminder illustration with clock and pills" class="img-fluid" style="height: 110px; object-fit: contain;">
                     </div>
-                    <h4>Medicine Reminders</h4>
-                    <p class="text-muted">Never miss a dose with smart notifications</p>
-                    <a href="{{ route('medicine.reminders') }}" class="btn btn-outline-primary rounded-pill px-4">Learn More</a>
-                </div>
+                    <h5 class="mb-2">Medicine Reminders</h5>
+                    <p class="text-muted mb-0">Never miss a dose with smart notifications</p>
+                </a>
             </div>
             
             <!-- Health Metrics Tracking -->
             <div class="col-md-6 col-lg-4">
-                <div class="feature-card-modern text-center p-4 h-100">
+                <a href="{{ $healthTrackingUrl }}" class="feature-card-modern feature-card-link text-center p-3 h-100 d-block">
                     <div class="feature-image mb-4">
-                        <img src="{{ asset('images/HM.jpg') }}" alt="Health metrics tracking illustration with charts" class="img-fluid" style="height: 150px; object-fit: contain;">
+                        <img src="{{ asset('images/HM.jpg') }}" alt="Health metrics tracking illustration with charts" class="img-fluid" style="height: 110px; object-fit: contain;">
                     </div>
-                    <h4>Health Metrics</h4>
-                    <p class="text-muted">Track BP, sugar, cholesterol and more</p>
-                    <a href="{{ route('health.tracking') }}" class="btn btn-outline-primary rounded-pill px-4">Learn More</a>
-                </div>
+                    <h5 class="mb-2">Health Metrics</h5>
+                    <p class="text-muted mb-0">Track BP, sugar, cholesterol and more</p>
+                </a>
             </div>
             
             <!-- AI ChatBot -->
             <div class="col-md-6 col-lg-4">
-                <div class="feature-card-modern text-center p-4 h-100">
+                @auth
+                    <button onclick="toggleChatbot()" class="feature-card-modern feature-card-link text-center p-3 h-100 d-block w-100 border-0 bg-white">
+                @else
+                    <a href="{{ route('login') }}?redirect={{ urlencode(request()->fullUrl()) }}" class="feature-card-modern feature-card-link text-center p-3 h-100 d-block">
+                @endauth
                     <div class="feature-image mb-4">
-                        <img src="{{ asset('images/ai.jpg') }}" alt="AI chatbot illustration with robot and chat bubbles" class="img-fluid" style="height: 150px; object-fit: contain;">
+                        <img src="{{ asset('images/ai.jpg') }}" alt="AI chatbot illustration with robot and chat bubbles" class="img-fluid" style="height: 110px; object-fit: contain;">
                     </div>
-                    <h4>AI Health Assistant</h4>
-                    <p class="text-muted">Get instant answers about diseases and symptoms</p>
-                    <button onclick="toggleChatbot()" class="btn btn-outline-primary rounded-pill px-4 border-0 bg-transparent">Ask AI</button>
-                </div>
+                    <h5 class="mb-2">AI Health Assistant</h5>
+                    <p class="text-muted mb-0">Get instant answers about diseases and symptoms</p>
+                @auth
+                    </button>
+                @else
+                    </a>
+                @endauth
             </div>
             
             <!-- Medical Records -->
             <div class="col-md-6 col-lg-4">
-                <div class="feature-card-modern text-center p-4 h-100">
+                <a href="{{ $healthLogsUrl }}" class="feature-card-modern feature-card-link text-center p-3 h-100 d-block">
                     <div class="feature-image mb-4">
-                        <img src="{{ asset('images/mr.jpg') }}" alt="Medical records illustration with documents and folder" class="img-fluid" style="height: 150px; object-fit: contain;">
+                        <img src="{{ asset('images/mr.jpg') }}" alt="Medical records illustration with documents and folder" class="img-fluid" style="height: 110px; object-fit: contain;">
                     </div>
-                    <h4>Medical Records</h4>
-                    <p class="text-muted">Store prescriptions and reports securely</p>
-                    <a href="{{ route('health') }}#logs" class="btn btn-outline-primary rounded-pill px-4">Learn More</a>
-                </div>
+                    <h5 class="mb-2">Medical Records</h5>
+                    <p class="text-muted mb-0">Store prescriptions and reports securely</p>
+                </a>
             </div>
             
             <!-- Symptom Tracker -->
             <div class="col-md-6 col-lg-4">
-                <div class="feature-card-modern text-center p-4 h-100">
+                <a href="{{ $healthSymptomsUrl }}" class="feature-card-modern feature-card-link text-center p-3 h-100 d-block">
                     <div class="feature-image mb-4">
-                        <img src="{{ asset('images/sym.jpg') }}" alt="Symptom tracker illustration with checklist and body diagram" class="img-fluid" style="height: 150px; object-fit: contain;">
+                        <img src="{{ asset('images/sym.jpg') }}" alt="Symptom tracker illustration with checklist and body diagram" class="img-fluid" style="height: 110px; object-fit: contain;">
                     </div>
-                    <h4>Symptom Tracker</h4>
-                    <p class="text-muted">Track symptoms and get primary suggestions</p>
-                    <a href="{{ route('health.symptoms') }}" class="btn btn-outline-primary rounded-pill px-4">Learn More</a>
-                </div>
+                    <h5 class="mb-2">Symptom Tracker</h5>
+                    <p class="text-muted mb-0">Track symptoms and get primary suggestions</p>
+                </a>
             </div>
             
             <!-- Personalized Suggestions -->
             <div class="col-md-6 col-lg-4">
-                <div class="feature-card-modern text-center p-4 h-100">
+                <a href="{{ $healthSuggestionsUrl }}" class="feature-card-modern feature-card-link text-center p-3 h-100 d-block">
                     <div class="feature-image mb-4">
                         <!-- Placeholder for Suggestions illustration - add image later -->
-                        <div class="bg-light rounded-4 d-flex align-items-center justify-content-center mx-auto" style="width: 150px; height: 150px;">
+                        <div class="bg-light rounded-4 d-flex align-items-center justify-content-center mx-auto" style="width: 110px; height: 110px;">
                             <i class="fas fa-map-marked-alt fa-4x text-primary opacity-50"></i>
                         </div>
                     </div>
-                    <h4>Smart Health Suggestions</h4>
-                    <p class="text-muted">Personalized recommendations based on your health metrics</p>
-                    <a href="{{ route('health.suggestions') }}" class="btn btn-outline-primary rounded-pill px-4">View Suggestions</a>
-                </div>
+                    <h5 class="mb-2">Smart Health Suggestions</h5>
+                    <p class="text-muted mb-0">Personalized recommendations based on your health metrics</p>
+                </a>
             </div>
             
             <!-- Health Tips -->
             <div class="col-md-6 col-lg-4">
-                <div class="feature-card-modern text-center p-4 h-100">
+                <a href="{{ $healthTipsUrl }}" class="feature-card-modern feature-card-link text-center p-3 h-100 d-block">
                     <div class="feature-image mb-4">
                         <!-- Placeholder for Health Tips illustration - add image later -->
-                        <div class="bg-light rounded-4 d-flex align-items-center justify-content-center mx-auto" style="width: 150px; height: 150px;">
+                        <div class="bg-light rounded-4 d-flex align-items-center justify-content-center mx-auto" style="width: 110px; height: 110px;">
                             <i class="fas fa-lightbulb fa-4x text-warning opacity-50"></i>
                         </div>
                     </div>
-                    <h4>Health Tips</h4>
-                    <p class="text-muted">Daily health tips and articles for healthy lifestyle</p>
-                    <a href="{{ route('health.tips') }}" class="btn btn-outline-primary rounded-pill px-4">Read Tips</a>
-                </div>
+                    <h5 class="mb-2">Health Tips</h5>
+                    <p class="text-muted mb-0">Daily health tips and articles for healthy lifestyle</p>
+                </a>
             </div>
         </div>
     </div>
@@ -281,8 +319,8 @@
                             <i class="fas fa-users fa-3x text-white"></i>
                         </div>
                     </div>
-                    <h2 class="fw-bold mb-2">50,000+</h2>
-                    <p>Active Users</p>
+                    <h2 class="fw-bold mb-2">{{ number_format($homeStats['active_users']) }}</h2>
+                    <p>Active Members</p>
                 </div>
             </div>
             <div class="col-md-3 col-6">
@@ -293,8 +331,8 @@
                             <i class="fas fa-file-medical fa-3x text-white"></i>
                         </div>
                     </div>
-                    <h2 class="fw-bold mb-2">100,000+</h2>
-                    <p>Health Records</p>
+                    <h2 class="fw-bold mb-2">{{ number_format($homeStats['total_uploads']) }}</h2>
+                    <p>Stored Health Files</p>
                 </div>
             </div>
             <div class="col-md-3 col-6">
@@ -305,7 +343,7 @@
                             <i class="fas fa-bell fa-3x text-white"></i>
                         </div>
                     </div>
-                    <h2 class="fw-bold mb-2">1M+</h2>
+                    <h2 class="fw-bold mb-2">{{ number_format($homeStats['total_reminders']) }}</h2>
                     <p>Medicine Reminders</p>
                 </div>
             </div>
@@ -317,8 +355,8 @@
                             <i class="fas fa-user-md fa-3x text-white"></i>
                         </div>
                     </div>
-                    <h2 class="fw-bold mb-2">500+</h2>
-                    <p>Partner Doctors</p>
+                    <h2 class="fw-bold mb-2">{{ $homeStats['reminder_adherence'] }}%</h2>
+                    <p>Dose Adherence</p>
                 </div>
             </div>
         </div>
@@ -331,15 +369,12 @@
         <div class="cta-card text-center p-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 30px;">
             <h2 class="text-white fw-bold mb-3">Ready to take control of your health?</h2>
             <p class="text-white text-opacity-90 mb-4 fs-5">Join thousands of users who are already managing their health better with My Doctor</p>
-            @guest
-                <a href="{{ route('register') }}" class="btn btn-light btn-lg rounded-pill px-5 py-3 fw-semibold">
-                    <i class="fas fa-user-plus me-2"></i>Sign Up Free
-                </a>
-            @else
-                <a href="{{ route('health.tracking') }}" class="btn btn-light btn-lg rounded-pill px-5 py-3 fw-semibold">
-                    <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
-                </a>
-            @endguest
+            <a href="{{ $ctaPrimaryUrl }}" class="btn btn-light btn-lg rounded-pill px-5 py-3 fw-semibold me-2 mb-2">
+                <i class="fas fa-tachometer-alt me-2"></i>{{ $isAuthenticated ? 'Go to Dashboard' : 'Login to Continue' }}
+            </a>
+            <a href="{{ $ctaSecondaryUrl }}" class="btn btn-outline-light btn-lg rounded-pill px-5 py-3 fw-semibold mb-2">
+                <i class="fas fa-users me-2"></i>{{ $isAuthenticated ? 'Open Community' : 'Login for Community' }}
+            </a>
         </div>
     </div>
 </section>
@@ -412,11 +447,27 @@
         box-shadow: 0 10px 30px rgba(0,0,0,0.05);
         transition: all 0.3s ease;
         border: 1px solid rgba(0,0,0,0.05);
+        animation: fadeInUp 0.6s ease both;
+    }
+
+    .feature-card-link {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .feature-card-link:hover,
+    .feature-card-link:focus {
+        color: inherit;
     }
     
     .feature-card-modern:hover {
-        transform: translateY(-10px);
+        transform: translateY(-8px) scale(1.01);
         box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+
+    .feature-card-link:focus-visible {
+        outline: 3px solid rgba(102, 126, 234, 0.35);
+        outline-offset: 2px;
     }
     
     .feature-image img {
@@ -425,6 +476,26 @@
     
     .feature-card-modern:hover .feature-image img {
         transform: scale(1.05);
+    }
+
+    .row.g-3 .col-md-6:nth-child(1) .feature-card-modern { animation-delay: 0.03s; }
+    .row.g-3 .col-md-6:nth-child(2) .feature-card-modern { animation-delay: 0.07s; }
+    .row.g-3 .col-md-6:nth-child(3) .feature-card-modern { animation-delay: 0.11s; }
+    .row.g-3 .col-md-6:nth-child(4) .feature-card-modern { animation-delay: 0.15s; }
+    .row.g-3 .col-md-6:nth-child(5) .feature-card-modern { animation-delay: 0.19s; }
+    .row.g-3 .col-md-6:nth-child(6) .feature-card-modern { animation-delay: 0.23s; }
+    .row.g-3 .col-md-6:nth-child(7) .feature-card-modern { animation-delay: 0.27s; }
+    .row.g-3 .col-md-6:nth-child(8) .feature-card-modern { animation-delay: 0.31s; }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(14px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
     
     /* Step Cards */

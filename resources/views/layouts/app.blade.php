@@ -2076,7 +2076,7 @@
             $navThemeClass = $isAdminNav ? 'nav-theme-admin' : 'nav-theme-regular';
             $dashboardRoute = $isAdminNav ? route('admin.dashboard') : route('dashboard');
             $profileDashboardRoute = auth()->check() ? route('dashboard') : route('home');
-            $canUseChatbot = !auth()->check() || !auth()->user()->isAdmin();
+            $canUseChatbot = auth()->check() && !auth()->user()->isAdmin();
             $activeUserSettings = auth()->check() ? auth()->user()->setting : null;
             $showNotificationBadge = $activeUserSettings?->show_notification_badge ?? true;
             $showMailBadge = $activeUserSettings?->show_mail_badge ?? true;
@@ -2145,25 +2145,30 @@
                             </li>
                         @endauth
                         <li class="banner-nav-item">
-                            <a href="{{ route('medicine.index') }}"
-                                class="banner-nav-link {{ request()->routeIs('medicine*') ? 'active' : '' }}">
+                            <a href="{{ auth()->check() ? route('medicine.index') : route('login') . '?redirect=' . urlencode(route('medicine.index')) }}"
+                                class="banner-nav-link {{ request()->routeIs('medicine*') ? 'active' : '' }}"
+                                title="{{ auth()->check() ? '' : __('ui.nav.login_required') }}">
                                 {{ __('ui.nav.medicine') }}
                             </a>
                         </li>
                         <li class="banner-nav-item">
-                            <a href="{{ route('health') }}"
-                                class="banner-nav-link {{ request()->routeIs('health*') ? 'active' : '' }}">
+                            <a href="{{ auth()->check() ? route('health') : route('login') . '?redirect=' . urlencode(route('health')) }}"
+                                class="banner-nav-link {{ request()->routeIs('health*') ? 'active' : '' }}"
+                                title="{{ auth()->check() ? '' : __('ui.nav.login_required') }}">
                                 {{ __('ui.nav.health') }}
                             </a>
                         </li>
                         <li class="banner-nav-item">
-                            <a href="{{ route('community.home') }}"
-                                class="banner-nav-link {{ request()->routeIs('community*') ? 'active' : '' }}">
+                            <a href="{{ auth()->check() ? route('community.home') : route('login') . '?redirect=' . urlencode(route('community.home')) }}"
+                                class="banner-nav-link {{ request()->routeIs('community*') ? 'active' : '' }}"
+                                title="{{ auth()->check() ? '' : __('ui.nav.login_required') }}">
                                 {{ __('ui.nav.community') }}
                             </a>
                         </li>
                         <li class="banner-nav-item">
-                            <a href="{{ route('suggestions') }}" class="banner-nav-link {{ request()->routeIs('suggestions') ? 'active' : '' }}">
+                            <a href="{{ auth()->check() ? route('suggestions') : route('login') . '?redirect=' . urlencode(route('suggestions')) }}"
+                                class="banner-nav-link {{ request()->routeIs('suggestions') ? 'active' : '' }}"
+                                title="{{ auth()->check() ? '' : __('ui.nav.login_required') }}">
                                 {{ __('ui.nav.suggestions') }}
                             </a>
                         </li>
@@ -2241,11 +2246,16 @@
                             <span class="toggle-label toggle-label-bn">BN</span>
                             <span class="toggle-knob" aria-hidden="true"></span>
                         </a>
+                        <span class="nav-user-name">
+                            <a href="{{ route('login') }}" style="text-decoration:none;color:inherit;">{{ __('ui.menu.login') }}</a>
+                            /
+                            <a href="{{ route('register') }}" style="text-decoration:none;color:inherit;">{{ __('ui.menu.register') }}</a>
+                        </span>
                     @endguest
 
                     <!-- User Circle Menu -->
                     <div class="user-menu" id="userMenu">
-                        <div class="user-circle" onclick="toggleUserDropdown()">
+                        <div class="user-circle" onclick="toggleUserDropdown()" title="{{ auth()->check() ? auth()->user()->name : __('ui.menu.guest') }}">
                             @auth
                                 @if (auth()->user()->picture)
                                     <img src="{{ asset('storage/' . auth()->user()->picture) }}"
@@ -2254,7 +2264,7 @@
                                     <span>{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
                                 @endif
                             @else
-                                <span>G</span>
+                                <span>?</span>
                             @endauth
                         </div>
 
@@ -2320,24 +2330,24 @@
                 <div class="banner position-relative overflow-hidden">
                     <!-- Banner Content with Container Layout -->
                     <div class="container position-relative z-3 py-5">
-                        <div class="row min-vh-50 align-items-center">
+                        <div class="row min-vh-50 align-items-center justify-content-center">
                             <!-- Left Column - Text and Buttons -->
-                            <div class="col-lg-7 text-white">
+                            <div class="col-lg-9 text-white text-center">
                                 <h1 class="display-3 fw-bold mt-5 pt-4 mb-4">Your Health,<br>Our <span
                                         class="text-warning">Priority</span></h1>
                                 <p class="lead mb-4">Experience healthcare reimagined with AI-powered insights, medicine
                                     reminders, and community support.</p>
 
                                 @guest
-                                    <div class="d-flex gap-3">
-                                        <a href="{{ route('register') }}"
+                                    <div class="d-flex gap-3 flex-wrap">
+                                        <a href="{{ route('login') }}?redirect={{ urlencode(route('dashboard')) }}"
                                             class="btn btn-light btn-lg rounded-pill px-5 py-3 fw-semibold">
-                                            Get Started <i class="fas fa-arrow-right ms-2"></i>
+                                            Login to Start <i class="fas fa-arrow-right ms-2"></i>
                                         </a>
-                                        <button onclick="toggleChatbot()"
+                                        <a href="{{ route('login') }}?redirect={{ urlencode(request()->fullUrl()) }}"
                                             class="btn btn-outline-light btn-lg rounded-pill px-5 py-3 fw-semibold">
                                             <i class="fas fa-robot me-2"></i>Ask AI
-                                        </button>
+                                        </a>
                                     </div>
                                 @else
                                     <div class="d-flex gap-3">
@@ -2353,48 +2363,6 @@
                                         @endif
                                     </div>
                                 @endguest
-                            </div>
-
-                            <!-- Right Column - Statistics with Icons -->
-                            <div class="col-lg-5 mt-5 pt-4 text-white">
-                                <div class="row g-4">
-                                    <div class="col-6">
-                                        <div class="stat-card text-center p-3">
-                                            <div class="stat-icon mb-2">
-                                                <i class="fas fa-users fa-3x text-warning"></i>
-                                            </div>
-                                            <h3 class="text-white mb-0">50K+</h3>
-                                            <small class="text-white-50">Active Users</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="stat-card text-center p-3">
-                                            <div class="stat-icon mb-2">
-                                                <i class="fas fa-file-medical fa-3x text-warning"></i>
-                                            </div>
-                                            <h3 class="text-white mb-0">10K+</h3>
-                                            <small class="text-white-50">Health Records</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="stat-card text-center p-3">
-                                            <div class="stat-icon mb-2">
-                                                <i class="fas fa-clock fa-3x text-warning"></i>
-                                            </div>
-                                            <h3 class="text-white mb-0">24/7</h3>
-                                            <small class="text-white-50">AI Support</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="stat-card text-center p-3">
-                                            <div class="stat-icon mb-2">
-                                                <i class="fas fa-user-md fa-3x text-warning"></i>
-                                            </div>
-                                            <h3 class="text-white mb-0">100+</h3>
-                                            <small class="text-white-50">Doctors</small>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -3813,10 +3781,13 @@ window.openVideoModal = function(type, source, isReel = false) {
             }
         }
 
-        // Chatbot toggle
+        // Chatbot toggle: if chatbot modal not present (guest), redirect to login
         function toggleChatbot() {
             const modal = document.getElementById('chatbotModal');
-            if (!modal) return;
+            if (!modal) {
+                window.location.href = '{{ route('login') }}?redirect=' + encodeURIComponent(window.location.href);
+                return;
+            }
             modal.classList.toggle('show');
         }
 

@@ -18,6 +18,11 @@ use App\Http\Controllers\PublicHealthController;
 use App\Http\Controllers\AdminManagementController;
 use App\Http\Controllers\GeoController;
 use App\Models\Disease;
+use App\Models\MedicineReminder;
+use App\Models\Post;
+use App\Models\Symptom;
+use App\Models\Upload;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 
@@ -34,7 +39,21 @@ Route::get('/', function () {
         return redirect()->route('admin.dashboard');
     }
 
-    return view('home');
+    $totalReminders = MedicineReminder::query()->count();
+    $takenReminders = MedicineReminder::query()->where('status', 'taken')->count();
+
+    $homeStats = [
+        'active_users' => User::query()->where('role', '!=', 'admin')->count(),
+        'approved_posts' => Post::query()->where('is_approved', true)->count(),
+        'total_uploads' => Upload::query()->count(),
+        'health_catalog' => Disease::query()->count() + Symptom::query()->count(),
+        'reminder_adherence' => $totalReminders > 0
+            ? (int) round(($takenReminders / $totalReminders) * 100)
+            : 0,
+        'total_reminders' => $totalReminders,
+    ];
+
+    return view('home', compact('homeStats'));
 })->name('home');
 
 // Main navigation pages
