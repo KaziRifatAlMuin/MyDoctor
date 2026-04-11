@@ -20,6 +20,7 @@ use App\Models\User;
 use App\Models\UserAddress;
 use App\Models\Environment;
 use App\Models\EnvironmentMetric;
+use Illuminate\Support\Facades\Schema;
 
 class MedicalSeeder extends Seeder
 {
@@ -121,14 +122,16 @@ class MedicalSeeder extends Seeder
             }
         }
 
-        // Environments — 10 for user 1
-        $environments = Environment::factory()->count(10)->create(['user_id' => 1]);
+        // Environments — 10 for user 1 (only if tables present)
+        if (Schema::hasTable('environments') && Schema::hasTable('environment_metrics')) {
+            $environments = Environment::factory()->count(10)->create(['user_id' => 1]);
 
-        // Environment Metrics — 3 per environment
-        foreach ($environments as $env) {
-            EnvironmentMetric::factory()->count(3)->create([
-                'environment_id' => $env->id,
-            ]);
+            // Environment Metrics — 3 per environment
+            foreach ($environments as $env) {
+                EnvironmentMetric::factory()->count(3)->create([
+                    'environment_id' => $env->id,
+                ]);
+            }
         }
     }
 

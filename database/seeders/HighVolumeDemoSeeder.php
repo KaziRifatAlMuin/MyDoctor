@@ -7,6 +7,7 @@ use App\Models\CommentLike;
 use App\Models\Disease;
 use App\Models\Environment;
 use App\Models\EnvironmentMetric;
+use Illuminate\Support\Facades\Schema;
 use App\Models\HealthMetric;
 use App\Models\Medicine;
 use App\Models\MedicineLog;
@@ -257,11 +258,13 @@ class HighVolumeDemoSeeder extends Seeder
             UserSymptom::factory()->count($symptomCount)->create(['user_id' => $user->id]);
 
             $envCount = $isTop ? random_int(8, 18) : random_int(4, 10);
-            $environments = Environment::factory()->count($envCount)->create(['user_id' => $user->id]);
-            foreach ($environments as $environment) {
-                EnvironmentMetric::factory()->count($isTop ? random_int(2, 4) : random_int(1, 3))->create([
-                    'environment_id' => $environment->id,
-                ]);
+            if (Schema::hasTable('environments') && Schema::hasTable('environment_metrics')) {
+                $environments = Environment::factory()->count($envCount)->create(['user_id' => $user->id]);
+                foreach ($environments as $environment) {
+                    EnvironmentMetric::factory()->count($isTop ? random_int(2, 4) : random_int(1, 3))->create([
+                        'environment_id' => $environment->id,
+                    ]);
+                }
             }
 
             $uploadCount = $isTop ? random_int(8, 20) : random_int(4, 10);

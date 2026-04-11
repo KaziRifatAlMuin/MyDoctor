@@ -381,7 +381,6 @@
                         <div class="stat-item"><small>Medicines</small><strong>{{ number_format($stats['medical']['medicines'] ?? 0) }}</strong></div>
                         <div class="stat-item"><small>Medicine Logs</small><strong>{{ number_format($stats['medical']['medicine_logs'] ?? 0) }}</strong></div>
                         <div class="stat-item"><small>Health Metrics</small><strong>{{ number_format($stats['medical']['health_metrics'] ?? 0) }}</strong></div>
-                        <div class="stat-item"><small>Environment Metrics</small><strong>{{ number_format($stats['medical']['environment_metrics'] ?? 0) }}</strong></div>
                         <div class="stat-item"><small>User Symptoms</small><strong>{{ number_format($stats['medical']['user_symptoms'] ?? 0) }}</strong></div>
                         <div class="stat-item"><small>User Diseases</small><strong>{{ number_format($stats['medical']['user_diseases'] ?? 0) }}</strong></div>
                         <div class="stat-item"><small>Disease Catalog</small><strong>{{ number_format($stats['medical']['reference_diseases'] ?? 0) }}</strong></div>

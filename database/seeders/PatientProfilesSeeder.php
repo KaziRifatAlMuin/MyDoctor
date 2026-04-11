@@ -3,8 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Disease;
-use App\Models\Environment;
-use App\Models\EnvironmentMetric;
+// Environments removed from core seeding; guarded in other seeders if present
 use App\Models\HealthMetric;
 use App\Models\Medicine;
 use App\Models\MedicineLog;

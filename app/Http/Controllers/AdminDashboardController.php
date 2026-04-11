@@ -9,7 +9,6 @@ use App\Models\Post;
 use App\Models\Comment;
 use App\Models\CommentLike;
 use App\Models\Disease;
-use App\Models\EnvironmentMetric;
 use App\Models\HealthMetric;
 use App\Models\UserHealth;
 use App\Models\Mailing;
@@ -124,7 +123,6 @@ class AdminDashboardController extends Controller
                 'medicines' => Medicine::count(),
                 'medicine_logs' => MedicineLog::count(),
                 'health_metrics' => UserHealth::count(),
-                'environment_metrics' => EnvironmentMetric::count(),
                 'user_symptoms' => UserSymptom::count(),
                 'user_diseases' => UserDisease::count(),
                 'reference_diseases' => Disease::count(),

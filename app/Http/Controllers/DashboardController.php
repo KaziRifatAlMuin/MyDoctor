@@ -11,10 +11,11 @@ use App\Models\Medicine;
 use App\Models\MedicineLog;
 use App\Models\UserDisease;
 use App\Models\Upload;
+use App\Services\LiveEnvironmentService;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(LiveEnvironmentService $liveEnvironmentService)
     {
         $user = Auth::user();
 
@@ -24,6 +25,7 @@ class DashboardController extends Controller
 
         $metricDefinitions = $this->ensureMetricDefinitions();
         $metricConfig = $this->buildMetricConfig($metricDefinitions);
+        $liveEnvironment = $liveEnvironmentService->forUser($user);
 
         // Health metrics summary
         $healthMetrics = UserHealth::with('healthMetric')
@@ -149,7 +151,8 @@ class DashboardController extends Controller
             'todayReminders',
             'recentUploads',
             'healthScore',
-            'metricTrends'
+            'metricTrends',
+            'liveEnvironment'
         ));
     }
 
