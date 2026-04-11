@@ -43,10 +43,13 @@ class RegisterController extends Controller
 
         $user = $this->create($request->all());
 
-        // Auto login after registration (optional - remove if you want manual login)
-        auth()->login($user);
+        // Auto login after registration. Honor an optional "remember" checkbox if provided.
+        auth()->login($user, $request->filled('remember'));
 
-        return redirect($this->redirectTo);
+        // Regenerate session to prevent fixation after login
+        $request->session()->regenerate();
+
+        return redirect()->to($this->resolveRedirectPath($request, $this->redirectTo));
     }
 
     /**
@@ -57,12 +60,24 @@ class RegisterController extends Controller
         return Validator::make($data, [
             'Name' => ['required', 'string', 'max:255'],
             'Email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'Email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'redirect' => ['nullable', 'string', 'max:2048'],
             'Phone' => ['nullable', 'string', 'max:20'],
             'DateOfBirth' => ['nullable', 'date'],
             'Occupation' => ['nullable', 'string', 'max:255'],
             'BloodGroup' => ['nullable', 'string', 'in:A+,A-,B+,B-,AB+,AB-,O+,O-'],
+            'Gender' => ['required', 'in:male,female,other'],
+            'DivisionId' => ['required', 'integer'],
+            'Division' => ['required', 'string', 'max:255'],
+            'DivisionBn' => ['nullable', 'string', 'max:255'],
+            'DistrictId' => ['required', 'integer'],
+            'District' => ['required', 'string', 'max:255'],
+            'DistrictBn' => ['nullable', 'string', 'max:255'],
+            'UpazilaId' => ['required', 'integer'],
+            'Upazila' => ['required', 'string', 'max:255'],
+            'UpazilaBn' => ['nullable', 'string', 'max:255'],
+            'Street' => ['nullable', 'string', 'max:255'],
+            'House' => ['nullable', 'string', 'max:255'],
         ]);
     }
 
@@ -71,9 +86,7 @@ class RegisterController extends Controller
      */
     protected function create(array $data)
     {
-        return User::create([
-            'name' => $data['Name'],
-            'email' => $data['Email'],
+        $user = User::create([
             'name' => $data['Name'],
             'email' => $data['Email'],
             'password' => Hash::make($data['password']),
@@ -81,8 +94,54 @@ class RegisterController extends Controller
             'date_of_birth' => $data['DateOfBirth'] ?? null,
             'occupation' => $data['Occupation'] ?? null,
             'blood_group' => $data['BloodGroup'] ?? null,
-            // 'email_notifications' => true, // Default to true
-            // 'push_notifications' => true,  // Default to true
+            'gender' => $data['Gender'] ?? null,
         ]);
+
+        $user->address()->updateOrCreate([], [
+            'division_id' => $data['DivisionId'] ?? null,
+            'division' => $data['Division'] ?? null,
+            'division_bn' => $data['DivisionBn'] ?? null,
+            'district_id' => $data['DistrictId'] ?? null,
+            'district' => $data['District'],
+            'district_bn' => $data['DistrictBn'] ?? null,
+            'upazila_id' => $data['UpazilaId'] ?? null,
+            'upazila' => $data['Upazila'],
+            'upazila_bn' => $data['UpazilaBn'] ?? null,
+            'street' => $data['Street'] ?? null,
+            'house' => $data['House'] ?? null,
+        ]);
+
+        return $user;
+    }
+
+    private function resolveRedirectPath(Request $request, string $fallback = '/'): string
+    {
+        $redirect = (string) ($request->input('redirect') ?? $request->query('redirect') ?? '');
+        if ($redirect === '') {
+            return $fallback;
+        }
+
+        if (str_starts_with($redirect, '/')) {
+            return $redirect;
+        }
+
+        $parts = parse_url($redirect);
+        if (!is_array($parts)) {
+            return $fallback;
+        }
+
+        if (isset($parts['host']) && strcasecmp((string) $parts['host'], $request->getHost()) !== 0) {
+            return $fallback;
+        }
+
+        $path = (string) ($parts['path'] ?? '/');
+        if (isset($parts['query'])) {
+            $path .= '?' . $parts['query'];
+        }
+        if (isset($parts['fragment'])) {
+            $path .= '#' . $parts['fragment'];
+        }
+
+        return $path !== '' ? $path : $fallback;
     }
 }

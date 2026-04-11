@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Models\HealthMetric;
+use App\Models\UserHealth;
 use App\Models\Symptom;
 use App\Models\UserSymptom;
 use App\Models\Medicine;
@@ -19,6 +20,7 @@ use App\Models\User;
 use App\Models\UserAddress;
 use App\Models\Environment;
 use App\Models\EnvironmentMetric;
+use Illuminate\Support\Facades\Schema;
 
 class MedicalSeeder extends Seeder
 {
@@ -28,6 +30,8 @@ class MedicalSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->ensureMetricDefinitions();
+
         // Ensure user with id=1 exists with password "abcd1234"
         if (!DB::table('users')->where('id', 1)->exists()) {
             DB::table('users')->insert([
@@ -52,7 +56,7 @@ class MedicalSeeder extends Seeder
         }
 
         // Health Metrics — 60 records for user 1
-        HealthMetric::factory()->count(60)->create(['user_id' => 1]);
+        UserHealth::factory()->count(60)->create(['user_id' => 1]);
 
         // Symptoms — 55 records for user 1
         UserSymptom::factory()->count(55)->create(['user_id' => 1]);
@@ -118,14 +122,21 @@ class MedicalSeeder extends Seeder
             }
         }
 
-        // Environments — 10 for user 1
-        $environments = Environment::factory()->count(10)->create(['user_id' => 1]);
+        // Environments — 10 for user 1 (only if tables present)
+        if (Schema::hasTable('environments') && Schema::hasTable('environment_metrics')) {
+            $environments = Environment::factory()->count(10)->create(['user_id' => 1]);
 
-        // Environment Metrics — 3 per environment
-        foreach ($environments as $env) {
-            EnvironmentMetric::factory()->count(3)->create([
-                'environment_id' => $env->id,
-            ]);
+            // Environment Metrics — 3 per environment
+            foreach ($environments as $env) {
+                EnvironmentMetric::factory()->count(3)->create([
+                    'environment_id' => $env->id,
+                ]);
+            }
         }
+    }
+
+    private function ensureMetricDefinitions(): void
+    {
+        HealthMetric::seedDefaults();
     }
 }

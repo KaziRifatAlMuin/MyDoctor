@@ -4,22 +4,30 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
 use App\Models\HealthMetric;
+use App\Models\UserHealth;
 use App\Models\UserSymptom;
 use App\Models\Medicine;
 use App\Models\MedicineLog;
 use App\Models\UserDisease;
+use App\Services\LiveEnvironmentService;
 
 class SuggestionsController extends Controller
 {
-    public function index()
+    public function index(LiveEnvironmentService $liveEnvironmentService)
     {
         $user = Auth::user();
+        $this->ensureMetricDefinitions();
+        $liveEnvironment = $liveEnvironmentService->forUser($user);
+        $weatherAdvice = data_get($liveEnvironment, 'insights.advisory');
+        $weatherAdviceLocation = data_get($liveEnvironment, 'location_label');
 
         // Latest metrics by type
-        $latestMetrics = HealthMetric::where('user_id', $user->id)
+        $latestMetrics = UserHealth::with('healthMetric')
+            ->where('user_id', $user->id)
             ->orderByDesc('recorded_at')
             ->get()
-            ->groupBy('metric_type')
+            ->filter(fn(UserHealth $record) => $record->healthMetric !== null)
+            ->groupBy(fn(UserHealth $record) => $record->metric_type ?? 'unknown')
             ->map(fn($g) => $g->first());
 
         // Recent symptoms (last 14 days)
@@ -54,7 +62,7 @@ class SuggestionsController extends Controller
 
         return view('suggestions', compact(
             'user', 'suggestions', 'latestMetrics', 'recentSymptoms',
-            'activeConditions', 'adherenceRate', 'medicines'
+            'activeConditions', 'adherenceRate', 'medicines', 'weatherAdvice', 'weatherAdviceLocation'
         ));
     }
 
@@ -326,5 +334,10 @@ class SuggestionsController extends Controller
         ];
 
         return $suggestions;
+    }
+
+    private function ensureMetricDefinitions(): void
+    {
+        HealthMetric::seedDefaults();
     }
 }

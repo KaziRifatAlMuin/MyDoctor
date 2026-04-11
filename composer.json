@@ -50,6 +50,11 @@
             "@php artisan config:clear --ansi",
             "@php artisan test"
         ],
+        "test:admin-auth": [
+            "@php artisan config:clear --ansi",
+            "@php artisan test --filter=AdminAccessControlTest",
+            "@php artisan test --filter=AdminWriteAuthorizationTest"
+        ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"

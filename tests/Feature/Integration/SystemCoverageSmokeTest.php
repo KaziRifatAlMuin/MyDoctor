@@ -152,9 +152,8 @@ class SystemCoverageSmokeTest extends TestCase
             ])
             ->assertRedirect(route('health') . '#metrics');
 
-        $this->assertDatabaseHas('health_metrics', [
+        $this->assertDatabaseHas('user_health', [
             'user_id' => $user->id,
-            'metric_type' => 'heart_rate',
         ]);
 
         $this->actingAs($user)
@@ -204,7 +203,7 @@ class SystemCoverageSmokeTest extends TestCase
 
         $post = Post::where('user_id', $user->id)->latest()->firstOrFail();
         $this->actingAs($user)
-            ->postJson(route('community.posts.like', $post), [])
+            ->putJson(route('community.posts.like', $post), [])
             ->assertOk()
             ->assertJson([
                 'success' => true,

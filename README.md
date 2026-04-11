@@ -162,6 +162,20 @@ php artisan schedule:work
 php artisan storage:link
 ```
 
+## Testing Shortcuts
+
+Run the admin authorization smoke checks (admin allowed, member denied, guest redirected):
+
+```powershell
+composer test:admin-auth
+```
+
+Run the full test suite:
+
+```powershell
+composer test
+```
+
 ## Documentation diagrams
 
 Key design diagrams are stored in the `doc/` folder — embedded below for quick reference.

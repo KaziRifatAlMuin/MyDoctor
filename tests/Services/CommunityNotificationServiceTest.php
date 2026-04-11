@@ -175,8 +175,7 @@ class CommunityNotificationServiceTest extends TestCase
         NotificationFacade::fake();
         
         // Enable push notifications
-        $this->postOwner->push_notifications = true;
-        $this->postOwner->save();
+        $this->postOwner->setting()->update(['push_notifications' => true]);
 
         $this->service->postLiked($this->post, $this->liker);
 
@@ -199,8 +198,7 @@ class CommunityNotificationServiceTest extends TestCase
         NotificationFacade::fake();
         
         // Disable push notifications
-        $this->postOwner->push_notifications = false;
-        $this->postOwner->save();
+        $this->postOwner->setting()->update(['push_notifications' => false]);
 
         $this->service->postLiked($this->post, $this->liker);
 

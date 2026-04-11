@@ -22,6 +22,10 @@ class PostLike extends Model
     protected static function booted(): void
     {
         static::created(function (PostLike $postLike): void {
+            if ($postLike->is_starred) {
+                return;
+            }
+
             $postLike->loadMissing(['post', 'user']);
 
             if (!$postLike->post || !$postLike->user) {
@@ -52,6 +56,35 @@ class PostLike extends Model
                     'actor_avatar' => $liker->picture ? asset('storage/' . $liker->picture) : null,
                 ],
             ]);
+
+            $starFollowerIds = PostLike::query()
+                ->where('post_id', $post->id)
+                ->where('is_starred', true)
+                ->where('user_id', '!=', $liker->id)
+                ->pluck('user_id')
+                ->unique()
+                ->values();
+
+            foreach ($starFollowerIds as $followerId) {
+                if ((int) $followerId === (int) $post->user_id) {
+                    continue;
+                }
+
+                Notification::create([
+                    'user_id' => $followerId,
+                    'from_user_id' => $liker->id,
+                    'type' => 'starred_post_update',
+                    'notifiable_type' => Post::class,
+                    'notifiable_id' => $post->id,
+                    'message' => "{$liker->name} reacted on a post you starred",
+                    'data' => [
+                        'post_id' => $post->id,
+                        'post_preview' => $preview,
+                        'actor_name' => $liker->name,
+                        'actor_avatar' => $liker->picture ? asset('storage/' . $liker->picture) : null,
+                    ],
+                ]);
+            }
         });
     }
 

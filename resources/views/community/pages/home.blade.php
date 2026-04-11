@@ -40,6 +40,21 @@
                                     </h2>
                                     <span class="badge text-bg-light border">{{ $disease->posts_count }}</span>
                                 </div>
+                                @auth
+                                    @if(!auth()->user()->isAdmin())
+                                        @php $starred = in_array($disease->id, $userStarredDiseaseIds ?? [], true); @endphp
+                                        <div class="d-flex justify-content-end mt-2">
+                                            <button type="button"
+                                                class="btn btn-sm {{ $starred ? 'btn-warning' : 'btn-outline-secondary' }} rounded-pill disease-star-btn"
+                                                data-disease-id="{{ $disease->id }}"
+                                                onclick="toggleDiseaseStar(this)"
+                                                style="font-weight:700;">
+                                                <i class="{{ $starred ? 'fas' : 'far' }} fa-star me-1"></i>
+                                                <span>{{ $starred ? 'Starred' : 'Star' }}</span>
+                                            </button>
+                                        </div>
+                                    @endif
+                                @endauth
                                 <p class="text-muted mt-3 mb-3" style="font-size: .9rem;">Open disease-specific posts feed.
                                 </p>
                                 <div class="d-flex gap-2 mt-auto">
@@ -66,4 +81,53 @@
             </div>
         </div>
     </div>
+
+    @auth
+        @if(!auth()->user()->isAdmin())
+            <script>
+                async function toggleDiseaseStar(button) {
+                    const diseaseId = button.dataset.diseaseId;
+                    if (!diseaseId) return;
+
+                    try {
+                        const response = await fetch(`/community/diseases/${diseaseId}/star`, {
+                            method: 'PUT',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        const data = await response.json();
+                        if (!data.success) {
+                            return;
+                        }
+
+                        const icon = button.querySelector('i');
+                        const text = button.querySelector('span');
+                        if (data.starred) {
+                            button.classList.remove('btn-outline-secondary');
+                            button.classList.add('btn-warning');
+                            if (icon) {
+                                icon.classList.remove('far');
+                                icon.classList.add('fas');
+                            }
+                            if (text) text.textContent = 'Starred';
+                        } else {
+                            button.classList.remove('btn-warning');
+                            button.classList.add('btn-outline-secondary');
+                            if (icon) {
+                                icon.classList.remove('fas');
+                                icon.classList.add('far');
+                            }
+                            if (text) text.textContent = 'Star';
+                        }
+                    } catch (error) {
+                        console.error('Failed to toggle disease star', error);
+                    }
+                }
+            </script>
+        @endif
+    @endauth
 @endsection

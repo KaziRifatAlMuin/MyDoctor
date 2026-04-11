@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\PostLike;
 use App\Models\CommentLike;
 use App\Models\Notification;
+use App\Models\UserStarredDisease;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -23,8 +24,12 @@ class CommunityController extends Controller
      */
     public function home()
     {
-        $userDiseaseIds = Auth::check()
-            ? Auth::user()->userDiseases()->pluck('disease_id')->all()
+        if (Auth::check() && Auth::user()->isAdmin()) {
+            return redirect()->route('admin.community.posts.index');
+        }
+
+        $userStarredDiseaseIds = Auth::check()
+            ? Auth::user()->starredDiseases()->pluck('disease_id')->all()
             : [];
 
         $diseases = Disease::withCount([
@@ -36,9 +41,9 @@ class CommunityController extends Controller
                 'posts as latest_post_at' => function ($q) {
                     $q->where('is_approved', true);
                 }
-            ], 'created_at')
-            ->when(!empty($userDiseaseIds), function ($q) use ($userDiseaseIds) {
-                $ids = implode(',', array_map('intval', $userDiseaseIds));
+            ], 'approved_at')
+            ->when(!empty($userStarredDiseaseIds), function ($q) use ($userStarredDiseaseIds) {
+                $ids = implode(',', array_map('intval', $userStarredDiseaseIds));
                 $q->orderByRaw("CASE WHEN id IN ({$ids}) THEN 0 ELSE 1 END");
             })
             ->orderByDesc('latest_post_at')
@@ -48,7 +53,7 @@ class CommunityController extends Controller
         $totalPosts = Post::where('is_approved', true)->count();
         $totalDiseases = $diseases->count();
 
-        return view('community.pages.home', compact('diseases', 'totalPosts', 'totalDiseases'));
+        return view('community.pages.home', compact('diseases', 'totalPosts', 'totalDiseases', 'userStarredDiseaseIds'));
     }
 
     /**
@@ -56,6 +61,20 @@ class CommunityController extends Controller
      */
     public function postsIndex(Request $request)
     {
+        if (Auth::check() && Auth::user()->isAdmin()) {
+            return redirect()->route('admin.community.posts.index');
+        }
+
+        return $this->index($request);
+    }
+
+    /**
+     * Admin community posts feed.
+     */
+    public function adminPostsIndex(Request $request)
+    {
+        $request->merge(['admin_community' => true]);
+
         return $this->index($request);
     }
 
@@ -64,6 +83,10 @@ class CommunityController extends Controller
      */
     public function diseasePosts(Request $request, Disease $disease)
     {
+        if (Auth::check() && Auth::user()->isAdmin()) {
+            return redirect()->route('admin.community.posts.index', ['disease' => $disease->id]);
+        }
+
         $request->merge(['disease' => $disease->id]);
 
         return $this->index($request);
@@ -76,14 +99,19 @@ class CommunityController extends Controller
     {
         try {
             $diseaseId = $request->get('disease');
-            $userDiseaseIds = Auth::check()
-                ? Auth::user()->userDiseases()->pluck('disease_id')->all()
+            $isAdminCommunity = (bool) $request->boolean('admin_community', false)
+                && Auth::check()
+                && Auth::user()->isAdmin();
+            $userStarredDiseaseIds = Auth::check()
+                ? Auth::user()->starredDiseases()->pluck('disease_id')->all()
                 : [];
             
             // Build the posts query with eager loading
             $query = Post::with(['user', 'disease', 'comments' => function($q) {
                 $q->with('user')->latest()->limit(3);
-                        }])->withCount(['likes as likes_count'])
+                        }])->withCount(['likes as likes_count' => function ($q) {
+                            $q->where('is_starred', false);
+                        }])
                             ->where('is_approved', true);
 
             // Apply disease filter if selected
@@ -91,14 +119,14 @@ class CommunityController extends Controller
                 $query->where('disease_id', $diseaseId);
             }
 
-            // Prioritize posts matching the current user's diseases, then newest.
-            if (!empty($userDiseaseIds)) {
-                $ids = implode(',', array_map('intval', $userDiseaseIds));
+            // Prioritize posts matching the current user's diseases, then newest by approval time.
+            if (!empty($userStarredDiseaseIds)) {
+                $ids = implode(',', array_map('intval', $userStarredDiseaseIds));
                 $query->orderByRaw("CASE WHEN disease_id IN ({$ids}) THEN 0 ELSE 1 END");
             }
 
-            // Get paginated posts (10 per page)
-            $posts = $query->orderByDesc('created_at')->paginate(10);
+            // Order by approval time (most recently approved first), then fallback to creation time.
+            $posts = $query->orderByDesc('approved_at')->orderByDesc('created_at')->paginate(10);
             
             // Get all diseases with post counts for the filter sidebar
                         $diseases = Disease::withCount([
@@ -134,6 +162,15 @@ class CommunityController extends Controller
                                        ->sortByDesc('posts_count')
                                        ->take(5)
                                        ->values();
+
+            $pendingPreviewPosts = collect();
+            if ($isAdminCommunity) {
+                $pendingPreviewPosts = Post::with(['user', 'disease'])
+                    ->where('is_approved', false)
+                    ->latest()
+                    ->take(3)
+                    ->get();
+            }
             
             // Log for debugging
             Log::info('Community index loaded', [
@@ -150,7 +187,9 @@ class CommunityController extends Controller
                 'totalUsers', 
                 'totalComments', 
                 'activeToday', 
-                'trendingDiseases'
+                'trendingDiseases',
+                'isAdminCommunity',
+                'pendingPreviewPosts'
             ));
         } catch (\Exception $e) {
             Log::error('Community Index Error: ' . $e->getMessage(), [
@@ -169,6 +208,8 @@ class CommunityController extends Controller
                 'totalComments' => 0,
                 'activeToday' => 0,
                 'trendingDiseases' => collect([]),
+                'isAdminCommunity' => (bool) $request->boolean('admin_community', false),
+                'pendingPreviewPosts' => collect([]),
                 'error' => 'Error loading community: ' . $e->getMessage()
             ]);
         }
@@ -200,7 +241,7 @@ class CommunityController extends Controller
                 $query->where('disease_id', $diseaseId);
             }
 
-            $posts = $query->latest()->paginate(10)->withQueryString();
+            $posts = $query->orderByDesc('approved_at')->orderByDesc('created_at')->paginate(10)->withQueryString();
 
             $diseases = Disease::withCount([
                 'posts as posts_count' => function ($q) use ($userId) {
@@ -278,15 +319,24 @@ class CommunityController extends Controller
             return redirect()->route('login');
         }
 
+        if (Auth::user()->isAdmin() && !(bool) $request->boolean('admin_community', false)) {
+            return redirect()->route('admin.community.posts.pending');
+        }
+
         try {
             $diseaseId = $request->get('disease');
             $userId = Auth::id();
+            $isAdmin = Auth::user()->isAdmin();
+            $isAdminCommunity = (bool) $request->boolean('admin_community', false) && $isAdmin;
 
             $query = Post::with(['user', 'disease', 'comments' => function ($q) {
                 $q->with('user')->latest()->limit(3);
             }])->withCount(['likes as likes_count'])
-              ->where('user_id', $userId)
               ->where('is_approved', false);
+
+            if (!$isAdmin) {
+                $query->where('user_id', $userId);
+            }
 
             if ($diseaseId && $diseaseId !== 'all') {
                 $query->where('disease_id', $diseaseId);
@@ -295,21 +345,30 @@ class CommunityController extends Controller
             $posts = $query->latest()->paginate(10)->withQueryString();
 
             $diseases = Disease::withCount([
-                'posts as posts_count' => function ($q) use ($userId) {
-                    $q->where('user_id', $userId)->where('is_approved', false);
+                'posts as posts_count' => function ($q) use ($userId, $isAdmin) {
+                    if (!$isAdmin) {
+                        $q->where('user_id', $userId);
+                    }
+                    $q->where('is_approved', false);
                 }
             ])->orderBy('disease_name')->get();
 
             $totalPosts = (clone $query)->count();
             $totalUsers = User::count();
-            $totalComments = Comment::whereHas('post', function ($postQuery) use ($userId) {
-                $postQuery->where('user_id', $userId)->where('is_approved', false);
+            $totalComments = Comment::whereHas('post', function ($postQuery) use ($userId, $isAdmin) {
+                if (!$isAdmin) {
+                    $postQuery->where('user_id', $userId);
+                }
+                $postQuery->where('is_approved', false);
             })->count();
             $activeToday = User::whereDate('updated_at', today())->count() ?: 0;
 
             $trendingDiseases = Disease::withCount([
-                'posts as posts_count' => function ($q) use ($userId) {
-                    $q->where('user_id', $userId)->where('is_approved', false);
+                'posts as posts_count' => function ($q) use ($userId, $isAdmin) {
+                    if (!$isAdmin) {
+                        $q->where('user_id', $userId);
+                    }
+                    $q->where('is_approved', false);
                 }
             ])->get()
               ->filter(function ($disease) {
@@ -329,6 +388,7 @@ class CommunityController extends Controller
                 'activeToday' => $activeToday,
                 'trendingDiseases' => $trendingDiseases,
                 'isPendingPage' => true,
+                'isAdminCommunity' => $isAdminCommunity,
             ]);
         } catch (\Exception $e) {
             Log::error('Community Pending Posts Error: ' . $e->getMessage(), [
@@ -346,9 +406,20 @@ class CommunityController extends Controller
                 'activeToday' => 0,
                 'trendingDiseases' => collect([]),
                 'isPendingPage' => true,
+                'isAdminCommunity' => (bool) $request->boolean('admin_community', false),
                 'error' => 'Error loading pending posts: ' . $e->getMessage(),
             ]);
         }
+    }
+
+    /**
+     * Admin-only pending posts feed.
+     */
+    public function adminPendingPosts(Request $request)
+    {
+        $request->merge(['admin_community' => true]);
+
+        return $this->pendingPosts($request);
     }
 
     /**
@@ -368,15 +439,20 @@ class CommunityController extends Controller
     public function showPost(Post $post)
     {
         try {
+            $isAdminCommunity = false;
+
             if (!$post->is_approved && !$this->canAccessUnapprovedPost($post)) {
                 abort(403, 'This post is pending approval.');
             }
 
             $post->load(['user', 'disease', 'comments' => function($q) {
-                $q->with('user')->latest();
+                $q->with('user')->withCount(['likes as likes_count'])->latest();
             }])->loadCount(['likes as likes_count']);
             
-            return view('community.pages.show', compact('post'));
+            return view('community.pages.show', [
+                'post' => $post,
+                'isAdminCommunity' => $isAdminCommunity,
+            ]);
         } catch (\Exception $e) {
             Log::error('Show Post Error: ' . $e->getMessage());
             return back()->with('error', 'Error loading post');
@@ -389,6 +465,11 @@ class CommunityController extends Controller
     public function modalPost(Post $post)
     {
         try {
+            $isAdminCommunity = request()->routeIs('admin.community.*')
+                || ((bool) request()->boolean('admin_community', false)
+                    && Auth::check()
+                    && Auth::user()->isAdmin());
+
             if (!$post->is_approved && !$this->canAccessUnapprovedPost($post)) {
                 return response()->json(['error' => 'This post is pending approval.'], 403);
             }
@@ -405,7 +486,10 @@ class CommunityController extends Controller
             ])->loadCount(['likes as likes_count']);
             
             // Return the modal post view
-            return view('community.pages.modal-post', compact('post'));
+            return view('community.pages.modal-post', [
+                'post' => $post,
+                'adminReadOnlyCommunity' => $isAdminCommunity,
+            ]);
         } catch (\Exception $e) {
             Log::error('Modal Post Error: ' . $e->getMessage());
             return response()->json(['error' => 'Failed to load post'], 500);
@@ -421,8 +505,18 @@ class CommunityController extends Controller
             $diseaseId = $request->get('disease');
             
             $query = Post::with(['user', 'disease'])
-                ->withCount(['likes as likes_count'])
+                ->withCount(['likes as likes_count' => function ($q) {
+                    $q->where('is_starred', false);
+                }])
                 ->where('is_approved', true);
+
+            if (Auth::check() && !Auth::user()->isAdmin()) {
+                $userStarredDiseaseIds = Auth::user()->starredDiseases()->pluck('disease_id')->all();
+                if (!empty($userStarredDiseaseIds)) {
+                    $ids = implode(',', array_map('intval', $userStarredDiseaseIds));
+                    $query->orderByRaw("CASE WHEN disease_id IN ({$ids}) THEN 0 ELSE 1 END");
+                }
+            }
 
             if ($diseaseId && $diseaseId !== 'all') {
                 $query->where('disease_id', $diseaseId);
@@ -455,7 +549,7 @@ class CommunityController extends Controller
                         'id' => $post->disease->id,
                         'name' => $post->disease->disease_name,
                     ] : null,
-                    'user_liked' => Auth::check() ? $post->likes()->where('user_id', Auth::id())->exists() : false,
+                    'user_liked' => Auth::check() ? $post->likes()->where('user_id', Auth::id())->where('is_starred', false)->exists() : false,
                     'is_owner' => Auth::check() && $post->user_id === Auth::id(),
                 ];
             });
@@ -643,6 +737,13 @@ class CommunityController extends Controller
                 ], 401);
             }
 
+            if (Auth::user()->isAdmin()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Admin accounts are view-only in community.'
+                ], 403);
+            }
+
             $request->validate([
                 'disease_id' => 'required|exists:diseases,id',
                 'description' => 'nullable|string|max:5000',
@@ -757,12 +858,17 @@ class CommunityController extends Controller
                 ], 401);
             }
 
-            if (Auth::id() !== $post->user_id) {
+            $isOwner = Auth::id() === $post->user_id;
+            $isAdmin = Auth::user()->isAdmin();
+
+            if (!$isOwner && !$isAdmin) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'You can only edit your own posts'
+                    'message' => 'You can only edit your own posts unless you are an admin'
                 ], 403);
             }
+
+            $this->authorize('update', $post);
 
             $request->validate([
                 'description' => 'required|string|max:5000',
@@ -804,12 +910,17 @@ class CommunityController extends Controller
                 ], 401);
             }
 
-            if (Auth::id() !== $post->user_id) {
+            $isOwner = Auth::id() === $post->user_id;
+            $isAdmin = Auth::user()->isAdmin();
+
+            if (!$isOwner && !$isAdmin) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'You can only delete your own posts'
+                    'message' => 'You can only delete your own posts unless you are an admin'
                 ], 403);
             }
+
+            $this->authorize('delete', $post);
 
             // Delete all files
             if ($post->files && is_array($post->files)) {
@@ -856,35 +967,47 @@ class CommunityController extends Controller
                 ], 401);
             }
 
+            if (Auth::user()->isAdmin()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Admin accounts cannot react to posts.'
+                ], 403);
+            }
+
             $user = Auth::user();
             $existingLike = PostLike::where('post_id', $post->id)
                                     ->where('user_id', $user->id)
                                     ->first();
 
-            if ($existingLike) {
-                $existingLike->delete();
-                // Make sure like_count doesn't go below 0
-                if ($post->like_count > 0) {
-                    $post->decrement('like_count');
-                }
-                $post->refresh();
-                $liked = false;
-                $starred = false;
-                
-                // Remove notification when unliked
-                $this->removeNotification($post, $user, 'like');
-                
-            } else {
+            if (!$existingLike) {
                 PostLike::create([
                     'post_id' => $post->id,
                     'user_id' => $user->id,
                     'is_starred' => false,
                 ]);
-                $post->increment('like_count');
-                $post->refresh();
                 $liked = true;
                 $starred = false;
+            } else {
+                if ($existingLike->is_starred) {
+                    $existingLike->is_starred = false;
+                    $existingLike->save();
+                    $liked = true;
+                    $starred = false;
+                } else {
+                    $existingLike->delete();
+                    $liked = false;
+                    $starred = false;
+                    $this->removeNotification($post, $user, 'like');
+                }
             }
+
+            $likeCount = PostLike::query()
+                ->where('post_id', $post->id)
+                ->where('is_starred', false)
+                ->count();
+
+            $post->update(['like_count' => $likeCount]);
+            $post->refresh();
 
             return response()->json([
                 'success' => true,
@@ -914,6 +1037,13 @@ class CommunityController extends Controller
                 ], 401);
             }
 
+            if (Auth::user()->isAdmin()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Admin accounts cannot react to posts.'
+                ], 403);
+            }
+
             $user = Auth::user();
             $postLike = PostLike::where('post_id', $post->id)
                 ->where('user_id', $user->id)
@@ -926,27 +1056,27 @@ class CommunityController extends Controller
                     'is_starred' => true,
                 ]);
 
-                $post->increment('like_count');
-                $post->refresh();
-
                 return response()->json([
                     'success' => true,
                     'starred' => true,
-                    'liked' => true,
-                    'count' => max(0, $post->like_count),
+                    'liked' => false,
+                    'count' => max(0, PostLike::query()->where('post_id', $post->id)->where('is_starred', false)->count()),
                     'message' => 'Post starred successfully.',
                 ]);
             }
 
             $postLike->is_starred = !$postLike->is_starred;
             $postLike->save();
-            $post->refresh();
+
+            if (!$postLike->is_starred) {
+                $postLike->delete();
+            }
 
             return response()->json([
                 'success' => true,
                 'starred' => (bool) $postLike->is_starred,
-                'liked' => true,
-                'count' => max(0, $post->like_count),
+                'liked' => false,
+                'count' => max(0, PostLike::query()->where('post_id', $post->id)->where('is_starred', false)->count()),
                 'message' => $postLike->is_starred ? 'Post starred successfully.' : 'Post removed from starred.',
             ]);
         } catch (\Exception $e) {
@@ -1015,7 +1145,14 @@ class CommunityController extends Controller
                 ], 403);
             }
 
-            $post->update(['is_approved' => true]);
+            $post->update([
+                'is_approved' => true,
+                'approved_at' => now(),
+            ]);
+
+            // Reload to ensure relations are fresh before notifying
+            $post->refresh();
+            $this->notifyStarredDiseaseFollowers($post);
 
             return response()->json([
                 'success' => true,
@@ -1063,6 +1200,94 @@ class CommunityController extends Controller
         }
     }
 
+    protected function notifyStarredDiseaseFollowers(Post $post): void
+    {
+        try {
+            if (!$post->disease_id) {
+                return;
+            }
+
+            $post->loadMissing(['disease', 'user']);
+
+            $targetUserIds = UserStarredDisease::query()
+                ->where('disease_id', $post->disease_id)
+                ->where('user_id', '!=', $post->user_id)
+                ->pluck('user_id')
+                ->unique()
+                ->values();
+
+            if ($targetUserIds->isEmpty()) {
+                return;
+            }
+
+            $preview = strlen((string) $post->description) > 60
+                ? substr((string) $post->description, 0, 60) . '...'
+                : (string) $post->description;
+
+            foreach ($targetUserIds as $targetUserId) {
+                Notification::create([
+                    'user_id' => $targetUserId,
+                    'from_user_id' => $post->user_id,
+                    'type' => 'starred_disease_post',
+                    'notifiable_type' => Post::class,
+                    'notifiable_id' => $post->id,
+                    'message' => "New post in your starred disease: " . ($post->disease?->disease_name ?? 'Unknown Disease'),
+                    'data' => [
+                        'post_id' => $post->id,
+                        'disease_id' => $post->disease_id,
+                        'disease_name' => $post->disease?->disease_name,
+                        'post_preview' => $preview,
+                    ],
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::error('Failed to notify starred disease followers: ' . $e->getMessage());
+        }
+    }
+
+    public function toggleDiseaseStar(Request $request, Disease $disease)
+    {
+        if (!Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please login to star diseases',
+            ], 401);
+        }
+
+        if (Auth::user()->isAdmin()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Admin accounts are view-only in community.',
+            ], 403);
+        }
+
+        $existing = UserStarredDisease::query()
+            ->where('user_id', Auth::id())
+            ->where('disease_id', $disease->id)
+            ->first();
+
+        if ($existing) {
+            $existing->delete();
+
+            return response()->json([
+                'success' => true,
+                'starred' => false,
+                'message' => 'Disease removed from starred.',
+            ]);
+        }
+
+        UserStarredDisease::create([
+            'user_id' => Auth::id(),
+            'disease_id' => $disease->id,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'starred' => true,
+            'message' => 'Disease starred successfully.',
+        ]);
+    }
+
     /**
      * Store a new comment with optional file and send notification
      */
@@ -1074,6 +1299,13 @@ class CommunityController extends Controller
                     'success' => false,
                     'message' => 'Please login to comment'
                 ], 401);
+            }
+
+            if (Auth::user()->isAdmin()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Admin accounts cannot comment on posts.'
+                ], 403);
             }
 
             $request->validate([
@@ -1154,12 +1386,7 @@ class CommunityController extends Controller
                 ], 401);
             }
 
-            if (Auth::id() !== $comment->user_id) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'You can only edit your own comments'
-                ], 403);
-            }
+            $this->authorize('update', $comment);
 
             $request->validate([
                 'description' => 'nullable|string|max:2000',
@@ -1187,6 +1414,11 @@ class CommunityController extends Controller
                 ],
                 'message' => 'Comment updated successfully!'
             ]);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You can only edit your own comments'
+            ], 403);
         } catch (\Exception $e) {
             Log::error('Update Comment Error: ' . $e->getMessage());
             return response()->json([
@@ -1209,12 +1441,7 @@ class CommunityController extends Controller
                 ], 401);
             }
 
-            if (Auth::id() !== $comment->user_id) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'You can only delete your own comments'
-                ], 403);
-            }
+            $this->authorize('delete', $comment);
 
             $post = $comment->post;
             
@@ -1238,6 +1465,11 @@ class CommunityController extends Controller
                 'comment_count' => $post->fresh()->comment_count,
                 'message' => 'Comment deleted successfully!'
             ]);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You can only delete your own comments'
+            ], 403);
         } catch (\Exception $e) {
             Log::error('Destroy Comment Error: ' . $e->getMessage());
             return response()->json([
@@ -1258,6 +1490,13 @@ class CommunityController extends Controller
                     'success' => false,
                     'message' => 'Please login to like comments'
                 ], 401);
+            }
+
+            if (Auth::user()->isAdmin()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Admin accounts cannot react to comments.'
+                ], 403);
             }
 
             $user = Auth::user();

@@ -22,8 +22,7 @@ class AiChatController extends Controller
         'medicine_reminders',
         'medicine_logs',
         'health_metrics',
-        'environments',
-        'environment_metrics',
+        'user_health',
         'symptoms',
         'user_symptoms',
         'diseases',
@@ -51,9 +50,7 @@ class AiChatController extends Controller
         'medicine_logs',
         'medicine_reminders',
         'medicine_schedules',
-        'health_metrics',
-        'environments',
-        'environment_metrics',
+        'user_health',
         'user_symptoms',
         'user_diseases',
         'uploads',
@@ -63,13 +60,19 @@ class AiChatController extends Controller
     public function message(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'message'           => ['required', 'string', 'max:1000'],
+            'message'           => ['required', 'string', 'max:5000'],
             'history'           => ['nullable', 'array', 'max:12'],
             'history.*.role'    => ['required_with:history', 'in:user,assistant'],
-            'history.*.content' => ['required_with:history', 'string', 'max:1000'],
+            'history.*.content' => ['required_with:history', 'string', 'max:5000'],
         ]);
 
         $authUserId = $request->user()?->id;
+
+        if ($request->user()?->isAdmin()) {
+            return response()->json([
+                'reply' => 'Chatbot is disabled for admin accounts.',
+            ], 403);
+        }
 
         if ($this->isUnauthorizedDataRequest($validated['message'])) {
             return response()->json([
@@ -80,70 +83,13 @@ class AiChatController extends Controller
         }
 
         $apiKey    = (string) config('services.openrouter.api_key', '');
-        $googleKey = (string) (env('GOOGLE_API_KEY', '') ?: config('services.google.api_key', ''));
+        $googleKey = (string) config('services.google.api_key', '');
 
-        // Personal health queries must still work from DB even when external AI is down.
-        if ((bool) config('chatbot.enable_text_to_sql', true)) {
-            try {
-                if ($authUserId !== null && $this->isPersonalHealthIntent($validated['message'])) {
-                    $snapshot = $this->getPersonalHealthSnapshot($authUserId);
-                    if ($snapshot !== null) {
-                        $directReply = $this->buildPersonalHealthReply($snapshot);
-                        if ($directReply !== null) {
-                            return response()->json(['reply' => $this->formatStructuredReply($directReply)]);
-                        }
-
-                        // Rich data: try LLM summary if possible, otherwise always fall back to local summary.
-                        if ($apiKey !== '' || $googleKey !== '') {
-                            $baseUrl = rtrim((string) config('services.openrouter.base_url', 'https://openrouter.ai/api/v1'), '/');
-                            $primaryModel = (string) config('services.openrouter.model', 'qwen/qwen3-6b-instruct:free');
-                            $fallbackModels = array_filter(array_merge(
-                                (array) config('services.openrouter.fallback_models', []),
-                                [
-                                config('services.openrouter.fallback_model_1'),
-                                config('services.openrouter.fallback_model_2'),
-                                config('services.openrouter.fallback_model_3'),
-                                ]
-                            ));
-                            $models = collect(array_merge([$primaryModel], $fallbackModels))
-                                ->filter(fn($m) => is_string($m) && trim($m) !== '')
-                                ->map(fn($m) => trim($m))
-                                ->unique()
-                                ->values()
-                                ->all();
-
-                            if ($models !== []) {
-                                $questionForModel = $validated['message'];
-                                if ($this->isRiskIntent($validated['message'])) {
-                                    $questionForModel .= "\n\nPlease include a concise assessment of risks related to the user's diseases and symptoms, and provide 2-3 actionable suggestions.";
-                                }
-
-                                $final = $this->askModelToSummarizeResults(
-                                    $questionForModel,
-                                    'PERSONAL_HEALTH_SNAPSHOT',
-                                    $snapshot,
-                                    $apiKey,
-                                    $primaryModel,
-                                    $baseUrl,
-                                    $models,
-                                    $googleKey
-                                );
-                                if ($final !== null) {
-                                    return response()->json(['reply' => $this->formatStructuredReply($final)]);
-                                }
-                            }
-                        }
-
-                        return response()->json(['reply' => $this->formatStructuredReply($this->buildPersonalHealthReply($snapshot, true))]);
-                    }
-                }
-            } catch (\Throwable $e) {
-                Log::warning('Personal health fast-path failed', [
-                    'message' => $e->getMessage(),
-                    'trace'   => $e->getTraceAsString(),
-                ]);
-            }
-        }
+        Log::info('aboutMe called', [
+            'user_id' => $authUserId,
+            'api_key_present' => $apiKey !== '',
+            'google_key_present' => $googleKey !== '',
+        ]);
 
         if ($apiKey === '' && $googleKey === '') {
             return response()->json([
@@ -152,7 +98,7 @@ class AiChatController extends Controller
         }
 
         $baseUrl      = rtrim((string) config('services.openrouter.base_url', 'https://openrouter.ai/api/v1'), '/');
-        $primaryModel = (string) config('services.openrouter.model', 'qwen/qwen3-6b-instruct:free');
+        $primaryModel = (string) config('services.openrouter.model', 'google/gemini-2.0-flash-001');
         $fallbackModels = array_filter(array_merge(
             (array) config('services.openrouter.fallback_models', []),
             [
@@ -168,6 +114,7 @@ class AiChatController extends Controller
             ->unique()
             ->values()
             ->all();
+        $models = $this->sanitizeOpenRouterModels($models);
 
         if ($models === []) {
             return response()->json([
@@ -176,7 +123,14 @@ class AiChatController extends Controller
         }
 
         // ── Text-to-SQL / RAG pipeline ────────────────────────────────────────
-        if ((bool) config('chatbot.enable_text_to_sql', true)) {
+        // Skip the heavy text-to-SQL/RAG flow for short conversational or
+        // emotional messages so they are handled by the normal LLM chat flow.
+        $skipTextToSql = $this->isShortChatIntent($validated['message'])
+            || $this->isEmotionalDistressIntent($validated['message'])
+            || $this->isDietIntent($validated['message'])
+            || $this->isGeneralWellnessIntent($validated['message']);
+
+        if ((bool) config('chatbot.enable_text_to_sql', true) && !$skipTextToSql) {
             try {
                 // Fast-path: deterministic personal health snapshot
                 if ($authUserId !== null && $this->isPersonalHealthIntent($validated['message'])) {
@@ -184,7 +138,7 @@ class AiChatController extends Controller
                     if ($snapshot !== null) {
                         // If data is simple enough, reply directly without LLM
                         $directReply = $this->buildPersonalHealthReply($snapshot);
-                        if ($directReply !== null) {
+                        if ($directReply !== null && $apiKey === '' && $googleKey === '') {
                             return response()->json(['reply' => $directReply]);
                         }
                         // Rich data: let LLM summarise from the snapshot
@@ -278,14 +232,12 @@ class AiChatController extends Controller
             [['role' => 'user', 'content' => $validated['message']]]
         );
 
-        // Try Google Gemini first if key is present
+        // Try Google Gemini first (with model fallback) if key is present
         if ($googleKey !== '') {
-            $googleModel = (string) (env('GOOGLE_MODEL', '') ?: config('services.google.model', 'gemini-1.5-flash'));
-            $resp = $this->googleChatRequest(
+            $resp = $this->googleChatWithFallback(
                 $systemPrompt,
                 $validated['message'],
                 $googleKey,
-                $googleModel,
                 0.5,
                 500
             );
@@ -363,6 +315,7 @@ class AiChatController extends Controller
               . 'When the user asks about their health, diseases, symptoms, or medicines, answer using the data retrieved from their records — do NOT ask them to repeat information the system already has. '
               . 'Never disclose other users\' data, sensitive credentials, tokens, passwords, phone numbers, or emails. If asked, refuse briefly. '
               . 'Always format responses with a short title, bold section labels, and bullet points where useful. '
+              . 'When giving tips, use natural bullet points and avoid labels like Tip 1, Tip 2, etc. '
               . 'Be concise, friendly, and practical. '
               . 'Never provide a clinical diagnosis. '
               . 'For emergencies or severe symptoms, advise contacting local emergency services immediately.';
@@ -381,9 +334,150 @@ class AiChatController extends Controller
     private function isPersonalHealthIntent(string $message): bool
     {
         return (bool) preg_match(
-            '/\b(my\s+health|health\s+condition|my\s+condition|health\s+status|my\s+symptoms?|my\s+diseases?|my\s+medicines?|my\s+metrics?|tell\s+me\s+about\s+my|what\s+(are|is)\s+my)\b/i',
+            '/\b(my\s+health|health\s+condition|my\s+condition|health\s+status|my\s+symptoms?|my\s+diseases?|my\s+medicines?|my\s+metrics?|tell\s+me\s+about\s+my|what\s+(are|is)\s+my|how\s+is\s+my\s+health|am\s+i\s+fit|amr\s+health|amar\s+health|amar\s+shorir|shorir\s+kemon|health\s+kmn|kemon\s+achi)\b/i',
             $message
         );
+    }
+
+    /**
+     * Detect simple emotional/distress expressions (English and common Banglish phrases).
+     * Provides a lightweight local fallback when the AI service is unavailable.
+     */
+    private function isEmotionalDistressIntent(string $message): bool
+    {
+        return (bool) preg_match(
+            '/\b(sad|depress(ed)?|i feel (bad|sad|lonely|down)|unhappy|suicid(e|al)|amr kharap|amar kharap|khara?p|dukhi|mon kharap|amar mon kharap)\b/i',
+            $message
+        );
+    }
+
+    /**
+     * Detect short, conversational messages that don't request DB access
+     * (e.g., greetings, small talk, brief Banglish phrases).
+     */
+    private function isShortChatIntent(string $message): bool
+    {
+        $trim = trim($message);
+        if ($trim === '') {
+            return false;
+        }
+
+        // Avoid classifying explicit personal-health intents as short chat
+        if ($this->isPersonalHealthIntent($message)) {
+            return false;
+        }
+
+        // Short messages under 120 chars and not containing question words
+        if (mb_strlen($trim) <= 120 && !preg_match('/\b(what|why|how|when|where|who|which|do you|should i|tell me|can you|could you)\b/i', $trim)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Detect generic fitness/wellness prompts that should be answered as
+     * normal LLM conversation rather than DB-centric text-to-SQL.
+     */
+    private function isGeneralWellnessIntent(string $message): bool
+    {
+        return (bool) preg_match(
+            '/\b(how\s+to\s+be\s+fit|how\s+can\s+i\s+be\s+fit|be\s+fit|stay\s+fit|fit\s+hobo|fit\s+thakbo|kivabe\s+fit\s+hobo|ki\s+vabe\s+fit\s+hobo|healthy\s+lifestyle|fitness\s+tips)\b/i',
+            trim($message)
+        );
+    }
+
+    private function isDietIntent(string $message): bool
+    {
+        return (bool) preg_match(
+            '/\b(diet\s+chart|diet\s+plan|meal\s+plan|food\s+plan|nutrition\s+plan|diet\s+dao|diet\s+chart\s+dao|khabar\s+chart|khabar\s+plan)\b/i',
+            trim($message)
+        );
+    }
+
+    /**
+     * Local fallback text for wellness prompts when external LLM is down.
+     */
+    private function buildWellnessFallbackReply(string $message): string
+    {
+        $tips = [
+            'Build a simple daily routine: 30 minutes of walking, consistent sleep, and regular hydration.',
+            'Keep your meals balanced with vegetables, protein, and fewer sugary drinks or processed snacks.',
+            'Track 1-2 weekly goals (for example, steps and sleep hours) so progress is measurable and realistic.',
+        ];
+
+        if (preg_match('/\b(kivabe|ki\s+vabe|hobo|thakbo|fit)\b/i', $message)) {
+            $tips[] = 'If you want, share your current routine and I can help make a personalized 7-day fitness plan.';
+        } else {
+            $tips[] = 'Share your age, activity level, and current routine, and I can suggest a personalized fitness plan.';
+        }
+
+        return implode(' ', $tips);
+    }
+
+    private function buildDietFallbackReply(string $message): string
+    {
+        $isBanglish = (bool) preg_match('/\b(dao|khabar|chart|plan|amar|amr|kivabe|ki\s+vabe)\b/i', $message);
+
+        $core = [
+            '**Morning:** 1 glass water, oats or whole-grain bread with egg/lean protein, plus one fruit.',
+            '**Lunch:** half plate vegetables, quarter plate protein (fish/chicken/lentils), quarter plate brown rice/roti.',
+            '**Evening snack:** nuts or yogurt; avoid sugary drinks and deep-fried snacks.',
+            '**Dinner:** lighter than lunch, include vegetables and protein; finish 2-3 hours before sleep.',
+            '**Hydration:** 2-3 liters water daily and keep a fixed meal schedule.',
+        ];
+
+        if ($isBanglish) {
+            $core[] = 'Chaile apnar weight, activity level, ar health condition dile ami personalized 7-day diet chart baniye dite pari.';
+        } else {
+            $core[] = 'Share your age, weight, activity level, and health conditions for a personalized 7-day diet chart.';
+        }
+
+        return implode(' ', $core);
+    }
+
+    /**
+     * Lightweight local reply generator for short conversational messages.
+     * Used as a graceful fallback when external AI is unavailable.
+     */
+    private function localChatFallback(string $message): string
+    {
+        $lower = strtolower($message);
+
+        if ($this->isEmotionalDistressIntent($message)) {
+            return "I'm sorry you're feeling this way. I'm here to listen. If you want, tell me what happened and I will try to support you step by step.";
+        }
+
+        if ($this->isDietIntent($message)) {
+            return $this->buildDietFallbackReply($message);
+        }
+
+        if ($this->isGeneralWellnessIntent($message)) {
+            return $this->buildWellnessFallbackReply($message);
+        }
+
+        // Simple Banglish/Bengali-friendly replies
+        if (preg_match('/\b(amr|amar|amake|amar\s+mon|mon\s+kharap|dukhi|khara?p|amr\s+khara?p)\b/i', $lower)) {
+            return "Ami dukkhito je apni eivabe feel korchen. Ami shuntey asi — bolte chan keno? If this is urgent, please contact local emergency services or a trusted person.";
+        }
+
+        if (preg_match('/\b(tips?\s*dao|tip\s*dao|tips?|advice|suggestion|ki\s*holo|what\s*happened)\b/i', $lower)) {
+            return 'Here are quick tips: stay hydrated, sleep at a fixed time, do 20-30 minutes of daily movement, and keep meals balanced. If you want, I can make a personalized 7-day plan for you.';
+        }
+
+        if (preg_match('/\b(hi|hello|hey|thanks|thank you|bye)\b/i', $lower)) {
+            if (preg_match('/\b(thanks|thank you)\b/i', $lower)) {
+                return 'You\'re welcome — glad I could help.';
+            }
+            return 'Hello! How can I help you today?';
+        }
+
+        // Default: echo with an offer to help
+        if (mb_strlen($message) < 60) {
+            return 'I hear you. Tell me a bit more, and I\'ll do my best to help.';
+        }
+
+        return 'Thanks for sharing that. Could you say a little more about what you mean?';
     }
 
     private function isRiskIntent(string $message): bool
@@ -444,13 +538,14 @@ class AiChatController extends Controller
                     ->map(fn($r) => (array) $r)
                     ->all();
 
-                // health_metrics — value is a JSON column, decode it
+                // user_health + health_metrics (definition) joined
                 $metrics = DB::connection($conn)
-                    ->table('health_metrics')
-                    ->where('user_id', $userId)
-                    ->orderByDesc('recorded_at')
+                    ->table('user_health as uh')
+                    ->leftJoin('health_metrics as hm', 'hm.id', '=', 'uh.health_metric_id')
+                    ->where('uh.user_id', $userId)
+                    ->orderByDesc('uh.recorded_at')
                     ->limit(20)
-                    ->get(['metric_type', 'value', 'recorded_at'])
+                    ->get(['hm.metric_name as metric_type', 'uh.value', 'uh.recorded_at'])
                     ->map(function ($r): array {
                         $row = (array) $r;
                         if (is_string($row['value'])) {
@@ -513,7 +608,7 @@ class AiChatController extends Controller
         $total = count($diseases) + count($symptoms) + count($metrics) + count($medicines);
 
         if ($total === 0) {
-            return 'I checked your records and could not find any saved diseases, symptoms, health metrics, or medicines yet. Please add health entries in the app first, then ask again.';
+            return 'আপনার রেকর্ডে এখনো কোনো রোগ, উপসর্গ, স্বাস্থ্য মেট্রিক বা ওষুধের তথ্য পাওয়া যায়নি। আগে অ্যাপে স্বাস্থ্য তথ্য যোগ করুন, তারপর আবার জিজ্ঞেস করুন।';
         }
 
         // For rich data, let the LLM compose a better narrative unless deterministic fallback is requested.
@@ -525,44 +620,47 @@ class AiChatController extends Controller
 
         if ($diseases !== []) {
             $labels = array_map(function (array $d): string {
-                $name   = (string) ($d['disease'] ?? 'Unknown disease');
+                $nameRaw = (string) ($d['disease'] ?? 'Unknown disease');
+                $name = $this->medicalNameBnWithEn($nameRaw);
                 $status = (string) ($d['status'] ?? 'unknown');
                 $date   = !empty($d['diagnosed_at']) ? ', diagnosed ' . $d['diagnosed_at'] : '';
-                return "{$name} ({$status}{$date})";
+                return "**{$name}** ({$status}{$date})";
             }, array_slice($diseases, 0, 3));
-            $parts[] = '**Diseases:** ' . implode(', ', $labels) . '.';
+            $parts[] = '**রোগের অবস্থা:** ' . implode(', ', $labels) . '।';
         }
 
         if ($symptoms !== []) {
             $labels = array_map(function (array $s): string {
-                $name = (string) ($s['symptom'] ?? 'Unknown symptom');
+                $nameRaw = (string) ($s['symptom'] ?? 'Unknown symptom');
+                $name = $this->medicalNameBnWithEn($nameRaw);
                 $sev  = $s['severity_level'] ?? null;
-                return $sev !== null ? "{$name} (severity {$sev}/10)" : $name;
+                return $sev !== null ? "**{$name}** (তীব্রতা {$sev}/10)" : "**{$name}**";
             }, array_slice($symptoms, 0, 5));
-            $parts[] = '**Recent symptoms:** ' . implode(', ', $labels) . '.';
+            $parts[] = '**সাম্প্রতিক উপসর্গ:** ' . implode(', ', $labels) . '।';
         }
 
         if ($medicines !== []) {
             $labels = array_map(fn(array $m): string => (string) ($m['medicine_name'] ?? 'Unknown'), array_slice($medicines, 0, 5));
-            $parts[] = '**Medicines:** ' . implode(', ', $labels) . '.';
+            $parts[] = '**ওষুধ:** ' . implode(', ', $labels) . '।';
         }
 
         if ($metrics !== []) {
             $labels = array_map(function (array $m): string {
-                $type  = (string) ($m['metric_type'] ?? 'metric');
+                $typeRaw  = (string) ($m['metric_type'] ?? 'metric');
+                $type = $this->metricNameBn($typeRaw);
                 $value = $m['value'] ?? null;
                 if (is_array($value)) {
                     $value = json_encode($value, JSON_UNESCAPED_UNICODE);
                 }
-                $display = (is_string($value) || is_numeric($value)) ? (string) $value : 'recorded';
-                return "{$type}: {$display}";
+                $display = (is_string($value) || is_numeric($value)) ? (string) $value : 'রেকর্ড করা আছে';
+                return "**{$type}**: **{$display}**";
             }, array_slice($metrics, 0, 5));
-            $parts[] = '**Health metrics:** ' . implode('; ', $labels) . '.';
+            $parts[] = '**স্বাস্থ্য মেট্রিক:** ' . implode('; ', $labels) . '।';
         }
 
         if ($forceDetailed) {
             $parts[] = sprintf(
-                '**Summary:** %d disease record(s), %d symptom record(s), %d medicine record(s), and %d health metric record(s) found.',
+                '**সারাংশ:** %dটি রোগের রেকর্ড, %dটি উপসর্গের রেকর্ড, %dটি ওষুধের রেকর্ড এবং %dটি স্বাস্থ্য মেট্রিক রেকর্ড পাওয়া গেছে।',
                 count($diseases),
                 count($symptoms),
                 count($medicines),
@@ -570,7 +668,7 @@ class AiChatController extends Controller
             );
         }
 
-        $parts[] = "\n*This is based on your saved records and is not a medical diagnosis. Please consult a licensed doctor for clinical advice.*";
+        $parts[] = "\n*এটি আপনার সংরক্ষিত তথ্যভিত্তিক সারাংশ, চিকিৎসা নির্ণয় নয়। চিকিৎসা পরামর্শের জন্য নিবন্ধিত চিকিৎসকের সাথে যোগাযোগ করুন।*";
 
         return implode("\n", $parts);
     }
@@ -643,20 +741,24 @@ class AiChatController extends Controller
 
         $user = "Schema:\n{$schemaDesc}\n\n{$authContext}\n\nQuestion: {$message}\n\nSQL Query:";
 
-        // Try Google Gemini first
+        // Try Google Gemini first (with model fallback)
         if ($googleKey !== '') {
-            $googleModel = (string) (env('GOOGLE_MODEL', '') ?: config('services.google.model', 'gemini-1.5-flash'));
-            $resp = $this->googleChatRequest($system, $user, $googleKey, $googleModel, 0.0, 300);
+            $resp = $this->googleChatWithFallback($system, $user, $googleKey, 0.0, 300);
             if ($resp !== null) {
                 $text = trim(preg_replace('/^```\w*\s*|```\s*$/m', '', $resp));
                 return $text !== '' ? $text : null;
             }
         }
 
-        // Try OpenRouter models
+        // Try OpenRouter models (bounded attempts to avoid long request chains).
+        $attempted = 0;
         foreach ($models as $model) {
+            if ($attempted >= 2) {
+                break;
+            }
+            $attempted++;
             try {
-                $response = Http::timeout(30)
+                $response = Http::timeout(12)
                     ->withToken($apiKey)
                     ->withHeaders([
                         'HTTP-Referer' => (string) config('services.openrouter.site_url', config('app.url')),
@@ -848,15 +950,15 @@ class AiChatController extends Controller
                 . 'Use ONLY the provided JSON data to answer. Do not ask clarifying questions — the data is already here. '
             . 'Do not reveal or infer data about any other users. '
             . 'Format output with a short title, bold labels, and bullet points when appropriate. '
+                . 'Do not write numbered tip labels like Tip 1/Tip 2; use natural bullet suggestions. '
                 . 'Provide personalized suggestions and tips based on the data, and vary phrasing/points between requests so responses are not identical each time. '
                 . 'If the JSON is empty, say no matching records were found. '
-                . 'Be concise (2–6 sentences), friendly, and remind the user this is not a medical diagnosis.';
+                . 'Be concise, friendly, and remind the user this is not a medical diagnosis.';
         $user   = "Question: {$question}\n\nData source: {$sql}\n\nData:\n{$json}\n\nAnswer:";
 
-        // Try Google Gemini first
+        // Try Google Gemini first (with model fallback)
         if ($googleKey !== '') {
-            $googleModel = (string) (env('GOOGLE_MODEL', '') ?: config('services.google.model', 'gemini-1.5-flash'));
-            $resp = $this->googleChatRequest($system, $user, $googleKey, $googleModel, 0.2, 500);
+            $resp = $this->googleChatWithFallback($system, $user, $googleKey, 0.2, 500);
             if ($resp !== null) {
                 return $this->extractReplyText($resp);
             }
@@ -898,55 +1000,33 @@ class AiChatController extends Controller
     }
 
     /**
-     * Gather a broad set of current user's records and ask the LLM to produce
-     * an "About me" summary strictly from those records.
+     * Generate 4-5 personalized smart suggestions from user records.
      */
-    public function aboutMe(Request $request): JsonResponse
+    public function smartSuggestions(Request $request): JsonResponse
     {
         $user = $request->user();
         if ($user === null) {
-            return response()->json(['reply' => $this->formatStructuredReply('Authentication required.')], 401);
+            return response()->json(['message' => 'Authentication required.'], 401);
         }
 
-        $userId = $user->id;
-        $userEmail = $user->email ?? '';
-        // Use the existing schema-aware snapshot function to collect personal records.
-        $snapshot = $this->getPersonalHealthSnapshot($userId);
+        if ($user->isAdmin()) {
+            return response()->json(['message' => 'Chatbot is disabled for admin accounts.'], 403);
+        }
+
+        $snapshot = $this->getPersonalHealthSnapshot((int) $user->id);
         if ($snapshot === null) {
-            return response()->json(['reply' => $this->formatStructuredReply('I could not access your records right now. Please try again later.')], 502);
+            return response()->json(['message' => 'Could not access user records right now.'], 502);
         }
-
-        // Describe the representative queries used to fetch the snapshot so the LLM knows the data provenance.
-        $queries = [
-            "SELECT d.disease_name as disease, ud.status, ud.diagnosed_at, ud.notes FROM user_diseases ud LEFT JOIN diseases d ON d.id = ud.disease_id WHERE ud.user_id = {$userId} ORDER BY ud.id DESC LIMIT 20",
-            "SELECT s.name as symptom, us.severity_level, us.note, us.recorded_at FROM user_symptoms us LEFT JOIN symptoms s ON s.id = us.symptom_id WHERE us.user_id = {$userId} ORDER BY us.recorded_at DESC LIMIT 20",
-            "SELECT metric_type, value, recorded_at FROM health_metrics WHERE user_id = {$userId} ORDER BY recorded_at DESC LIMIT 20",
-            "SELECT medicine_name, type, rule, unit FROM medicines WHERE user_id = {$userId} ORDER BY id DESC LIMIT 10",
-        ];
-
-        $sqlSource = implode("\n", $queries);
-
-        $question = "Risk about my disease and symptoms and my current health condition suggestions should be there along with 2-3 points.\n"
-            . "Use ONLY my current authenticated records and no other users.\n"
-            . "Current user id: {$userId}\n"
-            . "Current user email: {$userEmail}\n"
-            . "First focus on my diseases (2-3 lines), then my symptoms and trend (3-4 lines).\n"
-            . "Then give:\nTo Do: 4-6 bullet points\nNot To Do: 3-5 bullet points\n"
-            . "End with exactly 2 lines overall condition.";
-
-        // Enforce strict output formatting instructions for the LLM to follow.
-        $formatInstruction = "\n\nStrict format required: Provide a short title, then a 'Diseases' section (2-3 lines), then a 'Symptoms and trend' section (3-4 lines), then 'To Do' with 4-6 bullet points, then 'Not To Do' with 3-5 bullet points, and finish with exactly 2 lines labeled 'Overall condition'. Use bold labels and bullet points where appropriate. Keep the narrative concise (total 2-6 sentences for summary sections). Do not include other users' data.";
-
-        $question = $question . $formatInstruction;
 
         $apiKey    = (string) config('services.openrouter.api_key', '');
-        $googleKey = (string) (env('GOOGLE_API_KEY', '') ?: config('services.google.api_key', ''));
+        $googleKey = (string) config('services.google.api_key', '');
+
         if ($apiKey === '' && $googleKey === '') {
-            return response()->json([ 'reply' => $this->formatStructuredReply('AI service is not configured yet. Please set OPENROUTER_API_KEY or GOOGLE_API_KEY in your .env file.') ], 503);
+            return response()->json(['message' => 'AI service is not configured yet.'], 503);
         }
 
         $baseUrl      = rtrim((string) config('services.openrouter.base_url', 'https://openrouter.ai/api/v1'), '/');
-        $primaryModel = (string) config('services.openrouter.model', 'qwen/qwen3-6b-instruct:free');
+        $primaryModel = (string) config('services.openrouter.model', 'google/gemini-2.0-flash-001');
         $fallbackModels = array_filter(array_merge(
             (array) config('services.openrouter.fallback_models', []),
             [
@@ -962,6 +1042,113 @@ class AiChatController extends Controller
             ->unique()
             ->values()
             ->all();
+        $models = $this->sanitizeOpenRouterModels($models);
+
+        $parsed = $this->generateLlmSmartSuggestions($snapshot, $apiKey, $googleKey, $baseUrl, $models);
+        if ($parsed === []) {
+            return response()->json(['message' => 'AI suggestions could not be generated right now.'], 502);
+        }
+
+        return response()->json([
+            'suggestions' => $parsed,
+            'source' => 'llm',
+        ]);
+    }
+
+    /**
+     * Gather a broad set of current user's records and ask the LLM to produce
+     * an "About me" summary strictly from those records.
+     */
+    public function aboutMe(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if ($user === null) {
+            return response()->json(['reply' => $this->formatStructuredReply('Authentication required.')], 401);
+        }
+
+        if ($user->isAdmin()) {
+            return response()->json(['reply' => 'Chatbot is disabled for admin accounts.'], 403);
+        }
+
+        $userId = $user->id;
+        $userEmail = $user->email ?? '';
+        // Use the existing schema-aware snapshot function to collect personal records.
+        $snapshot = $this->getPersonalHealthSnapshot($userId);
+        if ($snapshot === null) {
+            return response()->json(['reply' => $this->formatStructuredReply('I could not access your records right now. Please try again later.')], 502);
+        }
+
+        // Describe the representative queries used to fetch the snapshot so the LLM knows the data provenance.
+        $queries = [
+            "SELECT d.disease_name as disease, ud.status, ud.diagnosed_at, ud.notes FROM user_diseases ud LEFT JOIN diseases d ON d.id = ud.disease_id WHERE ud.user_id = {$userId} ORDER BY ud.id DESC LIMIT 20",
+            "SELECT s.name as symptom, us.severity_level, us.note, us.recorded_at FROM user_symptoms us LEFT JOIN symptoms s ON s.id = us.symptom_id WHERE us.user_id = {$userId} ORDER BY us.recorded_at DESC LIMIT 20",
+            "SELECT hm.metric_name as metric_type, uh.value, uh.recorded_at FROM user_health uh LEFT JOIN health_metrics hm ON hm.id = uh.health_metric_id WHERE uh.user_id = {$userId} ORDER BY uh.recorded_at DESC LIMIT 20",
+            "SELECT medicine_name, type, rule, unit FROM medicines WHERE user_id = {$userId} ORDER BY id DESC LIMIT 10",
+        ];
+
+        $sqlSource = implode("\n", $queries);
+
+        $question = "আমার রোগ, উপসর্গ এবং বর্তমান স্বাস্থ্য অবস্থার ঝুঁকি বিশ্লেষণসহ সংক্ষিপ্ত পরামর্শ দিন।\n"
+            . "শুধু আমার authenticated রেকর্ড ব্যবহার করবেন, অন্য কারও তথ্য নয়।\n"
+            . "Current user id: {$userId}\n"
+            . "Current user email: {$userEmail}\n"
+            . "প্রথমে আমার রোগ নিয়ে ২-৩ লাইন, তারপর উপসর্গ ও ট্রেন্ড নিয়ে ৩-৪ লাইন লিখুন।\n"
+            . "এরপর আমার রোগ, উপসর্গ ও স্বাস্থ্য মেট্রিক অনুযায়ী ঠিক ৪-৫টি ব্যক্তিগত পরামর্শ দিন।";
+
+        // Enforce strict output formatting instructions for the LLM to follow.
+        $formatInstruction = "\n\nকঠোর ফরম্যাট নির্দেশনা:"
+            . "\n- পুরো উত্তর অবশ্যই বাংলায় লিখতে হবে।"
+            . "\n- শুরুতে একটি ছোট শিরোনাম দিন।"
+            . "\n- **রোগের অবস্থা** শিরোনামে রোগভিত্তিক ২-৩টি বুলেট দিন।"
+            . "\n- **উপসর্গ ও মেট্রিক প্রবণতা** শিরোনামে উপসর্গ/মেট্রিকভিত্তিক ২-৩টি বুলেট দিন।"
+            . "\n- **স্মার্ট পরামর্শ** শিরোনামে ঠিক ৪ বা ৫টি বুলেট পয়েন্ট দিন।"
+            . "\n- পরামর্শগুলো অবশ্যই ব্যবহারযোগ্য, ব্যক্তিগত এবং আমার ডেটা-ভিত্তিক হবে।"
+            . "\n- Tip 1/Tip 2 ধরনের নম্বরিং ব্যবহার করবেন না।"
+            . "\n- প্রয়োজনমতো markdown bold (**...**) ব্যবহার করতে পারেন।"
+            . "\n- ভাষা সংক্ষিপ্ত, পরিষ্কার ও কার্যকর রাখুন।"
+            . "\nঅন্য কোনো ব্যবহারকারীর তথ্য যুক্ত করবেন না।";
+
+        $question = $question . $formatInstruction;
+
+        $apiKey    = (string) config('services.openrouter.api_key', '');
+        $googleKey = (string) config('services.google.api_key', '');
+
+        // If AI keys are not configured, return a deterministic local summary
+        // built from the user's snapshot and include fallback suggestions so
+        // the UI still shows a helpful health summary.
+        if ($apiKey === '' && $googleKey === '') {
+            try {
+                $local = $this->buildPersonalHealthReply($snapshot, true);
+                $reply = $local ?? 'এই মুহূর্তে সারাংশ তৈরি করা যায়নি।';
+                $fallback = $this->buildFallbackSmartSuggestions($snapshot);
+                if (count($fallback) >= 4) {
+                    $reply = $this->appendSmartSuggestionsSection($reply, array_slice($fallback, 0, 4));
+                }
+                return response()->json(['reply' => $reply]);
+            } catch (\Throwable $e) {
+                Log::warning('AboutMe local summary failed when AI keys missing', ['message' => $e->getMessage()]);
+                return response()->json([ 'reply' => $this->formatStructuredReply('AI service is not configured yet. Please set OPENROUTER_API_KEY or GOOGLE_API_KEY in your .env file.') ], 503);
+            }
+        }
+
+        $baseUrl      = rtrim((string) config('services.openrouter.base_url', 'https://openrouter.ai/api/v1'), '/');
+        $primaryModel = (string) config('services.openrouter.model', 'google/gemini-2.0-flash-001');
+        $fallbackModels = array_filter(array_merge(
+            (array) config('services.openrouter.fallback_models', []),
+            [
+                config('services.openrouter.fallback_model_1'),
+                config('services.openrouter.fallback_model_2'),
+                config('services.openrouter.fallback_model_3'),
+            ]
+        ));
+
+        $models = collect(array_merge([$primaryModel], $fallbackModels))
+            ->filter(fn($m) => is_string($m) && trim($m) !== '')
+            ->map(fn($m) => trim($m))
+            ->unique()
+            ->values()
+            ->all();
+        $models = $this->sanitizeOpenRouterModels($models);
 
         $final = $this->askModelToSummarizeResults(
             $question,
@@ -974,16 +1161,43 @@ class AiChatController extends Controller
             $googleKey
         );
 
+        Log::info('aboutMe LLM summary result', [
+            'user_id' => $userId,
+            'has_final' => $final !== null,
+            'final_length' => is_string($final) ? strlen($final) : 0,
+        ]);
+
         if ($final !== null) {
             // For Suggestions page summary, return the model output directly so
-            // the requested sections (Diseases, Symptoms and trend, To Do,
-            // Not To Do, Overall condition) are shown without generic wrappers.
-            return response()->json(['reply' => $this->cleanAboutMeResponse($final)]);
+            // the requested sections are shown without generic wrappers.
+            $reply = $this->normalizeBanglaSummaryHeadings($this->cleanAboutMeResponse($final));
+            $reply = $this->normalizeMedicalTermsInBanglaText($reply);
+            $llmSuggestions = $this->generateLlmSmartSuggestions($snapshot, $apiKey, $googleKey, $baseUrl, $models);
+            if (count($llmSuggestions) < 4) {
+                $llmSuggestions = $this->buildFallbackSmartSuggestions($snapshot);
+            }
+            $reply = $this->appendSmartSuggestionsSection($reply, array_slice($llmSuggestions, 0, 4));
+            return response()->json(['reply' => $reply]);
         }
 
-        // If LLM summarization fails, provide deterministic local fallback.
-        $fallback = $this->buildPersonalHealthReply($snapshot, true);
-        return response()->json(['reply' => $this->formatStructuredReply($fallback)]);
+        // If the LLM failed, fall back to a deterministic local summary built
+        // from the user's snapshot so the UI shows helpful information.
+        try {
+            $local = $this->buildPersonalHealthReply($snapshot, true);
+            if ($local !== null) {
+                $reply = $local;
+                // Keep fallback fast/reliable when LLM summary already failed.
+                $llmSuggestions = $this->buildFallbackSmartSuggestions($snapshot);
+                $reply = $this->appendSmartSuggestionsSection($reply, array_slice($llmSuggestions, 0, 4));
+                return response()->json(['reply' => $reply]);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('AboutMe local fallback failed', ['message' => $e->getMessage()]);
+        }
+
+        return response()->json([
+            'reply' => 'AI summary could not be generated right now. Please regenerate in a moment.',
+        ], 502);
     }
 
     /**
@@ -1024,6 +1238,376 @@ class AiChatController extends Controller
 
         $clean = trim(implode("\n", $filtered));
         return $clean !== '' ? $clean : trim($text);
+    }
+
+    private function parseSmartSuggestionsFromModel(string $raw): array
+    {
+        $text = trim($raw);
+
+        $text = preg_replace('/^```(?:json)?\s*/i', '', $text);
+        $text = preg_replace('/\s*```$/', '', (string) $text);
+
+        $start = strpos($text, '[');
+        $end = strrpos($text, ']');
+        if ($start === false || $end === false || $end <= $start) {
+            return [];
+        }
+
+        $json = substr($text, $start, $end - $start + 1);
+        $decoded = json_decode($json, true);
+        if (!is_array($decoded)) {
+            return [];
+        }
+
+        $allowedCategories = ['Metric Alert', 'Adherence', 'Symptom', 'Condition', 'Lifestyle', 'Wellness'];
+        $allowedColors = ['danger', 'warning', 'info', 'success', 'primary'];
+
+        $normalized = [];
+        foreach ($decoded as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+
+            $title = trim((string) ($item['title'] ?? ''));
+            $message = trim((string) ($item['message'] ?? ''));
+            $category = trim((string) ($item['category'] ?? 'Wellness'));
+            $color = trim((string) ($item['color'] ?? 'primary'));
+            $icon = trim((string) ($item['icon'] ?? 'fa-lightbulb'));
+
+            if ($title === '' || $message === '') {
+                continue;
+            }
+
+            if (!in_array($category, $allowedCategories, true)) {
+                $category = 'Wellness';
+            }
+            if (!in_array($color, $allowedColors, true)) {
+                $color = 'primary';
+            }
+            if ($icon === '') {
+                $icon = 'fa-lightbulb';
+            }
+
+            $title = $this->normalizeBanglaSuggestionTitle($title);
+            $message = $this->normalizeMedicalTermsInBanglaText($message);
+            $message = $this->enhanceBoldingInBanglaText($message);
+
+            $normalized[] = [
+                'title' => $title,
+                'message' => $message,
+                'category' => $category,
+                'color' => $color,
+                'icon' => $icon,
+            ];
+        }
+
+        if (count($normalized) < 4) {
+            return [];
+        }
+
+        return array_slice($normalized, 0, 5);
+    }
+
+    private function generateLlmSmartSuggestions(
+        array $snapshot,
+        string $apiKey,
+        string $googleKey,
+        string $baseUrl,
+        array $models
+    ): array {
+        $json = json_encode($snapshot, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        $system = 'You are MyDoctor AI assistant for Bangla output. '
+            . 'Use ONLY the provided JSON user records. '
+            . 'Return STRICT JSON only: an array of 4 or 5 objects. '
+            . 'Each object must include: title, message, category, color, icon. '
+            . 'title and message MUST be in Bangla (Bengali). '
+            . 'Medical condition names may remain in English if needed, but sentence structure must be Bangla. '
+            . 'message must be practical and personalized; include markdown bold where useful using **text**. '
+            . 'category must be one of: Metric Alert, Adherence, Symptom, Condition, Lifestyle, Wellness. '
+            . 'color must be one of: danger, warning, info, success, primary. '
+            . 'icon must be a Font Awesome icon class name like fa-heartbeat or fa-pills. '
+            . 'Do NOT use numbered labels like Tip 1/Tip 2. '
+            . 'Do NOT include any markdown wrapper or explanation outside JSON.';
+        $userPrompt = "ব্যবহারকারীর ডেটা JSON:\n{$json}\n\nএখন শুধু JSON array রিটার্ন করুন।";
+
+        $modelRaw = null;
+
+        if ($googleKey !== '') {
+            $resp = $this->googleChatWithFallback($system, $userPrompt, $googleKey, 0.3, 700);
+            if ($resp !== null) {
+                $modelRaw = $resp;
+            }
+        }
+
+        if ($modelRaw === null) {
+            $attempted = 0;
+            foreach ($models as $model) {
+                if ($attempted >= 2) {
+                    break;
+                }
+                $attempted++;
+                try {
+                    $response = Http::timeout(10)
+                        ->withToken($apiKey)
+                        ->withHeaders([
+                            'HTTP-Referer' => (string) config('services.openrouter.site_url', config('app.url')),
+                            'X-Title'      => (string) config('services.openrouter.app_name', config('app.name')),
+                            'Content-Type' => 'application/json',
+                            'Accept'       => 'application/json',
+                        ])
+                        ->post($baseUrl . '/chat/completions', [
+                            'model'       => $model,
+                            'messages'    => [
+                                ['role' => 'system', 'content' => $system],
+                                ['role' => 'user', 'content' => $userPrompt],
+                            ],
+                            'temperature' => 0.3,
+                            'max_tokens'  => 700,
+                        ]);
+
+                    if ($response->successful()) {
+                        $reply = $this->extractReplyText(data_get($response->json(), 'choices.0.message.content'));
+                        if ($reply !== null) {
+                            $modelRaw = $reply;
+                            break;
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('Smart suggestions model call failed', [
+                        'model' => $model,
+                        'message' => $e->getMessage(),
+                    ]);
+                }
+            }
+        }
+
+        if ($modelRaw === null) {
+            return [];
+        }
+
+        return $this->parseSmartSuggestionsFromModel($modelRaw);
+    }
+
+    private function appendSmartSuggestionsSection(string $summaryText, array $suggestions): string
+    {
+        $content = trim($summaryText);
+        $content = preg_replace('/\n(?:\*\*)?(?:Smart Suggestions|স্মার্ট পরামর্শ)(?:\*\*)?\s*:?\s*[\s\S]*$/iu', '', $content) ?? $content;
+        $content = trim($content);
+
+        $bullets = [];
+        foreach ($suggestions as $s) {
+            $title = trim((string) ($s['title'] ?? 'পরামর্শ'));
+            $message = trim((string) ($s['message'] ?? ''));
+            if ($title === '' || $message === '') {
+                continue;
+            }
+            $bullets[] = "- **{$title}**: {$message}";
+        }
+
+        if (count($bullets) < 4) {
+            return $content;
+        }
+
+        return $content . "\n\n**স্মার্ট পরামর্শ**\n" . implode("\n", array_slice($bullets, 0, 4));
+    }
+
+    private function normalizeBanglaSummaryHeadings(string $text): string
+    {
+        $normalized = trim($text);
+
+        $map = [
+            '/\*\*\s*Your Health Overview\s*\*\*/i' => '**আপনার স্বাস্থ্য প্রোফাইল**',
+            '/^\s*Your Health Overview\s*:?\s*$/im' => 'আপনার স্বাস্থ্য প্রোফাইল',
+            '/\*\*\s*Diseases\s*\*\*/i' => '**রোগের অবস্থা**',
+            '/^\s*Diseases\s*:?\s*$/im' => 'রোগের অবস্থা',
+            '/\*\*\s*Symptoms\s+and\s+Metrics\s+Trend\s*\*\*/i' => '**উপসর্গ ও মেট্রিক প্রবণতা**',
+            '/^\s*Symptoms\s+and\s+Metrics\s+Trend\s*:?\s*$/im' => 'উপসর্গ ও মেট্রিক প্রবণতা',
+            '/\*\*\s*Smart Suggestions\s*\*\*/i' => '**স্মার্ট পরামর্শ**',
+            '/^\s*Smart Suggestions\s*:?\s*$/im' => 'স্মার্ট পরামর্শ',
+            '/\*\*\s*Advice based on weather([^*]*)\*\*/i' => '**আবহাওয়া ভিত্তিক পরামর্শ$1**',
+            '/^\s*Advice based on weather(.*)$/im' => 'আবহাওয়া ভিত্তিক পরামর্শ$1',
+        ];
+
+        foreach ($map as $pattern => $replacement) {
+            $normalized = preg_replace($pattern, $replacement, $normalized) ?? $normalized;
+        }
+
+        return $normalized;
+    }
+
+    private function medicalNameBnWithEn(string $name): string
+    {
+        $name = trim($name);
+        if ($name === '') {
+            return 'অজানা';
+        }
+
+        if (preg_match('/[\x{0980}-\x{09FF}]/u', $name)) {
+            return $name;
+        }
+
+        $map = [
+            "Cushing's Syndrome" => 'কুশিংস সিন্ড্রোম',
+            'Atrial Fibrillation' => 'এট্রিয়াল ফাইব্রিলেশন',
+            'Chickenpox' => 'চিকেনপক্স',
+            'Productive Cough' => 'কফসহ কাশি',
+            'Irregular Menstruation' => 'অনিয়মিত মাসিক',
+            'Hair Loss' => 'চুল পড়া',
+            'Dry Mouth' => 'মুখ শুকানো',
+            'Spinning Sensation' => 'মাথা ঘোরা',
+            'Dizziness' => 'মাথা ঘোরা',
+            'Fever' => 'জ্বর',
+        ];
+
+        foreach ($map as $en => $bn) {
+            if (strcasecmp($name, $en) === 0) {
+                return "{$bn} ({$en})";
+            }
+        }
+
+        return $name;
+    }
+
+    private function metricNameBn(string $metric): string
+    {
+        $metric = trim($metric);
+        $map = [
+            'heart_rate' => 'হার্ট রেট (heart_rate)',
+            'blood_pressure' => 'রক্তচাপ (blood_pressure)',
+            'blood_glucose' => 'রক্তে শর্করা (blood_glucose)',
+            'body_weight' => 'ওজন (body_weight)',
+            'temperature' => 'তাপমাত্রা (temperature)',
+            'oxygen_saturation' => 'অক্সিজেন স্যাচুরেশন (oxygen_saturation)',
+            'cholesterol' => 'কোলেস্টেরল (cholesterol)',
+            'creatinine' => 'ক্রিয়েটিনিন (creatinine)',
+            'hemoglobin' => 'হিমোগ্লোবিন (hemoglobin)',
+        ];
+
+        $key = strtolower($metric);
+        return $map[$key] ?? $metric;
+    }
+
+    private function normalizeBanglaSuggestionTitle(string $title): string
+    {
+        $title = trim($title);
+        $map = [
+            'High Heart Rate Detected' => 'উচ্চ হার্ট রেট শনাক্ত',
+            'Productive Cough Reported' => 'কফসহ কাশি রিপোর্ট হয়েছে',
+            'Atrial Fibrillation Management' => 'এট্রিয়াল ফাইব্রিলেশন ব্যবস্থাপনা',
+            'Medication Reminder' => 'ওষুধ গ্রহণের রিমাইন্ডার',
+            'Elevated Body Temperature' => 'উচ্চ তাপমাত্রা শনাক্ত',
+            'Abnormal Hemoglobin Level' => 'অস্বাভাবিক হিমোগ্লোবিন মাত্রা',
+        ];
+
+        foreach ($map as $en => $bn) {
+            if (strcasecmp($title, $en) === 0) {
+                return $bn;
+            }
+        }
+
+        return $title;
+    }
+
+    private function normalizeMedicalTermsInBanglaText(string $text): string
+    {
+        $map = [
+            "Cushing's Syndrome" => "কুশিংস সিন্ড্রোম (Cushing's Syndrome)",
+            'Atrial Fibrillation' => 'এট্রিয়াল ফাইব্রিলেশন (Atrial Fibrillation)',
+            'Chickenpox' => 'চিকেনপক্স (Chickenpox)',
+            'Productive Cough' => 'কফসহ কাশি (Productive Cough)',
+            'Irregular Menstruation' => 'অনিয়মিত মাসিক (Irregular Menstruation)',
+            'Hair Loss' => 'চুল পড়া (Hair Loss)',
+            'Dry Mouth' => 'মুখ শুকানো (Dry Mouth)',
+            'Spinning Sensation' => 'মাথা ঘোরা (Spinning Sensation)',
+        ];
+
+        foreach ($map as $en => $bnEn) {
+            $pattern = '/\b' . preg_quote($en, '/') . '\b/u';
+            $text = preg_replace($pattern, $bnEn, $text) ?? $text;
+        }
+
+        return $text;
+    }
+
+    private function enhanceBoldingInBanglaText(string $text): string
+    {
+        $text = preg_replace('/\b(\d+(?:\.\d+)?)\s*(bpm|°C|mmHg|mg\/dL|g\/dL|%)\b/u', '**$1 $2**', $text) ?? $text;
+        $text = preg_replace('/\b(heart_rate|blood_pressure|blood_glucose|body_weight|temperature|oxygen_saturation|cholesterol|creatinine|hemoglobin)\b/u', '**$1**', $text) ?? $text;
+        return $text;
+    }
+
+    private function buildFallbackSmartSuggestions(array $snapshot): array
+    {
+        $suggestions = [];
+
+        $diseases = array_slice((array) ($snapshot['diseases'] ?? []), 0, 2);
+        $symptoms = array_slice((array) ($snapshot['symptoms'] ?? []), 0, 3);
+        $medicines = array_slice((array) ($snapshot['medicines'] ?? []), 0, 2);
+        $metrics = array_slice((array) ($snapshot['health_metrics'] ?? []), 0, 2);
+
+        if ($diseases !== []) {
+            $names = implode(', ', array_map(fn($d) => $this->medicalNameBnWithEn((string) ($d['disease'] ?? 'অজানা')), $diseases));
+            $suggestions[] = [
+                'title' => 'রোগভিত্তিক ফলো-আপ',
+                'message' => "আপনার রেকর্ড অনুযায়ী **{$names}** নিয়মিত পর্যবেক্ষণে রাখা প্রয়োজন। উপসর্গের পরিবর্তন নোট করে পরবর্তী ফলো-আপে চিকিৎসককে জানান।",
+                'category' => 'Condition',
+                'color' => 'warning',
+                'icon' => 'fa-notes-medical',
+            ];
+        }
+
+        if ($symptoms !== []) {
+            $names = implode(', ', array_map(fn($s) => $this->medicalNameBnWithEn((string) ($s['symptom'] ?? 'উপসর্গ')), $symptoms));
+            $suggestions[] = [
+                'title' => 'প্রতিদিন উপসর্গ ট্র্যাক করুন',
+                'message' => "সাম্প্রতিক উপসর্গের মধ্যে **{$names}** রয়েছে। সময় ও তীব্রতা নিয়মিত লিখে রাখলে ট্রিগার এবং উন্নতির ধারা বোঝা সহজ হবে।",
+                'category' => 'Symptom',
+                'color' => 'danger',
+                'icon' => 'fa-thermometer-half',
+            ];
+        }
+
+        if ($medicines !== []) {
+            $names = implode(', ', array_map(fn($m) => (string) ($m['medicine_name'] ?? 'ওষুধ'), $medicines));
+            $suggestions[] = [
+                'title' => 'ওষুধ গ্রহণে ধারাবাহিকতা',
+                'message' => "আপনি **{$names}** সেবন করছেন। রিমাইন্ডার ও নির্দিষ্ট রুটিন মেনে চললে ডোজ মিস হওয়ার ঝুঁকি কমবে।",
+                'category' => 'Adherence',
+                'color' => 'info',
+                'icon' => 'fa-pills',
+            ];
+        }
+
+        if ($metrics !== []) {
+            $names = implode(', ', array_map(fn($m) => (string) ($m['metric_type'] ?? 'মেট্রিক'), $metrics));
+            $suggestions[] = [
+                'title' => 'গুরুত্বপূর্ণ মেট্রিক পর্যবেক্ষণ',
+                'message' => "**{$names}** সহ গুরুত্বপূর্ণ মেট্রিক নির্দিষ্ট সময়সূচিতে মাপলে পরিবর্তন দ্রুত ধরা যায়।",
+                'category' => 'Metric Alert',
+                'color' => 'primary',
+                'icon' => 'fa-chart-line',
+            ];
+        }
+
+        $suggestions[] = [
+            'title' => 'দৈনিক পুনরুদ্ধার রুটিন',
+            'message' => '**নিয়মিত ঘুম, পর্যাপ্ত পানি, হালকা ব্যায়াম ও মানসিক চাপ নিয়ন্ত্রণ** দীর্ঘমেয়াদে বেশিরভাগ অবস্থায় স্থিতি উন্নত করে।',
+            'category' => 'Lifestyle',
+            'color' => 'success',
+            'icon' => 'fa-leaf',
+        ];
+
+        while (count($suggestions) < 4) {
+            $suggestions[] = [
+                'title' => 'প্রতিরোধমূলক ফলো-আপ স্মরণ',
+                'message' => 'সাম্প্রতিক রেকর্ড পর্যালোচনার জন্য নিয়মিত ফলো-আপ পরিকল্পনা করুন, যাতে চিকিৎসকের সাথে নিরাপদভাবে কেয়ার প্ল্যান আপডেট করা যায়।',
+                'category' => 'Wellness',
+                'color' => 'primary',
+                'icon' => 'fa-user-md',
+            ];
+        }
+
+        return array_slice($suggestions, 0, 5);
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -1085,6 +1669,63 @@ class AiChatController extends Controller
             Log::warning('Google Gemini request failed', ['message' => $e->getMessage()]);
             return null;
         }
+    }
+
+    private function googleChatWithFallback(
+        string $system,
+        string $user,
+        string $apiKey,
+        float $temperature = 0.2,
+        int $maxTokens = 500
+    ): ?string {
+        $primary = (string) config('services.google.model', 'gemini-1.5-flash');
+        $fallbacks = (array) config('services.google.fallback_models', []);
+
+        $models = collect(array_merge([$primary], $fallbacks))
+            ->filter(fn($m) => is_string($m) && trim($m) !== '')
+            ->map(fn($m) => trim($m))
+            ->unique()
+            ->values()
+            ->all();
+
+        foreach ($models as $model) {
+            $resp = $this->googleChatRequest($system, $user, $apiKey, $model, $temperature, $maxTokens);
+            if ($resp !== null) {
+                return $resp;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Remove known invalid/deprecated OpenRouter model IDs and ensure a safe fallback set.
+     */
+    private function sanitizeOpenRouterModels(array $models): array
+    {
+        $blocked = [
+            'qwen/qwen3-6b-instruct:free',
+            'qwen/qwen3.6-plus:free',
+        ];
+
+        $clean = collect($models)
+            ->filter(fn($m) => is_string($m) && trim($m) !== '')
+            ->map(fn($m) => trim($m))
+            ->reject(fn($m) => in_array(strtolower($m), $blocked, true))
+            ->reject(fn($m) => str_ends_with(strtolower($m), ':free'))
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($clean !== []) {
+            return $clean;
+        }
+
+        return [
+            'google/gemini-2.0-flash-001',
+            'openai/gpt-4o-mini',
+            'anthropic/claude-3.5-haiku',
+        ];
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -1150,70 +1791,21 @@ class AiChatController extends Controller
             $sentences = [$text];
         }
 
-        $summary = array_shift($sentences) ?? $text;
-        $detailItems = array_slice($sentences, 0, 4);
-        $suggestions = $this->buildDefaultSuggestions($text);
-        $tips = $this->buildDefaultTips($text);
+        $items = array_slice($sentences, 0, 6);
+        if ($items === []) {
+            $items = [$text];
+        }
 
         $output = [
             '## MyDoctor AI Response',
             '',
-            '**Summary**',
-            '- ' . $summary,
+            '**Response**',
         ];
 
-        if ($detailItems !== []) {
-            $output[] = '';
-            $output[] = '**Details**';
-            foreach ($detailItems as $item) {
-                $output[] = '- ' . $item;
-            }
-        }
-
-        $output[] = '';
-        $output[] = '**Suggestions**';
-        foreach ($suggestions as $suggestion) {
-            $output[] = '- ' . $suggestion;
-        }
-
-        $output[] = '';
-        $output[] = '**Tips**';
-        foreach ($tips as $tip) {
-            $output[] = '- ' . $tip;
+        foreach ($items as $item) {
+            $output[] = '- ' . $item;
         }
 
         return implode("\n", $output);
-    }
-
-    private function buildDefaultSuggestions(string $context): array
-    {
-        $suggestions = [
-            'Review your latest health entries and keep them updated so recommendations stay accurate.',
-            'Share persistent or worsening symptoms with a licensed doctor for proper evaluation.',
-            'Use your medicine reminders consistently to improve treatment adherence and routine tracking.',
-            'Ask follow-up questions about trends in your records so you can monitor changes over time.',
-        ];
-
-        if (preg_match('/\b(emergency|chest pain|shortness of breath|severe|faint|stroke)\b/i', $context)) {
-            $suggestions[0] = 'Seek urgent medical care immediately if severe or emergency symptoms are present.';
-        }
-
-        return array_slice($suggestions, 0, 4);
-    }
-
-    private function buildDefaultTips(string $context): array
-    {
-        $tips = [
-            'Tip 1: Stay hydrated and aim for regular sleep to support recovery and overall health.',
-            'Tip 2: Record symptoms with time and severity so changes can be tracked accurately.',
-            'Tip 3: Follow prescribed medicines exactly and avoid skipping doses without medical advice.',
-            'Tip 4: Seek immediate emergency help if you develop severe or rapidly worsening symptoms.',
-        ];
-
-        if (!preg_match('/\b(emergency|severe|worsening)\b/i', $context)) {
-            $tips[3] = 'Tip 4: Schedule routine check-ups to review progress and adjust plans safely.';
-        }
-
-        return array_slice($tips, 0, 4);
     }
 }

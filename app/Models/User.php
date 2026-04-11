@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Log;
@@ -21,11 +22,8 @@ class User extends Authenticatable
         'occupation',
         'blood_group',
         'gender',
+        'is_active',
         'password',
-        'email_notifications',
-        'push_notifications',
-        'show_personal_info',
-        'show_diseases',
         'notification_settings',
     ];
 
@@ -38,12 +36,51 @@ class User extends Authenticatable
         'date_of_birth' => 'date',
         'email_verified_at' => 'datetime',
         'password'           => 'hashed',
-        'email_notifications' => 'boolean',
-        'push_notifications' => 'boolean',
-        'show_personal_info' => 'boolean',
-        'show_diseases' => 'boolean',
         'notification_settings' => 'array',
+        'is_active' => 'boolean',
     ];
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope('active_users', function (Builder $builder): void {
+            if (app()->runningInConsole()) {
+                return;
+            }
+
+            // Avoid resolving the authenticated User model here to prevent recursion.
+            if (request()->is('admin') || request()->is('admin/*')) {
+                return;
+            }
+
+            $builder->where('users.is_active', true);
+        });
+
+        static::created(function (User $user): void {
+            $user->setting()->firstOrCreate([], [
+                'email_notifications' => true,
+                'push_notifications' => true,
+                'show_personal_info' => false,
+                'show_diseases' => false,
+                'show_chatbot' => true,
+                'show_notification_badge' => true,
+                'show_mail_badge' => true,
+            ]);
+
+            $user->address()->firstOrCreate([], [
+                'division_id' => 0,
+                'division' => 'Not set',
+                'division_bn' => null,
+                'district_id' => 0,
+                'district' => 'Not set',
+                'district_bn' => null,
+                'upazila_id' => 0,
+                'upazila' => 'Not set',
+                'upazila_bn' => null,
+                'street' => null,
+                'house' => null,
+            ]);
+        });
+    }
 
     /**
      * Route notifications for Web Push
@@ -149,7 +186,7 @@ class User extends Authenticatable
      */
     public function wantsEmailNotifications(): bool
     {
-        return $this->email_notifications ?? true;
+        return (bool) $this->setting->email_notifications;
     }
 
     /**
@@ -157,7 +194,7 @@ class User extends Authenticatable
      */
     public function wantsPushNotifications(): bool
     {
-        return $this->push_notifications ?? true;
+        return (bool) $this->setting->push_notifications;
     }
 
     /**
@@ -183,9 +220,11 @@ class User extends Authenticatable
      */
     public function toggleEmailNotifications(): bool
     {
-        $this->email_notifications = !$this->email_notifications;
-        $this->save();
-        return $this->email_notifications;
+        $setting = $this->setting()->firstOrCreate([]);
+        $setting->email_notifications = !$setting->email_notifications;
+        $setting->save();
+
+        return (bool) $setting->email_notifications;
     }
 
     /**
@@ -193,15 +232,54 @@ class User extends Authenticatable
      */
     public function togglePushNotifications(): bool
     {
-        $this->push_notifications = !$this->push_notifications;
-        $this->save();
-        return $this->push_notifications;
+        $setting = $this->setting()->firstOrCreate([]);
+        $setting->push_notifications = !$setting->push_notifications;
+        $setting->save();
+
+        return (bool) $setting->push_notifications;
+    }
+
+    public function setting()
+    {
+        return $this->hasOne(UserSetting::class)->withDefault([
+            'email_notifications' => true,
+            'push_notifications' => true,
+            'show_personal_info' => false,
+            'show_diseases' => false,
+            'show_chatbot' => true,
+            'show_notification_badge' => true,
+            'show_mail_badge' => true,
+        ]);
+    }
+
+    public function address()
+    {
+        return $this->hasOne(UserAddress::class)->withDefault([
+            'division_id' => 0,
+            'division' => 'Not set',
+            'division_bn' => null,
+            'district_id' => 0,
+            'district' => 'Not set',
+            'district_bn' => null,
+            'upazila_id' => 0,
+            'upazila' => 'Not set',
+            'upazila_bn' => null,
+            'street' => null,
+            'house' => null,
+        ]);
     }
 
     // Health relationships
     public function healthMetrics()
     {
-        return $this->hasMany(HealthMetric::class);
+        return $this->hasMany(UserHealth::class, 'user_id');
+    }
+
+    public function healthMetricDefinitions()
+    {
+        return $this->belongsToMany(HealthMetric::class, 'user_health', 'user_id', 'health_metric_id')
+            ->withPivot('value', 'recorded_at')
+            ->withTimestamps();
     }
 
     public function symptoms()
@@ -234,6 +312,17 @@ class User extends Authenticatable
         return $this->belongsToMany(Disease::class, 'user_diseases')
                     ->withPivot('diagnosed_at', 'status', 'notes')
                     ->withTimestamps();
+    }
+
+    public function starredDiseases()
+    {
+        return $this->belongsToMany(Disease::class, 'user_starred_diseases')
+            ->withTimestamps();
+    }
+
+    public function userStarredDiseases()
+    {
+        return $this->hasMany(UserStarredDisease::class);
     }
 
     // Community relationships

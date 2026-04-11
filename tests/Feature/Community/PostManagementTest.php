@@ -34,7 +34,7 @@ class PostManagementTest extends TestCase
     {
         $this->actingAs($this->user);
 
-        $response = $this->post("/community/posts/{$this->post->id}/update", [
+        $response = $this->patch("/community/posts/{$this->post->id}", [
             'description' => 'Updated description'
         ]);
 
@@ -55,14 +55,14 @@ class PostManagementTest extends TestCase
     {
         $this->actingAs($this->anotherUser);
 
-        $response = $this->post("/community/posts/{$this->post->id}/update", [
+        $response = $this->patch("/community/posts/{$this->post->id}", [
             'description' => 'Updated description'
         ]);
 
         $response->assertStatus(403);
         $response->assertJson([
             'success' => false,
-            'message' => 'You can only edit your own posts'
+            'message' => 'You can only edit your own posts unless you are an admin'
         ]);
 
         $this->assertDatabaseHas('posts', [
@@ -76,7 +76,7 @@ class PostManagementTest extends TestCase
     {
         $this->actingAs($this->user);
 
-        $response = $this->post("/community/posts/{$this->post->id}/delete");
+        $response = $this->delete("/community/posts/{$this->post->id}");
 
         $response->assertStatus(200);
         $response->assertJson([
@@ -94,12 +94,12 @@ class PostManagementTest extends TestCase
     {
         $this->actingAs($this->anotherUser);
 
-        $response = $this->post("/community/posts/{$this->post->id}/delete");
+        $response = $this->delete("/community/posts/{$this->post->id}");
 
         $response->assertStatus(403);
         $response->assertJson([
             'success' => false,
-            'message' => 'You can only delete your own posts'
+            'message' => 'You can only delete your own posts unless you are an admin'
         ]);
 
         $this->assertDatabaseHas('posts', [
@@ -118,7 +118,7 @@ class PostManagementTest extends TestCase
             'comment_details' => 'Original comment'
         ]);
 
-        $response = $this->post("/community/comments/{$comment->id}/update", [
+        $response = $this->patch("/community/comments/{$comment->id}", [
             'description' => 'Updated comment'
         ]);
 
@@ -144,7 +144,7 @@ class PostManagementTest extends TestCase
             'post_id' => $this->post->id
         ]);
 
-        $response = $this->post("/community/comments/{$comment->id}/update", [
+        $response = $this->patch("/community/comments/{$comment->id}", [
             'description' => 'Updated comment'
         ]);
 
@@ -165,7 +165,7 @@ class PostManagementTest extends TestCase
             'post_id' => $this->post->id
         ]);
 
-        $response = $this->post("/community/comments/{$comment->id}/delete");
+        $response = $this->delete("/community/comments/{$comment->id}");
 
         $response->assertStatus(200);
         $response->assertJson([
@@ -188,7 +188,7 @@ class PostManagementTest extends TestCase
             'post_id' => $this->post->id
         ]);
 
-        $response = $this->post("/community/comments/{$comment->id}/delete");
+        $response = $this->delete("/community/comments/{$comment->id}");
 
         $response->assertStatus(403);
         $response->assertJson([

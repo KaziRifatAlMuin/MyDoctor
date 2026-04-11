@@ -7,6 +7,7 @@ use Illuminate\Database\Seeder;
 use Database\Seeders\DiseaseSeeder;
 use Database\Seeders\SymptomSeeder;
 use Database\Seeders\DiseaseSymptomSeeder;
+use Database\Seeders\HealthMetricSeeder;
 use Database\Seeders\HighVolumeDemoSeeder;
 use App\Models\User;
 
@@ -24,6 +25,7 @@ class DatabaseSeeder extends Seeder
             DiseaseSeeder::class,
             SymptomSeeder::class,
             DiseaseSymptomSeeder::class,
+            HealthMetricSeeder::class,
         ]);
 
         if (!User::query()->exists()) {

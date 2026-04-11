@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Medicine Logs - My Doctor')
+@section('title', 'Medicine Logs')
 
 @section('content')
 <div class="container-fluid py-4 px-4">

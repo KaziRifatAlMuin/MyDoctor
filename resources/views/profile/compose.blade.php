@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Compose Message - My Doctor')
+@section('title', 'Compose Message')
 @section('main_content_class', 'main-content main-content--wide')
 
 @push('styles')

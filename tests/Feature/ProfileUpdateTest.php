@@ -15,6 +15,14 @@ class ProfileUpdateTest extends TestCase
 {
     use RefreshDatabase;
 
+    private function requiredAddressPayload(): array
+    {
+        return [
+            'district' => 'Dhaka',
+            'upazila' => 'Dhanmondi',
+        ];
+    }
+
     // ──────────────────────────────────────────────────
     // Guest access
     // ──────────────────────────────────────────────────
@@ -36,13 +44,13 @@ class ProfileUpdateTest extends TestCase
         $user = User::factory()->create(['name' => 'Old Name']);
 
         $this->actingAs($user)
-             ->patch(route('profile.update'), [
+             ->patch(route('profile.update'), array_merge($this->requiredAddressPayload(), [
                  'name'          => 'New Name',
                  'date_of_birth' => '1990-05-15',
                  'phone'         => '01712345678',
                  'occupation'    => 'Developer',
                  'blood_group'   => 'O+',
-             ])
+             ]))
              ->assertRedirect(route('profile'))
              ->assertSessionHas('success');
 
@@ -58,13 +66,13 @@ class ProfileUpdateTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-             ->patch(route('profile.update'), [
+             ->patch(route('profile.update'), array_merge($this->requiredAddressPayload(), [
                  'name'          => 'Jane Doe',
                  'date_of_birth' => '1985-12-01',
                  'phone'         => '01987654321',
                  'occupation'    => 'Nurse',
                  'blood_group'   => 'A-',
-             ]);
+             ]));
 
         $this->assertDatabaseHas('users', [
             'id'         => $user->id,
@@ -86,10 +94,10 @@ class ProfileUpdateTest extends TestCase
         ]);
 
         $this->actingAs($user)
-             ->patch(route('profile.update'), [
+             ->patch(route('profile.update'), array_merge($this->requiredAddressPayload(), [
                  'name'          => 'Minimal User',
                  // optional fields omitted
-             ])
+             ]))
              ->assertRedirect(route('profile'));
 
         $user->refresh();
@@ -108,7 +116,7 @@ class ProfileUpdateTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-             ->patch(route('profile.update'), ['name' => ''])
+               ->patch(route('profile.update'), array_merge($this->requiredAddressPayload(), ['name' => '']))
              ->assertSessionHasErrors('name');
     }
 
@@ -118,7 +126,7 @@ class ProfileUpdateTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-             ->patch(route('profile.update'), ['name' => str_repeat('A', 256)])
+               ->patch(route('profile.update'), array_merge($this->requiredAddressPayload(), ['name' => str_repeat('A', 256)]))
              ->assertSessionHasErrors('name');
     }
 
@@ -128,7 +136,7 @@ class ProfileUpdateTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-             ->patch(route('profile.update'), ['name' => str_repeat('A', 255)])
+               ->patch(route('profile.update'), array_merge($this->requiredAddressPayload(), ['name' => str_repeat('A', 255)]))
              ->assertRedirect(route('profile'))
              ->assertSessionMissing('errors');
     }
@@ -143,10 +151,10 @@ class ProfileUpdateTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-             ->patch(route('profile.update'), [
+             ->patch(route('profile.update'), array_merge($this->requiredAddressPayload(), [
                  'name'          => 'Test User',
                  'date_of_birth' => now()->format('Y-m-d'),
-             ])
+             ]))
              ->assertSessionHasErrors('date_of_birth');
     }
 
@@ -156,10 +164,10 @@ class ProfileUpdateTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-             ->patch(route('profile.update'), [
+             ->patch(route('profile.update'), array_merge($this->requiredAddressPayload(), [
                  'name'          => 'Test User',
                  'date_of_birth' => now()->addYear()->format('Y-m-d'),
-             ])
+             ]))
              ->assertSessionHasErrors('date_of_birth');
     }
 
@@ -169,10 +177,10 @@ class ProfileUpdateTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-             ->patch(route('profile.update'), [
+             ->patch(route('profile.update'), array_merge($this->requiredAddressPayload(), [
                  'name'          => 'Test User',
                  'date_of_birth' => '1990-06-15',
-             ])
+             ]))
              ->assertRedirect(route('profile'))
              ->assertSessionMissing('errors');
     }
@@ -187,10 +195,10 @@ class ProfileUpdateTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-             ->patch(route('profile.update'), [
+             ->patch(route('profile.update'), array_merge($this->requiredAddressPayload(), [
                  'name'        => 'Test User',
                  'blood_group' => 'Z+',
-             ])
+             ]))
              ->assertSessionHasErrors('blood_group');
     }
 
@@ -203,10 +211,10 @@ class ProfileUpdateTest extends TestCase
             $user = User::factory()->create();
 
             $this->actingAs($user)
-                 ->patch(route('profile.update'), [
+                 ->patch(route('profile.update'), array_merge($this->requiredAddressPayload(), [
                      'name'        => 'Blood Group Test',
                      'blood_group' => $group,
-                 ])
+                 ]))
                  ->assertRedirect(route('profile'));
         }
     }
@@ -222,7 +230,7 @@ class ProfileUpdateTest extends TestCase
         $userB = User::factory()->create(['name' => 'Bob']);
 
         $this->actingAs($userA)
-             ->patch(route('profile.update'), ['name' => 'Alice Updated']);
+               ->patch(route('profile.update'), array_merge($this->requiredAddressPayload(), ['name' => 'Alice Updated']));
 
         $userB->refresh();
         $this->assertEquals('Bob', $userB->name);   // unchanged

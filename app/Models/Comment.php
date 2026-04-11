@@ -60,6 +60,36 @@ class Comment extends Model
                     'actor_avatar' => $commenter->picture ? asset('storage/' . $commenter->picture) : null,
                 ],
             ]);
+
+            $starFollowerIds = PostLike::query()
+                ->where('post_id', $comment->post->id)
+                ->where('is_starred', true)
+                ->where('user_id', '!=', $commenter->id)
+                ->pluck('user_id')
+                ->unique()
+                ->values();
+
+            foreach ($starFollowerIds as $followerId) {
+                if ((int) $followerId === (int) $comment->post->user_id) {
+                    continue;
+                }
+
+                Notification::create([
+                    'user_id' => $followerId,
+                    'from_user_id' => $commenter->id,
+                    'type' => 'starred_post_update',
+                    'notifiable_type' => self::class,
+                    'notifiable_id' => $comment->id,
+                    'message' => "{$commenter->name} commented on a post you starred",
+                    'data' => [
+                        'post_id' => $comment->post->id,
+                        'comment_id' => $comment->id,
+                        'comment_preview' => $preview,
+                        'actor_name' => $commenter->name,
+                        'actor_avatar' => $commenter->picture ? asset('storage/' . $commenter->picture) : null,
+                    ],
+                ]);
+            }
         });
     }
 

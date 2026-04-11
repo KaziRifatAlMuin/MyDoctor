@@ -11,17 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('environments', function (Blueprint $table) {
+        Schema::create('user_health', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->string('location_name');
-            $table->decimal('latitude', 10, 7)->nullable();
-            $table->decimal('longitude', 10, 7)->nullable();
+            $table->foreignId('health_metric_id')->constrained('health_metrics')->cascadeOnDelete();
+            $table->json('value');
             $table->dateTime('recorded_at');
-            $table->string('weather_condition')->nullable();
             $table->timestamps();
 
-            $table->index(['user_id', 'recorded_at']);
+            $table->index(['user_id', 'health_metric_id', 'recorded_at'], 'user_health_lookup_idx');
         });
     }
 
@@ -30,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('environments');
+        Schema::dropIfExists('user_health');
     }
 };

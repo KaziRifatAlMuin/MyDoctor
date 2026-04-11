@@ -414,6 +414,26 @@
                         </div>
 
                         <div class="info-item">
+                            <div class="info-icon gray"><i class="fas fa-person"></i></div>
+                            <div>
+                                <div class="info-label">Gender</div>
+                                <div class="info-value">
+                                    {{ auth()->user()->gender ? ucfirst(auth()->user()->gender) : 'Not provided' }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="info-item">
+                            <div class="info-icon green"><i class="fas fa-location-dot"></i></div>
+                            <div>
+                                <div class="info-label">Address</div>
+                                <div class="info-value">
+                                    {{ auth()->user()->address?->display_address ?? 'Not set' }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="info-item">
                             <div class="info-icon green"><i class="fas fa-shield-alt"></i></div>
                             <div>
                                 <div class="info-label">Email Verification</div>
@@ -588,6 +608,66 @@
                                 </div>
                             </div>
 
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Gender</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0">
+                                        <i class="fas fa-person text-primary" style="color:#667eea!important;"></i>
+                                    </span>
+                                    <select name="gender" class="form-select border-start-0">
+                                        <option value="">-- Select Gender --</option>
+                                        <option value="male" {{ old('gender', auth()->user()->gender) === 'male' ? 'selected' : '' }}>Male</option>
+                                        <option value="female" {{ old('gender', auth()->user()->gender) === 'female' ? 'selected' : '' }}>Female</option>
+                                        <option value="other" {{ old('gender', auth()->user()->gender) === 'other' ? 'selected' : '' }}>Other</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                @php
+                                    $isBnLocale = str_starts_with((string) app()->getLocale(), 'bn');
+                                @endphp
+                                <label class="form-label fw-semibold small">Division</label>
+                                <select id="profileDivision" class="form-select" data-current-id="{{ old('division_id', auth()->user()->address?->division_id) }}">
+                                    @if (old('division', auth()->user()->address?->division))
+                                        <option value="{{ old('division', auth()->user()->address?->division) }}" data-id="{{ old('division_id', auth()->user()->address?->division_id) }}" data-bn="{{ old('division_bn', auth()->user()->address?->division_bn) }}" selected>{{ $isBnLocale ? (old('division_bn', auth()->user()->address?->division_bn) ?: old('division', auth()->user()->address?->division)) : old('division', auth()->user()->address?->division) }}</option>
+                                    @else
+                                        <option value="">{{ $isBnLocale ? 'বিভাগ নির্বাচন করুন' : 'Select Division' }}</option>
+                                    @endif
+                                </select>
+                                <input type="hidden" name="division_id" id="profileDivisionId" value="{{ old('division_id', auth()->user()->address?->division_id) }}">
+                                <input type="hidden" name="division" id="profileDivisionEn" value="{{ old('division', auth()->user()->address?->division) }}">
+                                <input type="hidden" name="division_bn" id="profileDivisionBn" value="{{ old('division_bn', auth()->user()->address?->division_bn) }}">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">District <span class="text-danger">*</span></label>
+                                <select name="district" id="profileDistrict" class="form-select" required data-current="{{ old('district', auth()->user()->address?->district) }}" data-current-id="{{ old('district_id', auth()->user()->address?->district_id) }}">
+                                    <option value="{{ old('district', auth()->user()->address?->district) }}" selected>{{ old('district', auth()->user()->address?->district) ? ($isBnLocale ? (old('district_bn', auth()->user()->address?->district_bn) ?: old('district', auth()->user()->address?->district)) : old('district', auth()->user()->address?->district)) : ($isBnLocale ? 'জেলা নির্বাচন করুন' : 'Select District') }}</option>
+                                </select>
+                                <input type="hidden" name="district_id" id="profileDistrictId" value="{{ old('district_id', auth()->user()->address?->district_id) }}">
+                                <input type="hidden" name="district_bn" id="profileDistrictBn" value="{{ old('district_bn', auth()->user()->address?->district_bn) }}">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Upazila <span class="text-danger">*</span></label>
+                                <select name="upazila" id="profileUpazila" class="form-select" required data-current="{{ old('upazila', auth()->user()->address?->upazila) }}" data-current-id="{{ old('upazila_id', auth()->user()->address?->upazila_id) }}">
+                                    <option value="{{ old('upazila', auth()->user()->address?->upazila) }}" selected>{{ old('upazila', auth()->user()->address?->upazila) ? ($isBnLocale ? (old('upazila_bn', auth()->user()->address?->upazila_bn) ?: old('upazila', auth()->user()->address?->upazila)) : old('upazila', auth()->user()->address?->upazila)) : ($isBnLocale ? 'উপজেলা নির্বাচন করুন' : 'Select Upazila') }}</option>
+                                </select>
+                                <input type="hidden" name="upazila_id" id="profileUpazilaId" value="{{ old('upazila_id', auth()->user()->address?->upazila_id) }}">
+                                <input type="hidden" name="upazila_bn" id="profileUpazilaBn" value="{{ old('upazila_bn', auth()->user()->address?->upazila_bn) }}">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Street</label>
+                                <input type="text" name="street" class="form-control" value="{{ old('street', auth()->user()->address?->street) }}" placeholder="Street / Road">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">House</label>
+                                <input type="text" name="house" class="form-control" value="{{ old('house', auth()->user()->address?->house) }}" placeholder="House / Building">
+                            </div>
+
                         </div>
                     </div>
 
@@ -757,7 +837,7 @@
         });
 
         // Re-open the correct modal after validation errors (via session flash)
-        @if ($errors->hasAny(['name', 'phone', 'date_of_birth', 'occupation', 'blood_group']))
+        @if ($errors->hasAny(['name', 'phone', 'date_of_birth', 'occupation', 'blood_group', 'gender', 'district', 'upazila', 'street', 'house']))
             var modal = new bootstrap.Modal(document.getElementById('editProfileModal'));
             modal.show();
         @endif
@@ -766,6 +846,167 @@
             var modal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
             modal.show();
         @endif
+
+        initializeBdAddressSelector();
+
+        async function initializeBdAddressSelector() {
+            const divisionSelect = document.getElementById('profileDivision');
+            const districtSelect = document.getElementById('profileDistrict');
+            const upazilaSelect = document.getElementById('profileUpazila');
+            const divisionIdInput = document.getElementById('profileDivisionId');
+            const divisionEnInput = document.getElementById('profileDivisionEn');
+            const divisionBnInput = document.getElementById('profileDivisionBn');
+            const districtIdInput = document.getElementById('profileDistrictId');
+            const districtBnInput = document.getElementById('profileDistrictBn');
+            const upazilaIdInput = document.getElementById('profileUpazilaId');
+            const upazilaBnInput = document.getElementById('profileUpazilaBn');
+
+            if (!divisionSelect || !districtSelect || !upazilaSelect) {
+                return;
+            }
+
+            const locale = document.documentElement.lang?.startsWith('bn') ? 'bn' : 'en';
+            const apiBase = '{{ url('/geo/v2.0') }}';
+            const divisionPlaceholder = locale === 'bn' ? 'বিভাগ নির্বাচন করুন' : 'Select Division';
+            const districtPlaceholder = locale === 'bn' ? 'জেলা নির্বাচন করুন' : 'Select District';
+            const upazilaPlaceholder = locale === 'bn' ? 'উপজেলা নির্বাচন করুন' : 'Select Upazila';
+            const currentDistrict = districtSelect.dataset.current || '';
+            const currentUpazila = upazilaSelect.dataset.current || '';
+            const currentDivisionId = divisionSelect.dataset.currentId || '';
+            const currentDistrictId = districtSelect.dataset.currentId || '';
+            const currentUpazilaId = upazilaSelect.dataset.currentId || '';
+
+            const toList = (payload) => Array.isArray(payload) ? payload : (payload?.data || payload?.result || []);
+            const getId = (item) => item?.id ?? item?.division_id ?? item?.district_id ?? item?.upazila_id ?? null;
+            const getEn = (item) => item?.name ?? item?.division ?? item?.district ?? item?.upazila ?? item?.upazilla ?? item?.name_en ?? '';
+            const getBn = (item) => item?.bn_name ?? item?.bn ?? item?.name_bn ?? item?.bangla ?? '';
+            const labelOf = (item) => locale === 'bn' ? (getBn(item) || getEn(item)) : getEn(item);
+
+            const setDivisionMeta = (item) => {
+                divisionIdInput.value = getId(item) ?? '';
+                divisionEnInput.value = getEn(item) || '';
+                divisionBnInput.value = getBn(item) || '';
+            };
+            const setDistrictMeta = (item) => {
+                districtIdInput.value = getId(item) ?? '';
+                districtBnInput.value = getBn(item) || '';
+            };
+            const setUpazilaMeta = (item) => {
+                upazilaIdInput.value = getId(item) ?? '';
+                upazilaBnInput.value = getBn(item) || '';
+            };
+
+            const renderUpazilas = (upazilas, selectedName, selectedId) => {
+                upazilaSelect.innerHTML = `<option value="">${upazilaPlaceholder}</option>`;
+                (upazilas || []).forEach((item) => {
+                    const option = document.createElement('option');
+                    option.value = getEn(item);
+                    option.textContent = labelOf(item);
+                    option.dataset.id = String(getId(item) ?? '');
+                    option.dataset.bn = getBn(item) || '';
+                    if ((selectedId && option.dataset.id === String(selectedId)) || (selectedName && selectedName === option.value)) {
+                        option.selected = true;
+                        setUpazilaMeta(item);
+                    }
+                    upazilaSelect.appendChild(option);
+                });
+            };
+
+            const renderDistricts = (districtRows, selectedDistrictName, selectedDistrictId, selectedUpazilaName, selectedUpazilaId) => {
+                districtSelect.innerHTML = `<option value="">${districtPlaceholder}</option>`;
+                districtRows.forEach((districtRow) => {
+                    const option = document.createElement('option');
+                    option.value = getEn(districtRow);
+                    option.textContent = labelOf(districtRow);
+                    option.dataset.id = String(getId(districtRow) ?? '');
+                    option.dataset.bn = getBn(districtRow) || '';
+                    if ((selectedDistrictId && option.dataset.id === String(selectedDistrictId)) || (selectedDistrictName && selectedDistrictName === option.value)) {
+                        option.selected = true;
+                        setDistrictMeta(districtRow);
+                    }
+                    districtSelect.appendChild(option);
+                });
+
+                const selectedRow = districtRows.find((item) => String(getId(item) ?? '') === districtSelect.selectedOptions[0]?.dataset.id) || districtRows.find((item) => getEn(item) === districtSelect.value);
+                renderUpazilas([], '', '');
+                if (selectedRow && getId(selectedRow)) {
+                    loadUpazilas(getId(selectedRow), selectedUpazilaName, selectedUpazilaId);
+                }
+            };
+
+            const loadUpazilas = async (districtId, selectedUpazilaName, selectedUpazilaId) => {
+                const response = await fetch(`${apiBase}/upazilas/${districtId}`);
+                const payload = await response.json();
+                renderUpazilas(toList(payload), selectedUpazilaName, selectedUpazilaId);
+            };
+
+            try {
+                const divisionsResponse = await fetch(`${apiBase}/divisions`);
+                const divisionsPayload = await divisionsResponse.json();
+                const divisions = toList(divisionsPayload);
+
+                divisionSelect.innerHTML = `<option value="">${divisionPlaceholder}</option>`;
+
+                divisions.forEach((division) => {
+                    const option = document.createElement('option');
+                    option.value = getEn(division);
+                    option.textContent = labelOf(division);
+                    option.dataset.id = String(getId(division) ?? '');
+                    option.dataset.bn = getBn(division) || '';
+                    if ((currentDivisionId && option.dataset.id === String(currentDivisionId)) || (!currentDivisionId && divisionEnInput.value && option.value === divisionEnInput.value)) {
+                        option.selected = true;
+                        setDivisionMeta(division);
+                    }
+                    divisionSelect.appendChild(option);
+                });
+
+                const selectedDivisionId = divisionSelect.selectedOptions[0]?.dataset.id;
+                if (selectedDivisionId) {
+                    const districtsResponse = await fetch(`${apiBase}/districts/${selectedDivisionId}`);
+                    const districtsPayload = await districtsResponse.json();
+                    renderDistricts(toList(districtsPayload), currentDistrict, currentDistrictId, currentUpazila, currentUpazilaId);
+                }
+
+                divisionSelect.addEventListener('change', async function() {
+                    const selected = this.selectedOptions[0];
+                    const divisionId = selected?.dataset.id || '';
+                    setDivisionMeta({ id: divisionId, name: selected?.value || '', bn_name: selected?.dataset.bn || '' });
+                    districtSelect.innerHTML = `<option value="">${districtPlaceholder}</option>`;
+                    upazilaSelect.innerHTML = `<option value="">${upazilaPlaceholder}</option>`;
+                    setDistrictMeta({});
+                    setUpazilaMeta({});
+
+                    if (!divisionId) {
+                        return;
+                    }
+
+                    const districtsResponse = await fetch(`${apiBase}/districts/${divisionId}`);
+                    const districtsPayload = await districtsResponse.json();
+                    renderDistricts(toList(districtsPayload), '', '', '', '');
+                });
+
+                districtSelect.addEventListener('change', async function() {
+                    const selected = this.selectedOptions[0];
+                    const districtId = selected?.dataset.id || '';
+                    setDistrictMeta({ id: districtId, bn_name: selected?.dataset.bn || '' });
+                    upazilaSelect.innerHTML = `<option value="">${upazilaPlaceholder}</option>`;
+                    setUpazilaMeta({});
+
+                    if (!districtId) {
+                        return;
+                    }
+
+                    await loadUpazilas(districtId, '', '');
+                });
+
+                upazilaSelect.addEventListener('change', function() {
+                    const selected = this.selectedOptions[0];
+                    setUpazilaMeta({ id: selected?.dataset.id || '', bn_name: selected?.dataset.bn || '' });
+                });
+            } catch (error) {
+                console.error('Failed to load BD address API for profile form', error);
+            }
+        }
     </script>
 @endpush
 

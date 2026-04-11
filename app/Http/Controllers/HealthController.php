@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Models\HealthMetric;
+use App\Models\UserHealth;
 use App\Models\Symptom;
 use App\Models\UserSymptom;
 use App\Models\Medicine;
@@ -24,16 +25,20 @@ class HealthController extends Controller
         $user = Auth::user();
 
         $symptomsList  = config('health.symptoms', []);
-        $metricConfig  = config('health.metric_types', []);
+        $metricDefinitions = $this->ensureMetricDefinitions();
+        $metricConfig  = $this->buildMetricConfig($metricDefinitions);
         $diseasesBn    = [];
 
         // Health Metrics — latest 50, grouped by type
-        $healthMetrics = HealthMetric::where('user_id', $user->id)
+        $healthMetrics = UserHealth::with('healthMetric')
+            ->where('user_id', $user->id)
             ->orderByDesc('recorded_at')
             ->limit(50)
-            ->get();
+            ->get()
+            ->filter(fn(UserHealth $record) => $record->healthMetric !== null)
+            ->values();
 
-        $metricsByType = $healthMetrics->groupBy('metric_type');
+        $metricsByType = $healthMetrics->groupBy(fn(UserHealth $record) => $record->metric_type ?? 'unknown');
 
         // Latest value per metric type for summary cards
         $latestMetrics = $healthMetrics->groupBy('metric_type')->map(fn($group) => $group->first());
@@ -124,25 +129,26 @@ class HealthController extends Controller
             abort(403);
         }
 
-        $validTypes = implode(',', array_keys(config('health.metric_types')));
+        $definitions = $this->ensureMetricDefinitions();
+        $validTypes = implode(',', $definitions->pluck('metric_name')->all());
 
         $request->validate([
             'metric_type' => "required|string|in:$validTypes",
             'recorded_at' => 'required|date',
         ]);
 
-        $metricType = $request->metric_type;
-        $cfg        = config("health.metric_types.$metricType");
+        $metricType = (string) $request->metric_type;
+        $definition = $definitions->firstWhere('metric_name', $metricType);
 
-        $value = [];
-        foreach ($cfg['fields'] as $field) {
-            $value[$field] = $request->input("value_$field", 0);
+        if (!$definition) {
+            return back()->with('error', 'Selected metric definition no longer exists.');
         }
-        $value['unit'] = $cfg['unit'];
 
-        HealthMetric::create([
+        $value = $this->extractMetricValuesFromRequest($request, $metricType, (array) $definition->fields);
+
+        UserHealth::create([
             'user_id'     => $userId,
-            'metric_type' => $metricType,
+            'health_metric_id' => $definition->id,
             'recorded_at' => $request->recorded_at,
             'value'       => $value,
         ]);
@@ -289,29 +295,30 @@ class HealthController extends Controller
      *  UPDATE methods
      * ==================================================================== */
 
-    public function updateMetric(Request $request, HealthMetric $healthMetric)
+    public function updateMetric(Request $request, UserHealth $healthMetric)
     {
         $user = Auth::user();
         if (!$user || ($healthMetric->user_id !== $user->id && $user->role !== 'admin')) abort(403);
 
-        $validTypes = implode(',', array_keys(config('health.metric_types')));
+        $definitions = $this->ensureMetricDefinitions();
+        $validTypes = implode(',', $definitions->pluck('metric_name')->all());
 
         $request->validate([
             'metric_type' => "required|string|in:$validTypes",
             'recorded_at' => 'required|date',
         ]);
 
-        $metricType = $request->metric_type;
-        $cfg        = config("health.metric_types.$metricType");
+        $metricType = (string) $request->metric_type;
+        $definition = $definitions->firstWhere('metric_name', $metricType);
 
-        $value = [];
-        foreach ($cfg['fields'] as $field) {
-            $value[$field] = $request->input("value_$field", 0);
+        if (!$definition) {
+            return back()->with('error', 'Selected metric definition no longer exists.');
         }
-        $value['unit'] = $cfg['unit'];
+
+        $value = $this->extractMetricValuesFromRequest($request, $metricType, (array) $definition->fields);
 
         $healthMetric->update([
-            'metric_type' => $metricType,
+            'health_metric_id' => $definition->id,
             'recorded_at' => $request->recorded_at,
             'value'       => $value,
         ]);
@@ -422,7 +429,7 @@ class HealthController extends Controller
      *  DELETE methods
      * ==================================================================== */
 
-    public function destroyMetric(HealthMetric $healthMetric)
+    public function destroyMetric(UserHealth $healthMetric)
     {
         $user = Auth::user();
         if (!$user || ($healthMetric->user_id !== $user->id && $user->role !== 'admin')) abort(403);
@@ -491,5 +498,59 @@ class HealthController extends Controller
         }
 
         $symptom->diseases()->syncWithoutDetaching($diseaseIds);
+    }
+
+    private function ensureMetricDefinitions()
+    {
+        HealthMetric::seedDefaults();
+        return HealthMetric::query()->orderBy('metric_name')->get();
+    }
+
+    private function buildMetricConfig($definitions): array
+    {
+        $config = [];
+        foreach ($definitions as $definition) {
+            $metricName = (string) $definition->metric_name;
+            $fields = array_values((array) $definition->fields);
+            $config[$metricName] = [
+                'en' => ucwords(str_replace('_', ' ', $metricName)),
+                'bn' => '',
+                'unit' => '',
+                'fields' => $fields,
+                'js_fields' => collect($fields)->values()->map(function (string $field, int $index): array {
+                    return [
+                        'name' => 'value_' . $index,
+                        'field_key' => $field,
+                        'label' => $field,
+                        'placeholder' => 'Enter ' . $field,
+                        'min' => 0,
+                        'max' => 100000,
+                        'step' => '0.01',
+                    ];
+                })->all(),
+            ];
+        }
+
+        return $config;
+    }
+
+    private function extractMetricValuesFromRequest(Request $request, string $metricType, array $fields): array
+    {
+        $values = [];
+        $legacyFields = array_values((array) data_get(config('health.metric_types', []), $metricType . '.fields', []));
+
+        foreach (array_values($fields) as $index => $fieldLabel) {
+            $value = $request->input('value_' . $index);
+            if ($value === null) {
+                $legacyField = $legacyFields[$index] ?? null;
+                if ($legacyField !== null) {
+                    $value = $request->input('value_' . $legacyField);
+                }
+            }
+
+            $values[$fieldLabel] = $value ?? 0;
+        }
+
+        return $values;
     }
 }
