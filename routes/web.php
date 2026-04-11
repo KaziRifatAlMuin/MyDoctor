@@ -16,6 +16,7 @@ use App\Http\Controllers\CommunityController;
 use App\Http\Controllers\AiChatController;
 use App\Http\Controllers\PublicHealthController;
 use App\Http\Controllers\AdminManagementController;
+use App\Http\Controllers\GeoController;
 use App\Models\Disease;
 use Illuminate\Http\Request;
 
@@ -50,6 +51,16 @@ Route::view('/sitemap', 'sitemap')->name('sitemap');
 Route::view('/appointments', 'appointments')->name('appointments');
 Route::view('/pharmacy/nearby', 'pharmacy.nearby')->name('pharmacy.nearby');
 Route::view('/emergency', 'emergency')->name('emergency');
+
+// Local proxy for BD Geo API v2 endpoints (same-origin, no CORS issues in forms)
+Route::prefix('geo/v2.0')->group(function () {
+    Route::get('/divisions', [GeoController::class, 'divisions']);
+    Route::get('/districts', [GeoController::class, 'districtsAll']);
+    Route::get('/districts/{divisionId}', [GeoController::class, 'districtsByDivision'])->whereNumber('divisionId');
+    Route::get('/upazilas', [GeoController::class, 'upazilasAll']);
+    Route::get('/upazilas/{districtId}', [GeoController::class, 'upazilasByDistrict'])->whereNumber('districtId');
+    Route::get('/unions/{upazilaId}', [GeoController::class, 'unionsByUpazila'])->whereNumber('upazilaId');
+});
 
 Route::get('/language/{locale}', function (string $locale) {
     if (!in_array($locale, ['en', 'bn'], true)) {
@@ -373,6 +384,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/users', [AdminManagementController::class, 'usersIndex'])->name('users.index');
     Route::post('/users', [AdminManagementController::class, 'usersStore'])->name('users.store');
     Route::patch('/users/{user}', [AdminManagementController::class, 'usersUpdate'])->name('users.update');
+    Route::patch('/users/{user}/toggle-active', [AdminManagementController::class, 'usersToggleActive'])->name('users.toggle-active');
     Route::delete('/users/{user}', [AdminManagementController::class, 'usersDestroy'])->name('users.destroy');
 
     Route::get('/diseases', [AdminManagementController::class, 'diseasesIndex'])->name('diseases.index');
@@ -418,10 +430,17 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 */
 Route::middleware(['auth', 'admin'])->prefix('api/users')->group(function () {
     Route::get('{id}', function ($id) {
-        $user = \App\Models\User::findOrFail($id);
+        $user = \App\Models\User::with('address')->findOrFail($id);
         return response()->json($user->only([
-            'id', 'name', 'email', 'phone', 'occupation', 'blood_group', 'date_of_birth', 'picture', 'role', 'email_verified_at'
-        ]));
+            'id', 'name', 'email', 'phone', 'occupation', 'blood_group', 'date_of_birth', 'picture', 'role', 'gender', 'is_active', 'email_verified_at'
+        ]) + [
+            'address' => [
+                'district' => $user->address?->district,
+                'upazila' => $user->address?->upazila,
+                'street' => $user->address?->street,
+                'house' => $user->address?->house,
+            ],
+        ]);
     });
     
     Route::get('{id}/medical', function ($id) {

@@ -72,6 +72,14 @@
                                             <small style="display:block; color:#5e6797;">Date of Birth</small>
                                             <strong style="color:#253374;">{{ optional($user->date_of_birth)->format('M d, Y') ?: 'Not specified' }}</strong>
                                         </div>
+                                        <div style="background:#eef7ff; border:1px solid #d5e9ff; border-radius:10px; padding:0.65rem 0.75rem;">
+                                            <small style="display:block; color:#4c6f90;">Gender</small>
+                                            <strong style="color:#224f78;">{{ $user->gender ? ucfirst($user->gender) : 'Not specified' }}</strong>
+                                        </div>
+                                        <div style="background:#f7fff7; border:1px solid #d9efd9; border-radius:10px; padding:0.65rem 0.75rem;">
+                                            <small style="display:block; color:#517c51;">Address</small>
+                                            <strong style="color:#305a30;">{{ $user->address?->display_address ?? 'Not set' }}</strong>
+                                        </div>
                                     </div>
                                 @else
                                     <p style="margin:0.9rem 0 0; color:#6a7992; font-size:0.9rem; line-height:1.5;">

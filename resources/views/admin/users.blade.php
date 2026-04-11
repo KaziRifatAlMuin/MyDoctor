@@ -228,7 +228,7 @@
                 <div class="hero-stat"><small>Total Users</small><strong>{{ number_format($users->total()) }}</strong></div>
                 <div class="hero-stat"><small>Admins</small><strong>{{ number_format($adminCount) }}</strong></div>
                 <div class="hero-stat"><small>Members</small><strong>{{ number_format($memberCount) }}</strong></div>
-                <div class="hero-stat"><small>Verified</small><strong>{{ number_format($verifiedCount) }}</strong></div>
+                <div class="hero-stat"><small>Active</small><strong>{{ number_format($activeCount) }}</strong></div>
             </div>
         </div>
 
@@ -261,6 +261,8 @@
                         <tr>
                             <th>User</th>
                             <th>Email</th>
+                            <th>Gender</th>
+                            <th>Address</th>
                             <th>Role</th>
                             <th>Status</th>
                             <th>Joined</th>
@@ -284,6 +286,10 @@
                                     </div>
                                 </td>
                                 <td>{{ $user->email }}</td>
+                                <td>{{ $user->gender ? ucfirst($user->gender) : 'N/A' }}</td>
+                                <td>
+                                    {{ $user->address?->display_upazila ?: 'Not set' }}, {{ $user->address?->display_district ?: 'Not set' }}
+                                </td>
                                 <td>
                                     <span class="role-badge role-{{ strtolower($user->role) }}">
                                         <i class="fas {{ $user->role === 'admin' ? 'fa-crown' : 'fa-user' }}"></i>
@@ -291,22 +297,34 @@
                                     </span>
                                 </td>
                                 <td>
-                                    @if ($user->email_verified_at)
-                                        <span class="status-badge status-ok"><i class="fas fa-circle-check"></i>Verified</span>
+                                    @if ($user->is_active)
+                                        <span class="status-badge status-ok"><i class="fas fa-circle-check"></i>Active</span>
                                     @else
-                                        <span class="status-badge status-pending"><i class="fas fa-clock"></i>Pending</span>
+                                        <span class="status-badge status-pending"><i class="fas fa-user-slash"></i>Inactive</span>
                                     @endif
                                 </td>
                                 <td>{{ optional($user->created_at)->format('M d, Y') }}</td>
                                 <td>
-                                    <a href="{{ route('admin.users.show', $user) }}" class="action-link">
-                                        <i class="fas fa-arrow-up-right-from-square"></i>View
-                                    </a>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <a href="{{ route('admin.users.show', $user) }}" class="action-link">
+                                            <i class="fas fa-arrow-up-right-from-square"></i>View
+                                        </a>
+                                        @if (auth()->id() !== $user->id)
+                                            <form method="POST" action="{{ route('admin.users.toggle-active', $user) }}">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="action-link" style="border-color: {{ $user->is_active ? 'rgba(220, 38, 38, 0.3)' : 'rgba(22, 163, 74, 0.3)' }}; color: {{ $user->is_active ? '#dc2626' : '#16a34a' }}; background: #fff;">
+                                                    <i class="fas {{ $user->is_active ? 'fa-user-slash' : 'fa-user-check' }}"></i>
+                                                    {{ $user->is_active ? 'Deactivate' : 'Activate' }}
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center text-muted py-4">No users found.</td>
+                                <td colspan="8" class="text-center text-muted py-4">No users found.</td>
                             </tr>
                         @endforelse
                     </tbody>

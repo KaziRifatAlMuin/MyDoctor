@@ -114,6 +114,16 @@
                                         @endif
                                     </div>
 
+                                    <div style="font-size: 0.82rem; color: #51617e; margin-bottom: 0.45rem;">
+                                        <i class="fas fa-person me-1"></i>
+                                        {{ $user->gender ? ucfirst($user->gender) : 'Gender not set' }}
+                                    </div>
+
+                                    <div style="font-size: 0.82rem; color: #51617e; margin-bottom: 0.75rem;">
+                                        <i class="fas fa-location-dot me-1"></i>
+                                        {{ $user->address?->display_upazila ?: 'Not set' }}, {{ $user->address?->display_district ?: 'Not set' }}
+                                    </div>
+
                                     {{-- Join Info --}}
                                     <div style="font-size: 0.85rem; color: #718096; margin-top: auto; padding-top: 1rem; border-top: 1px solid #e0e0e0; margin-bottom: 1rem;">
                                         <i class="fas fa-calendar-alt me-1"></i> Joined {{ $user->created_at->format('M d, Y') }}

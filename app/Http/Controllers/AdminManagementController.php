@@ -24,6 +24,7 @@ class AdminManagementController extends Controller
         $search = trim((string) $request->query('q', ''));
 
         $users = User::query()
+            ->with('address')
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($inner) use ($search) {
                     $inner->where('name', 'like', "%{$search}%")
@@ -40,6 +41,8 @@ class AdminManagementController extends Controller
             'search' => $search,
             'adminCount' => User::where('role', 'admin')->count(),
             'memberCount' => User::where('role', 'member')->count(),
+            'activeCount' => User::where('is_active', true)->count(),
+            'inactiveCount' => User::where('is_active', false)->count(),
             'verifiedCount' => User::whereNotNull('email_verified_at')->count(),
             'newThisWeekCount' => User::whereDate('created_at', '>=', now()->subDays(7))->count(),
         ]);
@@ -54,16 +57,45 @@ class AdminManagementController extends Controller
             'role' => ['required', 'in:admin,member'],
             'phone' => ['nullable', 'string', 'max:20'],
             'occupation' => ['nullable', 'string', 'max:255'],
+            'gender' => ['nullable', 'in:male,female,other'],
+            'is_active' => ['nullable', 'boolean'],
+            'division_id' => ['nullable', 'integer'],
+            'division' => ['nullable', 'string', 'max:255'],
+            'division_bn' => ['nullable', 'string', 'max:255'],
+            'district_id' => ['nullable', 'integer'],
+            'district' => ['nullable', 'string', 'max:255'],
+            'district_bn' => ['nullable', 'string', 'max:255'],
+            'upazila_id' => ['nullable', 'integer'],
+            'upazila' => ['nullable', 'string', 'max:255'],
+            'upazila_bn' => ['nullable', 'string', 'max:255'],
+            'street' => ['nullable', 'string', 'max:255'],
+            'house' => ['nullable', 'string', 'max:255'],
         ]);
 
-        User::create([
+        $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
             'phone' => $validated['phone'] ?? null,
             'occupation' => $validated['occupation'] ?? null,
+            'gender' => $validated['gender'] ?? null,
+            'is_active' => (bool) ($validated['is_active'] ?? true),
             'email_verified_at' => now(),
+        ]);
+
+        $user->address()->updateOrCreate([], [
+            'division_id' => $validated['division_id'] ?? null,
+            'division' => $validated['division'] ?? 'Not set',
+            'division_bn' => $validated['division_bn'] ?? null,
+            'district_id' => $validated['district_id'] ?? null,
+            'district' => $validated['district'] ?? 'Not set',
+            'district_bn' => $validated['district_bn'] ?? null,
+            'upazila_id' => $validated['upazila_id'] ?? null,
+            'upazila' => $validated['upazila'] ?? 'Not set',
+            'upazila_bn' => $validated['upazila_bn'] ?? null,
+            'street' => $validated['street'] ?? null,
+            'house' => $validated['house'] ?? null,
         ]);
 
         return redirect()
@@ -80,11 +112,30 @@ class AdminManagementController extends Controller
             'phone' => ['nullable', 'string', 'max:20'],
             'occupation' => ['nullable', 'string', 'max:255'],
             'password' => ['nullable', 'string', 'min:8'],
+            'gender' => ['nullable', 'in:male,female,other'],
+            'is_active' => ['nullable', 'boolean'],
+            'division_id' => ['nullable', 'integer'],
+            'division' => ['nullable', 'string', 'max:255'],
+            'division_bn' => ['nullable', 'string', 'max:255'],
+            'district_id' => ['nullable', 'integer'],
+            'district' => ['nullable', 'string', 'max:255'],
+            'district_bn' => ['nullable', 'string', 'max:255'],
+            'upazila_id' => ['nullable', 'integer'],
+            'upazila' => ['nullable', 'string', 'max:255'],
+            'upazila_bn' => ['nullable', 'string', 'max:255'],
+            'street' => ['nullable', 'string', 'max:255'],
+            'house' => ['nullable', 'string', 'max:255'],
         ]);
 
         if ($request->user()->id === $user->id && $validated['role'] !== 'admin') {
             return back()->withErrors([
                 'role' => 'You cannot remove your own admin role.',
+            ]);
+        }
+
+        if ($request->user()->id === $user->id && isset($validated['is_active']) && ! (bool) $validated['is_active']) {
+            return back()->withErrors([
+                'is_active' => 'You cannot deactivate your own account.',
             ]);
         }
 
@@ -94,6 +145,8 @@ class AdminManagementController extends Controller
             'role' => $validated['role'],
             'phone' => $validated['phone'] ?? null,
             'occupation' => $validated['occupation'] ?? null,
+            'gender' => $validated['gender'] ?? null,
+            'is_active' => (bool) ($validated['is_active'] ?? true),
         ];
 
         if (!empty($validated['password'])) {
@@ -102,9 +155,41 @@ class AdminManagementController extends Controller
 
         $user->update($updateData);
 
+        $user->address()->updateOrCreate([], [
+            'division_id' => $validated['division_id'] ?? ($user->address?->division_id ?? null),
+            'division' => $validated['division'] ?? ($user->address?->division ?? 'Not set'),
+            'division_bn' => $validated['division_bn'] ?? ($user->address?->division_bn ?? null),
+            'district_id' => $validated['district_id'] ?? ($user->address?->district_id ?? null),
+            'district' => $validated['district'] ?? ($user->address?->district ?? 'Not set'),
+            'district_bn' => $validated['district_bn'] ?? ($user->address?->district_bn ?? null),
+            'upazila_id' => $validated['upazila_id'] ?? ($user->address?->upazila_id ?? null),
+            'upazila' => $validated['upazila'] ?? ($user->address?->upazila ?? 'Not set'),
+            'upazila_bn' => $validated['upazila_bn'] ?? ($user->address?->upazila_bn ?? null),
+            'street' => $validated['street'] ?? null,
+            'house' => $validated['house'] ?? null,
+        ]);
+
         return redirect()
             ->route('admin.users.index')
             ->with('success', 'User updated successfully.');
+    }
+
+    public function usersToggleActive(Request $request, User $user): RedirectResponse
+    {
+        if ($request->user()->id === $user->id) {
+            return back()->withErrors([
+                'is_active' => 'You cannot deactivate your own account.',
+            ]);
+        }
+
+        $user->is_active = !$user->is_active;
+        $user->save();
+
+        return redirect()
+            ->route('admin.users.index')
+            ->with('success', $user->is_active
+                ? 'User activated successfully.'
+                : 'User deactivated successfully.');
     }
 
     public function usersDestroy(Request $request, User $user): RedirectResponse

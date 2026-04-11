@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('password');
             $table->enum('role', ['member', 'admin'])->default('member');
             $table->boolean('is_active')->default(true);
+            $table->json('notification_settings')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

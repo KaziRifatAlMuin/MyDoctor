@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class NotificationPreferenceController extends Controller
 {
@@ -47,11 +48,12 @@ class NotificationPreferenceController extends Controller
         $settings->show_mail_badge = $request->has('show_mail_badge');
         $settings->save();
 
-        $notificationSettings = is_array($user->notification_settings) ? $user->notification_settings : [];
-        $notificationSettings['reminder_before_minutes'] = $validated['reminder_before_minutes'] ?? 5;
-        $user->notification_settings = $notificationSettings;
-        
-        $user->save();
+        if (Schema::hasColumn('users', 'notification_settings')) {
+            $notificationSettings = is_array($user->notification_settings) ? $user->notification_settings : [];
+            $notificationSettings['reminder_before_minutes'] = $validated['reminder_before_minutes'] ?? 5;
+            $user->notification_settings = $notificationSettings;
+            $user->save();
+        }
 
         // Persist chatbot bubble preference as a cookie (365 days)
         $chatbotCookieValue = (!$user->isAdmin() && $request->has('show_chatbot')) ? '1' : '0';

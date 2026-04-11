@@ -140,6 +140,81 @@
                             @enderror
                         </div>
 
+                        <div class="col-md-6 mb-3">
+                            <label for="Gender" class="form-label fw-semibold">Gender</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0">
+                                    <i class="fas fa-person text-primary"></i>
+                                </span>
+                                <select class="form-control border-start-0 @error('Gender') is-invalid @enderror" id="Gender" name="Gender">
+                                    <option value="">Select Gender</option>
+                                    <option value="male" {{ old('Gender') == 'male' ? 'selected' : '' }}>Male</option>
+                                    <option value="female" {{ old('Gender') == 'female' ? 'selected' : '' }}>Female</option>
+                                    <option value="other" {{ old('Gender') == 'other' ? 'selected' : '' }}>Other</option>
+                                </select>
+                            </div>
+                            @error('Gender')
+                                <span class="text-danger small">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            @php
+                                $isBnLocale = str_starts_with((string) app()->getLocale(), 'bn');
+                            @endphp
+                            <label for="Division" class="form-label fw-semibold">Division</label>
+                            <select id="Division" class="form-control" data-current-division-id="{{ old('DivisionId') }}" data-current-district-id="{{ old('DistrictId') }}" data-current-upazila-id="{{ old('UpazilaId') }}" data-current-district="{{ old('District') }}" data-current-upazila="{{ old('Upazila') }}">
+                                @if (old('Division'))
+                                    <option value="{{ old('Division') }}" data-id="{{ old('DivisionId') }}" data-bn="{{ old('DivisionBn') }}" selected>{{ $isBnLocale ? (old('DivisionBn') ?: old('Division')) : old('Division') }}</option>
+                                @else
+                                    <option value="">{{ $isBnLocale ? 'বিভাগ নির্বাচন করুন' : 'Select Division' }}</option>
+                                @endif
+                            </select>
+                            <input type="hidden" id="DivisionId" name="DivisionId" value="{{ old('DivisionId') }}">
+                            <input type="hidden" id="DivisionEn" name="Division" value="{{ old('Division') }}">
+                            <input type="hidden" id="DivisionBn" name="DivisionBn" value="{{ old('DivisionBn') }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="District" class="form-label fw-semibold">District <span class="text-danger">*</span></label>
+                            <select id="District" name="District" class="form-control @error('District') is-invalid @enderror" required>
+                                <option value="{{ old('District') }}">{{ old('District') ? ($isBnLocale ? (old('DistrictBn') ?: old('District')) : old('District')) : ($isBnLocale ? 'জেলা নির্বাচন করুন' : 'Select District') }}</option>
+                            </select>
+                            <input type="hidden" id="DistrictId" name="DistrictId" value="{{ old('DistrictId') }}">
+                            <input type="hidden" id="DistrictBn" name="DistrictBn" value="{{ old('DistrictBn') }}">
+                            @error('District')
+                                <span class="text-danger small">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="Upazila" class="form-label fw-semibold">Upazila <span class="text-danger">*</span></label>
+                            <select id="Upazila" name="Upazila" class="form-control @error('Upazila') is-invalid @enderror" required>
+                                <option value="{{ old('Upazila') }}">{{ old('Upazila') ? ($isBnLocale ? (old('UpazilaBn') ?: old('Upazila')) : old('Upazila')) : ($isBnLocale ? 'উপজেলা নির্বাচন করুন' : 'Select Upazila') }}</option>
+                            </select>
+                            <input type="hidden" id="UpazilaId" name="UpazilaId" value="{{ old('UpazilaId') }}">
+                            <input type="hidden" id="UpazilaBn" name="UpazilaBn" value="{{ old('UpazilaBn') }}">
+                            @error('Upazila')
+                                <span class="text-danger small">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="Street" class="form-label fw-semibold">Street</label>
+                            <input type="text" class="form-control @error('Street') is-invalid @enderror" id="Street" name="Street" value="{{ old('Street') }}" placeholder="Street / Road">
+                            @error('Street')
+                                <span class="text-danger small">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="House" class="form-label fw-semibold">House</label>
+                            <input type="text" class="form-control @error('House') is-invalid @enderror" id="House" name="House" value="{{ old('House') }}" placeholder="House / Building">
+                            @error('House')
+                                <span class="text-danger small">{{ $message }}</span>
+                            @enderror
+                        </div>
+
                         <!-- Password Field -->
                         <div class="col-md-6 mb-3">
                             <label for="password" class="form-label fw-semibold">Password <span class="text-danger">*</span></label>
@@ -261,5 +336,166 @@
             toggleIcon.classList.add('fa-eye');
         }
     }
+
+    document.addEventListener('DOMContentLoaded', async function() {
+        const divisionSelect = document.getElementById('Division');
+        const districtSelect = document.getElementById('District');
+        const upazilaSelect = document.getElementById('Upazila');
+        const divisionIdInput = document.getElementById('DivisionId');
+        const divisionEnInput = document.getElementById('DivisionEn');
+        const divisionBnInput = document.getElementById('DivisionBn');
+        const districtIdInput = document.getElementById('DistrictId');
+        const districtBnInput = document.getElementById('DistrictBn');
+        const upazilaIdInput = document.getElementById('UpazilaId');
+        const upazilaBnInput = document.getElementById('UpazilaBn');
+
+        if (!divisionSelect || !districtSelect || !upazilaSelect) {
+            return;
+        }
+
+        const locale = document.documentElement.lang?.startsWith('bn') ? 'bn' : 'en';
+        const apiBase = '{{ url('/geo/v2.0') }}';
+        const divisionPlaceholder = locale === 'bn' ? 'বিভাগ নির্বাচন করুন' : 'Select Division';
+        const districtPlaceholder = locale === 'bn' ? 'জেলা নির্বাচন করুন' : 'Select District';
+        const upazilaPlaceholder = locale === 'bn' ? 'উপজেলা নির্বাচন করুন' : 'Select Upazila';
+        const currentDistrict = divisionSelect.dataset.currentDistrict || '';
+        const currentUpazila = divisionSelect.dataset.currentUpazila || '';
+        const currentDivisionId = divisionSelect.dataset.currentDivisionId || '';
+        const currentDistrictId = divisionSelect.dataset.currentDistrictId || '';
+        const currentUpazilaId = divisionSelect.dataset.currentUpazilaId || '';
+
+        const toList = (payload) => Array.isArray(payload) ? payload : (payload?.data || payload?.result || []);
+        const getId = (item) => item?.id ?? item?.division_id ?? item?.district_id ?? item?.upazila_id ?? null;
+        const getEn = (item) => item?.name ?? item?.division ?? item?.district ?? item?.upazila ?? item?.upazilla ?? item?.name_en ?? '';
+        const getBn = (item) => item?.bn_name ?? item?.bn ?? item?.name_bn ?? item?.bangla ?? '';
+        const labelOf = (item) => locale === 'bn' ? (getBn(item) || getEn(item)) : getEn(item);
+
+        const setDivisionMeta = (item) => {
+            divisionIdInput.value = getId(item) ?? '';
+            divisionEnInput.value = getEn(item) || '';
+            divisionBnInput.value = getBn(item) || '';
+        };
+        const setDistrictMeta = (item) => {
+            districtIdInput.value = getId(item) ?? '';
+            districtBnInput.value = getBn(item) || '';
+        };
+        const setUpazilaMeta = (item) => {
+            upazilaIdInput.value = getId(item) ?? '';
+            upazilaBnInput.value = getBn(item) || '';
+        };
+
+        const renderUpazilas = (upazilas, selectedName, selectedId) => {
+            upazilaSelect.innerHTML = `<option value="">${upazilaPlaceholder}</option>`;
+            (upazilas || []).forEach((item) => {
+                const option = document.createElement('option');
+                option.value = getEn(item);
+                option.textContent = labelOf(item);
+                option.dataset.id = String(getId(item) ?? '');
+                option.dataset.bn = getBn(item) || '';
+                if ((selectedId && option.dataset.id === String(selectedId)) || (selectedName && selectedName === option.value)) {
+                    option.selected = true;
+                    setUpazilaMeta(item);
+                }
+                upazilaSelect.appendChild(option);
+            });
+        };
+
+        const renderDistricts = (districtRows, selectedDistrictName, selectedDistrictId, selectedUpazilaName, selectedUpazilaId) => {
+            districtSelect.innerHTML = `<option value="">${districtPlaceholder}</option>`;
+            districtRows.forEach((districtRow) => {
+                const option = document.createElement('option');
+                option.value = getEn(districtRow);
+                option.textContent = labelOf(districtRow);
+                option.dataset.id = String(getId(districtRow) ?? '');
+                option.dataset.bn = getBn(districtRow) || '';
+                if ((selectedDistrictId && option.dataset.id === String(selectedDistrictId)) || (selectedDistrictName && selectedDistrictName === option.value)) {
+                    option.selected = true;
+                    setDistrictMeta(districtRow);
+                }
+                districtSelect.appendChild(option);
+            });
+
+            const selectedRow = districtRows.find((item) => String(getId(item) ?? '') === districtSelect.selectedOptions[0]?.dataset.id) || districtRows.find((item) => getEn(item) === districtSelect.value);
+            renderUpazilas([], '', '');
+            if (selectedRow && getId(selectedRow)) {
+                loadUpazilas(getId(selectedRow), selectedUpazilaName, selectedUpazilaId);
+            }
+        };
+
+        const loadUpazilas = async (districtId, selectedUpazilaName, selectedUpazilaId) => {
+            const response = await fetch(`${apiBase}/upazilas/${districtId}`);
+            const payload = await response.json();
+            const rows = toList(payload);
+            renderUpazilas(rows, selectedUpazilaName, selectedUpazilaId);
+        };
+
+        try {
+            const divisionsResponse = await fetch(`${apiBase}/divisions`);
+            const divisionsPayload = await divisionsResponse.json();
+            const divisions = toList(divisionsPayload);
+
+            divisionSelect.innerHTML = `<option value="">${divisionPlaceholder}</option>`;
+
+            divisions.forEach((division) => {
+                const option = document.createElement('option');
+                option.value = getEn(division);
+                option.textContent = labelOf(division);
+                option.dataset.id = String(getId(division) ?? '');
+                option.dataset.bn = getBn(division) || '';
+                if ((currentDivisionId && option.dataset.id === String(currentDivisionId)) || (!currentDivisionId && divisionEnInput.value && option.value === divisionEnInput.value)) {
+                    option.selected = true;
+                    setDivisionMeta(division);
+                }
+                divisionSelect.appendChild(option);
+            });
+
+            const selectedDivisionId = divisionSelect.selectedOptions[0]?.dataset.id;
+            if (selectedDivisionId) {
+                const districtsResponse = await fetch(`${apiBase}/districts/${selectedDivisionId}`);
+                const districtsPayload = await districtsResponse.json();
+                const districtRows = toList(districtsPayload);
+                renderDistricts(districtRows, currentDistrict, currentDistrictId, currentUpazila, currentUpazilaId);
+            }
+
+            divisionSelect.addEventListener('change', async function() {
+                const selected = this.selectedOptions[0];
+                const divisionId = selected?.dataset.id || '';
+                setDivisionMeta({ id: divisionId, name: selected?.value || '', bn_name: selected?.dataset.bn || '' });
+                districtSelect.innerHTML = `<option value="">${districtPlaceholder}</option>`;
+                upazilaSelect.innerHTML = `<option value="">${upazilaPlaceholder}</option>`;
+                setDistrictMeta({});
+                setUpazilaMeta({});
+
+                if (!divisionId) {
+                    return;
+                }
+
+                const districtsResponse = await fetch(`${apiBase}/districts/${divisionId}`);
+                const districtsPayload = await districtsResponse.json();
+                renderDistricts(toList(districtsPayload), '', '', '', '');
+            });
+
+            districtSelect.addEventListener('change', async function() {
+                const selected = this.selectedOptions[0];
+                const districtId = selected?.dataset.id || '';
+                setDistrictMeta({ id: districtId, bn_name: selected?.dataset.bn || '' });
+                upazilaSelect.innerHTML = `<option value="">${upazilaPlaceholder}</option>`;
+                setUpazilaMeta({});
+
+                if (!districtId) {
+                    return;
+                }
+
+                await loadUpazilas(districtId, '', '');
+            });
+
+            upazilaSelect.addEventListener('change', function() {
+                const selected = this.selectedOptions[0];
+                setUpazilaMeta({ id: selected?.dataset.id || '', bn_name: selected?.dataset.bn || '' });
+            });
+        } catch (error) {
+            console.error('Failed to load BD address API for registration form', error);
+        }
+    });
 </script>
 @endpush

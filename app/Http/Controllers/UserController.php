@@ -16,7 +16,7 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::query();
+        $query = User::query()->with('address');
         
         // Apply search filter
         if ($request->filled('search')) {
@@ -51,7 +51,7 @@ class UserController extends Controller
      */
     public function publicShow(User $user)
     {
-        $user->load('setting');
+        $user->load(['setting', 'address']);
 
         if ($user->setting->show_diseases) {
             $user->load(['userDiseases' => function ($query) {
@@ -72,6 +72,7 @@ class UserController extends Controller
             abort(403, 'Access denied. Admin privileges required.');
         }
         
+        $user->load('address');
         $metricDefinitions = $this->ensureMetricDefinitions();
 
         // Load all health data for the user (same as HealthController)
@@ -179,6 +180,18 @@ class UserController extends Controller
             'date_of_birth' => 'nullable|date|before:today',
             'gender' => 'nullable|in:male,female,other',
             'role' => 'required|in:admin,member',
+            'is_active' => 'nullable|boolean',
+            'division_id' => 'nullable|integer',
+            'division' => 'nullable|string|max:255',
+            'division_bn' => 'nullable|string|max:255',
+            'district_id' => 'nullable|integer',
+            'district' => 'nullable|string|max:255',
+            'district_bn' => 'nullable|string|max:255',
+            'upazila_id' => 'nullable|integer',
+            'upazila' => 'nullable|string|max:255',
+            'upazila_bn' => 'nullable|string|max:255',
+            'street' => 'nullable|string|max:255',
+            'house' => 'nullable|string|max:255',
         ]);
 
         // Prevent admin from removing their own admin access
@@ -188,7 +201,27 @@ class UserController extends Controller
             ])->withInput();
         }
 
+        if ($user->id === auth()->id() && isset($validated['is_active']) && ! (bool) $validated['is_active']) {
+            return back()->withErrors([
+                'is_active' => 'You cannot deactivate your own account.',
+            ])->withInput();
+        }
+
         $user->update($validated);
+
+        $user->address()->updateOrCreate([], [
+            'division_id' => $validated['division_id'] ?? ($user->address?->division_id ?? null),
+            'division' => $validated['division'] ?? ($user->address?->division ?? 'Not set'),
+            'division_bn' => $validated['division_bn'] ?? ($user->address?->division_bn ?? null),
+            'district_id' => $validated['district_id'] ?? ($user->address?->district_id ?? null),
+            'district' => $validated['district'],
+            'district_bn' => $validated['district_bn'] ?? ($user->address?->district_bn ?? null),
+            'upazila_id' => $validated['upazila_id'] ?? ($user->address?->upazila_id ?? null),
+            'upazila' => $validated['upazila'],
+            'upazila_bn' => $validated['upazila_bn'] ?? ($user->address?->upazila_bn ?? null),
+            'street' => $validated['street'] ?? null,
+            'house' => $validated['house'] ?? null,
+        ]);
 
         $redirectTab = request()->input('redirect_tab', 'overview');
         return back()->with('success', "{$user->name} was updated successfully.")->withFragment($redirectTab);

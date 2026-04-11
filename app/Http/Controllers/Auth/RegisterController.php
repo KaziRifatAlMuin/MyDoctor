@@ -57,12 +57,23 @@ class RegisterController extends Controller
         return Validator::make($data, [
             'Name' => ['required', 'string', 'max:255'],
             'Email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'Email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'Phone' => ['nullable', 'string', 'max:20'],
             'DateOfBirth' => ['nullable', 'date'],
             'Occupation' => ['nullable', 'string', 'max:255'],
             'BloodGroup' => ['nullable', 'string', 'in:A+,A-,B+,B-,AB+,AB-,O+,O-'],
+            'Gender' => ['nullable', 'in:male,female,other'],
+            'DivisionId' => ['nullable', 'integer'],
+            'Division' => ['nullable', 'string', 'max:255'],
+            'DivisionBn' => ['nullable', 'string', 'max:255'],
+            'DistrictId' => ['nullable', 'integer'],
+            'District' => ['required', 'string', 'max:255'],
+            'DistrictBn' => ['nullable', 'string', 'max:255'],
+            'UpazilaId' => ['nullable', 'integer'],
+            'Upazila' => ['required', 'string', 'max:255'],
+            'UpazilaBn' => ['nullable', 'string', 'max:255'],
+            'Street' => ['nullable', 'string', 'max:255'],
+            'House' => ['nullable', 'string', 'max:255'],
         ]);
     }
 
@@ -71,9 +82,7 @@ class RegisterController extends Controller
      */
     protected function create(array $data)
     {
-        return User::create([
-            'name' => $data['Name'],
-            'email' => $data['Email'],
+        $user = User::create([
             'name' => $data['Name'],
             'email' => $data['Email'],
             'password' => Hash::make($data['password']),
@@ -81,8 +90,23 @@ class RegisterController extends Controller
             'date_of_birth' => $data['DateOfBirth'] ?? null,
             'occupation' => $data['Occupation'] ?? null,
             'blood_group' => $data['BloodGroup'] ?? null,
-            // 'email_notifications' => true, // Default to true
-            // 'push_notifications' => true,  // Default to true
+            'gender' => $data['Gender'] ?? null,
         ]);
+
+        $user->address()->updateOrCreate([], [
+            'division_id' => $data['DivisionId'] ?? null,
+            'division' => $data['Division'] ?? null,
+            'division_bn' => $data['DivisionBn'] ?? null,
+            'district_id' => $data['DistrictId'] ?? null,
+            'district' => $data['District'],
+            'district_bn' => $data['DistrictBn'] ?? null,
+            'upazila_id' => $data['UpazilaId'] ?? null,
+            'upazila' => $data['Upazila'],
+            'upazila_bn' => $data['UpazilaBn'] ?? null,
+            'street' => $data['Street'] ?? null,
+            'house' => $data['House'] ?? null,
+        ]);
+
+        return $user;
     }
 }

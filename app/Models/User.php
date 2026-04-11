@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Log;
@@ -21,6 +22,7 @@ class User extends Authenticatable
         'occupation',
         'blood_group',
         'gender',
+        'is_active',
         'password',
         'notification_settings',
     ];
@@ -35,10 +37,24 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password'           => 'hashed',
         'notification_settings' => 'array',
+        'is_active' => 'boolean',
     ];
 
     protected static function booted(): void
     {
+        static::addGlobalScope('active_users', function (Builder $builder): void {
+            if (app()->runningInConsole()) {
+                return;
+            }
+
+            // Avoid resolving the authenticated User model here to prevent recursion.
+            if (request()->is('admin') || request()->is('admin/*')) {
+                return;
+            }
+
+            $builder->where('users.is_active', true);
+        });
+
         static::created(function (User $user): void {
             $user->setting()->firstOrCreate([], [
                 'email_notifications' => true,
@@ -48,6 +64,20 @@ class User extends Authenticatable
                 'show_chatbot' => true,
                 'show_notification_badge' => true,
                 'show_mail_badge' => true,
+            ]);
+
+            $user->address()->firstOrCreate([], [
+                'division_id' => null,
+                'division' => 'Not set',
+                'division_bn' => null,
+                'district_id' => null,
+                'district' => 'Not set',
+                'district_bn' => null,
+                'upazila_id' => null,
+                'upazila' => 'Not set',
+                'upazila_bn' => null,
+                'street' => null,
+                'house' => null,
             ]);
         });
     }
@@ -219,6 +249,23 @@ class User extends Authenticatable
             'show_chatbot' => true,
             'show_notification_badge' => true,
             'show_mail_badge' => true,
+        ]);
+    }
+
+    public function address()
+    {
+        return $this->hasOne(UserAddress::class)->withDefault([
+            'division_id' => null,
+            'division' => 'Not set',
+            'division_bn' => null,
+            'district_id' => null,
+            'district' => 'Not set',
+            'district_bn' => null,
+            'upazila_id' => null,
+            'upazila' => 'Not set',
+            'upazila_bn' => null,
+            'street' => null,
+            'house' => null,
         ]);
     }
 

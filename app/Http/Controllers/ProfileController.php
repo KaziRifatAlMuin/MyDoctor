@@ -29,6 +29,18 @@ class ProfileController extends Controller
             'phone'         => 'nullable|string|max:20',
             'occupation'    => 'nullable|string|max:255',
             'blood_group'   => 'nullable|in:A+,A-,B+,B-,AB+,AB-,O+,O-',
+            'gender'        => 'nullable|in:male,female,other',
+            'division_id'   => 'nullable|integer',
+            'division'      => 'nullable|string|max:255',
+            'division_bn'   => 'nullable|string|max:255',
+            'district_id'   => 'nullable|integer',
+            'district'      => 'required|string|max:255',
+            'district_bn'   => 'nullable|string|max:255',
+            'upazila_id'    => 'nullable|integer',
+            'upazila'       => 'required|string|max:255',
+            'upazila_bn'    => 'nullable|string|max:255',
+            'street'        => 'nullable|string|max:255',
+            'house'         => 'nullable|string|max:255',
         ]);
 
         $user = Auth::user();
@@ -37,7 +49,22 @@ class ProfileController extends Controller
         $user->phone = $request->input('phone');
         $user->occupation = $request->input('occupation');
         $user->blood_group = $request->input('blood_group');
+        $user->gender = $request->input('gender');
         $user->save();
+
+        $user->address()->updateOrCreate([], [
+            'division_id' => $request->input('division_id'),
+            'division' => $request->input('division'),
+            'division_bn' => $request->input('division_bn'),
+            'district_id' => $request->input('district_id'),
+            'district' => $request->input('district'),
+            'district_bn' => $request->input('district_bn'),
+            'upazila_id' => $request->input('upazila_id'),
+            'upazila' => $request->input('upazila'),
+            'upazila_bn' => $request->input('upazila_bn'),
+            'street' => $request->input('street'),
+            'house' => $request->input('house'),
+        ]);
 
         return redirect()->route('profile')->with('success', 'Profile updated successfully.');
     }
