@@ -3,6 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\DashboardController;
@@ -57,7 +60,6 @@ Route::get('/', function () {
 })->name('home');
 
 // Main navigation pages
-Route::view('/medicine', 'medicine')->name('medicine');
 Route::view('/help', 'help')->name('help');
 
 // Footer pages
@@ -101,33 +103,53 @@ Route::get('/symptoms/{symptom}', [PublicHealthController::class, 'showSymptom']
 
 /*
 |--------------------------------------------------------------------------
-| Auth Routes
+| Guest Routes (Login, Register, Password Reset)
 |--------------------------------------------------------------------------
 */
-Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
-Route::post('/register', [RegisterController::class, 'register']);
-
 Route::middleware('guest')->group(function () {
+    // Login Routes
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login']);
-    Route::get('/forgot-password', function () {
-        return view('auth.forgot-password');
-    })->name('password.request');
+    
+    // Register Routes
+    Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
+    Route::post('/register', [RegisterController::class, 'register']);
+    
+    // Password Reset Routes
+    Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
+    Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+    Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
+    Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
 });
 
+/*
+|--------------------------------------------------------------------------
+| Email Verification Routes
+|--------------------------------------------------------------------------
+*/
+Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
+    ->middleware('signed')
+    ->name('verification.verify');
+
+Route::middleware(['auth', \App\Http\Middleware\RedirectIfEmailNotVerified::class])->group(function () {
+    Route::get('/email/verify', [EmailVerificationController::class, 'notice'])->name('verification.notice');
+    Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])->name('verification.resend');
+});
 /*
 |--------------------------------------------------------------------------
 | Authenticated Routes
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', \App\Http\Middleware\RedirectIfEmailNotVerified::class])->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+});
+
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/home', function () {
         if (auth()->user()?->isAdmin()) {
             return redirect()->route('admin.dashboard');
         }
-
         return redirect()->route('home');
     });
     
@@ -206,22 +228,19 @@ Route::middleware('auth')->group(function () {
     Route::delete('/health/disease/{userDisease}', [HealthController::class, 'destroyDisease'])->name('health.disease.destroy');
     Route::delete('/health/upload/{upload}', [HealthController::class, 'destroyUpload'])->name('health.upload.destroy');
     
-  /*
-|--------------------------------------------------------------------------
-| Notification Routes
-|--------------------------------------------------------------------------
-*/
-Route::middleware('auth')->prefix('notifications')->name('notifications.')->group(function () {
-    Route::get('/', [App\Http\Controllers\NotificationController::class, 'index'])->name('index');
-    Route::get('/unread-count', [App\Http\Controllers\NotificationController::class, 'unreadCount'])->name('unread-count');
-    Route::post('/{id}/read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('read');
-    Route::post('/mark-all-read', [App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
-    Route::delete('/{id}/delete', [App\Http\Controllers\NotificationController::class, 'delete'])->name('delete');
-    Route::delete('/clear-all', [App\Http\Controllers\NotificationController::class, 'clearAll'])->name('clear-all');
-});
-
-
-
+    /*
+    |--------------------------------------------------------------------------
+    | Notification Routes
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', [App\Http\Controllers\NotificationController::class, 'index'])->name('index');
+        Route::get('/unread-count', [App\Http\Controllers\NotificationController::class, 'unreadCount'])->name('unread-count');
+        Route::post('/{id}/read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('read');
+        Route::post('/mark-all-read', [App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
+        Route::delete('/{id}/delete', [App\Http\Controllers\NotificationController::class, 'delete'])->name('delete');
+        Route::delete('/clear-all', [App\Http\Controllers\NotificationController::class, 'clearAll'])->name('clear-all');
+    });
 
     // Suggestions
     Route::get('/suggestions', [SuggestionsController::class, 'index'])->name('suggestions');
@@ -230,12 +249,6 @@ Route::middleware('auth')->prefix('notifications')->name('notifications.')->grou
     Route::post('/chatbot/message', [AiChatController::class, 'message'])->name('chatbot.message');
     Route::post('/chatbot/about-me', [AiChatController::class, 'aboutMe'])->name('chatbot.about_me');
     Route::post('/chatbot/smart-suggestions', [AiChatController::class, 'smartSuggestions'])->name('chatbot.smart_suggestions');
-
-    // Email verification
-    Route::post('/email/verification-notification', function (\Illuminate\Http\Request $request) {
-        $request->user()->sendEmailVerificationNotification();
-        return back()->with('status', 'verification-link-sent');
-    })->name('verification.send');
 });
 
 /*
@@ -243,7 +256,7 @@ Route::middleware('auth')->prefix('notifications')->name('notifications.')->grou
 | Push Subscription Routes
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/push-subscriptions', function (Request $request) {
         try {
             $user = auth()->user();
@@ -284,7 +297,7 @@ Route::prefix('health')->name('health.')->group(function () {
         return redirect()->route('help');
     })->name('tips');
     
-    Route::middleware('auth')->group(function () {
+    Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/records', function () {
             return redirect(route('health', [], false) . '#logs');
         })->name('records');
@@ -308,7 +321,7 @@ Route::prefix('health')->name('health.')->group(function () {
 | Community Routes - FULLY WORKING WITH MODAL DYNAMIC UPDATES
 |--------------------------------------------------------------------------
 */
-Route::prefix('community')->name('community.')->group(function () {
+Route::prefix('community')->name('community.')->middleware(\App\Http\Middleware\RedirectIfEmailNotVerified::class)->group(function () {
     // Page routes (return HTML)
     Route::get('/', [CommunityController::class, 'home'])->name('home');
     Route::get('/posts', [CommunityController::class, 'postsIndex'])->name('posts.index');
@@ -354,7 +367,6 @@ Route::prefix('community')->name('community.')->group(function () {
     
     // User details for modals
     Route::get('/user/{userId}', [CommunityController::class, 'getUserDetails'])->name('user.details');
-    
 });
 
 /*
@@ -362,7 +374,7 @@ Route::prefix('community')->name('community.')->group(function () {
 | Medicine Routes
 |--------------------------------------------------------------------------
 */
-Route::prefix('medicine')->name('medicine.')->middleware('auth')->group(function () {
+Route::prefix('medicine')->name('medicine.')->middleware(['auth', 'verified'])->group(function () {
     Route::view('/', 'medicine')->name('index');
     Route::get('/my-medicines', [MedicineController::class, 'index'])->name('my-medicines');
     Route::get('/add', [MedicineController::class, 'create'])->name('add');
@@ -398,7 +410,7 @@ Route::prefix('medicine')->name('medicine.')->middleware('auth')->group(function
 });
 
 // User routes (auth required)
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/users', [App\Http\Controllers\UserController::class, 'index'])->name('users.index');
 });
 
@@ -406,14 +418,14 @@ Route::middleware('auth')->group(function () {
 Route::get('/user/{user}', [App\Http\Controllers\UserController::class, 'publicShow'])->name('users.show');
 
 // Admin user update route
-Route::middleware(['auth', 'admin'])->patch('/user/{user}', [App\Http\Controllers\UserController::class, 'update'])->name('users.update');
+Route::middleware(['auth', 'admin', \App\Http\Middleware\RedirectIfEmailNotVerified::class])->patch('/user/{user}', [App\Http\Controllers\UserController::class, 'update'])->name('users.update');
 
 /*
 |--------------------------------------------------------------------------
 | Admin Routes
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'admin', \App\Http\Middleware\RedirectIfEmailNotVerified::class])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/users', [AdminManagementController::class, 'usersIndex'])->name('users.index');
     Route::post('/users', [AdminManagementController::class, 'usersStore'])->name('users.store');
@@ -462,7 +474,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 | Admin API Routes
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'admin'])->prefix('api/users')->group(function () {
+Route::middleware(['auth', 'admin', \App\Http\Middleware\RedirectIfEmailNotVerified::class])->prefix('api/users')->group(function () {
     Route::get('{id}', function ($id) {
         $user = \App\Models\User::with('address')->findOrFail($id);
         return response()->json($user->only([
