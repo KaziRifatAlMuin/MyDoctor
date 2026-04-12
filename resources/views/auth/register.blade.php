@@ -1,3 +1,4 @@
+{{-- resources/views/auth/register.blade.php --}}
 @extends('layouts.app')
 
 @section('title', 'Register')
@@ -14,7 +15,27 @@
                     <p class="text-muted">Join My Doctor today and take control of your health</p>
                 </div>
 
-                <form method="POST" action="{{ route('register', [], false) }}">
+                @if (session('success'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
+                @if ($errors->any())
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <strong>Please fix the following errors:</strong>
+                        <ul class="mb-0 mt-2">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
+                <form method="POST" action="{{ route('register', [], false) }}" id="registerForm">
                     @csrf
                     <input type="hidden" name="redirect" value="{{ request('redirect') }}">
 
@@ -57,6 +78,7 @@
                             @error('Email')
                                 <span class="text-danger small">{{ $message }}</span>
                             @enderror
+                            <small class="text-muted">We'll send a verification link to this email</small>
                         </div>
 
                         <!-- Phone Field -->
@@ -66,7 +88,7 @@
                                 <span class="input-group-text bg-white border-end-0">
                                     <i class="fas fa-phone text-primary"></i>
                                 </span>
-                                <input type="text" 
+                                <input type="tel" 
                                        class="form-control border-start-0 @error('Phone') is-invalid @enderror" 
                                        id="Phone" 
                                        name="Phone" 
@@ -141,11 +163,12 @@
                             @enderror
                         </div>
 
+                        <!-- Gender Field -->
                         <div class="col-md-6 mb-3">
                             <label for="Gender" class="form-label fw-semibold">Gender <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white border-end-0">
-                                    <i class="fas fa-person text-primary"></i>
+                                    <i class="fas fa-venus-mars text-primary"></i>
                                 </span>
                                 <select class="form-control border-start-0 @error('Gender') is-invalid @enderror" id="Gender" name="Gender" required>
                                     <option value="">Select Gender</option>
@@ -159,12 +182,19 @@
                             @enderror
                         </div>
 
+                        <!-- Division Field -->
                         <div class="col-md-6 mb-3">
                             @php
                                 $isBnLocale = str_starts_with((string) app()->getLocale(), 'bn');
                             @endphp
                             <label for="Division" class="form-label fw-semibold">Division <span class="text-danger">*</span></label>
-                            <select id="Division" class="form-control @error('Division') is-invalid @enderror" data-current-division-id="{{ old('DivisionId') }}" data-current-district-id="{{ old('DistrictId') }}" data-current-upazila-id="{{ old('UpazilaId') }}" data-current-district="{{ old('District') }}" data-current-upazila="{{ old('Upazila') }}" required>
+                            <select id="Division" class="form-control @error('Division') is-invalid @enderror" 
+                                data-current-division-id="{{ old('DivisionId') }}" 
+                                data-current-district-id="{{ old('DistrictId') }}" 
+                                data-current-upazila-id="{{ old('UpazilaId') }}" 
+                                data-current-district="{{ old('District') }}" 
+                                data-current-upazila="{{ old('Upazila') }}" 
+                                required>
                                 @if (old('Division'))
                                     <option value="{{ old('Division') }}" data-id="{{ old('DivisionId') }}" data-bn="{{ old('DivisionBn') }}" selected>{{ $isBnLocale ? (old('DivisionBn') ?: old('Division')) : old('Division') }}</option>
                                 @else
@@ -182,6 +212,7 @@
                             @enderror
                         </div>
 
+                        <!-- District Field -->
                         <div class="col-md-6 mb-3">
                             <label for="District" class="form-label fw-semibold">District <span class="text-danger">*</span></label>
                             <select id="District" name="District" class="form-control @error('District') is-invalid @enderror" required>
@@ -194,6 +225,7 @@
                             @enderror
                         </div>
 
+                        <!-- Upazila Field -->
                         <div class="col-md-6 mb-3">
                             <label for="Upazila" class="form-label fw-semibold">Upazila <span class="text-danger">*</span></label>
                             <select id="Upazila" name="Upazila" class="form-control @error('Upazila') is-invalid @enderror" required>
@@ -206,17 +238,29 @@
                             @enderror
                         </div>
 
+                        <!-- Street Field -->
                         <div class="col-md-6 mb-3">
-                            <label for="Street" class="form-label fw-semibold">Street</label>
-                            <input type="text" class="form-control @error('Street') is-invalid @enderror" id="Street" name="Street" value="{{ old('Street') }}" placeholder="Street / Road">
+                            <label for="Street" class="form-label fw-semibold">Street / Road</label>
+                            <input type="text" 
+                                   class="form-control @error('Street') is-invalid @enderror" 
+                                   id="Street" 
+                                   name="Street" 
+                                   value="{{ old('Street') }}" 
+                                   placeholder="Street / Road name">
                             @error('Street')
                                 <span class="text-danger small">{{ $message }}</span>
                             @enderror
                         </div>
 
+                        <!-- House Field -->
                         <div class="col-md-6 mb-3">
-                            <label for="House" class="form-label fw-semibold">House</label>
-                            <input type="text" class="form-control @error('House') is-invalid @enderror" id="House" name="House" value="{{ old('House') }}" placeholder="House / Building">
+                            <label for="House" class="form-label fw-semibold">House / Building</label>
+                            <input type="text" 
+                                   class="form-control @error('House') is-invalid @enderror" 
+                                   id="House" 
+                                   name="House" 
+                                   value="{{ old('House') }}" 
+                                   placeholder="House / Building number">
                             @error('House')
                                 <span class="text-danger small">{{ $message }}</span>
                             @enderror
@@ -233,7 +277,7 @@
                                        class="form-control border-start-0 @error('password') is-invalid @enderror" 
                                        id="password" 
                                        name="password" 
-                                       placeholder="Enter password"
+                                       placeholder="Enter password (min. 8 characters)"
                                        required>
                                 <button class="btn btn-outline-secondary border-start-0 bg-white" 
                                         type="button" 
@@ -244,6 +288,12 @@
                             @error('password')
                                 <span class="text-danger small">{{ $message }}</span>
                             @enderror
+                            <div class="password-strength mt-2" id="passwordStrength">
+                                <div class="progress" style="height: 4px;">
+                                    <div class="progress-bar" id="passwordStrengthBar" role="progressbar" style="width: 0%;"></div>
+                                </div>
+                                <small class="text-muted" id="passwordStrengthText">Password strength</small>
+                            </div>
                         </div>
 
                         <!-- Confirm Password Field -->
@@ -257,8 +307,19 @@
                                        class="form-control border-start-0" 
                                        id="password-confirm" 
                                        name="password_confirmation" 
-                                       placeholder="Confirm password"
+                                       placeholder="Confirm your password"
                                        required>
+                                <button class="btn btn-outline-secondary border-start-0 bg-white" 
+                                        type="button" 
+                                        onclick="togglePassword('password-confirm')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div id="passwordMatchWarning" class="text-danger small mt-1" style="display: none;">
+                                <i class="fas fa-times-circle"></i> Passwords do not match
+                            </div>
+                            <div id="passwordMatchSuccess" class="text-success small mt-1" style="display: none;">
+                                <i class="fas fa-check-circle"></i> Passwords match
                             </div>
                         </div>
                     </div>
@@ -277,6 +338,7 @@
                     <!-- Register Button -->
                     <div class="d-grid mb-4">
                         <button type="submit" class="btn btn-primary btn-lg fw-semibold py-3" 
+                                id="registerBtn"
                                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
                             <i class="fas fa-user-plus me-2"></i>Create Account
                         </button>
@@ -303,47 +365,161 @@
                 <ul class="list-unstyled" style="max-width: 400px;">
                     <li class="mb-3 d-flex align-items-center">
                         <i class="fas fa-check-circle me-3 fa-lg"></i>
-                        <span>Health Monitoring </span>
+                        <span>Health Monitoring & Tracking</span>
                     </li>
                     <li class="mb-3 d-flex align-items-center">
                         <i class="fas fa-check-circle me-3 fa-lg"></i>
-                        <span>Medicine Remainder</span>
+                        <span>Medicine Reminder System</span>
                     </li>
                     <li class="mb-3 d-flex align-items-center">
                         <i class="fas fa-check-circle me-3 fa-lg"></i>
-                        <span>Secure health records storage</span>
+                        <span>Secure Health Records Storage</span>
                     </li>
                     <li class="mb-3 d-flex align-items-center">
                         <i class="fas fa-check-circle me-3 fa-lg"></i>
-                        <span>Real Time Health Suggestions</span>
+                        <span>Real-Time Health Suggestions</span>
                     </li>
-                   
+                    <li class="mb-3 d-flex align-items-center">
+                        <i class="fas fa-check-circle me-3 fa-lg"></i>
+                        <span>Community Support & Discussions</span>
+                    </li>
                 </ul>
-                
-                
             </div>
         </div>
     </div>
 </div>
-@endsection
 
 @push('scripts')
 <script>
+    // Toggle password visibility
     function togglePassword(fieldId) {
         const passwordInput = document.getElementById(fieldId);
-        const toggleIcon = passwordInput.parentElement.querySelector('i');
+        const icon = passwordInput.parentElement.querySelector('button i');
         
         if (passwordInput.type === 'password') {
             passwordInput.type = 'text';
-            toggleIcon.classList.remove('fa-eye');
-            toggleIcon.classList.add('fa-eye-slash');
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
         } else {
             passwordInput.type = 'password';
-            toggleIcon.classList.remove('fa-eye-slash');
-            toggleIcon.classList.add('fa-eye');
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
         }
     }
 
+    // Password strength checker
+    function checkPasswordStrength(password) {
+        let strength = 0;
+        let message = '';
+        let color = '';
+        
+        if (password.length >= 8) strength++;
+        if (password.match(/[a-z]+/)) strength++;
+        if (password.match(/[A-Z]+/)) strength++;
+        if (password.match(/[0-9]+/)) strength++;
+        if (password.match(/[$@#&!]+/)) strength++;
+        
+        switch(strength) {
+            case 0:
+            case 1:
+                message = 'Very Weak';
+                color = '#dc3545';
+                break;
+            case 2:
+                message = 'Weak';
+                color = '#ffc107';
+                break;
+            case 3:
+                message = 'Fair';
+                color = '#17a2b8';
+                break;
+            case 4:
+                message = 'Good';
+                color = '#28a745';
+                break;
+            case 5:
+                message = 'Strong';
+                color = '#28a745';
+                break;
+        }
+        
+        const percentage = (strength / 5) * 100;
+        const strengthBar = document.getElementById('passwordStrengthBar');
+        const strengthText = document.getElementById('passwordStrengthText');
+        
+        if (strengthBar) {
+            strengthBar.style.width = percentage + '%';
+            strengthBar.style.backgroundColor = color;
+        }
+        if (strengthText) {
+            strengthText.innerHTML = message;
+            strengthText.style.color = color;
+        }
+    }
+
+    // Check password match
+    function checkPasswordMatch() {
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('password-confirm').value;
+        const warning = document.getElementById('passwordMatchWarning');
+        const success = document.getElementById('passwordMatchSuccess');
+        const registerBtn = document.getElementById('registerBtn');
+        
+        if (confirmPassword.length > 0) {
+            if (password === confirmPassword) {
+                warning.style.display = 'none';
+                success.style.display = 'block';
+                registerBtn.disabled = false;
+            } else {
+                warning.style.display = 'block';
+                success.style.display = 'none';
+                registerBtn.disabled = true;
+            }
+        } else {
+            warning.style.display = 'none';
+            success.style.display = 'none';
+            registerBtn.disabled = false;
+        }
+    }
+
+    // Form validation before submit
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('password-confirm').value;
+        
+        if (password !== confirmPassword) {
+            e.preventDefault();
+            alert('Passwords do not match. Please check your password confirmation.');
+            return false;
+        }
+        
+        if (password.length < 8) {
+            e.preventDefault();
+            alert('Password must be at least 8 characters long.');
+            return false;
+        }
+        
+        const terms = document.getElementById('terms');
+        if (!terms.checked) {
+            e.preventDefault();
+            alert('Please agree to the Terms of Service and Privacy Policy.');
+            return false;
+        }
+        
+        // Disable button to prevent double submission
+        document.getElementById('registerBtn').disabled = true;
+        document.getElementById('registerBtn').innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating Account...';
+    });
+
+    // Event listeners for password fields
+    document.getElementById('password').addEventListener('input', function() {
+        checkPasswordStrength(this.value);
+        checkPasswordMatch();
+    });
+    
+    document.getElementById('password-confirm').addEventListener('input', checkPasswordMatch);
+
+    // BD Address API Integration
     document.addEventListener('DOMContentLoaded', async function() {
         const divisionSelect = document.getElementById('Division');
         const districtSelect = document.getElementById('District');
@@ -448,10 +624,12 @@
             divisionEnInput.value = getEn(item) || '';
             divisionBnInput.value = getBn(item) || '';
         };
+        
         const setDistrictMeta = (item) => {
             districtIdInput.value = getId(item) ?? '';
             districtBnInput.value = getBn(item) || '';
         };
+        
         const setUpazilaMeta = (item) => {
             upazilaIdInput.value = getId(item) ?? '';
             upazilaBnInput.value = getBn(item) || '';
@@ -564,4 +742,31 @@
         }
     });
 </script>
+
+<style>
+    .password-strength {
+        font-size: 0.75rem;
+    }
+    .progress {
+        background-color: #e9ecef;
+        border-radius: 2px;
+    }
+    .progress-bar {
+        transition: width 0.3s ease;
+    }
+    input:focus {
+        box-shadow: none !important;
+        border-color: #667eea !important;
+    }
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+</style>
 @endpush
+@endsection
