@@ -1,14 +1,16 @@
 <?php
+// app/Models/User.php
 
 namespace App\Models;
 
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Log;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, Notifiable;
 
@@ -35,7 +37,7 @@ class User extends Authenticatable
     protected $casts = [
         'date_of_birth' => 'date',
         'email_verified_at' => 'datetime',
-        'password'           => 'hashed',
+        'password' => 'hashed',
         'notification_settings' => 'array',
         'is_active' => 'boolean',
     ];
@@ -80,6 +82,22 @@ class User extends Authenticatable
                 'house' => null,
             ]);
         });
+    }
+
+    /**
+     * Send the email verification notification.
+     */
+    public function sendEmailVerificationNotification()
+    {
+        $this->notify(new \App\Notifications\CustomVerifyEmail());
+    }
+
+    /**
+     * Send the password reset notification.
+     */
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new \App\Notifications\ResetPasswordNotification($token));
     }
 
     /**
@@ -359,47 +377,43 @@ class User extends Authenticatable
         return $this->attributes['name'] ?? null;
     }
 
+    // Add this with your other relationships
+    public function notifications()
+    {
+        return $this->hasMany(\App\Models\Notification::class, 'user_id');
+    }
 
+    public function unreadNotifications()
+    {
+        return $this->hasMany(\App\Models\Notification::class, 'user_id')->unread();
+    }
 
+    public function sentNotifications()
+    {
+        return $this->hasMany(\App\Models\Notification::class, 'from_user_id');
+    }
 
-// Add this with your other relationships
-public function notifications()
-{
-    return $this->hasMany(\App\Models\Notification::class, 'user_id');
-}
+    /**
+     * Check if user is admin
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
 
-public function unreadNotifications()
-{
-    return $this->hasMany(\App\Models\Notification::class, 'user_id')->unread();
-}
+    /**
+     * Check if user is member
+     */
+    public function isMember(): bool
+    {
+        return $this->role === 'member';
+    }
 
-public function sentNotifications()
-{
-    return $this->hasMany(\App\Models\Notification::class, 'from_user_id');
-}
-
-/**
- * Check if user is admin
- */
-public function isAdmin(): bool
-{
-    return $this->role === 'admin';
-}
-
-/**
- * Check if user is member
- */
-public function isMember(): bool
-{
-    return $this->role === 'member';
-}
-
-/**
- * Check if user has specific role
- */
-public function hasRole(string $role): bool
-{
-    return $this->role === $role;
-}
-
+    /**
+     * Check if user has specific role
+     */
+    public function hasRole(string $role): bool
+    {
+        return $this->role === $role;
+    }
 }
