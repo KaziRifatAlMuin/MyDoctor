@@ -19,7 +19,8 @@
                     
                     <p class="text-muted mb-4">
                         A verification link was sent to <strong>{{ auth()->user()->email }}</strong>.
-                        Please open that email and click the verification link before logging in.
+                        Please open that email and click the verification link before logging in.<br>
+                        <span class="text-danger">Check the spam folder if you don't see it in your inbox.</span>
                     </p>
 
                     @if (session('status') || session('success'))
