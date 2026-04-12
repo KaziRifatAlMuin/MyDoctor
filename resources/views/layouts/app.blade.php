@@ -3955,10 +3955,49 @@ window.openVideoModal = function(type, source, isReel = false) {
             
             // Close dropdown
             const dropdown = document.getElementById('notificationDropdown');
-            dropdown.classList.remove('show');
-            
-            // Open post in modal
-            openPostModal(postId, notificationId);
+            if (dropdown) {
+                dropdown.classList.remove('show');
+            }
+
+            if (!notificationId) {
+                return openPostModal(postId, notificationId);
+            }
+
+            fetch(`/notifications/${notificationId}/read`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Failed to mark notification as read');
+                return res.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    return fetch('/notifications/unread-count', {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                }
+                throw new Error(data.message || 'Failed to mark notification as read');
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Failed to refresh unread count');
+                return res.json();
+            })
+            .then(countData => {
+                updateNotificationCount(countData.count || 0);
+                openPostModal(postId, notificationId);
+            })
+            .catch(err => {
+                console.error('Error handling notification click:', err);
+                openPostModal(postId, notificationId);
+            });
         }
 
         // Mark all notifications as read
