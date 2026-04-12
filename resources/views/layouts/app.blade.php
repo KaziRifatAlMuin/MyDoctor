@@ -2402,7 +2402,7 @@
                                     <div class="d-flex gap-3">
                                         <a href="{{ route('dashboard') }}"
                                             class="btn btn-light btn-lg rounded-pill px-5 py-3 fw-semibold">
-                                            Get Started <i class="fas fa-arrow-right ms-2"></i>
+                                            Dashboard <i class="fas fa-arrow-right ms-2"></i>
                                         </a>
                                         @if (!auth()->user()->isAdmin())
                                             <button onclick="toggleChatbot()"
