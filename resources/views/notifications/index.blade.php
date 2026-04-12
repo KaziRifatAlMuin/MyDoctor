@@ -608,11 +608,15 @@
         <div class="notifications-list">
             @foreach($notifications as $notification)
                 <div class="notification-card {{ is_null($notification->read_at) ? 'unread' : '' }}" 
-                     id="notification-{{ $notification->id }}">
+                     id="notification-{{ $notification->id }}"
+                     @if(isset($notification->data['post_id']))
+                         onclick="openPostModal({{ $notification->data['post_id'] }}, {{ $notification->id }})"
+                         style="cursor: pointer;"
+                     @endif>
                     
                     <div class="card-content">
                         <!-- Checkbox -->
-                        <div class="card-checkbox">
+                        <div class="card-checkbox" onclick="event.stopPropagation();">
                             <input type="checkbox" 
                                    class="notification-check" 
                                    data-id="{{ $notification->id }}"
@@ -646,7 +650,7 @@
                             <!-- Actions -->
                             <div class="card-actions">
                                 @if(isset($notification->data['post_id']))
-                                    <button class="btn-view" onclick="openPostModal({{ $notification->data['post_id'] }}, {{ $notification->id }})">
+                                    <button class="btn-view" onclick="event.stopPropagation(); openPostModal({{ $notification->data['post_id'] }}, {{ $notification->id }})">
                                         <i class="fas fa-eye"></i>
                                         View Post
                                     </button>
