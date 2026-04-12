@@ -50,7 +50,7 @@
                         </p>
                         <div class="d-flex flex-wrap gap-2 gap-md-3 mb-4">
                             <a href="{{ $ctaPrimaryUrl }}" class="btn btn-teal rounded-pill px-4 px-md-5 py-2 py-md-3">
-                                <i class="fas fa-heartbeat me-2"></i>{{ $isAuthenticated ? 'Open Dashboard' : 'Login to Continue' }}
+                                <i class="fas fa-heartbeat me-2"></i>{{ $isAuthenticated ? 'Open health' : 'Login to Continue' }}
                             </a>
                             <a href="{{ $ctaSecondaryUrl }}" class="btn btn-outline-teal rounded-pill px-4 px-md-5 py-2 py-md-3">
                                 <i class="fas fa-users me-2"></i>{{ $isAuthenticated ? 'Open Community' : 'Login for Community' }}
