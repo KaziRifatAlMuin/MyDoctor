@@ -121,12 +121,14 @@ class ProfileController extends Controller
      */
     public function destroy(Request $request)
     {
-        $request->validate(['password' => 'required']);
+        $request->validate([
+            'delete_password' => 'required',
+        ]);
 
         $user = Auth::user();
 
-        if (!Hash::check($request->password, $user->password)) {
-            return back()->withErrors(['password' => 'The password you entered is incorrect.']);
+        if (!Hash::check($request->delete_password, $user->password)) {
+            return back()->withErrors(['delete_password' => 'The password you entered is incorrect.']);
         }
 
         Auth::logout();
