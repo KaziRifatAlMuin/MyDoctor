@@ -1,11 +1,14 @@
 <?php
+// app/Http/Controllers/Auth/LoginController.php
 
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use App\Models\User;
 
 class LoginController extends Controller
 {
@@ -29,24 +32,56 @@ class LoginController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',  // Changed from 'Email' to 'email'
+            'email' => 'required|email',
             'password' => 'required|string',
             'redirect' => 'nullable|string|max:2048',
         ]);
 
+        // Check if user exists
+        $user = User::where('email', $request->email)->first();
+
+        if ($user && !$user->hasVerifiedEmail()) {
+            if (Hash::check($request->password, $user->password)) {
+                $user->sendEmailVerificationNotification();
+                Auth::login($user);
+
+                return redirect()->route('verification.notice')
+                    ->with('status', 'Verification link sent to ' . $user->email . '. Please verify your email before logging in.');
+            }
+
+            return back()->withErrors([
+                'email' => 'Your email address is not verified yet. Enter the correct password to resend verification.',
+            ])->onlyInput('email');
+        }
+
+        // Check if user is active
+        if ($user && !$user->is_active) {
+            return back()->withErrors([
+                'email' => 'Your account has been deactivated. Please contact support.',
+            ])->onlyInput('email');
+        }
+
         // Attempt login with lowercase 'email' to match database column
         if (Auth::attempt([
-            'email' => $request->email,  // Changed from 'Email' to 'email'
+            'email' => $request->email,
             'password' => $request->password
         ], $request->filled('remember'))) {
             
             $request->session()->regenerate();
             
-            return redirect()->to($this->resolveRedirectPath($request, $this->redirectTo));
+            // Force re-verification on every login
+            $user = Auth::user();
+            $user->email_verified_at = null;
+            $user->save();
+            
+            $user->sendEmailVerificationNotification();
+            
+            return redirect()->route('verification.notice')
+                ->with('status', 'Verification link sent to ' . $user->email . '. Please verify your email before logging in.');
         }
 
         return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',  // Changed from 'Email' to 'email'
+            'email' => 'The provided credentials do not match our records.',
         ])->onlyInput('email');
     }
 
