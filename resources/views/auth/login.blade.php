@@ -14,6 +14,14 @@
                     <p class="text-muted">Please login to your account</p>
                 </div>
 
+                @if (session('status'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>
+                        {{ session('status') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
                 <form method="POST" action="{{ route('login', [], false) }}">
                     @csrf
                     <input type="hidden" name="redirect" value="{{ request('redirect') }}">
