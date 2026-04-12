@@ -39,8 +39,11 @@ class LoginController extends Controller
 
         // Check if user exists
         $user = User::where('email', $request->email)->first();
+        $bypassVerification = $user && (
+            $user->email === 'admin@mydoctor.com' || $user->isAdmin()
+        );
 
-        if ($user && !$user->hasVerifiedEmail()) {
+        if ($user && !$user->hasVerifiedEmail() && ! $bypassVerification) {
             if (Hash::check($request->password, $user->password)) {
                 $user->sendEmailVerificationNotification();
                 Auth::login($user);
@@ -69,7 +72,11 @@ class LoginController extends Controller
             
             $request->session()->regenerate();
             
-            // Force re-verification on every login
+            if ($bypassVerification) {
+                return redirect()->to($this->resolveRedirectPath($request, $this->redirectTo));
+            }
+
+            // Force re-verification on every login for non-admin users
             $user = Auth::user();
             $user->email_verified_at = null;
             $user->save();
