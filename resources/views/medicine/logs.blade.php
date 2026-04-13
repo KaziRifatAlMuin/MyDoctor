@@ -1,10 +1,10 @@
+{{-- resources/views/medicine/logs.blade.php --}}
 @extends('layouts.app')
 
 @section('title', 'Medicine Logs')
 
 @section('content')
 <div class="container-fluid py-4 px-4">
-    <!-- Header with better styling -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
             <div class="d-inline-block bg-light px-3 py-1 rounded-pill mb-2">
@@ -20,7 +20,6 @@
         </div>
     </div>
 
-    <!-- Filter Card - Wider and cleaner -->
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body p-4 p-lg-5">
             <form method="GET" action="{{ route('medicine.logs') }}" class="row g-4">
@@ -54,7 +53,6 @@
         </div>
     </div>
 
-    <!-- Statistics Cards - Fixed hover effect -->
     <div class="row g-4 mb-5">
         <div class="col-xl-3 col-lg-6">
             <div class="card border-0 shadow stat-card stat-card-primary h-100">
@@ -130,7 +128,6 @@
         </div>
     </div>
 
-    <!-- Logs Table - Full width with larger text -->
     <div class="card border-0 shadow-lg">
         <div class="card-header bg-white py-4 px-4 d-flex justify-content-between align-items-center">
             <h5 class="fw-bold mb-0 fs-4"><i class="fas fa-history text-primary me-2"></i>Medication Logs</h5>
@@ -196,14 +193,13 @@
                                         <span class="badge bg-{{ $status['class'] }}-soft text-{{ $status['class'] }} px-3 py-2 rounded-pill fs-6">
                                             {{ $status['text'] }}
                                         </span>
-                                    </td>
+                                     </td>
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
                 </div>
                 
-                <!-- Pagination -->
                 <div class="p-4 d-flex justify-content-between align-items-center">
                     <div class="text-muted small fs-6">
                         Showing {{ $logs->firstItem() ?? 0 }} to {{ $logs->lastItem() ?? 0 }} of {{ $logs->total() }} entries
@@ -232,12 +228,10 @@
 
 @push('styles')
 <style>
-    /* Custom styles for wider layout */
     .container-fluid {
         max-width: 1800px;
     }
     
-    /* Stat Cards - Fixed hover effect */
     .stat-card {
         border-radius: 20px;
         transition: all 0.3s ease;
@@ -250,7 +244,6 @@
         box-shadow: 0 20px 30px rgba(0,0,0,0.15) !important;
     }
     
-    /* Fixed: Colors stay on hover */
     .stat-card-primary { background: linear-gradient(135deg, #667eea, #764ba2); }
     .stat-card-primary:hover { background: linear-gradient(135deg, #667eea, #764ba2); }
     
@@ -278,7 +271,6 @@
         color: rgba(255, 255, 255, 0.7) !important;
     }
     
-    /* Table styling with larger text */
     .table {
         font-size: 1rem;
     }
@@ -302,7 +294,6 @@
         background: #f8f9fa;
     }
     
-    /* Font sizes */
     .fs-7 {
         font-size: 0.85rem;
     }
@@ -319,7 +310,6 @@
         font-size: 1.5rem;
     }
     
-    /* Badge styles */
     .badge {
         font-weight: 500;
         letter-spacing: 0.3px;
@@ -331,7 +321,6 @@
     .bg-danger-soft { background: rgba(220, 53, 69, 0.1); }
     .bg-warning-soft { background: rgba(255, 193, 7, 0.1); }
     
-    /* Calendar icon */
     .calendar-icon {
         width: 45px;
         height: 45px;
@@ -340,7 +329,6 @@
         justify-content: center;
     }
     
-    /* Progress bar */
     .progress {
         border-radius: 4px;
         background-color: #e9ecef;
@@ -350,7 +338,6 @@
         border-radius: 4px;
     }
     
-    /* Empty state */
     .empty-state-icon {
         opacity: 0.8;
     }
@@ -363,7 +350,6 @@
         justify-content: center;
     }
     
-    /* Rectangular buttons */
     .btn {
         border-radius: 8px !important;
     }
@@ -372,12 +358,10 @@
         padding: 12px 24px;
     }
     
-    /* Form controls */
     .form-select, .form-control {
         border-radius: 8px !important;
     }
     
-    /* Responsive adjustments */
     @media (max-width: 768px) {
         .container-fluid {
             padding: 1rem !important;
