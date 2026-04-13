@@ -14,7 +14,6 @@ class UserSetting extends Model
     protected $fillable = [
         'user_id',
         'email_notifications',
-        'push_notifications',
         'show_personal_info',
         'show_diseases',
         'show_chatbot',
@@ -24,7 +23,6 @@ class UserSetting extends Model
 
     protected $casts = [
         'email_notifications' => 'boolean',
-        'push_notifications' => 'boolean',
         'show_personal_info' => 'boolean',
         'show_diseases' => 'boolean',
         'show_chatbot' => 'boolean',

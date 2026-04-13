@@ -170,7 +170,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return redirect()->route('profile.setting');
     })->name('profile.notifications.update');
     Route::post('/profile/notifications/toggle-email', [NotificationPreferenceController::class, 'toggleEmail'])->name('profile.notifications.toggle-email');
-    Route::post('/profile/notifications/toggle-push', [NotificationPreferenceController::class, 'togglePush'])->name('profile.notifications.toggle-push');
+    
+
 
     // Mailbox (internal mailings)
     Route::get('/profile/mailbox', [App\Http\Controllers\MailingController::class, 'inbox'])->name('profile.mailbox');
@@ -251,38 +252,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/chatbot/smart-suggestions', [AiChatController::class, 'smartSuggestions'])->name('chatbot.smart_suggestions');
 });
 
-/*
-|--------------------------------------------------------------------------
-| Push Subscription Routes
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::post('/push-subscriptions', function (Request $request) {
-        try {
-            $user = auth()->user();
-            $user->updatePushSubscription(
-                $request->endpoint,
-                $request->keys['p256dh'],
-                $request->keys['auth']
-            );
-            return response()->json(['success' => true]);
-        } catch (\Exception $e) {
-            \Log::error('Push subscription error: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to save subscription'], 500);
-        }
-    });
-    
-    Route::post('/push-subscriptions/delete', function (Request $request) {
-        try {
-            $user = auth()->user();
-            $user->deletePushSubscription($request->endpoint);
-            return response()->json(['success' => true]);
-        } catch (\Exception $e) {
-            \Log::error('Push subscription delete error: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to delete subscription'], 500);
-        }
-    });
-});
 
 /*
 |--------------------------------------------------------------------------

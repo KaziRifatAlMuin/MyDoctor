@@ -159,15 +159,7 @@
                                 </select>
                             </div>
 
-                            <div class="settings-card">
-                                <h5><i class="fas fa-bell text-success me-2"></i>Push Alerts</h5>
-                                <p class="settings-help">Receive instant browser push notifications.</p>
-                                <div class="form-check form-switch mt-2 mb-0">
-                                    <input class="form-check-input" type="checkbox" name="push_notifications"
-                                        id="push_notifications" value="1" {{ $settings->push_notifications ? 'checked' : '' }}>
-                                    <label class="form-check-label fw-semibold" for="push_notifications">Enable Push Alerts</label>
-                                </div>
-                            </div>
+        
 
                             @if (!$user->isAdmin())
                                 <div class="settings-card">

@@ -357,7 +357,7 @@
             display: inline-flex;
             align-items: center;
             justify-content: space-between;
-            width: 76px;
+            width: 80px;
             height: 30px;
             padding: 0 8px;
             border-radius: 8px;
@@ -383,7 +383,7 @@
             position: absolute;
             top: 3px;
             left: 3px;
-            width: 34px;
+            width: 38px;
             height: 22px;
             border-radius: 6px;
             background: #111827;
@@ -3852,18 +3852,7 @@ window.openVideoModal = function(type, source, isReel = false) {
             });
         }
 
-        function togglePushQuick() {
-            fetch('{{ route('profile.notifications.toggle-push') }}', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                }
-            }).then(() => {
-                console.log('Push notifications toggled');
-            });
-        }
-
-        // ========== NOTIFICATION FUNCTIONS ==========
+// ========== NOTIFICATION FUNCTIONS ==========
         // Load notifications
         function loadNotifications() {
             const list = document.getElementById('notificationList');
@@ -4463,7 +4452,6 @@ window.openVideoModal = function(type, source, isReel = false) {
 
         // Make functions global
         window.toggleEmailQuick = toggleEmailQuick;
-        window.togglePushQuick = togglePushQuick;
         @if (! $isAdminNav)
             window.toggleNotificationDropdown = toggleNotificationDropdown;
             window.markAllNotificationsRead = markAllNotificationsRead;
@@ -4650,10 +4638,6 @@ window.openVideoModal = function(type, source, isReel = false) {
         });
         
     </script>
-
-    @auth
-        <script src="{{ asset('js/push-notifications.js') }}"></script>
-    @endauth
 
     <!-- Global Edit Functions - Available on all pages -->
     <script>
