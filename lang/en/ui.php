@@ -568,4 +568,104 @@ return [
     ],
 
 
+    'home' => [
+    // Hero Section
+    'hero_kicker' => 'Health Intelligence Platform',
+    'hero_title' => 'Smarter care, daily momentum, better outcomes.',
+    'hero_subtitle' => 'MyDoctor unifies reminders, health metrics, medical records, symptom tracking, and AI-powered support in one modern patient-first workspace.',
+    'open_health' => 'Open Health',
+    'login_to_continue' => 'Login to Continue',
+    'open_community' => 'Open Community',
+    'login_for_community' => 'Login for Community',
+    'active_users' => 'Active users',
+    'community_posts' => 'Community posts',
+    'health_topics' => 'Health topics',
+    
+    // Insight Card
+    'care_readiness_pulse' => 'Care Readiness Pulse',
+    'live' => 'LIVE',
+    'total_reminders' => 'Total reminders',
+    'stored_files' => 'Stored files',
+    'dose_adherence' => 'Dose adherence this cycle',
+    
+    // Ticker Section
+    'active_members' => 'active members',
+    'health_files_secured' => 'health files secured',
+    'reminders_managed' => 'reminders managed',
+    'adherence_rate' => 'adherence rate',
+    
+    // Core Capabilities Section
+    'core_capabilities' => 'Core Capabilities',
+    'everything_connected' => 'Everything connected, nothing fragmented',
+    
+    // Feature Cards
+    'community' => 'Community',
+    'community_posting' => 'Community Posting',
+    'community_desc' => 'Connect with people facing similar health conditions.',
+    'approved_posts' => 'approved posts',
+    
+    'medication' => 'Medication',
+    'medicine_reminders' => 'Medicine Reminders',
+    'medicine_desc' => 'Automated alerts so doses are never missed.',
+    'reminders_configured' => 'reminders configured',
+    
+    'metrics' => 'Metrics',
+    'health_tracking' => 'Health Tracking',
+    'health_tracking_desc' => 'Track BP, glucose, pulse, and more over time.',
+    'tracked_topics' => 'tracked topics',
+    
+    'ai' => 'AI',
+    'ai_health_assistant' => 'AI Health Assistant',
+    'ai_desc' => 'Ask symptom and condition questions instantly.',
+    'ai_safety' => 'Safe, structured guidance',
+    
+    'records' => 'Records',
+    'medical_records' => 'Medical Records',
+    'medical_records_desc' => 'Securely store reports, prescriptions, and files.',
+    'uploads_stored' => 'uploads stored',
+    
+    'symptoms' => 'Symptoms',
+    'symptom_tracker' => 'Symptom Tracker',
+    'symptom_desc' => 'Log daily symptoms and watch patterns emerge.',
+    'timeline_health_notes' => 'Timeline-based health notes',
+    
+    'insights' => 'Insights',
+    'smart_suggestions' => 'Smart Suggestions',
+    'suggestions_desc' => 'Get practical recommendations based on your data.',
+    'data_driven_suggestions' => 'Data-driven suggestions',
+    
+    'help' => 'Help',
+    'help_support' => 'Help & Support',
+    'help_desc' => 'Find guides, FAQs and contact options for assistance.',
+    'get_help' => 'Get help',
+    
+    // How It Works Section
+    'how_it_works' => 'How It Works',
+    'wellness_loop' => 'Your wellness loop in four steps',
+    
+    'create_profile' => 'Create profile',
+    'create_profile_desc' => 'Start in under a minute and set baseline details.',
+    'track_daily_data' => 'Track daily data',
+    'track_daily_data_desc' => 'Log metrics, symptoms, medicine intake, and files.',
+    'review_insights' => 'Review insights',
+    'review_insights_desc' => 'Use trends and suggestions to optimize your routine.',
+    'improve_consistency' => 'Improve consistency',
+    'improve_consistency_desc' => 'Rely on reminders and community motivation every day.',
+    
+    // CTA Section
+    'cta_title' => 'Turn your health data into healthier days',
+    'cta_subtitle' => 'Access your dashboard, follow reminders, and stay in sync with your care goals.',
+    'go_to_dashboard' => 'Go to Dashboard',
+],
+'layout' => [
+    'banner_title' => 'Your Health,',
+    'banner_title_our' => 'Our',
+    'banner_title_priority' => 'Priority',
+    'banner_subtitle' => 'Experience healthcare reimagined with AI-powered insights, medicine reminders, and community support.',
+    'get_started' => 'Get Started',
+    'ask_ai' => 'Ask MyDoctor AI',
+    'dashboard' => 'Dashboard',
+    'chatbot_tooltip' => 'Ask me about health!',
+],
+
 ];

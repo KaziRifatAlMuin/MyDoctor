@@ -42,32 +42,31 @@
             <div class="hero-panel reveal-block">
                 <div class="row align-items-center g-4 g-xl-5">
                     <div class="col-lg-7">
-                        <span class="hero-kicker"><i class="fas fa-circle me-2"></i>Health Intelligence Platform</span>
-                        <h1 class="hero-title mt-3 mb-3">Smarter care, daily momentum, better outcomes.</h1>
+                        <span class="hero-kicker"><i class="fas fa-circle me-2"></i>{{ __('ui.home.hero_kicker') }}</span>
+                        <h1 class="hero-title mt-3 mb-3">{{ __('ui.home.hero_title') }}</h1>
                         <p class="hero-subtitle mb-4">
-                            MyDoctor unifies reminders, health metrics, medical records, symptom tracking, and AI-powered support in one
-                            modern patient-first workspace.
+                            {{ __('ui.home.hero_subtitle') }}
                         </p>
                         <div class="d-flex flex-wrap gap-2 gap-md-3 mb-4">
                             <a href="{{ $ctaPrimaryUrl }}" class="btn btn-teal rounded-pill px-4 px-md-5 py-2 py-md-3">
-                                <i class="fas fa-heartbeat me-2"></i>{{ $isAuthenticated ? 'Open health' : 'Login to Continue' }}
+                                <i class="fas fa-heartbeat me-2"></i>{{ $isAuthenticated ? __('ui.home.open_health') : __('ui.home.login_to_continue') }}
                             </a>
                             <a href="{{ $ctaSecondaryUrl }}" class="btn btn-outline-teal rounded-pill px-4 px-md-5 py-2 py-md-3">
-                                <i class="fas fa-users me-2"></i>{{ $isAuthenticated ? 'Open Community' : 'Login for Community' }}
+                                <i class="fas fa-users me-2"></i>{{ $isAuthenticated ? __('ui.home.open_community') : __('ui.home.login_for_community') }}
                             </a>
                         </div>
                         <div class="hero-inline-stats">
                             <div class="hero-inline-stat">
                                 <div class="hero-inline-value" data-counter="{{ (int) $homeStats['active_users'] }}">0</div>
-                                <small>Active users</small>
+                                <small>{{ __('ui.home.active_users') }}</small>
                             </div>
                             <div class="hero-inline-stat">
                                 <div class="hero-inline-value" data-counter="{{ (int) $homeStats['approved_posts'] }}">0</div>
-                                <small>Community posts</small>
+                                <small>{{ __('ui.home.community_posts') }}</small>
                             </div>
                             <div class="hero-inline-stat">
                                 <div class="hero-inline-value" data-counter="{{ (int) $homeStats['health_catalog'] }}">0</div>
-                                <small>Health topics</small>
+                                <small>{{ __('ui.home.health_topics') }}</small>
                             </div>
                         </div>
                     </div>
@@ -75,16 +74,16 @@
                     <div class="col-lg-5">
                         <div class="hero-insight-card reveal-block" data-tilt-card>
                             <div class="insight-head">
-                                <h6 class="mb-0">Care Readiness Pulse</h6>
-                                <span class="badge-soft">LIVE</span>
+                                <h6 class="mb-0">{{ __('ui.home.care_readiness_pulse') }}</h6>
+                                <span class="badge-soft">{{ __('ui.home.live') }}</span>
                             </div>
                             <div class="insight-grid mt-3">
                                 <div class="insight-kpi">
-                                    <small>Total reminders</small>
+                                    <small>{{ __('ui.home.total_reminders') }}</small>
                                     <strong data-counter="{{ (int) $homeStats['total_reminders'] }}">0</strong>
                                 </div>
                                 <div class="insight-kpi">
-                                    <small>Stored files</small>
+                                    <small>{{ __('ui.home.stored_files') }}</small>
                                     <strong data-counter="{{ (int) $homeStats['total_uploads'] }}">0</strong>
                                 </div>
                             </div>
@@ -92,7 +91,7 @@
                                 <div class="adherence-ring" style="--adherence: {{ max(0, min(100, (int) $homeStats['reminder_adherence'])) }};">
                                     <div class="ring-inner">{{ (int) $homeStats['reminder_adherence'] }}%</div>
                                 </div>
-                                <p class="mb-0 text-muted small">Dose adherence this cycle</p>
+                                <p class="mb-0 text-muted small">{{ __('ui.home.dose_adherence') }}</p>
                             </div>
                         </div>
                     </div>
@@ -106,19 +105,19 @@
             <div class="ticker-wrap reveal-block">
                 <div class="ticker-item">
                     <i class="fas fa-users"></i>
-                    <span><strong data-counter="{{ (int) $homeStats['active_users'] }}">0</strong> active members</span>
+                    <span><strong data-counter="{{ (int) $homeStats['active_users'] }}">0</strong> {{ __('ui.home.active_members') }}</span>
                 </div>
                 <div class="ticker-item">
                     <i class="fas fa-file-medical"></i>
-                    <span><strong data-counter="{{ (int) $homeStats['total_uploads'] }}">0</strong> health files secured</span>
+                    <span><strong data-counter="{{ (int) $homeStats['total_uploads'] }}">0</strong> {{ __('ui.home.health_files_secured') }}</span>
                 </div>
                 <div class="ticker-item">
                     <i class="fas fa-bell"></i>
-                    <span><strong data-counter="{{ (int) $homeStats['total_reminders'] }}">0</strong> reminders managed</span>
+                    <span><strong data-counter="{{ (int) $homeStats['total_reminders'] }}">0</strong> {{ __('ui.home.reminders_managed') }}</span>
                 </div>
                 <div class="ticker-item">
                     <i class="fas fa-check-circle"></i>
-                    <span><strong>{{ (int) $homeStats['reminder_adherence'] }}%</strong> adherence rate</span>
+                    <span><strong>{{ (int) $homeStats['reminder_adherence'] }}%</strong> {{ __('ui.home.adherence_rate') }}</span>
                 </div>
             </div>
         </div>
@@ -127,38 +126,38 @@
     <section class="py-4 py-md-5">
         <div class="container">
             <div class="section-head reveal-block mb-4 mb-md-5">
-                <span class="section-kicker">Core Capabilities</span>
-                <h2 class="section-title">Everything connected, nothing fragmented</h2>
+                <span class="section-kicker">{{ __('ui.home.core_capabilities') }}</span>
+                <h2 class="section-title">{{ __('ui.home.everything_connected') }}</h2>
             </div>
 
             <div class="row g-3 g-md-4">
                 <div class="col-md-6 col-xl-3">
                     <a href="{{ $communityUrl }}" class="feature-neo feature-neo-link h-100 d-block reveal-block" data-tilt-card>
-                        <span class="feature-chip">Community</span>
+                        <span class="feature-chip">{{ __('ui.home.community') }}</span>
                         <div class="feature-icon"><i class="fas fa-user-friends"></i></div>
-                        <h5>Community Posting</h5>
-                        <p>Connect with people facing similar health conditions.</p>
-                        <small class="feature-meta"><i class="fas fa-comments me-1"></i>{{ number_format($homeStats['approved_posts']) }} approved posts</small>
+                        <h5>{{ __('ui.home.community_posting') }}</h5>
+                        <p>{{ __('ui.home.community_desc') }}</p>
+                        <small class="feature-meta"><i class="fas fa-comments me-1"></i>{{ number_format($homeStats['approved_posts']) }} {{ __('ui.home.approved_posts') }}</small>
                     </a>
                 </div>
 
                 <div class="col-md-6 col-xl-3">
                     <a href="{{ $medicineReminderUrl }}" class="feature-neo feature-neo-link h-100 d-block reveal-block" data-tilt-card>
-                        <span class="feature-chip">Medication</span>
+                        <span class="feature-chip">{{ __('ui.home.medication') }}</span>
                         <div class="feature-icon"><i class="fas fa-pills"></i></div>
-                        <h5>Medicine Reminders</h5>
-                        <p>Automated alerts so doses are never missed.</p>
-                        <small class="feature-meta"><i class="fas fa-bell me-1"></i>{{ number_format($homeStats['total_reminders']) }} reminders configured</small>
+                        <h5>{{ __('ui.home.medicine_reminders') }}</h5>
+                        <p>{{ __('ui.home.medicine_desc') }}</p>
+                        <small class="feature-meta"><i class="fas fa-bell me-1"></i>{{ number_format($homeStats['total_reminders']) }} {{ __('ui.home.reminders_configured') }}</small>
                     </a>
                 </div>
 
                 <div class="col-md-6 col-xl-3">
                     <a href="{{ $healthTrackingUrl }}" class="feature-neo feature-neo-link h-100 d-block reveal-block" data-tilt-card>
-                        <span class="feature-chip">Metrics</span>
+                        <span class="feature-chip">{{ __('ui.home.metrics') }}</span>
                         <div class="feature-icon"><i class="fas fa-wave-square"></i></div>
-                        <h5>Health Tracking</h5>
-                        <p>Track BP, glucose, pulse, and more over time.</p>
-                        <small class="feature-meta"><i class="fas fa-chart-line me-1"></i>{{ number_format($homeStats['health_catalog']) }} tracked topics</small>
+                        <h5>{{ __('ui.home.health_tracking') }}</h5>
+                        <p>{{ __('ui.home.health_tracking_desc') }}</p>
+                        <small class="feature-meta"><i class="fas fa-chart-line me-1"></i>{{ number_format($homeStats['health_catalog']) }} {{ __('ui.home.tracked_topics') }}</small>
                     </a>
                 </div>
 
@@ -168,11 +167,11 @@
                     @else
                         <a href="{{ route('login', [], false) }}?redirect={{ urlencode(request()->fullUrl()) }}" class="feature-neo feature-neo-link h-100 d-block reveal-block" data-tilt-card>
                     @endauth
-                        <span class="feature-chip">AI</span>
+                        <span class="feature-chip">{{ __('ui.home.ai') }}</span>
                         <div class="feature-icon"><i class="fas fa-user-md"></i></div>
-                        <h5>AI Health Assistant</h5>
-                        <p>Ask symptom and condition questions instantly.</p>
-                        <small class="feature-meta"><i class="fas fa-shield-alt me-1"></i>Safe, structured guidance</small>
+                        <h5>{{ __('ui.home.ai_health_assistant') }}</h5>
+                        <p>{{ __('ui.home.ai_desc') }}</p>
+                        <small class="feature-meta"><i class="fas fa-shield-alt me-1"></i>{{ __('ui.home.ai_safety') }}</small>
                     @auth
                         </button>
                     @else
@@ -182,41 +181,41 @@
 
                 <div class="col-md-6 col-xl-3">
                     <a href="{{ $healthLogsUrl }}" class="feature-neo feature-neo-link h-100 d-block reveal-block" data-tilt-card>
-                        <span class="feature-chip">Records</span>
+                        <span class="feature-chip">{{ __('ui.home.records') }}</span>
                         <div class="feature-icon"><i class="fas fa-folder-open"></i></div>
-                        <h5>Medical Records</h5>
-                        <p>Securely store reports, prescriptions, and files.</p>
-                        <small class="feature-meta"><i class="fas fa-file-medical-alt me-1"></i>{{ number_format($homeStats['total_uploads']) }} uploads stored</small>
+                        <h5>{{ __('ui.home.medical_records') }}</h5>
+                        <p>{{ __('ui.home.medical_records_desc') }}</p>
+                        <small class="feature-meta"><i class="fas fa-file-medical-alt me-1"></i>{{ number_format($homeStats['total_uploads']) }} {{ __('ui.home.uploads_stored') }}</small>
                     </a>
                 </div>
 
                 <div class="col-md-6 col-xl-3">
                     <a href="{{ $healthSymptomsUrl }}" class="feature-neo feature-neo-link h-100 d-block reveal-block" data-tilt-card>
-                        <span class="feature-chip">Symptoms</span>
+                        <span class="feature-chip">{{ __('ui.home.symptoms') }}</span>
                         <div class="feature-icon"><i class="fas fa-stethoscope"></i></div>
-                        <h5>Symptom Tracker</h5>
-                        <p>Log daily symptoms and watch patterns emerge.</p>
-                        <small class="feature-meta"><i class="fas fa-notes-medical me-1"></i>Timeline-based health notes</small>
+                        <h5>{{ __('ui.home.symptom_tracker') }}</h5>
+                        <p>{{ __('ui.home.symptom_desc') }}</p>
+                        <small class="feature-meta"><i class="fas fa-notes-medical me-1"></i>{{ __('ui.home.timeline_health_notes') }}</small>
                     </a>
                 </div>
 
                 <div class="col-md-6 col-xl-3">
                     <a href="{{ $healthSuggestionsUrl }}" class="feature-neo feature-neo-link h-100 d-block reveal-block" data-tilt-card>
-                        <span class="feature-chip">Insights</span>
+                        <span class="feature-chip">{{ __('ui.home.insights') }}</span>
                         <div class="feature-icon"><i class="fas fa-compass"></i></div>
-                        <h5>Smart Suggestions</h5>
-                        <p>Get practical recommendations based on your data.</p>
-                        <small class="feature-meta"><i class="fas fa-brain me-1"></i>Data-driven suggestions</small>
+                        <h5>{{ __('ui.home.smart_suggestions') }}</h5>
+                        <p>{{ __('ui.home.suggestions_desc') }}</p>
+                        <small class="feature-meta"><i class="fas fa-brain me-1"></i>{{ __('ui.home.data_driven_suggestions') }}</small>
                     </a>
                 </div>
 
                 <div class="col-md-6 col-xl-3">
                     <a href="{{ $healthTipsUrl }}" class="feature-neo feature-neo-link h-100 d-block reveal-block" data-tilt-card>
-                        <span class="feature-chip">Help</span>
+                        <span class="feature-chip">{{ __('ui.home.help') }}</span>
                         <div class="feature-icon"><i class="fas fa-life-ring"></i></div>
-                        <h5>Help & Support</h5>
-                        <p>Find guides, FAQs and contact options for assistance.</p>
-                        <small class="feature-meta"><i class="fas fa-life-ring me-1"></i>Get help</small>
+                        <h5>{{ __('ui.home.help_support') }}</h5>
+                        <p>{{ __('ui.home.help_desc') }}</p>
+                        <small class="feature-meta"><i class="fas fa-life-ring me-1"></i>{{ __('ui.home.get_help') }}</small>
                     </a>
                 </div>
             </div>
@@ -226,8 +225,8 @@
     <section class="py-4 py-md-5 journey-zone">
         <div class="container">
             <div class="section-head reveal-block mb-4 mb-md-5">
-                <span class="section-kicker">How It Works</span>
-                <h2 class="section-title">Your wellness loop in four steps</h2>
+                <span class="section-kicker">{{ __('ui.home.how_it_works') }}</span>
+                <h2 class="section-title">{{ __('ui.home.wellness_loop') }}</h2>
             </div>
             <div class="row g-3 g-md-4 journey-grid">
                 <div class="col-md-6 col-xl-3 reveal-block journey-step">
@@ -236,8 +235,8 @@
                             <i class="fas fa-user-plus"></i>
                         </div>
                         <span class="journey-num">01</span>
-                        <h6>Create profile</h6>
-                        <p>Start in under a minute and set baseline details.</p>
+                        <h6>{{ __('ui.home.create_profile') }}</h6>
+                        <p>{{ __('ui.home.create_profile_desc') }}</p>
                     </div>
                 </div>
                 <div class="col-md-6 col-xl-3 reveal-block journey-step">
@@ -246,8 +245,8 @@
                             <i class="fas fa-wave-square"></i>
                         </div>
                         <span class="journey-num">02</span>
-                        <h6>Track daily data</h6>
-                        <p>Log metrics, symptoms, medicine intake, and files.</p>
+                        <h6>{{ __('ui.home.track_daily_data') }}</h6>
+                        <p>{{ __('ui.home.track_daily_data_desc') }}</p>
                     </div>
                 </div>
                 <div class="col-md-6 col-xl-3 reveal-block journey-step">
@@ -256,8 +255,8 @@
                             <i class="fas fa-brain"></i>
                         </div>
                         <span class="journey-num">03</span>
-                        <h6>Review insights</h6>
-                        <p>Use trends and suggestions to optimize your routine.</p>
+                        <h6>{{ __('ui.home.review_insights') }}</h6>
+                        <p>{{ __('ui.home.review_insights_desc') }}</p>
                     </div>
                 </div>
                 <div class="col-md-6 col-xl-3 reveal-block journey-step">
@@ -266,8 +265,8 @@
                             <i class="fas fa-check-circle"></i>
                         </div>
                         <span class="journey-num">04</span>
-                        <h6>Improve consistency</h6>
-                        <p>Rely on reminders and community motivation every day.</p>
+                        <h6>{{ __('ui.home.improve_consistency') }}</h6>
+                        <p>{{ __('ui.home.improve_consistency_desc') }}</p>
                     </div>
                 </div>
             </div>
@@ -277,14 +276,14 @@
     <section class="py-4 py-md-5">
         <div class="container">
             <div class="cta-panel text-center reveal-block">
-                <h2 class="mb-3">Turn your health data into healthier days</h2>
-                <p class="mb-4">Access your dashboard, follow reminders, and stay in sync with your care goals.</p>
+                <h2 class="mb-3">{{ __('ui.home.cta_title') }}</h2>
+                <p class="mb-4">{{ __('ui.home.cta_subtitle') }}</p>
                 <div class="d-flex flex-wrap justify-content-center gap-2 gap-md-3">
                     <a href="{{ $ctaPrimaryUrl }}" class="btn btn-light rounded-pill px-4 px-md-5 py-2 py-md-3">
-                        <i class="fas fa-tachometer-alt me-2"></i>{{ $isAuthenticated ? 'Go to Dashboard' : 'Login to Continue' }}
+                        <i class="fas fa-tachometer-alt me-2"></i>{{ $isAuthenticated ? __('ui.home.go_to_dashboard') : __('ui.home.login_to_continue') }}
                     </a>
                     <a href="{{ $ctaSecondaryUrl }}" class="btn btn-outline-light rounded-pill px-4 px-md-5 py-2 py-md-3">
-                        <i class="fas fa-users me-2"></i>{{ $isAuthenticated ? 'Open Community' : 'Login for Community' }}
+                        <i class="fas fa-users me-2"></i>{{ $isAuthenticated ? __('ui.home.open_community') : __('ui.home.login_for_community') }}
                     </a>
                 </div>
             </div>
@@ -295,6 +294,7 @@
 
 @push('styles')
 <style>
+    /* YOUR ORIGINAL STYLES - KEPT EXACTLY AS IS */
     .home-next {
         /* use same purple gradient family as auth pages for accents */
         --admin-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);

@@ -2374,49 +2374,46 @@
                 </div>
             </nav>
 
-            @if (request()->routeIs('home'))
-                <!-- Banner Hero Section (Home only) -->
-                <div class="banner position-relative overflow-hidden">
-                    <!-- Banner Content with Container Layout -->
-                    <div class="container position-relative z-3 py-5">
-                        <div class="row min-vh-50 align-items-center justify-content-start">
-                            <!-- Left Column - Text and Buttons -->
-                            <div class="col-lg-9 text-white text-start">
-                                <h1 class="display-3 fw-bold mt-5 pt-4 mb-4">Your Health,<br>Our <span
-                                        class="text-warning">Priority</span></h1>
-                                <p class="lead mb-4">Experience healthcare reimagined with AI-powered insights, medicine
-                                    reminders, and community support.</p>
+@if (request()->routeIs('home'))
+    <!-- Banner Hero Section (Home only) -->
+    <div class="banner position-relative overflow-hidden">
+        <div class="container position-relative z-3 py-5">
+            <div class="row min-vh-50 align-items-center justify-content-start">
+                <div class="col-lg-9 text-white text-start">
+                    <h1 class="display-3 fw-bold mt-5 pt-4 mb-4">{{ __('ui.layout.banner_title') }}<br>{{ __('ui.layout.banner_title_our') }} <span
+                            class="text-warning">{{ __('ui.layout.banner_title_priority') }}</span></h1>
+                    <p class="lead mb-4">{{ __('ui.layout.banner_subtitle') }}</p>
 
-                                @guest
-                                    <div class="d-flex gap-3 flex-wrap">
-                                        <a href="{{ route('login', [], false) }}?redirect={{ urlencode(route('dashboard', [], false)) }}"
-                                            class="btn btn-light btn-lg rounded-pill px-5 py-3 fw-semibold">
-                                            Get Started <i class="fas fa-arrow-right ms-2"></i>
-                                        </a>
-                                        <a href="{{ route('login', [], false) }}?redirect={{ urlencode(request()->fullUrl()) }}"
-                                            class="btn btn-outline-light btn-lg rounded-pill px-5 py-3 fw-semibold">
-                                            <i class="fas fa-user-md me-2"></i>Ask MyDoctor AI
-                                        </a>
-                                    </div>
-                                @else
-                                    <div class="d-flex gap-3">
-                                        <a href="{{ route('dashboard') }}"
-                                            class="btn btn-light btn-lg rounded-pill px-5 py-3 fw-semibold">
-                                            Dashboard <i class="fas fa-arrow-right ms-2"></i>
-                                        </a>
-                                        @if (!auth()->user()->isAdmin())
-                                            <button onclick="toggleChatbot()"
-                                                class="btn btn-outline-light btn-lg rounded-pill px-5 py-3 fw-semibold">
-                                                <i class="fas fa-user-md me-2"></i>Ask MyDoctor AI
-                                            </button>
-                                        @endif
-                                    </div>
-                                @endguest
-                            </div>
+                    @guest
+                        <div class="d-flex gap-3 flex-wrap">
+                            <a href="{{ route('login', [], false) }}?redirect={{ urlencode(route('dashboard', [], false)) }}"
+                                class="btn btn-light btn-lg rounded-pill px-5 py-3 fw-semibold">
+                                {{ __('ui.layout.get_started') }} <i class="fas fa-arrow-right ms-2"></i>
+                            </a>
+                            <a href="{{ route('login', [], false) }}?redirect={{ urlencode(request()->fullUrl()) }}"
+                                class="btn btn-outline-light btn-lg rounded-pill px-5 py-3 fw-semibold">
+                                <i class="fas fa-user-md me-2"></i>{{ __('ui.layout.ask_ai') }}
+                            </a>
                         </div>
-                    </div>
+                    @else
+                        <div class="d-flex gap-3">
+                            <a href="{{ route('dashboard') }}"
+                                class="btn btn-light btn-lg rounded-pill px-5 py-3 fw-semibold">
+                                {{ __('ui.layout.dashboard') }} <i class="fas fa-arrow-right ms-2"></i>
+                            </a>
+                            @if (!auth()->user()->isAdmin())
+                                <button onclick="toggleChatbot()"
+                                    class="btn btn-outline-light btn-lg rounded-pill px-5 py-3 fw-semibold">
+                                    <i class="fas fa-user-md me-2"></i>{{ __('ui.layout.ask_ai') }}
+                                </button>
+                            @endif
+                        </div>
+                    @endguest
                 </div>
-            @endif
+            </div>
+        </div>
+    </div>
+@endif
         </div>
 
         <!-- Main Content -->
@@ -2428,7 +2425,7 @@
             <!-- Chatbot Icon -->
             <div class="chatbot-icon" id="chatbotIcon" onclick="toggleChatbot()">
                 <i class="fas fa-user-md"></i>
-                <span class="chatbot-tooltip">Ask me about health!</span>
+                <span class="chatbot-tooltip">{{ __('ui.layout.chatbot_tooltip') }}</span>
             </div>
 
             <!-- Chatbot Modal -->
