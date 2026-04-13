@@ -41,7 +41,6 @@ class ProfileTest extends TestCase
     #[Test]
     public function guest_cannot_post_to_logout(): void
     {
-        // As a guest, POST /logout should redirect to login
         $this->post(route('logout'))
              ->assertRedirect(route('login'));
     }
@@ -84,7 +83,7 @@ class ProfileTest extends TestCase
 
         $this->actingAs($user)
              ->patch(route('profile.password'), [
-                 'current_password'      => 'password',
+                 'current_password'      => 'abcd1234',
                  'password'              => 'newpassword1',
                  'password_confirmation' => 'differentpassword',
              ])
@@ -97,8 +96,8 @@ class ProfileTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-             ->delete(route('profile.destroy'), ['password' => 'wrongpassword'])
-             ->assertSessionHasErrors('password');
+             ->delete(route('profile.destroy'), ['delete_password' => 'wrongpassword'])
+             ->assertSessionHasErrors('delete_password');
 
         $this->assertDatabaseHas('users', ['id' => $user->id]);
     }
@@ -109,7 +108,7 @@ class ProfileTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-             ->delete(route('profile.destroy'), ['password' => 'abcd1234'])
+             ->delete(route('profile.destroy'), ['delete_password' => 'abcd1234'])
              ->assertRedirect('/');
 
         $this->assertDatabaseMissing('users', ['id' => $user->id]);

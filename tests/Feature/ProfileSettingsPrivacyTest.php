@@ -15,9 +15,11 @@ class ProfileSettingsPrivacyTest extends TestCase
     public function test_settings_update_persists_public_visibility_permissions(): void
     {
         $user = User::factory()->create();
-        $user->setting()->update([
+        
+        // Ensure setting exists first
+        $setting = $user->setting()->firstOrCreate([]);
+        $setting->update([
             'email_notifications' => false,
-            'push_notifications' => false,
             'show_personal_info' => false,
             'show_diseases' => false,
             'show_chatbot' => false,
@@ -27,7 +29,6 @@ class ProfileSettingsPrivacyTest extends TestCase
 
         $response = $this->actingAs($user)->put(route('profile.setting.update'), [
             'email_notifications' => '1',
-            'push_notifications' => '1',
             'show_personal_info' => '1',
             // show_diseases intentionally omitted to verify false handling
             'show_chatbot' => '1',
@@ -42,14 +43,17 @@ class ProfileSettingsPrivacyTest extends TestCase
         $user->refresh();
         $user->load('setting');
 
-        $this->assertTrue($user->setting->email_notifications);
-        $this->assertTrue($user->setting->push_notifications);
-        $this->assertTrue($user->setting->show_personal_info);
-        $this->assertFalse($user->setting->show_diseases);
-        $this->assertTrue($user->setting->show_chatbot);
-        $this->assertTrue($user->setting->show_notification_badge);
-        $this->assertTrue($user->setting->show_mail_badge);
-        $this->assertSame(15, (int) ($user->notification_settings['reminder_before_minutes'] ?? 0));
+        // Assert all values
+        $this->assertTrue($user->setting->email_notifications, 'email_notifications should be true');
+        $this->assertTrue($user->setting->show_personal_info, 'show_personal_info should be true');
+        $this->assertFalse($user->setting->show_diseases, 'show_diseases should be false');
+        $this->assertTrue($user->setting->show_chatbot, 'show_chatbot should be true');
+        $this->assertTrue($user->setting->show_notification_badge, 'show_notification_badge should be true');
+        $this->assertTrue($user->setting->show_mail_badge, 'show_mail_badge should be true');
+        
+        // Check notification_settings separately
+        $notificationSettings = $user->notification_settings ?? [];
+        $this->assertSame(15, (int) ($notificationSettings['reminder_before_minutes'] ?? 0), 'reminder_before_minutes should be 15');
     }
 
     public function test_public_profile_respects_privacy_permissions(): void

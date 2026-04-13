@@ -35,17 +35,18 @@ class RegistrationTest extends TestCase
     public function user_can_register_with_valid_data(): void
     {
         $response = $this->post(route('register'), array_merge($this->requiredRegistrationFields(), [
-            'Name' => 'Test User',              // Uppercase N
-            'Email' => 'newuser@example.com',   // Uppercase E
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'Name' => 'Test User',
+            'Email' => 'newuser@example.com',
+            'password' => 'pass1234', // 7 chars - valid with min:4
+            'password_confirmation' => 'pass1234',
         ]));
 
-        $response->assertRedirect('/');
+        // After registration, user is redirected to email verification notice
+        $response->assertRedirect(route('verification.notice'));
         
         $this->assertDatabaseHas('users', [
-            'email' => 'newuser@example.com',   // Database uses lowercase
-            'name' => 'Test User'                // Database uses lowercase
+            'email' => 'newuser@example.com',
+            'name' => 'Test User'
         ]);
     }
 
@@ -55,13 +56,13 @@ class RegistrationTest extends TestCase
         User::factory()->create(['email' => 'existing@example.com']);
 
         $response = $this->post(route('register'), array_merge($this->requiredRegistrationFields(), [
-            'Name' => 'Another User',            // Uppercase N
-            'Email' => 'existing@example.com',   // Uppercase E
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'Name' => 'Another User',
+            'Email' => 'existing@example.com',
+            'password' => 'pass1234',
+            'password_confirmation' => 'pass1234',
         ]));
 
-        $response->assertSessionHasErrors('Email');  // Uppercase E for error key
+        $response->assertSessionHasErrors('Email');
         
         $this->assertEquals(1, User::where('email', 'existing@example.com')->count());
     }
@@ -70,49 +71,49 @@ class RegistrationTest extends TestCase
     public function registration_fails_without_name(): void
     {
         $response = $this->post(route('register'), array_merge($this->requiredRegistrationFields(), [
-            'Name' => '',                         // Uppercase N
-            'Email' => 'noname@example.com',       // Uppercase E
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'Name' => '',
+            'Email' => 'noname@example.com',
+            'password' => 'pass1234',
+            'password_confirmation' => 'pass1234',
         ]));
 
-        $response->assertSessionHasErrors('Name');  // Uppercase N for error key
+        $response->assertSessionHasErrors('Name');
     }
 
     #[Test]
     public function registration_fails_without_email(): void
     {
         $response = $this->post(route('register'), array_merge($this->requiredRegistrationFields(), [
-            'Name' => 'No Email User',            // Uppercase N
-            'Email' => '',                          // Uppercase E
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'Name' => 'No Email User',
+            'Email' => '',
+            'password' => 'pass1234',
+            'password_confirmation' => 'pass1234',
         ]));
 
-        $response->assertSessionHasErrors('Email');  // Uppercase E for error key
+        $response->assertSessionHasErrors('Email');
     }
 
     #[Test]
     public function registration_fails_with_invalid_email_format(): void
     {
         $response = $this->post(route('register'), array_merge($this->requiredRegistrationFields(), [
-            'Name' => 'Bad Email',                 // Uppercase N
-            'Email' => 'not-an-email',              // Uppercase E
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'Name' => 'Bad Email',
+            'Email' => 'not-an-email',
+            'password' => 'pass1234',
+            'password_confirmation' => 'pass1234',
         ]));
 
-        $response->assertSessionHasErrors('Email');  // Uppercase E for error key
+        $response->assertSessionHasErrors('Email');
     }
 
     #[Test]
     public function registration_fails_with_password_too_short(): void
     {
         $response = $this->post(route('register'), array_merge($this->requiredRegistrationFields(), [
-            'Name' => 'Short Pass',                // Uppercase N
-            'Email' => 'shortpass@example.com',     // Uppercase E
-            'password' => 'short',
-            'password_confirmation' => 'short',
+            'Name' => 'Short Pass',
+            'Email' => 'shortpass@example.com',
+            'password' => '123', // 3 chars - less than min:4
+            'password_confirmation' => '123',
         ]));
 
         $response->assertSessionHasErrors('password');
@@ -122,9 +123,9 @@ class RegistrationTest extends TestCase
     public function registration_fails_when_passwords_do_not_match(): void
     {
         $response = $this->post(route('register'), array_merge($this->requiredRegistrationFields(), [
-            'Name' => 'Mismatch User',             // Uppercase N
-            'Email' => 'mismatch@example.com',      // Uppercase E
-            'password' => 'password123',
+            'Name' => 'Mismatch User',
+            'Email' => 'mismatch@example.com',
+            'password' => 'pass1234',
             'password_confirmation' => 'differentpassword',
         ]));
 
@@ -135,23 +136,23 @@ class RegistrationTest extends TestCase
     public function registration_stores_optional_fields(): void
     {
         $response = $this->post(route('register'), array_merge($this->requiredRegistrationFields(), [
-            'Name' => 'Complete User',              // Uppercase N
-            'Email' => 'complete@example.com',       // Uppercase E
-            'Phone' => '01712345678',                 // Uppercase P
-            'DateOfBirth' => '1995-06-15',            // Uppercase D, B
-            'Occupation' => 'Engineer',               // Uppercase O
-            'BloodGroup' => 'O+',                      // Uppercase B, G
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'Name' => 'Complete User',
+            'Email' => 'complete@example.com',
+            'Phone' => '01712345678',
+            'DateOfBirth' => '1995-06-15',
+            'Occupation' => 'Engineer',
+            'BloodGroup' => 'O+',
+            'password' => 'pass1234',
+            'password_confirmation' => 'pass1234',
         ]));
 
-        $response->assertRedirect('/');
+        $response->assertRedirect(route('verification.notice'));
         
         $this->assertDatabaseHas('users', [
-            'email' => 'complete@example.com',        // Database uses lowercase
-            'phone' => '01712345678',                  // Database uses lowercase
-            'occupation' => 'Engineer',                // Database uses lowercase
-            'blood_group' => 'O+',                      // Database uses lowercase
+            'email' => 'complete@example.com',
+            'phone' => '01712345678',
+            'occupation' => 'Engineer',
+            'blood_group' => 'O+',
         ]);
     }
 
@@ -159,65 +160,65 @@ class RegistrationTest extends TestCase
     public function registration_rejects_invalid_blood_group(): void
     {
         $response = $this->post(route('register'), array_merge($this->requiredRegistrationFields(), [
-            'Name' => 'Bad Blood',                    
-            'Email' => 'badblood@example.com',         
-            'BloodGroup' => 'X+',                       
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'Name' => 'Bad Blood',
+            'Email' => 'badblood@example.com',
+            'BloodGroup' => 'X+',
+            'password' => 'pass1234',
+            'password_confirmation' => 'pass1234',
         ]));
 
-        $response->assertSessionHasErrors('BloodGroup');  
+        $response->assertSessionHasErrors('BloodGroup');
     }
 
     #[Test]
     public function registration_fails_with_name_exceeding_255_characters(): void
     {
         $response = $this->post(route('register'), array_merge($this->requiredRegistrationFields(), [
-            'Name'     => str_repeat('A', 256),
-            'Email'    => 'longname@example.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'Name' => str_repeat('A', 256),
+            'Email' => 'longname@example.com',
+            'password' => 'pass1234',
+            'password_confirmation' => 'pass1234',
         ]));
 
         $response->assertSessionHasErrors('Name');
     }
 
     #[Test]
-    public function registration_accepts_name_of_exactly_255_characters(): void  // boundary OK
+    public function registration_accepts_name_of_exactly_255_characters(): void
     {
         $response = $this->post(route('register'), array_merge($this->requiredRegistrationFields(), [
-            'Name'     => str_repeat('A', 255),
-            'Email'    => 'exactname@example.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'Name' => str_repeat('A', 255),
+            'Email' => 'exactname@example.com',
+            'password' => 'pass1234',
+            'password_confirmation' => 'pass1234',
         ]));
 
-        $response->assertRedirect('/');
+        $response->assertRedirect(route('verification.notice'));
         $this->assertDatabaseHas('users', ['email' => 'exactname@example.com']);
     }
 
     #[Test]
-    public function registration_succeeds_with_password_of_exactly_8_characters(): void  // min boundary
+    public function registration_succeeds_with_password_of_exactly_4_characters(): void
     {
         $response = $this->post(route('register'), array_merge($this->requiredRegistrationFields(), [
-            'Name'     => 'Exact Pass',
-            'Email'    => 'exact8@example.com',
-            'password' => 'pass1234',   // exactly 8 chars
-            'password_confirmation' => 'pass1234',
+            'Name' => 'Exact Pass',
+            'Email' => 'exact4@example.com',
+            'password' => 'pass', // 4 chars - minimum allowed
+            'password_confirmation' => 'pass',
         ]));
 
-        $response->assertRedirect('/');
-        $this->assertDatabaseHas('users', ['email' => 'exact8@example.com']);
+        $response->assertRedirect(route('verification.notice'));
+        $this->assertDatabaseHas('users', ['email' => 'exact4@example.com']);
     }
 
     #[Test]
-    public function registration_fails_with_password_of_7_characters(): void   // just below min
+    public function registration_fails_with_password_of_3_characters(): void
     {
         $response = $this->post(route('register'), array_merge($this->requiredRegistrationFields(), [
-            'Name'     => 'Short Pass',
-            'Email'    => 'pass7@example.com',
-            'password' => 'pass123',   // only 7 chars
-            'password_confirmation' => 'pass123',
+            'Name' => 'Short Pass',
+            'Email' => 'pass3@example.com',
+            'password' => 'pas', // 3 chars - below minimum
+            'password_confirmation' => 'pas',
         ]));
 
         $response->assertSessionHasErrors('password');
@@ -228,7 +229,6 @@ class RegistrationTest extends TestCase
     {
         $user = User::factory()->create();
 
-        // The RegisterController applies 'guest' middleware — auth'd users get bounced
         $this->actingAs($user)
              ->get(route('register'))
              ->assertRedirect(route('dashboard'));
@@ -242,10 +242,10 @@ class RegistrationTest extends TestCase
         $this->actingAs($user)
              ->post(route('register'), [
                  ...$this->requiredRegistrationFields(),
-                 'Name'     => 'Another User',
-                 'Email'    => 'another@example.com',
-                 'password' => 'password123',
-                 'password_confirmation' => 'password123',
+                 'Name' => 'Another User',
+                 'Email' => 'another@example.com',
+                 'password' => 'pass1234',
+                 'password_confirmation' => 'pass1234',
              ])
              ->assertRedirect(route('dashboard'));
     }
