@@ -1,11 +1,10 @@
-{{-- resources/views/auth/forgot-password.blade.php --}}
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Reset Password - {{ config('app.name', 'My Doctor') }}</title>
+    <title>{{ __('ui.auth.reset_password_title') }} - {{ config('app.name', 'My Doctor') }}</title>
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -38,7 +37,7 @@
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             width: 100%;
-            max-width: 600px;  /* Increased from default 400px to 600px */
+            max-width: 600px;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         
@@ -163,15 +162,15 @@
             <div class="card-body-custom">
                 <div class="text-center mb-4">
                     <img src="{{ asset('images/logos/applogo.png') }}" alt="{{ config('app.name') }}" class="logo">
-                    <h4>Reset Password</h4>
-                    <p class="text-muted-custom">Enter your email to receive a password reset link</p>
+                    <h4>{{ __('ui.auth.forgot_password_heading') }}</h4>
+                    <p class="text-muted-custom">{{ __('ui.auth.forgot_password_subtitle') }}</p>
                 </div>
 
                 @if (session('status'))
                     <div class="alert alert-success alert-custom alert-dismissible fade show" role="alert">
                         <i class="fas fa-check-circle me-2"></i>
                         {{ session('status') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ __('ui.actions.close') }}"></button>
                     </div>
                 @endif
 
@@ -181,7 +180,7 @@
                         @foreach ($errors->all() as $error)
                             {{ $error }}
                         @endforeach
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ __('ui.actions.close') }}"></button>
                     </div>
                 @endif
 
@@ -189,7 +188,7 @@
                     @csrf
 
                     <div class="mb-4">
-                        <label for="email">Email Address</label>
+                        <label for="email">{{ __('ui.auth.email_address') }}</label>
                         <div class="input-group input-group-custom">
                             <span class="input-group-text">
                                 <i class="fas fa-envelope text-primary"></i>
@@ -199,7 +198,7 @@
                                    id="email" 
                                    name="email" 
                                    value="{{ old('email') }}" 
-                                   placeholder="Enter your registered email address"
+                                   placeholder="{{ __('ui.auth.email_placeholder') }}"
                                    required 
                                    autofocus>
                         </div>
@@ -210,13 +209,13 @@
 
                     <div class="d-grid mb-4">
                         <button type="submit" class="btn btn-gradient" id="sendResetLinkBtn">
-                            <i class="fas fa-paper-plane me-2"></i>Send Password Reset Link
+                            <i class="fas fa-paper-plane me-2"></i>{{ __('ui.auth.send_reset_link') }}
                         </button>
                     </div>
 
                     <div class="text-center">
                         <a href="{{ route('login') }}" class="back-link">
-                            <i class="fas fa-arrow-left me-1"></i>Back to Login
+                            <i class="fas fa-arrow-left me-1"></i>{{ __('ui.auth.back_to_login') }}
                         </a>
                     </div>
                 </form>
@@ -234,14 +233,12 @@
             const emailInput = document.getElementById('email');
             
             form.addEventListener('submit', function(e) {
-                console.log('Form submit event triggered');
-                
                 const email = emailInput.value.trim();
                 
                 // Validate email
                 if (!email) {
                     e.preventDefault();
-                    alert('Please enter your email address.');
+                    alert('{{ __("ui.auth.email_required_alert") }}');
                     emailInput.focus();
                     return false;
                 }
@@ -250,26 +247,20 @@
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!emailRegex.test(email)) {
                     e.preventDefault();
-                    alert('Please enter a valid email address.');
+                    alert('{{ __("ui.auth.email_invalid_alert") }}');
                     emailInput.focus();
                     return false;
                 }
                 
-                console.log('Validation passed, showing loading state');
-                
                 // Show loading state
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending reset link...';
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>{{ __("ui.auth.sending_reset_link") }}';
                 submitBtn.disabled = true;
                 
                 // Re-enable button after 10 seconds as fallback
                 setTimeout(function() {
-                    console.log('Fallback: re-enabling button');
-                    submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Send Password Reset Link';
+                    submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>{{ __("ui.auth.send_reset_link") }}';
                     submitBtn.disabled = false;
                 }, 10000);
-                
-                // Don't prevent default - let form submit normally
-                console.log('Form submitting...');
             });
         });
         

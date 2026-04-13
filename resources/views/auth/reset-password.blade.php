@@ -1,11 +1,10 @@
-{{-- resources/views/auth/reset-password.blade.php --}}
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Reset Password - {{ config('app.name', 'My Doctor') }}</title>
+    <title>{{ __('ui.auth.reset_password_title') }} - {{ config('app.name', 'My Doctor') }}</title>
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -178,8 +177,8 @@
             <div class="card-body-custom">
                 <div class="text-center mb-4">
                     <img src="{{ asset('images/logos/applogo.png') }}" alt="{{ config('app.name') }}" class="logo">
-                    <h4>Create New Password</h4>
-                    <p class="text-muted-custom">Please enter your new password below</p>
+                    <h4>{{ __('ui.auth.create_new_password') }}</h4>
+                    <p class="text-muted-custom">{{ __('ui.auth.enter_new_password') }}</p>
                 </div>
 
                 @if ($errors->any())
@@ -190,7 +189,7 @@
                                 <li>{{ $error }}</li>
                             @endforeach
                         </ul>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ __('ui.actions.close') }}"></button>
                     </div>
                 @endif
 
@@ -199,7 +198,7 @@
                     <input type="hidden" name="token" value="{{ $token }}">
 
                     <div class="mb-3">
-                        <label for="email">Email Address</label>
+                        <label for="email">{{ __('ui.auth.email_address') }}</label>
                         <div class="input-group input-group-custom">
                             <span class="input-group-text">
                                 <i class="fas fa-envelope text-primary"></i>
@@ -209,7 +208,7 @@
                                    id="email" 
                                    name="email" 
                                    value="{{ $email ?? old('email') }}" 
-                                   placeholder="Enter your email address"
+                                   placeholder="{{ __('ui.auth.email_placeholder') }}"
                                    readonly
                                    required>
                         </div>
@@ -219,7 +218,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="password">New Password</label>
+                        <label for="password">{{ __('ui.auth.new_password_label') }}</label>
                         <div class="input-group input-group-custom">
                             <span class="input-group-text">
                                 <i class="fas fa-lock text-primary"></i>
@@ -228,7 +227,7 @@
                                    class="form-control @error('password') is-invalid @enderror" 
                                    id="password" 
                                    name="password" 
-                                   placeholder="Enter new password"
+                                   placeholder="{{ __('ui.auth.new_password_placeholder') }}"
                                    required>
                             <button class="btn btn-outline-secondary btn-show-password" 
                                     type="button" 
@@ -242,7 +241,7 @@
                     </div>
 
                     <div class="mb-4">
-                        <label for="password_confirmation">Confirm Password</label>
+                        <label for="password_confirmation">{{ __('ui.auth.confirm_new_password') }}</label>
                         <div class="input-group input-group-custom">
                             <span class="input-group-text">
                                 <i class="fas fa-lock text-primary"></i>
@@ -251,7 +250,7 @@
                                    class="form-control" 
                                    id="password_confirmation" 
                                    name="password_confirmation" 
-                                   placeholder="Confirm your new password"
+                                   placeholder="{{ __('ui.auth.confirm_new_password_placeholder') }}"
                                    required>
                             <button class="btn btn-outline-secondary btn-show-password" 
                                     type="button" 
@@ -260,16 +259,16 @@
                             </button>
                         </div>
                         <div id="passwordMatchSuccess" class="password-match-success">
-                            <i class="fas fa-check-circle"></i> Passwords match!
+                            <i class="fas fa-check-circle"></i> {{ __('ui.auth.passwords_match') }}
                         </div>
                         <div id="passwordMatchError" class="password-match-error">
-                            <i class="fas fa-times-circle"></i> Passwords do not match
+                            <i class="fas fa-times-circle"></i> {{ __('ui.auth.passwords_do_not_match') }}
                         </div>
                     </div>
 
                     <div class="d-grid">
                         <button type="submit" class="btn btn-gradient" id="resetPasswordBtn">
-                            <i class="fas fa-key me-2"></i>Reset Password
+                            <i class="fas fa-key me-2"></i>{{ __('ui.auth.reset_password_button') }}
                         </button>
                     </div>
                 </form>
@@ -329,12 +328,12 @@
             
             if (password !== confirmPassword) {
                 e.preventDefault();
-                alert('Passwords do not match. Please check your password confirmation.');
+                alert('{{ __("ui.auth.passwords_do_not_match_alert") }}');
                 return false;
             }
             
             const resetBtn = document.getElementById('resetPasswordBtn');
-            resetBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Resetting Password...';
+            resetBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>{{ __("ui.auth.resetting_password") }}';
             resetBtn.disabled = true;
         });
         
