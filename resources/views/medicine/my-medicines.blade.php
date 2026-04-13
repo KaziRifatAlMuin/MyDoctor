@@ -1,10 +1,10 @@
+{{-- resources/views/medicine/my-medicines.blade.php --}}
 @extends('layouts.app')
 
 @section('title', 'My Medicines')
 
 @section('content')
 <div class="container py-4">
-    <!-- Header with better styling -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
             <h1 class="display-5 fw-bold text-primary mb-1">
@@ -17,7 +17,6 @@
         </a>
     </div>
 
-    <!-- Success Message -->
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 border-start border-4 border-success" role="alert">
             <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
@@ -25,14 +24,12 @@
         </div>
     @endif
 
-    <!-- Medicines Grid -->
     @if($medicines->count() > 0)
         <div class="row g-4">
             @foreach($medicines as $medicine)
                 <div class="col-xl-3 col-lg-4 col-md-6">
                     <div class="card h-100 border-0 shadow-sm medicine-card">
                         <div class="card-body p-4">
-                            <!-- Header with type and menu -->
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <span class="badge bg-primary-soft text-primary px-3 py-2 rounded-pill">
                                     <i class="fas fa-capsules me-1"></i>{{ $medicine->typeLabel ?? 'Medicine' }}
@@ -72,12 +69,10 @@
                                 </div>
                             </div>
                             
-                            <!-- Medicine Name -->
                             <h4 class="fw-bold mb-3 text-truncate" title="{{ $medicine->medicine_name }}">
                                 {{ $medicine->medicine_name }}
                             </h4>
                             
-                            <!-- Details in a clean grid -->
                             <div class="bg-light p-3 rounded-3 mb-3">
                                 <div class="row g-3">
                                     <div class="col-6">
@@ -109,7 +104,6 @@
                                 </div>
                             </div>
                             
-                            <!-- Schedule Status -->
                             @if($medicine->activeSchedule)
                                 <div class="schedule-status active p-3 rounded-3 mb-3">
                                     <div class="d-flex align-items-center">
@@ -132,7 +126,6 @@
                                 </div>
                             @endif
                             
-                            <!-- Action Buttons -->
                             <div class="d-flex gap-2">
                                 <a href="{{ route('medicine.schedules', ['medicine_id' => $medicine->id]) }}" 
                                    class="btn btn-outline-primary flex-grow-1 rounded-pill">
@@ -150,7 +143,6 @@
             @endforeach
         </div>
     @else
-        <!-- Empty State - Centered and clean -->
         <div class="text-center py-5 my-5">
             <div class="empty-state-icon mb-4">
                 <div class="bg-primary-soft d-inline-block p-4 rounded-circle">
@@ -214,7 +206,6 @@
         opacity: 0.9;
     }
     
-    /* Better responsive grid */
     @media (min-width: 1400px) {
         .col-xl-3 {
             flex: 0 0 auto;
@@ -222,7 +213,6 @@
         }
     }
     
-    /* Keep the main content nicely centered */
     .main-content {
         max-width: 1400px;
         margin: 0 auto;

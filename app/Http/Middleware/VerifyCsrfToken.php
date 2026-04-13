@@ -14,5 +14,7 @@ class VerifyCsrfToken extends Middleware
     protected $except = [
         'medicine/reminders/*/taken-from-notification',
         'medicine/reminders/*/snooze',
+        'forgot-password',
+        '*/forgot-password',
     ];
 }

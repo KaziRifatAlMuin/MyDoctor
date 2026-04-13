@@ -1,14 +1,16 @@
 <?php
+// app/Models/User.php
 
 namespace App\Models;
 
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Log;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, Notifiable;
 
@@ -35,7 +37,7 @@ class User extends Authenticatable
     protected $casts = [
         'date_of_birth' => 'date',
         'email_verified_at' => 'datetime',
-        'password'           => 'hashed',
+        'password' => 'hashed',
         'notification_settings' => 'array',
         'is_active' => 'boolean',
     ];
@@ -58,7 +60,6 @@ class User extends Authenticatable
         static::created(function (User $user): void {
             $user->setting()->firstOrCreate([], [
                 'email_notifications' => true,
-                'push_notifications' => true,
                 'show_personal_info' => false,
                 'show_diseases' => false,
                 'show_chatbot' => true,
@@ -83,103 +84,28 @@ class User extends Authenticatable
     }
 
     /**
-     * Route notifications for Web Push
+     * Send the email verification notification.
      */
-    public function routeNotificationForWebPush()
+    public function sendEmailVerificationNotification()
     {
-        return $this->pushSubscriptions;
+        $this->notify(new \App\Notifications\CustomVerifyEmail());
     }
 
     /**
-     * Push subscriptions relationship
+     * Send the password reset notification.
      */
-    public function pushSubscriptions()
+    public function sendPasswordResetNotification($token)
     {
-        return $this->morphMany(\App\Models\PushSubscription::class, 'subscribable');
+        $this->notify(new \App\Notifications\ResetPasswordNotification($token));
     }
 
-    /**
-     * Update or create a push subscription
-     */
-    public function updatePushSubscription(string $endpoint, ?string $publicKey = null, ?string $authToken = null, string $contentEncoding = 'aesgcm')
-    {
-        try {
-            Log::info('Updating push subscription for user ' . $this->id, [
-                'endpoint_prefix' => substr($endpoint, 0, 50) . '...',
-                'has_public_key' => !is_null($publicKey),
-                'has_auth_token' => !is_null($authToken)
-            ]);
+  
 
-            // First, clean up any orphaned subscriptions with same endpoint for different users
-            \App\Models\PushSubscription::where('endpoint', $endpoint)
-                ->where('subscribable_id', '!=', $this->id)
-                ->delete();
 
-            // Update or create the subscription
-            $subscription = $this->pushSubscriptions()->updateOrCreate(
-                ['endpoint' => $endpoint],
-                [
-                    'public_key' => $publicKey,
-                    'auth_token' => $authToken,
-                    'content_encoding' => $contentEncoding,
-                ]
-            );
 
-            Log::info('Push subscription saved', [
-                'subscription_id' => $subscription->id,
-                'user_id' => $this->id
-            ]);
 
-            return $subscription;
 
-        } catch (\Exception $e) {
-            Log::error('Failed to update push subscription', [
-                'user_id' => $this->id,
-                'error' => $e->getMessage(),
-                'endpoint' => substr($endpoint, 0, 100) . '...'
-            ]);
-            
-            // Try one more time with a more aggressive approach
-            try {
-                // Force delete any existing subscription with this endpoint
-                \App\Models\PushSubscription::where('endpoint', $endpoint)->delete();
-                
-                // Create fresh
-                $subscription = $this->pushSubscriptions()->create([
-                    'endpoint' => $endpoint,
-                    'public_key' => $publicKey,
-                    'auth_token' => $authToken,
-                    'content_encoding' => $contentEncoding,
-                ]);
-                
-                Log::info('Push subscription created after retry', [
-                    'subscription_id' => $subscription->id
-                ]);
-                
-                return $subscription;
-                
-            } catch (\Exception $e2) {
-                Log::error('Critical push subscription failure', [
-                    'user_id' => $this->id,
-                    'error' => $e2->getMessage()
-                ]);
-                throw $e2;
-            }
-        }
-    }
 
-    /**
-     * Delete a push subscription by endpoint
-     */
-    public function deletePushSubscription(string $endpoint)
-    {
-        Log::info('Deleting push subscription', [
-            'user_id' => $this->id,
-            'endpoint_prefix' => substr($endpoint, 0, 50) . '...'
-        ]);
-        
-        return $this->pushSubscriptions()->where('endpoint', $endpoint)->delete();
-    }
 
     /**
      * Check if user wants email notifications
@@ -189,13 +115,7 @@ class User extends Authenticatable
         return (bool) $this->setting->email_notifications;
     }
 
-    /**
-     * Check if user wants push notifications
-     */
-    public function wantsPushNotifications(): bool
-    {
-        return (bool) $this->setting->push_notifications;
-    }
+
 
     /**
      * Get specific notification setting
@@ -227,23 +147,12 @@ class User extends Authenticatable
         return (bool) $setting->email_notifications;
     }
 
-    /**
-     * Toggle push notifications
-     */
-    public function togglePushNotifications(): bool
-    {
-        $setting = $this->setting()->firstOrCreate([]);
-        $setting->push_notifications = !$setting->push_notifications;
-        $setting->save();
 
-        return (bool) $setting->push_notifications;
-    }
 
     public function setting()
     {
         return $this->hasOne(UserSetting::class)->withDefault([
             'email_notifications' => true,
-            'push_notifications' => true,
             'show_personal_info' => false,
             'show_diseases' => false,
             'show_chatbot' => true,
@@ -359,47 +268,43 @@ class User extends Authenticatable
         return $this->attributes['name'] ?? null;
     }
 
+    // Add this with your other relationships
+    public function notifications()
+    {
+        return $this->hasMany(\App\Models\Notification::class, 'user_id');
+    }
 
+    public function unreadNotifications()
+    {
+        return $this->hasMany(\App\Models\Notification::class, 'user_id')->unread();
+    }
 
+    public function sentNotifications()
+    {
+        return $this->hasMany(\App\Models\Notification::class, 'from_user_id');
+    }
 
-// Add this with your other relationships
-public function notifications()
-{
-    return $this->hasMany(\App\Models\Notification::class, 'user_id');
-}
+    /**
+     * Check if user is admin
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
 
-public function unreadNotifications()
-{
-    return $this->hasMany(\App\Models\Notification::class, 'user_id')->unread();
-}
+    /**
+     * Check if user is member
+     */
+    public function isMember(): bool
+    {
+        return $this->role === 'member';
+    }
 
-public function sentNotifications()
-{
-    return $this->hasMany(\App\Models\Notification::class, 'from_user_id');
-}
-
-/**
- * Check if user is admin
- */
-public function isAdmin(): bool
-{
-    return $this->role === 'admin';
-}
-
-/**
- * Check if user is member
- */
-public function isMember(): bool
-{
-    return $this->role === 'member';
-}
-
-/**
- * Check if user has specific role
- */
-public function hasRole(string $role): bool
-{
-    return $this->role === $role;
-}
-
+    /**
+     * Check if user has specific role
+     */
+    public function hasRole(string $role): bool
+    {
+        return $this->role === $role;
+    }
 }

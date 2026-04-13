@@ -1,4 +1,5 @@
 <?php
+// app/Http/Controllers/Auth/RegisterController.php
 
 namespace App\Http\Controllers\Auth;
 
@@ -8,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Support\Facades\Auth;
 
 class RegisterController extends Controller
 {
@@ -16,7 +18,7 @@ class RegisterController extends Controller
      *
      * @var string
      */
-    protected $redirectTo = '/';
+    protected $redirectTo = '/email/verify';
 
     /**
      * Create a new controller instance.
@@ -43,13 +45,14 @@ class RegisterController extends Controller
 
         $user = $this->create($request->all());
 
-        // Auto login after registration. Honor an optional "remember" checkbox if provided.
-        auth()->login($user, $request->filled('remember'));
+        // Send email verification notification
+        event(new Registered($user));
 
-        // Regenerate session to prevent fixation after login
-        $request->session()->regenerate();
+        // Log the user in so they can see the verification notice page
+        Auth::login($user);
 
-        return redirect()->to($this->resolveRedirectPath($request, $this->redirectTo));
+        return redirect()->route('verification.notice')
+            ->with('status', 'Registration successful! A verification link has been sent to ' . $user->email . '. Please verify your email to continue.');
     }
 
     /**
@@ -60,7 +63,7 @@ class RegisterController extends Controller
         return Validator::make($data, [
             'Name' => ['required', 'string', 'max:255'],
             'Email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => ['required', 'string', 'min:4', 'confirmed'], // Simple: min 4 characters, no complexity
             'redirect' => ['nullable', 'string', 'max:2048'],
             'Phone' => ['nullable', 'string', 'max:20'],
             'DateOfBirth' => ['nullable', 'date'],

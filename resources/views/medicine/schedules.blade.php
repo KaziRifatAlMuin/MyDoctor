@@ -1,10 +1,10 @@
+{{-- resources/views/medicine/schedules.blade.php --}}
 @extends('layouts.app')
 
 @section('title', 'Medicine Schedules')
 
 @section('content')
 <div class="container py-4">
-    <!-- Header with better styling -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
             <h1 class="display-5 fw-bold text-primary mb-1">
@@ -37,7 +37,6 @@
         </div>
     </div>
 
-    <!-- Medicine Info Card (only when viewing specific medicine) -->
     @if(isset($medicine))
     <div class="card border-0 shadow-sm mb-4 bg-primary-soft">
         <div class="card-body p-4">
@@ -63,7 +62,6 @@
     </div>
     @endif
 
-    <!-- Success Message -->
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 border-start border-4 border-success mb-4" role="alert">
             <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
@@ -71,15 +69,12 @@
         </div>
     @endif
 
-    <!-- Schedules Grid -->
     @if(isset($schedules) && $schedules->count() > 0)
         <div class="row g-4">
             @foreach($schedules as $schedule)
-                <!-- Left-aligned card with more width -->
                 <div class="{{ $schedules->count() == 1 ? 'col-xl-9 col-lg-9' : 'col-xl-6 col-lg-6' }}">
                     <div class="card h-100 border-0 shadow schedule-card">
                         <div class="card-body p-4">
-                            <!-- Header with status -->
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <div class="d-flex align-items-center gap-2">
                                     @if(!isset($medicine))
@@ -102,7 +97,6 @@
                                 </span>
                             </div>
 
-                            <!-- Schedule Details - Better spacing -->
                             <div class="schedule-details mb-3">
                                 <div class="row g-3">
                                     <div class="col-md-6">
@@ -175,7 +169,6 @@
                                 </div>
                             </div>
 
-                            <!-- Reminder Stats with Icons - More spacious -->
                             @php
                                 $totalReminders = $schedule->reminders()->count();
                                 $takenReminders = $schedule->reminders()->where('status', 'taken')->count();
@@ -207,7 +200,6 @@
                                 </div>
                             </div>
 
-                            <!-- Actions - Larger buttons -->
                             <div class="d-flex gap-3">
                                 <a href="{{ route('medicine.schedules.edit', $schedule->id) }}" 
                                    class="btn btn-outline-primary flex-grow-1 rounded-pill py-2">
@@ -236,7 +228,6 @@
             @endforeach
         </div>
     @else
-        <!-- Empty State -->
         <div class="text-center py-5 my-5">
             <div class="empty-state-icon mb-4">
                 <div class="bg-primary-soft d-inline-block p-4 rounded-circle">
@@ -316,15 +307,14 @@
         color: #667eea;
     }
     
-    /* Grid layouts */
     @media (min-width: 992px) {
         .col-lg-6 {
             flex: 0 0 auto;
-            width: 50%; /* 2 cards per row */
+            width: 50%;
         }
         .col-lg-9 {
             flex: 0 0 auto;
-            width: 75%; /* 3/4 of container - wider single card */
+            width: 75%;
         }
     }
     
@@ -332,7 +322,6 @@
         font-weight: 500;
     }
     
-    /* Better spacing inside cards */
     .bg-light {
         transition: all 0.2s ease;
     }

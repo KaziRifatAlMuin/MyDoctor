@@ -1,3 +1,4 @@
+{{-- resources/views/medicine/add.blade.php --}}
 @extends('layouts.app')
 
 @section('title', 'Add Medicine')
@@ -6,7 +7,6 @@
 <div class="container-fluid py-4">
     <div class="row">
         <div class="col-12">
-            <!-- Breadcrumb -->
             <nav aria-label="breadcrumb" class="mb-4">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="{{ route('medicine.index') }}" class="text-decoration-none">Medicine</a></li>
@@ -15,7 +15,6 @@
                 </ol>
             </nav>
 
-            <!-- Form Card -->
             <div class="card border-0 shadow-lg">
                 <div class="card-header bg-primary text-white py-3">
                     <h4 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Add New Medicine</h4>
@@ -25,7 +24,6 @@
                     <form action="{{ route('medicine.store') }}" method="POST">
                         @csrf
                         
-                        <!-- Medicine Name -->
                         <div class="mb-4">
                             <label for="medicine_name" class="form-label fw-bold">
                                 <i class="fas fa-capsules me-2 text-primary"></i>Medicine Name
@@ -43,7 +41,6 @@
                         </div>
 
                         <div class="row">
-                            <!-- Type -->
                             <div class="col-md-6 mb-4">
                                 <label for="type" class="form-label fw-bold">
                                     <i class="fas fa-tag me-2 text-primary"></i>Medicine Type
@@ -65,7 +62,6 @@
                                 @enderror
                             </div>
 
-                            <!-- Rule -->
                             <div class="col-md-6 mb-4">
                                 <label for="rule" class="form-label fw-bold">
                                     <i class="fas fa-clock me-2 text-primary"></i>When to Take
@@ -86,7 +82,6 @@
                         </div>
 
                         <div class="row">
-                            <!-- Value Per Dose -->
                             <div class="col-md-4 mb-4">
                                 <label for="value_per_dose" class="form-label fw-bold">
                                     <i class="fas fa-weight me-2 text-primary"></i>Value Per Dose
@@ -101,7 +96,6 @@
                                 @enderror
                             </div>
 
-                            <!-- Unit -->
                             <div class="col-md-4 mb-4">
                                 <label for="unit" class="form-label fw-bold">
                                     <i class="fas fa-flask me-2 text-primary"></i>Unit
@@ -124,7 +118,6 @@
                                 @enderror
                             </div>
 
-                            <!-- Dose Limit -->
                             <div class="col-md-4 mb-4">
                                 <label for="dose_limit" class="form-label fw-bold">
                                     <i class="fas fa-ban me-2 text-primary"></i>Daily Dose Limit
@@ -139,7 +132,6 @@
                             </div>
                         </div>
 
-                        <!-- Additional Info -->
                         <div class="alert alert-info bg-light border-0 rounded-3 p-3 mb-4">
                             <div class="d-flex">
                                 <i class="fas fa-info-circle fa-2x text-info me-3"></i>
@@ -150,7 +142,6 @@
                             </div>
                         </div>
 
-                        <!-- Form Actions -->
                         <div class="d-flex gap-3">
                             <a href="{{ route('medicine.my-medicines') }}" class="btn btn-outline-secondary btn-lg flex-grow-1">
                                 <i class="fas fa-times me-2"></i>Cancel

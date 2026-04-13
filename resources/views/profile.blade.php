@@ -500,6 +500,11 @@
                                 <i class="fas fa-chevron-right text-muted" style="font-size:0.8rem;"></i>
                             </a>
 
+                            <button type="button" class="action-btn danger text-start" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                                <span><i class="fas fa-trash-alt me-2"></i>Delete Account</span>
+                                <i class="fas fa-chevron-right" style="font-size:0.8rem;"></i>
+                            </button>
+
                             {{-- Email verification UI removed (handled elsewhere) --}}
 
                             <div class="mt-2">
@@ -814,8 +819,62 @@
         </div>
     </div>
 
+    {{-- ════════════════════════════════════════════════════════ --}}
+    {{-- Modal: Delete Account                                   --}}
+    {{-- ════════════════════════════════════════════════════════ --}}
+    <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow">
 
-    {{-- Delete account removed; replaced with Sign Out in actions --}}
+                <div class="modal-header border-0 px-4 pt-4">
+                    <h5 class="modal-title fw-bold text-danger" id="deleteAccountLabel">
+                        <i class="fas fa-trash-alt me-2"></i>
+                        Delete Account
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <form method="POST" action="{{ route('profile.destroy') }}">
+                    @csrf
+                    @method('DELETE')
+
+                    <div class="modal-body px-4">
+                        <p class="text-danger fw-semibold">
+                            This action is permanent. Your profile, settings, and all personal data will be deleted.
+                        </p>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Confirm Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0">
+                                    <i class="fas fa-lock text-danger"></i>
+                                </span>
+                                <input type="password" name="delete_password" class="form-control border-start-0"
+                                    placeholder="Enter your password" required>
+                            </div>
+                            @error('delete_password')
+                                <div class="text-danger small mt-2">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="alert alert-warning mb-0" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            You will be logged out immediately after account deletion.
+                        </div>
+                    </div>
+
+                    <div class="modal-footer border-0 px-4 pb-4">
+                        <button type="button" class="btn btn-light rounded-pill px-4"
+                            data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger rounded-pill px-4">
+                            <i class="fas fa-trash-alt me-2"></i>Delete My Account
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
 
 @endsection
 
@@ -844,6 +903,11 @@
 
         @if ($errors->hasAny(['current_password', 'password']))
             var modal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
+            modal.show();
+        @endif
+
+        @if ($errors->has('delete_password'))
+            var modal = new bootstrap.Modal(document.getElementById('deleteAccountModal'));
             modal.show();
         @endif
 

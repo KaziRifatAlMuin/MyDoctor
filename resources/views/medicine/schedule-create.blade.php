@@ -1,3 +1,4 @@
+{{-- resources/views/medicine/schedule-create.blade.php --}}
 @extends('layouts.app')
 
 @section('title', 'Add Schedule')
@@ -5,8 +6,7 @@
 @section('content')
 <div class="container py-4">
     <div class="row justify-content-center">
-        <div class="col-lg-10"> <!-- Increased from col-lg-8 to col-lg-10 -->
-            <!-- Breadcrumb with better styling -->
+        <div class="col-lg-10">
             <nav aria-label="breadcrumb" class="mb-4">
                 <ol class="breadcrumb bg-light p-3 rounded-3">
                     <li class="breadcrumb-item"><a href="{{ route('medicine.index') }}" class="text-decoration-none"><i class="fas fa-home me-1"></i>Medicine</a></li>
@@ -16,7 +16,6 @@
                 </ol>
             </nav>
 
-            <!-- Medicine Info Card -->
             <div class="card border-0 shadow-sm mb-4 bg-primary-soft">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center">
@@ -35,19 +34,17 @@
                 </div>
             </div>
 
-            <!-- Form Card -->
             <div class="card border-0 shadow-lg">
                 <div class="card-header bg-primary text-white py-3">
                     <h4 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Add New Schedule</h4>
                 </div>
                 
-                <div class="card-body p-4 p-lg-5"> <!-- Increased padding -->
+                <div class="card-body p-4 p-lg-5">
                     <form action="{{ route('medicine.schedules.store') }}" method="POST">
                         @csrf
                         
                         <input type="hidden" name="medicine_id" value="{{ $medicine->id }}">
                         
-                        <!-- Schedule Settings Section -->
                         <div class="row g-4 mb-4">
                             <div class="col-md-6">
                                 <label for="dosage_period_days" class="form-label fw-bold">
@@ -82,7 +79,6 @@
                             </div>
                         </div>
 
-                        <!-- Interval Hours -->
                         <div class="mb-4">
                             <label for="interval_hours" class="form-label fw-bold">
                                 <i class="fas fa-hourglass-half me-2 text-primary"></i>Interval Between Doses (Hours)
@@ -96,7 +92,6 @@
                             @enderror
                         </div>
 
-                        <!-- Dosage Times Selection -->
                         <div class="mb-4">
                             <label class="form-label fw-bold">
                                 <i class="fas fa-clock me-2 text-primary"></i>Dosage Times
@@ -150,7 +145,6 @@
                             </div>
                         </div>
 
-                        <!-- Date Range -->
                         <div class="row g-4 mb-4">
                             <div class="col-md-6">
                                 <label for="start_date" class="form-label fw-bold">
@@ -176,7 +170,6 @@
                             </div>
                         </div>
 
-                        <!-- Active Status -->
                         <div class="mb-4 p-3 bg-light rounded-3">
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" name="is_active" id="is_active" 
@@ -188,14 +181,12 @@
                             <small class="text-muted d-block mt-2 ms-4">Inactive schedules won't generate reminders</small>
                         </div>
 
-                        <!-- Summary -->
                         <div class="alert alert-primary bg-primary-soft border-0 rounded-3 p-4 mb-4" id="scheduleSummary" style="display: none;">
                             <h6 class="fw-bold mb-3"><i class="fas fa-info-circle me-2"></i>Schedule Summary</h6>
                             <p class="mb-2" id="summaryText"></p>
                             <div class="summary-details small" id="summaryDetails"></div>
                         </div>
 
-                        <!-- Form Actions -->
                         <div class="d-flex gap-3">
                             <a href="{{ route('medicine.schedules', ['medicine_id' => $medicine->id]) }}" 
                                class="btn btn-outline-secondary btn-lg flex-grow-1 rounded-pill">
@@ -219,14 +210,12 @@
         updateSummary();
         updateSelectedCount();
         
-        // Add event listeners
         document.querySelectorAll('.time-checkbox').forEach(checkbox => {
             checkbox.addEventListener('change', function() {
                 updateBinaryTime();
                 updateSummary();
                 updateSelectedCount();
                 
-                // Visual feedback
                 const badge = this.nextElementSibling.querySelector('.badge');
                 if (this.checked) {
                     badge.classList.remove('bg-white', 'text-dark', 'border');
@@ -241,7 +230,6 @@
         document.getElementById('frequency_per_day').addEventListener('input', updateSummary);
         document.getElementById('dosage_period_days').addEventListener('change', updateSummary);
         
-        // Initialize time slot styling
         document.querySelectorAll('.time-checkbox:checked').forEach(checkbox => {
             const badge = checkbox.nextElementSibling.querySelector('.badge');
             badge.classList.remove('bg-white', 'text-dark', 'border');
@@ -287,7 +275,6 @@
             
             summaryText.innerHTML = summary;
             
-            // Add details
             let details = '<strong>Selected times:</strong> ';
             details += selectedTimes.map(time => {
                 const [hour, minute] = time.split(':');

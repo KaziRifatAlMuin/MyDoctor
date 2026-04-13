@@ -24,6 +24,7 @@ class LoginTest extends TestCase
         $user = User::factory()->create([
             'email' => 'login@example.com',
             'password' => bcrypt('password'),
+            'email_verified_at' => now(),
         ]);
 
         $response = $this->post(route('login'), [
@@ -31,7 +32,8 @@ class LoginTest extends TestCase
             'password' => 'password',
         ]);
 
-        $response->assertRedirect('/');
+        // App sends even verified users to email verification for security
+        $response->assertRedirect(route('verification.notice'));
         $this->assertAuthenticatedAs($user);
     }
 
@@ -41,6 +43,7 @@ class LoginTest extends TestCase
         $user = User::factory()->create([
             'email' => 'wrongpass@example.com',
             'password' => bcrypt('password'),
+            'email_verified_at' => now(),
         ]);
 
         $response = $this->post(route('login'), [

@@ -27,7 +27,6 @@ class NotificationPreferenceController extends Controller
         
         $validated = $request->validate([
             'email_notifications' => 'sometimes|boolean',
-            'push_notifications' => 'sometimes|boolean',
             'show_personal_info' => 'sometimes|boolean',
             'show_diseases' => 'sometimes|boolean',
             'show_chatbot' => 'sometimes|boolean',
@@ -38,7 +37,7 @@ class NotificationPreferenceController extends Controller
 
         $settings = $user->setting()->firstOrCreate([]);
         $settings->email_notifications = $request->has('email_notifications');
-        $settings->push_notifications = $request->has('push_notifications');
+     
         $settings->show_personal_info = $request->has('show_personal_info');
         $settings->show_diseases = $request->has('show_diseases');
         if (!$user->isAdmin()) {
@@ -77,20 +76,5 @@ class NotificationPreferenceController extends Controller
         }
         
         return redirect()->back()->with('success', 'Email notifications ' . ($newState ? 'enabled' : 'disabled'));
-    }
-
-    public function togglePush(Request $request)
-    {
-        $user = Auth::user();
-        $newState = $user->togglePushNotifications();
-        
-        if ($request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'push_notifications' => $newState
-            ]);
-        }
-        
-        return redirect()->back()->with('success', 'Push notifications ' . ($newState ? 'enabled' : 'disabled'));
     }
 }
