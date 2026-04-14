@@ -4,29 +4,27 @@
 
 @section('content')
 <!-- Hero Section -->
+<!-- Hero Section -->
 <section class="community-hero py-5">
     <div class="container">
         <div class="row align-items-center min-vh-50">
             <div class="col-lg-6 mb-5 mb-lg-0" data-aos="fade-right">
                 <span class="badge bg-primary-soft text-primary mb-3 px-3 py-2 rounded-pill">
-                    <i class="fas fa-users me-2"></i>Join 50,000+ Members
+                    <i class="fas fa-users me-2"></i>{{ __('ui.community.join_50000_members') }}
                 </span>
                 <h1 class="display-4 fw-bold mb-4">
-                    Connect, Share, and
-                    <span class="text-primary">Heal Together</span>
+                    {{ __('ui.community.connect_share_heal_together') }}
                 </h1>
                 <p class="lead text-muted mb-4">
-                    Join a supportive community where you can share experiences, ask questions, 
-                    and find comfort in knowing you're not alone on your health journey.
+                    {{ __('ui.community.join_supportive_community') }}
                 </p>
                 <div class="d-flex flex-wrap gap-3 button-group">
-                    <!-- Redirect to login if not authenticated -->
                     <a href="{{ auth()->check() ? route('community.posts.index') : route('login') }}" class="btn btn-primary btn-lg rounded-pill px-5 join-discussions-btn">
-                        <i class="fas fa-comments me-2"></i>Join Discussions
+                        <i class="fas fa-comments me-2"></i>{{ __('ui.community.join_discussions') }}
                     </a>
                     @guest
                         <a href="{{ route('register') }}" class="btn btn-outline-primary btn-lg rounded-pill px-5 signup-btn">
-                            <i class="fas fa-user-plus me-2"></i>Sign Up Free
+                            <i class="fas fa-user-plus me-2"></i>{{ __('ui.community.sign_up_free') }}
                         </a>
                     @endguest
                 </div>
@@ -36,19 +34,19 @@
                     <div class="col-4">
                         <div class="stat-item">
                             <h3 class="fw-bold text-primary mb-1">50K+</h3>
-                            <small class="text-muted">Active Members</small>
+                            <small class="text-muted">{{ __('ui.community.active_members') }}</small>
                         </div>
                     </div>
                     <div class="col-4">
                         <div class="stat-item">
                             <h3 class="fw-bold text-primary mb-1">10K+</h3>
-                            <small class="text-muted">Discussions</small>
+                            <small class="text-muted">{{ __('ui.community.discussions') }}</small>
                         </div>
                     </div>
                     <div class="col-4">
                         <div class="stat-item">
                             <h3 class="fw-bold text-primary mb-1">24/7</h3>
-                            <small class="text-muted">Support</small>
+                            <small class="text-muted">{{ __('ui.community.support') }}</small>
                         </div>
                     </div>
                 </div>

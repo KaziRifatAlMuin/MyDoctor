@@ -38,20 +38,20 @@
         <div class="health-card h-100">
             <div class="health-card-header">
                 <h5>
-                    <i class="fas fa-tachometer-alt"></i> Health Metrics
+                    <i class="fas fa-tachometer-alt"></i> {{ __('ui.health.health_metrics') }}
                     <span class="bn-label">{{ __('ui.nav.health') }}</span>
                 </h5>
                 <button class="btn btn-sm text-white px-3"
                         data-bs-toggle="modal" data-bs-target="#addMetricModal"
                         style="background:linear-gradient(135deg,#667eea,#764ba2);border-radius:8px;font-size:0.78rem;">
-                    <i class="fas fa-plus me-1"></i>Add
+                    <i class="fas fa-plus me-1"></i>{{ __('ui.health.add') }}
                 </button>
             </div>
             <div class="health-card-body">
                 @if($latestMetrics->isEmpty())
                     <div class="empty-state">
                         <i class="fas fa-chart-line d-block"></i>
-                        <p>No metrics recorded yet. Add your first reading!</p>
+                        <p>{{ __('ui.health.no_metrics_recorded_yet') }}</p>
                     </div>
                 @else
                     <div class="row g-3">
@@ -108,10 +108,10 @@
         <div class="health-card h-100">
             <div class="health-card-header">
                 <h5>
-                    <i class="fas fa-check-double"></i> Adherence
+                    <i class="fas fa-check-double"></i> {{ __('ui.health.adherence') }}
                     <span class="bn-label">{{ __('ui.health.adherence') }}</span>
                 </h5>
-                <span class="health-card-badge bg-light text-muted">30 days</span>
+                <span class="health-card-badge bg-light text-muted">{{ __('ui.health.days_30') }}</span>
             </div>
             <div class="health-card-body d-flex flex-column align-items-center justify-content-center">
                 @if($totalScheduled > 0)
@@ -122,27 +122,27 @@
                                  style="font-size:1.6rem;color:{{ $adherenceRate >= 80 ? '#38a169' : ($adherenceRate >= 50 ? '#dd6b20' : '#e53e3e') }};">
                                 {{ $adherenceRate }}%
                             </div>
-                            <div class="text-muted" style="font-size:0.65rem;">rate</div>
+                            <div class="text-muted" style="font-size:0.65rem;">{{ __('ui.health.rate') }}</div>
                         </div>
                     </div>
                     <div class="d-flex justify-content-center gap-4 mt-4">
                         <div class="text-center">
                             <div class="fw-bold text-success" style="font-size:1.1rem;">{{ $totalTaken }}</div>
-                            <div class="small text-muted">Taken</div>
+                            <div class="small text-muted">{{ __('ui.health.taken') }}</div>
                         </div>
                         <div class="text-center">
                             <div class="fw-bold text-danger" style="font-size:1.1rem;">{{ $totalMissed }}</div>
-                            <div class="small text-muted">Missed</div>
+                            <div class="small text-muted">{{ __('ui.health.missed') }}</div>
                         </div>
                         <div class="text-center">
                             <div class="fw-bold text-secondary" style="font-size:1.1rem;">{{ $totalScheduled }}</div>
-                            <div class="small text-muted">Total</div>
+                            <div class="small text-muted">{{ __('ui.health.total') }}</div>
                         </div>
                     </div>
                 @else
                     <div class="empty-state py-4">
                         <i class="fas fa-clipboard-check d-block"></i>
-                        <p>No medicine logs yet.</p>
+                        <p>{{ __('ui.health.no_medicine_logs_yet') }}</p>
                     </div>
                 @endif
             </div>
@@ -158,7 +158,7 @@
         <div class="health-card h-100">
             <div class="health-card-header">
                 <h5>
-                    <i class="fas fa-notes-medical"></i> Symptoms
+                    <i class="fas fa-notes-medical"></i> {{ __('ui.health.symptoms') }}
                     <span class="bn-label">{{ __('ui.health.symptom') }}</span>
                 </h5>
                 <button class="btn btn-sm text-white px-2"
@@ -171,7 +171,7 @@
                 @if($symptoms->isEmpty())
                     <div class="empty-state py-4">
                         <i class="fas fa-notes-medical d-block"></i>
-                        <p>No symptoms logged yet.</p>
+                        <p>{{ __('ui.health.no_symptoms_logged_yet') }}</p>
                     </div>
                 @else
                     @foreach($symptoms->take(5) as $sym)
@@ -210,7 +210,7 @@
         <div class="health-card h-100">
             <div class="health-card-header">
                 <h5>
-                    <i class="fas fa-virus"></i> Conditions
+                    <i class="fas fa-virus"></i> {{ __('ui.health.conditions') }}
                     <span class="bn-label">{{ __('ui.health.disease') }}</span>
                 </h5>
                 <button class="btn btn-sm text-white px-2"
@@ -223,7 +223,7 @@
                 @if($activeConditions->isEmpty())
                     <div class="empty-state py-4">
                         <i class="fas fa-virus-slash d-block"></i>
-                        <p>No conditions recorded.</p>
+                        <p>{{ __('ui.health.no_conditions_recorded') }}</p>
                     </div>
                 @else
                     @foreach($activeConditions->take(5) as $ud)
@@ -247,11 +247,11 @@
                                     </a>
                                 @else
                                     <div class="fw-semibold text-truncate" style="font-size:0.88rem;color:#2d3748;">
-                                        Unknown
+                                        {{ __('ui.health.unknown') }}
                                     </div>
                                 @endif
                                 @if($ud->diagnosed_at)
-                                    <div class="small text-muted">Since {{ $ud->diagnosed_at->format('M Y') }}</div>
+                                    <div class="small text-muted">{{ __('ui.health.since') }} {{ $ud->diagnosed_at->format('M Y') }}</div>
                                 @endif
                             </div>
                             <span class="severity-badge {{ $statusBadge }} text-capitalize flex-shrink-0">{{ $ud->status_label }}</span>
@@ -267,16 +267,16 @@
         <div class="health-card h-100">
             <div class="health-card-header">
                 <h5>
-                    <i class="fas fa-pills"></i> Medicines
+                    <i class="fas fa-pills"></i> {{ __('ui.health.medicines') }}
                     <span class="bn-label">{{ __('ui.nav.medicine') }}</span>
                 </h5>
-                <span class="health-card-badge bg-light text-muted">{{ $activeMeds->count() }} active</span>
+                <span class="health-card-badge bg-light text-muted">{{ $activeMeds->count() }} {{ __('ui.health.active') }}</span>
             </div>
             <div class="health-card-body p-0">
                 @if($activeMeds->isEmpty())
                     <div class="empty-state py-4">
                         <i class="fas fa-pills d-block"></i>
-                        <p>No active medicines.</p>
+                        <p>{{ __('ui.health.no_active_medicines') }}</p>
                     </div>
                 @else
                     @foreach($activeMeds->take(6) as $m)
@@ -293,7 +293,7 @@
                                     {{ $m->value_per_dose }}{{ $m->unit }} &middot; {{ $m->type ?? 'N/A' }}
                                 </div>
                             </div>
-                            <span class="med-status-active flex-shrink-0">Active</span>
+                            <span class="med-status-active flex-shrink-0">{{ __('ui.health.active') }}</span>
                         </div>
                     @endforeach
                 @endif
@@ -310,7 +310,7 @@
         <div class="health-card">
             <div class="health-card-header">
                 <h5>
-                    <i class="fas fa-prescription"></i> Prescriptions
+                    <i class="fas fa-prescription"></i> {{ __('ui.health.prescriptions') }}
                     <span class="bn-label">{{ __('ui.health.prescription') }}</span>
                 </h5>
                 <div class="d-flex align-items-center gap-2">
@@ -326,7 +326,7 @@
                 @if($prescriptionUploads->isEmpty())
                     <div class="empty-state py-4">
                         <i class="fas fa-file-prescription d-block"></i>
-                        <p>No prescriptions uploaded.</p>
+                        <p>{{ __('ui.health.no_prescriptions_uploaded') }}</p>
                     </div>
                 @else
                     @foreach($prescriptionUploads->take(4) as $u)
@@ -356,7 +356,7 @@
         <div class="health-card">
             <div class="health-card-header">
                 <h5>
-                    <i class="fas fa-file-medical-alt"></i> Reports
+                    <i class="fas fa-file-medical-alt"></i> {{ __('ui.health.reports') }}
                     <span class="bn-label">{{ __('ui.health.medical_report') }}</span>
                 </h5>
                 <div class="d-flex align-items-center gap-2">
@@ -372,7 +372,7 @@
                 @if($reportUploads->isEmpty())
                     <div class="empty-state py-4">
                         <i class="fas fa-file-medical-alt d-block"></i>
-                        <p>No reports uploaded.</p>
+                        <p>{{ __('ui.health.no_reports_uploaded') }}</p>
                     </div>
                 @else
                     @foreach($reportUploads->take(4) as $u)
@@ -397,5 +397,3 @@
         </div>
     </div>
 </div>
-
-

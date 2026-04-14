@@ -2,7 +2,7 @@
      id="notification-{{ $notification->id }}">
     <div class="d-flex align-items-start gap-3">
         <div class="flex-shrink-0">
-            @if($notification->fromUser->picture)
+            @if($notification->fromUser && $notification->fromUser->picture)
                 <img src="{{ asset('storage/' . $notification->fromUser->picture) }}"
                      alt="{{ $notification->fromUser->name }}"
                      class="rounded-circle"
@@ -10,7 +10,7 @@
             @else
                 <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
                      style="width: 40px; height: 40px;">
-                    {{ strtoupper(substr($notification->fromUser->name, 0, 1)) }}
+                    {{ strtoupper(substr($notification->fromUser->name ?? 'ই', 0, 1)) }}
                 </div>
             @endif
         </div>
@@ -22,7 +22,7 @@
                     <small class="text-muted">{{ $notification->created_at->diffForHumans() }}</small>
                 </div>
                 @if(is_null($notification->read_at))
-                    <span class="badge bg-primary rounded-pill unread-badge">New</span>
+                    <span class="badge bg-primary rounded-pill unread-badge">{{ __('ui.notifications.new') }}</span>
                 @endif
             </div>
 
@@ -42,12 +42,12 @@
                 <a href="/community/posts/{{ $notification->data['post_id'] }}"
                    class="btn btn-sm btn-outline-primary"
                    onclick="markAsRead({{ $notification->id }})">
-                    View Post
+                    {{ __('ui.notifications.view_post') }}
                 </a>
                 @if(is_null($notification->read_at))
                     <button class="btn btn-sm btn-outline-secondary"
                             onclick="markAsRead({{ $notification->id }})">
-                        Mark as Read
+                        {{ __('ui.notifications.mark_as_read') }}
                     </button>
                 @endif
             </div>

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Community - Connect & Share Health Experiences')
-@section('meta_description', 'Join our health community to share experiences, ask questions, and get support from others on similar health journeys.')
+@section('title', __('ui.community.community_forum'))
+@section('meta_description', __('ui.community.community_meta_description'))
 
 @section('content')
 <style>
@@ -1377,36 +1377,36 @@ body {
             <div>
                 <h1 style="font-size: 28px; font-weight: 700; margin-bottom: 5px;">
                     <i class="fas {{ $isPendingPage ? 'fa-hourglass-half' : ($isStarredPage ? 'fa-star' : 'fa-users') }} me-3" style="color: {{ $isPendingPage ? '#ff9800' : ($isStarredPage ? '#f7b500' : '#1877f2') }};"></i>
-                    {{ $isPendingPage ? 'Pending Posts' : ($isStarredPage ? 'Starred Posts' : ($isAdminCommunity ? 'Admin Community Moderation' : 'Community Forum')) }}
+                    {{ $isPendingPage ? __('ui.community.pending_posts_title') : ($isStarredPage ? __('ui.community.starred_posts_title') : ($isAdminCommunity ? __('ui.community.admin_community_moderation_title') : __('ui.community.community_forum_title'))) }}
                 </h1>
                 <p style="color: #65676b; margin: 0;">
-                    {{ $isPendingPage ? ($isAdminCommunity ? 'Posts awaiting approval. Approve to publish, or delete to reject.' : 'Your posts waiting for admin approval') : ($isStarredPage ? 'Your saved posts in one focused feed' : ($isAdminCommunity ? 'View and manage community posts with approval workflow.' : 'Connect with others, share experiences, and get support')) }}
+                    {{ $isPendingPage ? ($isAdminCommunity ? __('ui.community.posts_awaiting_approval') : __('ui.community.your_posts_waiting_for_approval')) : ($isStarredPage ? __('ui.community.your_saved_posts') : ($isAdminCommunity ? __('ui.community.view_and_manage_community_posts') : __('ui.community.connect_with_others_share_experiences'))) }}
                 </p>
             </div>
             <div style="display:flex; align-items:center; gap:10px;">
                 <select id="diseaseFilter" onchange="filterByDisease(this.value)" style="padding: 10px 16px; border: 1px solid #e4e6eb; border-radius: 8px; min-width: 220px;">
-                    <option value="all" {{ !request('disease') ? 'selected' : '' }}>All Diseases</option>
+                    <option value="all" {{ !request('disease') ? 'selected' : '' }}>{{ __('ui.community.all_posts') }}</option>
                     @foreach($diseases as $disease)
                         <option value="{{ $disease->id }}" {{ request('disease') == $disease->id ? 'selected' : '' }}>
-                            {{ $disease->disease_name }} - {{ $disease->posts_count }} posts
+                            {{ $disease->disease_name }} - {{ $disease->posts_count }} {{ __('ui.community.posts') }}
                         </option>
                     @endforeach
                 </select>
                 <a href="{{ route('community.home') }}" class="btn btn-sm btn-outline-primary rounded-pill ms-1 d-inline-flex align-items-center" style="white-space:nowrap;">
-                    <i class="fas fa-th-large me-2"></i>Disease Cards
+                    <i class="fas fa-th-large me-2"></i>{{ __('ui.community.disease_cards') }}
                 </a>
                 @auth
                     @if(! $isAdminCommunity)
                         <a href="{{ $isStarredPage ? route('community.posts.index') : route('community.posts.starred') }}" class="btn btn-sm {{ $isStarredPage ? 'btn-outline-primary' : 'btn-warning' }} rounded-pill ms-1 d-inline-flex align-items-center" style="white-space:nowrap;">
-                            <i class="fas fa-star me-2"></i>{{ $isStarredPage ? 'All Posts' : 'Starred Posts' }}
+                            <i class="fas fa-star me-2"></i>{{ $isStarredPage ? __('ui.community.all_posts') : __('ui.community.starred_posts') }}
                         </a>
                     @endif
                     <a href="{{ $isPendingPage ? ($isAdminCommunity ? route('admin.community.posts.index') : route('community.posts.index')) : ($isAdminCommunity ? route('admin.community.posts.pending') : route('community.posts.pending')) }}" class="btn btn-sm {{ $isPendingPage ? 'btn-outline-primary' : 'btn-outline-warning' }} rounded-pill ms-1 d-inline-flex align-items-center" style="white-space:nowrap;">
-                        <i class="fas fa-hourglass-half me-2"></i>{{ $isPendingPage ? 'All Posts' : 'Pending Posts' }}
+                        <i class="fas fa-hourglass-half me-2"></i>{{ $isPendingPage ? __('ui.community.all_posts') : __('ui.community.pending_posts') }}
                     </a>
                 @endauth
                 <a href="{{ auth()->check() ? route('users.index') : route('login') }}" class="btn btn-sm btn-primary rounded-pill ms-2 d-none d-md-inline-flex align-items-center" style="white-space:nowrap;">
-                    <i class="fas fa-users me-2"></i> Browse Members
+                    <i class="fas fa-users me-2"></i> {{ __('ui.community.browse_members') }}
                 </a>
                 <a href="{{ auth()->check() ? route('users.index') : route('login') }}" class="btn btn-sm btn-primary rounded-pill ms-2 d-md-none align-items-center" style="white-space:nowrap;">
                     <i class="fas fa-users"></i>
@@ -1422,12 +1422,12 @@ body {
             <div class="filter-card">
                 <h5 class="filter-title">
                     <i class="fas fa-filter me-2" style="color: #1877f2;"></i>
-                    Quick Filters
+                    {{ __('ui.community.quick_filters') }}
                 </h5>
                 <div class="quick-filter-buttons">
                     <button class="quick-filter-btn {{ !request('disease') ? 'active' : '' }}" onclick="filterByDisease('all')">
                         <i class="fas {{ $isPendingPage ? 'fa-hourglass-half' : ($isStarredPage ? 'fa-star' : 'fa-globe') }} me-2"></i>
-                        <span class="filter-name">{{ $isPendingPage ? 'All Pending Posts' : ($isStarredPage ? 'All Starred Posts' : 'All Posts') }}</span>
+                        <span class="filter-name">{{ $isPendingPage ? __('ui.community.all_pending_posts') : ($isStarredPage ? __('ui.community.all_starred_posts') : __('ui.community.all_posts')) }}</span>
                         <span class="filter-count">{{ $totalPosts }}</span>
                     </button>
                     @foreach($diseases as $disease)
@@ -1446,13 +1446,13 @@ body {
             <div class="filter-card">
                 <h5 class="filter-title">
                     <i class="fas fa-info-circle me-2" style="color: #17a2b8;"></i>
-                    Guidelines
+                    {{ __('ui.community.guidelines') }}
                 </h5>
                 <ul class="guidelines-list">
-                    <li><i class="fas fa-check-circle me-2" style="color: #28a745;"></i>Be respectful and supportive</li>
-                    <li><i class="fas fa-check-circle me-2" style="color: #28a745;"></i>No medical misinformation</li>
-                    <li><i class="fas fa-check-circle me-2" style="color: #28a745;"></i>Protect your privacy</li>
-                    <li><i class="fas fa-check-circle me-2" style="color: #28a745;"></i>Report inappropriate content</li>
+                    <li><i class="fas fa-check-circle me-2" style="color: #28a745;"></i>{{ __('ui.community.be_respectful') }}</li>
+                    <li><i class="fas fa-check-circle me-2" style="color: #28a745;"></i>{{ __('ui.community.no_medical_misinformation') }}</li>
+                    <li><i class="fas fa-check-circle me-2" style="color: #28a745;"></i>{{ __('ui.community.protect_your_privacy') }}</li>
+                    <li><i class="fas fa-check-circle me-2" style="color: #28a745;"></i>{{ __('ui.community.report_inappropriate_content') }}</li>
                 </ul>
             </div>
         </div>
@@ -1465,16 +1465,16 @@ body {
                         <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom: 12px;">
                             <h5 class="filter-title" style="margin:0; color:#5b21b6;">
                                 <i class="fas fa-shield-check me-2" style="color:#7a3fb8;"></i>
-                                Post Approval Queue
+                                {{ __('ui.community.post_approval_queue') }}
                             </h5>
                             <a href="{{ route('admin.community.posts.pending') }}" class="btn btn-sm btn-outline-warning rounded-pill">
-                                <i class="fas fa-list me-1"></i>View All Pending
+                                <i class="fas fa-list me-1"></i>{{ __('ui.community.view_all_pending') }}
                             </a>
                         </div>
 
                         @if($pendingPreviewPosts->isEmpty())
                             <div style="background:#faf5ff; border:1px dashed #d8b4fe; border-radius:10px; padding:14px; color:#6b21a8;">
-                                No pending posts right now. Everything is up to date.
+                                {{ __('ui.community.no_pending_posts') }}
                             </div>
                         @else
                             <div style="display:grid; gap:10px;">
@@ -1482,23 +1482,23 @@ body {
                                     <div style="background:#faf5ff; border:1px solid #e9d5ff; border-radius:10px; padding:12px;">
                                         <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
                                             <div>
-                                                <div style="font-weight:600; color:#4c1d95;">{{ $pendingPost->is_anonymous ? 'Anonymous Member' : $pendingPost->user->name }}</div>
+                                                <div style="font-weight:600; color:#4c1d95;">{{ $pendingPost->is_anonymous ? __('ui.community.anonymous_member') : $pendingPost->user->name }}</div>
                                                 <div style="font-size:12px; color:#6d28d9; margin-top:2px;">{{ optional($pendingPost->disease)->disease_name ?? 'General' }} • {{ $pendingPost->created_at->diffForHumans() }}</div>
                                             </div>
-                                            <span class="badge text-bg-warning">Pending</span>
+                                            <span class="badge text-bg-warning">{{ __('ui.community.pending') }}</span>
                                         </div>
                                         <div style="margin-top:8px; color:#2b2b2b; font-size:14px; line-height:1.4;">
                                             {{ \Illuminate\Support\Str::limit($pendingPost->description, 140) }}
                                         </div>
                                         <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
                                             <button type="button" class="btn btn-sm btn-outline-secondary" onclick="openPostModal({{ $pendingPost->id }})">
-                                                <i class="fas fa-eye me-1"></i>Preview
+                                                <i class="fas fa-eye me-1"></i>{{ __('ui.community.preview') }}
                                             </button>
                                             <button type="button" class="btn btn-sm btn-success" onclick="approvePost({{ $pendingPost->id }})">
-                                                <i class="fas fa-check me-1"></i>Approve
+                                                <i class="fas fa-check me-1"></i>{{ __('ui.community.approve') }}
                                             </button>
                                             <button type="button" class="btn btn-sm btn-danger" onclick="confirmDelete({{ $pendingPost->id }}, 'post')">
-                                                <i class="fas fa-trash me-1"></i>Reject & Delete
+                                                <i class="fas fa-trash me-1"></i>{{ __('ui.community.reject_delete') }}
                                             </button>
                                         </div>
                                     </div>
@@ -1511,7 +1511,6 @@ body {
                 <!-- Create Post -->
                 @auth
                     @if(! $isAdminCommunity)
-                    <!-- Clickable Create Post Box -->
                     <div class="create-post-trigger" onclick="openCreatePostModal()">
                         <div class="trigger-avatar">
                             @if(Auth::user()->picture)
@@ -1521,11 +1520,11 @@ body {
                             @endif
                         </div>
                         <div class="trigger-input">
-                            <div class="trigger-placeholder">How do you feel today?</div>
+                            <div class="trigger-placeholder">{{ __('ui.community.how_do_you_feel_today') }}</div>
                         </div>
                         <div class="trigger-icons">
-                            <button class="trigger-icon" title="Photos"><i class="fas fa-image"></i></button>
-                            <button class="trigger-icon" title="Video"><i class="fas fa-video"></i></button>
+                            <button class="trigger-icon" title="{{ __('ui.community.photos') }}"><i class="fas fa-image"></i></button>
+                            <button class="trigger-icon" title="{{ __('ui.community.video') }}"><i class="fas fa-video"></i></button>
                         </div>
                     </div>
 
@@ -1533,20 +1532,17 @@ body {
                     <div class="modal fade" id="createPostModal" tabindex="-1" aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered">
                             <div class="modal-content">
-                                <!-- Header -->
                                 <div class="modal-header border-bottom">
                                     <h5 class="modal-title">
                                         <i class="fas fa-pen-fancy me-2" style="color: #1877f2;"></i>
-                                        Create Post
+                                        {{ __('ui.community.create_post') }}
                                     </h5>
-                                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close" style="background: none; border: none; font-size: 24px; line-height: 1; opacity: 0.5; cursor: pointer;">
+                                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="{{ __('ui.actions.close') }}" style="background: none; border: none; font-size: 24px; line-height: 1; opacity: 0.5; cursor: pointer;">
                                         <span aria-hidden="true">×</span>
                                     </button>
                                 </div>
 
-                                <!-- Body -->
                                 <div class="modal-body">
-                                    <!-- User Info -->
                                     <div class="modal-user-info">
                                         <div class="modal-avatar">
                                             @if(Auth::user()->picture)
@@ -1558,7 +1554,7 @@ body {
                                         <div style="flex: 1;">
                                             <div class="modal-user-name">{{ Auth::user()->name }}</div>
                                             <select id="createPostDiseaseId" class="modal-disease-select">
-                                                <option value="">Select disease</option>
+                                                <option value="">{{ __('ui.community.select_disease') }}</option>
                                                 @foreach($diseases as $disease)
                                                     <option value="{{ $disease->id }}">
                                                         {{ $disease->disease_name }}
@@ -1568,11 +1564,10 @@ body {
                                         </div>
                                     </div>
 
-                                    <!-- Text Area with Character Counter -->
                                     <div style="position: relative;">
                                         <textarea id="createPostContent" 
                                                   class="modal-textarea" 
-                                                  placeholder="Write your health experiences..." 
+                                                  placeholder="{{ __('ui.community.write_your_health_experiences') }}" 
                                                   rows="5"
                                                   oninput="updateCreatePostCharCounter()"></textarea>
                                         
@@ -1584,42 +1579,39 @@ body {
                                     <div style="margin-bottom: 12px;">
                                         <label style="display:flex; align-items:center; gap:8px; font-size:13px; color:#65676b; cursor:pointer;">
                                             <input type="checkbox" id="createPostAnonymous" style="cursor:pointer;">
-                                            Post anonymously
+                                            {{ __('ui.community.post_anonymously') }}
                                         </label>
                                     </div>
 
-                                    <!-- File Upload Info -->
                                     <div class="file-upload-info">
                                         <i class="fas fa-info-circle"></i>
-                                        <span>Max 10MB per file • 50MB total</span>
-                                        <span class="file-upload-stats" id="fileUploadStats">0 files</span>
+                                        <span>{{ __('ui.community.max_10mb_per_file') }}</span>
+                                        <span class="file-upload-stats" id="fileUploadStats">0 {{ __('ui.community.files') }}</span>
                                     </div>
 
-                                    <!-- File Preview Grid -->
                                     <div id="createPostFilePreview" class="file-preview-area" style="display: none;">
                                         <div class="file-preview-grid" id="createPostFilePreviewGrid"></div>
                                     </div>
                                 </div>
 
-                                <!-- Footer -->
                                 <div class="modal-footer border-top">
                                     <div style="flex: 1; display: flex; gap: 8px; flex-wrap: wrap;">
                                         <label class="modal-file-btn">
-                                            <i class="fas fa-image me-1"></i>Photo
+                                            <i class="fas fa-image me-1"></i>{{ __('ui.community.photo') }}
                                             <input type="file" id="createPostImage" class="d-none" accept="image/*" multiple onchange="handleCreatePostFileSelect(this)">
                                         </label>
                                         <label class="modal-file-btn">
-                                            <i class="fas fa-video me-1"></i>Video
+                                            <i class="fas fa-video me-1"></i>{{ __('ui.community.video') }}
                                             <input type="file" id="createPostVideo" class="d-none" accept="video/*" multiple onchange="handleCreatePostFileSelect(this)">
                                         </label>
                                         <label class="modal-file-btn">
-                                            <i class="fas fa-file me-1"></i>File
+                                            <i class="fas fa-file me-1"></i>{{ __('ui.community.file') }}
                                             <input type="file" id="createPostFile" class="d-none" accept=".pdf,.doc,.docx,.txt,.xls,.xlsx" multiple onchange="handleCreatePostFileSelect(this)">
                                         </label>
                                     </div>
-                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">{{ __('ui.community.cancel') }}</button>
                                     <button type="button" class="btn btn-primary btn-sm" onclick="submitCreatePost()" id="createPostSubmitBtn">
-                                        <i class="fas fa-paper-plane me-1"></i>Post
+                                        <i class="fas fa-paper-plane me-1"></i>{{ __('ui.community.post') }}
                                     </button>
                                 </div>
                             </div>
@@ -1631,14 +1623,14 @@ body {
                 @guest
                     <div class="guest-banner">
                         <i class="fas fa-users fa-3x mb-3"></i>
-                        <h4>Join the Community</h4>
-                        <p>Connect with thousands of people on similar health journeys</p>
+                        <h4>{{ __('ui.community.join_community') }}</h4>
+                        <p>{{ __('ui.community.connect_with_others') }}</p>
                         <div class="guest-buttons">
                             <a href="{{ route('register') }}" class="btn btn-primary">
-                                <i class="fas fa-user-plus me-2"></i>Sign Up
+                                <i class="fas fa-user-plus me-2"></i>{{ __('ui.community.sign_up') }}
                             </a>
                             <a href="{{ route('login') }}" class="btn btn-outline-primary">
-                                <i class="fas fa-sign-in-alt me-2"></i>Login
+                                <i class="fas fa-sign-in-alt me-2"></i>{{ __('ui.community.login') }}
                             </a>
                         </div>
                     </div>
@@ -1651,31 +1643,26 @@ body {
                     @empty
                         <div style="text-align: center; padding: 60px 20px; background: white; border-radius: 12px;">
                             <i class="fas fa-comments fa-4x mb-3" style="color: #adb5bd;"></i>
-                            <h5>{{ $isPendingPage ? 'No pending posts' : ($isStarredPage ? 'No starred posts yet' : 'No discussions yet') }}</h5>
-                            <p style="color: #65676b;">{{ $isPendingPage ? 'New posts will appear here until approved by an admin.' : ($isStarredPage ? 'Star posts from the feed to collect them here.' : 'Be the first to start a conversation!') }}</p>
+                            <h5>{{ $isPendingPage ? __('ui.community.no_pending_posts') : ($isStarredPage ? __('ui.community.no_starred_posts_yet') : __('ui.community.no_discussions_yet')) }}</h5>
+                            <p style="color: #65676b;">{{ $isPendingPage ? __('ui.community.new_posts_will_appear') : ($isStarredPage ? __('ui.community.star_posts_to_collect') : __('ui.community.start_conversation')) }}</p>
                         </div>
                     @endforelse
                 </div>
 
-                <!-- Pagination - NO ICONS -->
+                <!-- Pagination -->
                 <div class="pagination-wrapper mt-4">
                     @if ($posts->hasPages())
                         <ul class="pagination">
-                            {{-- Previous Page Link --}}
                             @if ($posts->onFirstPage())
-                                <li class="page-item disabled"><span class="page-link">Prev</span></li>
+                                <li class="page-item disabled"><span class="page-link">{{ __('ui.community.prev') }}</span></li>
                             @else
-                                <li class="page-item"><a class="page-link" href="{{ $posts->previousPageUrl() }}" rel="prev">Prev</a></li>
+                                <li class="page-item"><a class="page-link" href="{{ $posts->previousPageUrl() }}" rel="prev">{{ __('ui.community.prev') }}</a></li>
                             @endif
 
-                            {{-- Pagination Elements --}}
                             @foreach ($posts->links()->elements as $element)
-                                {{-- "Three Dots" Separator --}}
                                 @if (is_string($element))
                                     <li class="page-item disabled"><span class="page-link">{{ $element }}</span></li>
                                 @endif
-
-                                {{-- Array Of Links --}}
                                 @if (is_array($element))
                                     @foreach ($element as $page => $url)
                                         @if ($page == $posts->currentPage())
@@ -1687,11 +1674,10 @@ body {
                                 @endif
                             @endforeach
 
-                            {{-- Next Page Link --}}
                             @if ($posts->hasMorePages())
-                                <li class="page-item"><a class="page-link" href="{{ $posts->nextPageUrl() }}" rel="next">Next</a></li>
+                                <li class="page-item"><a class="page-link" href="{{ $posts->nextPageUrl() }}" rel="next">{{ __('ui.community.next') }}</a></li>
                             @else
-                                <li class="page-item disabled"><span class="page-link">Next</span></li>
+                                <li class="page-item disabled"><span class="page-link">{{ __('ui.community.next') }}</span></li>
                             @endif
                         </ul>
                     @endif
@@ -1704,24 +1690,24 @@ body {
             <div class="filter-card">
                 <h5 class="filter-title">
                     <i class="fas fa-chart-line me-2" style="color: #1877f2;"></i>
-                    Community Stats
+                    {{ __('ui.community.community_stats') }}
                 </h5>
                 <div class="stats-grid">
                     <div class="stat-item">
                         <div class="stat-value">{{ number_format($totalUsers) }}</div>
-                        <div class="stat-label">Members</div>
+                        <div class="stat-label">{{ __('ui.community.members') }}</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-value">{{ number_format($totalPosts) }}</div>
-                        <div class="stat-label">Posts</div>
+                        <div class="stat-label">{{ __('ui.community.posts') }}</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-value">{{ number_format($totalComments) }}</div>
-                        <div class="stat-label">Comments</div>
+                        <div class="stat-label">{{ __('ui.community.comments') }}</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-value">{{ number_format($activeToday) }}</div>
-                        <div class="stat-label">Active Today</div>
+                        <div class="stat-label">{{ __('ui.community.active_today') }}</div>
                     </div>
                 </div>
             </div>
@@ -1747,17 +1733,15 @@ body {
 
             <div class="support-card">
                 <i class="fas fa-headset support-icon"></i>
-                <h6>Need Help?</h6>
-                <p class="text-muted small">24/7 Support available</p>
+                <h6>{{ __('ui.community.need_help') }}</h6>
+                <p class="text-muted small">{{ __('ui.community.support_available') }}</p>
                 <a href="{{ route('help') }}" class="btn-support">
-                    <i class="fas fa-question-circle me-2"></i>Get Help
+                    <i class="fas fa-question-circle me-2"></i>{{ __('ui.community.get_help') }}
                 </a>
             </div>
         </div>
     </div>
 </div>
-
-<!-- NO MODALS HERE - They are inherited from layouts.app -->
 
 @endsection
 
@@ -1806,7 +1790,7 @@ function handleCreatePostFileSelect(input) {
     const maxFileSize = 10 * 1024 * 1024;
     const oversized = files.filter(f => f.size > maxFileSize);
     if (oversized.length > 0) {
-        showToast(`Some files exceed 10MB`, 'warning');
+        showToast(`{{ __('ui.community.some_files_exceed_10mb') }}`, 'warning');
         input.value = '';
         return;
     }
@@ -1818,7 +1802,7 @@ function handleCreatePostFileSelect(input) {
     const maxTotalSize = 50 * 1024 * 1024;
     
     if (totalSize > maxTotalSize) {
-        showToast(`Total file size exceeds 50MB limit`, 'warning');
+        showToast(`{{ __('ui.community.total_file_size_exceeds_50mb') }}`, 'warning');
         createPostFiles = createPostFiles.slice(0, createPostFiles.length - files.length);
         return;
     }
@@ -1833,12 +1817,12 @@ function updateCreatePostFilePreview() {
     
     if (createPostFiles.length === 0) {
         previewArea.style.display = 'none';
-        if (statsEl) statsEl.textContent = '0 files';
+        if (statsEl) statsEl.textContent = '0 {{ __("ui.community.files") }}';
         return;
     }
 
     const totalSize = createPostFiles.reduce((sum, f) => sum + f.size, 0);
-    if (statsEl) statsEl.textContent = `${createPostFiles.length} files • ${formatFileSize(totalSize)}`;
+    if (statsEl) statsEl.textContent = `${createPostFiles.length} {{ __("ui.community.files") }} • ${formatFileSize(totalSize)}`;
     
     let html = '';
     
@@ -1895,7 +1879,7 @@ function clearCreatePostFile() {
     document.getElementById('createPostVideo').value = '';
     document.getElementById('createPostFile').value = '';
     document.getElementById('createPostFilePreview').style.display = 'none';
-    document.getElementById('fileUploadStats').textContent = '0 files';
+    document.getElementById('fileUploadStats').textContent = '0 {{ __("ui.community.files") }}';
 }
 
 function submitCreatePost() {
@@ -1904,12 +1888,12 @@ function submitCreatePost() {
     const isAnonymous = document.getElementById('createPostAnonymous')?.checked ? '1' : '0';
 
     if (!content && createPostFiles.length === 0) {
-        showToast('Please write something or add a file', 'warning');
+        showToast('{{ __("ui.community.please_write_something_or_add_file") }}', 'warning');
         return;
     }
 
     if (!diseaseId) {
-        showToast('Please select a disease', 'warning');
+        showToast('{{ __("ui.community.please_select_disease") }}', 'warning');
         return;
     }
 
@@ -1925,7 +1909,7 @@ function submitCreatePost() {
     const submitBtn = document.getElementById('createPostSubmitBtn');
     const originalText = submitBtn.innerHTML;
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Posting...';
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> {{ __("ui.community.posting") }}...';
 
     fetch('/community/posts', {
         method: 'POST',
@@ -1954,9 +1938,9 @@ function submitCreatePost() {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
 
-            showToast(`✅ ${data.message || 'Post submitted successfully.'}`, 'success');
+            showToast(`✅ ${data.message || '{{ __("ui.community.post_submitted_for_approval") }}'}`, 'success');
         } else {
-            showToast('❌ ' + (data.message || 'Error creating post'), 'error');
+            showToast('❌ ' + (data.message || '{{ __("ui.community.error_creating_post") }}'), 'error');
         }
     })
     .catch(error => {
@@ -2005,9 +1989,9 @@ function reportPost(postId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showToast(`✅ ${data.message || 'Post reported successfully.'}`, 'success');
+            showToast(`✅ ${data.message || '{{ __("ui.community.post_reported_successfully") }}'}`, 'success');
         } else {
-            showToast('❌ ' + (data.message || 'Unable to report this post'), 'error');
+            showToast('❌ ' + (data.message || '{{ __("ui.community.unable_to_report_post") }}'), 'error');
         }
     })
     .catch(error => {
@@ -2027,13 +2011,13 @@ function approvePost(postId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showToast(`✅ ${data.message || 'Post approved successfully.'}`, 'success');
+            showToast(`✅ ${data.message || '{{ __("ui.community.post_approved_successfully") }}'}`, 'success');
             const postElement = document.getElementById(`post-${postId}`);
             if (postElement && @json($isPendingPage)) {
                 postElement.remove();
             }
         } else {
-            showToast('❌ ' + (data.message || 'Unable to approve this post'), 'error');
+            showToast('❌ ' + (data.message || '{{ __("ui.community.unable_to_approve_post") }}'), 'error');
         }
     })
     .catch(error => {
@@ -2041,7 +2025,7 @@ function approvePost(postId) {
     });
 }
 
-// ==================== TOGGLE COMMENTS (Community specific) ====================
+// ==================== TOGGLE COMMENTS ====================
 function toggleComments(postId) {
     const section = document.getElementById(`comments-section-${postId}`);
     const btn = document.getElementById(`toggle-comments-${postId}`);
@@ -2052,15 +2036,14 @@ function toggleComments(postId) {
 
     if (!section.style.display || section.style.display === 'none') {
         section.style.display = 'block';
-        btn.innerHTML = `<i class="fas fa-chevron-up me-1"></i><span class="comment-count">${count}</span> Hide Comments`;
+        btn.innerHTML = `<i class="fas fa-chevron-up me-1"></i><span class="comment-count">${count}</span> {{ __("ui.community.hide_comments") }}`;
     } else {
         section.style.display = 'none';
-        btn.innerHTML = `<i class="far fa-comment me-1"></i><span class="comment-count">${count}</span> Comments`;
+        btn.innerHTML = `<i class="far fa-comment me-1"></i><span class="comment-count">${count}</span> {{ __("ui.community.comments") }}`;
     }
 }
 
 function loadMoreComments(postId) {
-    // Instead of loading more comments, open the modal
     openPostModal(postId);
 }
 

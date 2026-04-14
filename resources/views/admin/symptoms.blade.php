@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Admin Symptoms')
+@section('title', __('ui.admin_symptoms.title'))
 
 @push('styles')
 <style>
@@ -184,8 +184,8 @@
 <div class="admin-catalog-surface">
     <div class="container" style="max-width: 1240px;">
         <div class="catalog-hero">
-            <h1><i class="fas fa-stethoscope me-2"></i>Admin Symptoms Catalog</h1>
-            <p>Matching disease page design and card sizes with direct public-view navigation and admin actions.</p>
+            <h1><i class="fas fa-stethoscope me-2"></i>{{ __('ui.admin_symptoms.title') }}</h1>
+            <p>{{ __('ui.admin_symptoms.subtitle') }}</p>
         </div>
 
         @if (session('success'))
@@ -204,17 +204,17 @@
 
         <section class="catalog-toolbar">
             <form class="toolbar-grid" method="GET" action="{{ route('admin.symptoms.index') }}">
-                <input type="text" name="q" value="{{ $search }}" placeholder="Search symptoms by name...">
-                <button class="btn-main" type="submit"><i class="fas fa-magnifying-glass"></i>Search</button>
-                <a href="{{ route('admin.dashboard') }}" class="btn-ghost"><i class="fas fa-arrow-left"></i>Back</a>
+                <input type="text" name="q" value="{{ $search }}" placeholder="{{ __('ui.admin_symptoms.search_placeholder') }}">
+                <button class="btn-main" type="submit"><i class="fas fa-magnifying-glass"></i>{{ __('ui.admin_symptoms.search') }}</button>
+                <a href="{{ route('admin.dashboard') }}" class="btn-ghost"><i class="fas fa-arrow-left"></i>{{ __('ui.admin_symptoms.back') }}</a>
             </form>
         </section>
 
         <section class="catalog-panel">
             <form class="create-grid" method="POST" action="{{ route('admin.symptoms.store') }}">
                 @csrf
-                <input class="form-input" type="text" name="name" placeholder="New symptom name" required>
-                <button class="btn-main" type="submit"><i class="fas fa-plus"></i>Create</button>
+                <input class="form-input" type="text" name="name" placeholder="{{ __('ui.admin_symptoms.new_symptom_name') }}" required>
+                <button class="btn-main" type="submit"><i class="fas fa-plus"></i>{{ __('ui.admin_symptoms.create') }}</button>
             </form>
         </section>
 
@@ -223,17 +223,17 @@
                 <article class="item-card">
                     <h2 class="item-title">{{ $symptom->name }}</h2>
                     <div class="item-badges">
-                        <span class="item-badge">{{ number_format($symptom->user_symptoms_count) }} user logs</span>
-                        <span class="item-badge">{{ number_format($symptom->diseases_count) }} diseases</span>
+                        <span class="item-badge">{{ number_format($symptom->user_symptoms_count) }} {{ __('ui.admin_symptoms.user_logs') }}</span>
+                        <span class="item-badge">{{ number_format($symptom->diseases_count) }} {{ __('ui.admin_symptoms.diseases') }}</span>
                     </div>
-                    <p class="item-copy">Open this symptom in public view and validate connected disease links.</p>
+                    <p class="item-copy">{{ __('ui.admin_symptoms.default_description') }}</p>
                     <div class="item-actions">
-                        <a href="{{ route('public.symptoms.show', $symptom) }}" class="btn-open"><i class="fas fa-arrow-up-right-from-square"></i>Public View</a>
-                        <button type="button" class="btn-edit js-toggle-edit" data-target="symptom-edit-{{ $symptom->id }}"><i class="fas fa-pen"></i>Edit</button>
-                        <form method="POST" action="{{ route('admin.symptoms.destroy', $symptom) }}" onsubmit="return confirm('Delete this symptom?');">
+                        <a href="{{ route('public.symptoms.show', $symptom) }}" class="btn-open"><i class="fas fa-arrow-up-right-from-square"></i>{{ __('ui.admin_symptoms.public_view') }}</a>
+                        <button type="button" class="btn-edit js-toggle-edit" data-target="symptom-edit-{{ $symptom->id }}"><i class="fas fa-pen"></i>{{ __('ui.admin_symptoms.edit') }}</button>
+                        <form method="POST" action="{{ route('admin.symptoms.destroy', $symptom) }}" onsubmit="return confirm('{{ __('ui.admin_symptoms.delete_confirm') }}');">
                             @csrf
                             @method('DELETE')
-                            <button class="btn-delete" type="submit"><i class="fas fa-trash"></i>Delete</button>
+                            <button class="btn-delete" type="submit"><i class="fas fa-trash"></i>{{ __('ui.admin_symptoms.delete') }}</button>
                         </form>
                     </div>
 
@@ -244,13 +244,13 @@
                             <div class="mb-2">
                                 <input class="form-input" type="text" name="name" value="{{ $symptom->name }}" required>
                             </div>
-                            <button class="btn-main" type="submit"><i class="fas fa-floppy-disk"></i>Save</button>
+                            <button class="btn-main" type="submit"><i class="fas fa-floppy-disk"></i>{{ __('ui.admin_symptoms.save') }}</button>
                         </form>
                     </div>
                 </article>
             @empty
                 <div class="item-card" style="grid-column: 1 / -1; text-align: center;">
-                    <p class="mb-0 text-muted">No symptoms found for this search.</p>
+                    <p class="mb-0 text-muted">{{ __('ui.admin_symptoms.no_symptoms_found') }}</p>
                 </div>
             @endforelse
         </div>

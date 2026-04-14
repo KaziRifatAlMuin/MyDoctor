@@ -7,15 +7,15 @@
             <div>
                 <h5 class="fw-bold mb-0" style="color: #2d3748;">
                     <i class="fas fa-{{ $uploadType === 'prescription' ? 'prescription' : 'file-medical-alt' }} me-2" style="color: #667eea;"></i>
-                    My {{ ucfirst($uploadType) }}s
+                    {{ __('ui.health.my_uploads', ['type' => ucfirst($uploadType)]) }}
                 </h5>
                 <p class="text-muted mb-0" style="font-size: 0.82rem;">
-                    {{ $uploadItems->count() }} {{ $uploadType }}(s) uploaded
+                    {{ $uploadItems->count() }} {{ $uploadType }}(s) {{ __('ui.health.uploaded') }}
                 </p>
             </div>
             <button class="btn text-white" data-bs-toggle="modal" data-bs-target="#addUploadModal"
                 style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px; font-size: 0.88rem;">
-                <i class="fas fa-cloud-upload-alt me-1"></i> Upload {{ ucfirst($uploadType) }}
+                <i class="fas fa-cloud-upload-alt me-1"></i> {{ __('ui.health.upload_upload', ['type' => ucfirst($uploadType)]) }}
             </button>
         </div>
     </div>
@@ -26,7 +26,7 @@
                 <div class="health-card-body">
                     <div class="empty-state">
                         <i class="fas fa-{{ $uploadType === 'prescription' ? 'prescription' : 'file-medical-alt' }} d-block"></i>
-                        <p>No {{ $uploadType }}s uploaded yet.<br>Upload your medical documents to keep them organized.</p>
+                        <p>{{ __('ui.health.no_uploads_yet', ['type' => ucfirst($uploadType)]) }}</p>
                     </div>
                 </div>
             </div>
@@ -44,7 +44,7 @@
                         @else
                             <div class="text-center" style="color: #cbd5e0;">
                                 <i class="fas fa-image" style="font-size: 2.5rem;"></i>
-                                <div style="font-size: 0.78rem; margin-top: 0.5rem;">No preview available</div>
+                                <div style="font-size: 0.78rem; margin-top: 0.5rem;">{{ __('ui.health.no_preview') }}</div>
                             </div>
                         @endif
                     </div>
@@ -56,7 +56,7 @@
                                 {{ $upload->title }}
                             </h6>
                             <span class="health-card-badge {{ $upload->type === 'prescription' ? 'bg-primary bg-opacity-10 text-primary' : 'bg-success bg-opacity-10 text-success' }}">
-                                {{ ucfirst($upload->type) }}
+                                {{ __("ui.health.{$upload->type}") }}
                             </span>
                         </div>
 
@@ -87,13 +87,13 @@
                             <div class="action-btn-group">
                                 <button type="button" class="btn btn-sm btn-outline-primary"
                                     onclick="openEditUpload({{ $upload->id }}, '{{ addslashes($upload->title) }}', '{{ $upload->type }}', '{{ addslashes($upload->doctor_name ?? '') }}', '{{ addslashes($upload->institution ?? '') }}', '{{ $upload->document_date ? $upload->document_date->format('Y-m-d') : '' }}', '{{ addslashes($upload->notes ?? '') }}', '{{ addslashes($upload->summary ?? '') }}')">
-                                    <i class="fas fa-edit"></i>
+                                    <i class="fas fa-edit"></i> {{ __('ui.health.edit') }}
                                 </button>
                                 <form action="{{ route('health.upload.destroy', $upload) }}" method="POST"
-                                    onsubmit="return confirm('Delete this upload?')" class="d-inline">
+                                    onsubmit="return confirm('{{ __('ui.health.delete_upload_confirm') }}')" class="d-inline">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-outline-danger">
-                                        <i class="fas fa-trash"></i>
+                                        <i class="fas fa-trash"></i> {{ __('ui.health.delete') }}
                                     </button>
                                 </form>
                             </div>

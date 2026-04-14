@@ -805,11 +805,11 @@
                         <div class="welcome-greeting">
                             @php
                                 $hour = now()->hour;
-                                $greeting = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Evening');
+                                $greeting = $hour < 12 ? __('ui.dashboard.good_morning') : ($hour < 17 ? __('ui.dashboard.good_afternoon') : __('ui.dashboard.good_evening'));
                             @endphp
-                            {{ $greeting }}, {{ $user->name ?? 'there' }}! 👋
+                            {{ $greeting }}, {{ $user->name ?? __('ui.dashboard.there') }}! 👋
                         </div>
-                        <div class="welcome-sub">Here's your health snapshot for today</div>
+                        <div class="welcome-sub">{{ __('ui.dashboard.health_snapshot_today') }}</div>
                         <div class="welcome-date">
                             <i class="far fa-calendar-alt me-1"></i>{{ now()->format('l, F j, Y') }}
                         </div>
@@ -820,11 +820,11 @@
                 @php
                     $scoreColor = $healthScore >= 75 ? '#38a169' : ($healthScore >= 50 ? '#dd6b20' : '#e53e3e');
                 @endphp
-                <div class="health-score-wrap" title="Your overall health score">
+                <div class="health-score-wrap" title="{{ __('ui.dashboard.health_score_title') }}">
                     <div class="health-score-circle" style="--score: {{ $healthScore }}; --score-color: {{ $scoreColor }};">
                         <div class="health-score-inner">
                             <div class="health-score-value">{{ $healthScore }}</div>
-                            <div class="health-score-label">Health Score</div>
+                            <div class="health-score-label">{{ __('ui.dashboard.health_score') }}</div>
                         </div>
                     </div>
                 </div>
@@ -833,23 +833,23 @@
             <div class="hero-stats position-relative" style="z-index:2;">
                 <div class="hero-stat-pill">
                     <div class="hero-stat-value" data-count="{{ $healthMetrics->count() }}">{{ $healthMetrics->count() }}</div>
-                    <div class="hero-stat-label"><i class="fas fa-chart-line me-1"></i>Metrics</div>
+                    <div class="hero-stat-label"><i class="fas fa-chart-line me-1"></i>{{ __('ui.dashboard.metrics') }}</div>
                 </div>
                 <div class="hero-stat-pill">
                     <div class="hero-stat-value" data-count="{{ $symptoms->count() }}">{{ $symptoms->count() }}</div>
-                    <div class="hero-stat-label"><i class="fas fa-notes-medical me-1"></i>Symptoms</div>
+                    <div class="hero-stat-label"><i class="fas fa-notes-medical me-1"></i>{{ __('ui.dashboard.symptoms') }}</div>
                 </div>
                 <div class="hero-stat-pill">
                     <div class="hero-stat-value" data-count="{{ $medicines->count() }}">{{ $medicines->count() }}</div>
-                    <div class="hero-stat-label"><i class="fas fa-pills me-1"></i>Medicines</div>
+                    <div class="hero-stat-label"><i class="fas fa-pills me-1"></i>{{ __('ui.dashboard.medicines') }}</div>
                 </div>
                 <div class="hero-stat-pill">
                     <div class="hero-stat-value">{{ $adherenceRate }}%</div>
-                    <div class="hero-stat-label"><i class="fas fa-check-double me-1"></i>Adherence</div>
+                    <div class="hero-stat-label"><i class="fas fa-check-double me-1"></i>{{ __('ui.dashboard.adherence') }}</div>
                 </div>
                 <div class="hero-stat-pill">
                     <div class="hero-stat-value" data-count="{{ $activeConditions->count() }}">{{ $activeConditions->count() }}</div>
-                    <div class="hero-stat-label"><i class="fas fa-heartbeat me-1"></i>Conditions</div>
+                    <div class="hero-stat-label"><i class="fas fa-heartbeat me-1"></i>{{ __('ui.dashboard.conditions') }}</div>
                 </div>
             </div>
         </div>
@@ -861,15 +861,15 @@
             <div class="col-12 fade-in-up delay-1">
                 <div class="dash-card">
                     <div class="dash-card-header">
-                        <h6><i class="fas fa-cloud-sun"></i> Live Environment & Weather</h6>
-                        <span class="badge bg-light text-muted" style="font-size:0.68rem;">{{ $liveEnvironment['location_label'] ?? 'Location not set' }}</span>
+                        <h6><i class="fas fa-cloud-sun"></i> {{ __('ui.dashboard.live_environment') }}</h6>
+                        <span class="badge bg-light text-muted" style="font-size:0.68rem;">{{ $liveEnvironment['location_label'] ?? __('ui.dashboard.location_not_set') }}</span>
                     </div>
                     <div class="dash-card-body">
                         @if(!($liveEnvironment['available'] ?? false))
                             <div class="text-center py-3" style="color:#a0aec0;">
                                 <i class="fas fa-map-marker-alt fa-2x mb-2" style="color:#cbd5e0;"></i>
-                                <p class="mb-1" style="font-size:0.9rem;">{{ $liveEnvironment['message'] ?? 'Live data unavailable right now.' }}</p>
-                                <a href="{{ route('profile') }}" class="dash-card-link justify-content-center">Update your address <i class="fas fa-arrow-right"></i></a>
+                                <p class="mb-1" style="font-size:0.9rem;">{{ $liveEnvironment['message'] ?? __('ui.dashboard.live_data_unavailable') }}</p>
+                                <a href="{{ route('profile') }}" class="dash-card-link justify-content-center">{{ __('ui.dashboard.update_address') }} <i class="fas fa-arrow-right"></i></a>
                             </div>
                         @else
                             @php
@@ -883,53 +883,53 @@
                                     <i class="fas fa-location-dot me-1 text-primary"></i>{{ $liveEnvironment['location_label'] ?? 'Bangladesh' }}
                                 </div>
                                 <div class="live-env-meta">
-                                    <i class="fas fa-clock me-1"></i>Updated {{ isset($liveEnvironment['updated_at']) ? \Carbon\Carbon::parse($liveEnvironment['updated_at'])->diffForHumans() : 'just now' }}
+                                    <i class="fas fa-clock me-1"></i>{{ __('ui.dashboard.updated') }} {{ isset($liveEnvironment['updated_at']) ? \Carbon\Carbon::parse($liveEnvironment['updated_at'])->diffForHumans() : __('ui.dashboard.just_now') }}
                                 </div>
                             </div>
 
                             <div class="live-env-grid">
                                 <div class="live-env-item">
-                                    <div class="live-env-label">Condition</div>
+                                    <div class="live-env-label">{{ __('ui.dashboard.condition') }}</div>
                                     <div class="live-env-value">{{ $weather['weather_text'] ?? 'N/A' }}</div>
                                 </div>
                                 <div class="live-env-item">
-                                    <div class="live-env-label">Temperature</div>
+                                    <div class="live-env-label">{{ __('ui.dashboard.temperature') }}</div>
                                     <div class="live-env-value">{{ isset($weather['temperature_c']) ? round($weather['temperature_c']) . '°C' : 'N/A' }}</div>
                                 </div>
                                 <div class="live-env-item">
-                                    <div class="live-env-label">Humidity</div>
+                                    <div class="live-env-label">{{ __('ui.dashboard.humidity') }}</div>
                                     <div class="live-env-value">{{ isset($weather['humidity']) ? round($weather['humidity']) . '%' : 'N/A' }}</div>
                                 </div>
                                 <div class="live-env-item">
-                                    <div class="live-env-label">US AQI</div>
+                                    <div class="live-env-label">{{ __('ui.dashboard.us_aqi') }}</div>
                                     <div class="live-env-value">{{ isset($air['us_aqi']) ? round($air['us_aqi']) : 'N/A' }}</div>
-                                    <div class="live-env-meta">{{ $air['us_aqi_label'] ?? 'Unavailable' }}</div>
+                                    <div class="live-env-meta">{{ $air['us_aqi_label'] ?? __('ui.dashboard.unavailable') }}</div>
                                 </div>
                             </div>
 
                             <div class="live-env-grid" style="margin-top:0.6rem;">
                                 <div class="live-env-item">
-                                    <div class="live-env-label">Rain Outlook</div>
+                                    <div class="live-env-label">{{ __('ui.dashboard.rain_outlook') }}</div>
                                     <div class="live-env-value">
-                                        {{ ($insights['rain_likely'] ?? null) === null ? 'N/A' : (($insights['rain_likely'] ?? false) ? 'Likely Rain' : 'No Rain Signal') }}
+                                        {{ ($insights['rain_likely'] ?? null) === null ? 'N/A' : (($insights['rain_likely'] ?? false) ? __('ui.dashboard.likely_rain') : __('ui.dashboard.no_rain_signal')) }}
                                     </div>
                                     @if(isset($weather['rain_probability_pct']) && $weather['rain_probability_pct'] !== null)
-                                        <div class="live-env-meta">Chance: {{ round($weather['rain_probability_pct']) }}%</div>
+                                        <div class="live-env-meta">{{ __('ui.dashboard.chance') }}: {{ round($weather['rain_probability_pct']) }}%</div>
                                     @endif
                                 </div>
                                 <div class="live-env-item">
-                                    <div class="live-env-label">Temperature Feel</div>
-                                    <div class="live-env-value">{{ $insights['temperature_label'] ?? 'Unavailable' }}</div>
+                                    <div class="live-env-label">{{ __('ui.dashboard.temperature_feel') }}</div>
+                                    <div class="live-env-value">{{ $insights['temperature_label'] ?? __('ui.dashboard.unavailable') }}</div>
                                     @if(isset($weather['temp_min_c']) && isset($weather['temp_max_c']) && $weather['temp_min_c'] !== null && $weather['temp_max_c'] !== null)
-                                        <div class="live-env-meta">Today: {{ round($weather['temp_min_c']) }}°C - {{ round($weather['temp_max_c']) }}°C</div>
+                                        <div class="live-env-meta">{{ __('ui.dashboard.today') }}: {{ round($weather['temp_min_c']) }}°C - {{ round($weather['temp_max_c']) }}°C</div>
                                     @endif
                                 </div>
                                 <div class="live-env-item">
-                                    <div class="live-env-label">Feels Like</div>
+                                    <div class="live-env-label">{{ __('ui.dashboard.feels_like') }}</div>
                                     <div class="live-env-value">{{ isset($weather['feels_like_c']) ? round($weather['feels_like_c']) . '°C' : 'N/A' }}</div>
                                 </div>
                                 <div class="live-env-item">
-                                    <div class="live-env-label">Wind</div>
+                                    <div class="live-env-label">{{ __('ui.dashboard.wind') }}</div>
                                     <div class="live-env-value">{{ isset($weather['wind_kmh']) ? round($weather['wind_kmh']) . ' km/h' : 'N/A' }}</div>
                                 </div>
                                 <div class="live-env-item">
@@ -943,11 +943,11 @@
                             </div>
 
                             <div class="live-env-meta mt-2">
-                                Data source: {{ $liveEnvironment['source'] ?? 'External API' }}
+                                {{ __('ui.dashboard.data_source') }}: {{ $liveEnvironment['source'] ?? 'External API' }}
                             </div>
 
                             <div class="live-env-item mt-2">
-                                <div class="live-env-label">Condition Advisory</div>
+                                <div class="live-env-label">{{ __('ui.dashboard.condition_advisory') }}</div>
                                 <div class="live-env-meta" style="font-size:0.84rem;color:#374151;" id="liveEnvAdvisory"></div>
 
                                 @push('scripts')
@@ -980,7 +980,7 @@
         ══════════════════════════════════════════════════════ --}}
         <div class="quick-actions-row fade-in-up delay-1">
             <div class="section-title">
-                <i class="fas fa-bolt"></i> Quick Actions
+                <i class="fas fa-bolt"></i> {{ __('ui.dashboard.quick_actions') }}
             </div>
             <div class="row g-2">
                 @if(!auth()->check() || !auth()->user()->isAdmin())
@@ -989,7 +989,7 @@
                             <div class="quick-action-icon qa-icon-indigo">
                                 <i class="fas fa-user-md"></i>
                             </div>
-                            <div class="quick-action-label">MyDoctor AI</div>
+                            <div class="quick-action-label">{{ __('ui.dashboard.mydoctor_ai') }}</div>
                         </a>
                     </div>
                 @endif
@@ -998,7 +998,7 @@
                         <div class="quick-action-icon qa-icon-purple">
                             <i class="fas fa-chart-line"></i>
                         </div>
-                        <div class="quick-action-label">Record Metric</div>
+                        <div class="quick-action-label">{{ __('ui.dashboard.record_metric') }}</div>
                     </a>
                 </div>
                 <div class="col-6 col-md-3 col-xl">
@@ -1006,7 +1006,7 @@
                         <div class="quick-action-icon qa-icon-orange">
                             <i class="fas fa-notes-medical"></i>
                         </div>
-                        <div class="quick-action-label">Log Symptom</div>
+                        <div class="quick-action-label">{{ __('ui.dashboard.log_symptom') }}</div>
                     </a>
                 </div>
                 <div class="col-6 col-md-3 col-xl">
@@ -1014,7 +1014,7 @@
                         <div class="quick-action-icon qa-icon-green">
                             <i class="fas fa-bell"></i>
                         </div>
-                        <div class="quick-action-label">Reminders</div>
+                        <div class="quick-action-label">{{ __('ui.dashboard.reminders') }}</div>
                     </a>
                 </div>
                 <div class="col-6 col-md-3 col-xl">
@@ -1022,7 +1022,7 @@
                         <div class="quick-action-icon qa-icon-red">
                             <i class="fas fa-prescription-bottle-alt"></i>
                         </div>
-                        <div class="quick-action-label">Upload Rx</div>
+                        <div class="quick-action-label">{{ __('ui.dashboard.upload_rx') }}</div>
                     </a>
                 </div>
                 <div class="col-6 col-md-3 col-xl">
@@ -1030,7 +1030,7 @@
                         <div class="quick-action-icon qa-icon-cyan">
                             <i class="fas fa-pills"></i>
                         </div>
-                        <div class="quick-action-label">Medicines</div>
+                        <div class="quick-action-label">{{ __('ui.dashboard.medicines') }}</div>
                     </a>
                 </div>
                 <div class="col-6 col-md-3 col-xl">
@@ -1038,7 +1038,7 @@
                         <div class="quick-action-icon qa-icon-teal">
                             <i class="fas fa-user-edit"></i>
                         </div>
-                        <div class="quick-action-label">My Profile</div>
+                        <div class="quick-action-label">{{ __('ui.dashboard.my_profile') }}</div>
                     </a>
                 </div>
                 <div class="col-6 col-md-3 col-xl">
@@ -1046,7 +1046,7 @@
                         <div class="quick-action-icon qa-icon-blue">
                             <i class="fas fa-users"></i>
                         </div>
-                        <div class="quick-action-label">Browse Members</div>
+                        <div class="quick-action-label">{{ __('ui.dashboard.browse_members') }}</div>
                     </a>
                 </div>
             </div>
@@ -1061,8 +1061,8 @@
             <div class="col-lg-4 fade-in-up delay-2">
                 <div class="dash-card">
                     <div class="dash-card-header">
-                        <h6><i class="fas fa-check-double"></i> Medicine Adherence</h6>
-                        <span class="badge bg-light text-muted" style="font-size:0.68rem;">30 days</span>
+                        <h6><i class="fas fa-check-double"></i> {{ __('ui.dashboard.medicine_adherence') }}</h6>
+                        <span class="badge bg-light text-muted" style="font-size:0.68rem;">{{ __('ui.dashboard.days_30') }}</span>
                     </div>
                     <div class="dash-card-body d-flex flex-column align-items-center justify-content-center">
                         @if($totalScheduled > 0)
@@ -1073,29 +1073,29 @@
                                          style="color:{{ $adherenceRate >= 80 ? '#38a169' : ($adherenceRate >= 50 ? '#dd6b20' : '#e53e3e') }};">
                                         {{ $adherenceRate }}%
                                     </div>
-                                    <div class="adherence-ring-label">adherence</div>
+                                    <div class="adherence-ring-label">{{ __('ui.dashboard.adherence') }}</div>
                                 </div>
                             </div>
                             <div class="d-flex justify-content-center gap-4 mt-3">
                                 <div class="text-center">
                                     <div class="fw-bold text-success" style="font-size:1.1rem;">{{ $totalTaken }}</div>
-                                    <div class="small text-muted">Taken</div>
+                                    <div class="small text-muted">{{ __('ui.dashboard.taken') }}</div>
                                 </div>
                                 <div class="text-center">
                                     <div class="fw-bold text-danger" style="font-size:1.1rem;">{{ $totalMissed }}</div>
-                                    <div class="small text-muted">Missed</div>
+                                    <div class="small text-muted">{{ __('ui.dashboard.missed') }}</div>
                                 </div>
                                 <div class="text-center">
                                     <div class="fw-bold text-secondary" style="font-size:1.1rem;">{{ $totalScheduled }}</div>
-                                    <div class="small text-muted">Scheduled</div>
+                                    <div class="small text-muted">{{ __('ui.dashboard.scheduled') }}</div>
                                 </div>
                             </div>
 
                             {{-- 30-Day Adherence Sparkline --}}
                             <div class="mt-3 w-100">
                                 <div class="d-flex justify-content-between mb-1">
-                                    <small class="text-muted" style="font-size:0.68rem;">30-Day Trend</small>
-                                    <small class="text-muted" style="font-size:0.68rem;">Today</small>
+                                    <small class="text-muted" style="font-size:0.68rem;">{{ __('ui.dashboard.days_trend') }}</small>
+                                    <small class="text-muted" style="font-size:0.68rem;">{{ __('ui.dashboard.today') }}</small>
                                 </div>
                                 <div class="adherence-bar-wrap">
                                     @foreach($adherenceByDay as $day)
@@ -1113,8 +1113,8 @@
                         @else
                             <div class="text-center py-4" style="color:#a0aec0;">
                                 <i class="fas fa-clipboard-check fa-3x mb-3" style="color:#cbd5e0;"></i>
-                                <p class="mb-1" style="font-size:0.92rem;">No medicine logs yet</p>
-                                <a href="{{ route('medicine.reminders') }}" class="dash-card-link">Set up reminders <i class="fas fa-arrow-right"></i></a>
+                                <p class="mb-1" style="font-size:0.92rem;">{{ __('ui.dashboard.no_medicine_logs') }}</p>
+                                <a href="{{ route('medicine.reminders') }}" class="dash-card-link">{{ __('ui.dashboard.set_up_reminders') }} <i class="fas fa-arrow-right"></i></a>
                             </div>
                         @endif
                     </div>
@@ -1125,15 +1125,15 @@
             <div class="col-lg-4 fade-in-up delay-3">
                 <div class="dash-card">
                     <div class="dash-card-header">
-                        <h6><i class="fas fa-clock"></i> Today's Reminders</h6>
-                        <a href="{{ route('medicine.reminders') }}" class="dash-card-link">All <i class="fas fa-arrow-right"></i></a>
+                        <h6><i class="fas fa-clock"></i> {{ __('ui.dashboard.today_reminders') }}</h6>
+                        <a href="{{ route('medicine.reminders') }}" class="dash-card-link">{{ __('ui.dashboard.all') }} <i class="fas fa-arrow-right"></i></a>
                     </div>
                     <div class="dash-card-body">
                         @if($todayReminders->isEmpty())
                             <div class="text-center py-3" style="color:#a0aec0;">
                                 <i class="fas fa-check-circle fa-2x mb-2" style="color:#38a169;"></i>
-                                <p class="mb-1 fw-semibold" style="font-size:0.92rem;color:#38a169;">All clear!</p>
-                                <p class="mb-0" style="font-size:0.78rem;">No pending reminders today</p>
+                                <p class="mb-1 fw-semibold" style="font-size:0.92rem;color:#38a169;">{{ __('ui.dashboard.all_clear') }}</p>
+                                <p class="mb-0" style="font-size:0.78rem;">{{ __('ui.dashboard.no_pending_reminders') }}</p>
                             </div>
                         @else
                             @foreach($todayReminders->take(5) as $rem)
@@ -1154,7 +1154,7 @@
                             @if($todayReminders->count() > 5)
                                 <div class="text-center mt-2">
                                     <a href="{{ route('medicine.reminders') }}" class="dash-card-link justify-content-center">
-                                        +{{ $todayReminders->count() - 5 }} more <i class="fas fa-arrow-right"></i>
+                                        +{{ $todayReminders->count() - 5 }} {{ __('ui.dashboard.more') }} <i class="fas fa-arrow-right"></i>
                                     </a>
                                 </div>
                             @endif
@@ -1167,8 +1167,8 @@
             <div class="col-lg-4 fade-in-up delay-4">
                 <div class="dash-card">
                     <div class="dash-card-header">
-                        <h6><i class="fas fa-calendar-week"></i> This Week</h6>
-                        <span class="badge bg-light text-muted" style="font-size:0.68rem;">7 days</span>
+                        <h6><i class="fas fa-calendar-week"></i> {{ __('ui.dashboard.this_week') }}</h6>
+                        <span class="badge bg-light text-muted" style="font-size:0.68rem;">{{ __('ui.dashboard.days_7') }}</span>
                     </div>
                     <div class="dash-card-body">
                         <div class="activity-item">
@@ -1176,7 +1176,7 @@
                                 <i class="fas fa-chart-line"></i>
                             </div>
                             <div class="activity-text">
-                                <strong>{{ $recentMetricsCount }}</strong> health metrics recorded
+                                <strong>{{ $recentMetricsCount }}</strong> {{ __('ui.dashboard.health_metrics_recorded') }}
                             </div>
                         </div>
                         <div class="activity-item">
@@ -1184,7 +1184,7 @@
                                 <i class="fas fa-notes-medical"></i>
                             </div>
                             <div class="activity-text">
-                                <strong>{{ $recentSymptomsCount }}</strong> symptoms logged
+                                <strong>{{ $recentSymptomsCount }}</strong> {{ __('ui.dashboard.symptoms_logged') }}
                             </div>
                         </div>
                         <div class="activity-item">
@@ -1192,7 +1192,7 @@
                                 <i class="fas fa-pills"></i>
                             </div>
                             <div class="activity-text">
-                                <strong>{{ $medicines->count() }}</strong> active medicines
+                                <strong>{{ $medicines->count() }}</strong> {{ __('ui.dashboard.active_medicines') }}
                             </div>
                         </div>
                         <div class="activity-item">
@@ -1200,7 +1200,7 @@
                                 <i class="fas fa-file-medical"></i>
                             </div>
                             <div class="activity-text">
-                                <strong>{{ $prescriptionCount }}</strong> prescriptions &middot; <strong>{{ $reportCount }}</strong> reports
+                                <strong>{{ $prescriptionCount }}</strong> {{ __('ui.dashboard.prescriptions') }} &middot; <strong>{{ $reportCount }}</strong> {{ __('ui.dashboard.reports') }}
                             </div>
                         </div>
                         <div class="activity-item">
@@ -1208,7 +1208,7 @@
                                 <i class="fas fa-heartbeat"></i>
                             </div>
                             <div class="activity-text">
-                                <strong>{{ $activeConditions->count() }}</strong> active conditions
+                                <strong>{{ $activeConditions->count() }}</strong> {{ __('ui.dashboard.active_conditions') }}
                             </div>
                         </div>
                     </div>
@@ -1223,15 +1223,15 @@
             <div class="col-12 fade-in-up delay-3">
                 <div class="dash-card">
                     <div class="dash-card-header">
-                        <h6><i class="fas fa-heartbeat"></i> Latest Health Metrics</h6>
-                        <a href="{{ route('health') }}" class="dash-card-link">View All <i class="fas fa-arrow-right"></i></a>
+                        <h6><i class="fas fa-heartbeat"></i> {{ __('ui.dashboard.latest_health_metrics') }}</h6>
+                        <a href="{{ route('health') }}" class="dash-card-link">{{ __('ui.dashboard.view_all') }} <i class="fas fa-arrow-right"></i></a>
                     </div>
                     <div class="dash-card-body">
                         @if($latestMetrics->isEmpty())
                             <div class="text-center py-4" style="color:#a0aec0;">
                                 <i class="fas fa-chart-line fa-3x mb-3" style="color:#cbd5e0;"></i>
-                                <p class="mb-1" style="font-size:0.92rem;">No metrics recorded yet</p>
-                                <a href="{{ route('health') }}" class="dash-card-link justify-content-center">Record your first metric <i class="fas fa-arrow-right"></i></a>
+                                <p class="mb-1" style="font-size:0.92rem;">{{ __('ui.dashboard.no_metrics_recorded') }}</p>
+                                <a href="{{ route('health') }}" class="dash-card-link justify-content-center">{{ __('ui.dashboard.record_first_metric') }} <i class="fas fa-arrow-right"></i></a>
                             </div>
                         @else
                             @php
@@ -1319,15 +1319,15 @@
             <div class="col-lg-4 fade-in-up delay-4">
                 <div class="dash-card">
                     <div class="dash-card-header">
-                        <h6><i class="fas fa-virus"></i> Active Conditions</h6>
-                        <a href="{{ route('health') }}" class="dash-card-link">Manage <i class="fas fa-arrow-right"></i></a>
+                        <h6><i class="fas fa-virus"></i> {{ __('ui.dashboard.active_conditions') }}</h6>
+                        <a href="{{ route('health') }}" class="dash-card-link">{{ __('ui.dashboard.manage') }} <i class="fas fa-arrow-right"></i></a>
                     </div>
                     <div class="dash-card-body">
                         @if($activeConditions->isEmpty())
                             <div class="text-center py-3" style="color:#a0aec0;">
                                 <i class="fas fa-shield-alt fa-2x mb-2" style="color:#38a169;"></i>
-                                <p class="mb-0 fw-semibold" style="font-size:0.88rem;color:#38a169;">No active conditions</p>
-                                <p class="mb-0 text-muted" style="font-size:0.75rem;">Looking healthy!</p>
+                                <p class="mb-0 fw-semibold" style="font-size:0.88rem;color:#38a169;">{{ __('ui.dashboard.no_active_conditions') }}</p>
+                                <p class="mb-0 text-muted" style="font-size:0.75rem;">{{ __('ui.dashboard.looking_healthy') }}</p>
                             </div>
                         @else
                             @foreach($activeConditions->take(5) as $ud)
@@ -1339,12 +1339,12 @@
                                             </a>
                                         @else
                                             <div class="fw-semibold" style="font-size:0.88rem;color:#2d3748;">
-                                                Unknown
+                                                {{ __('ui.dashboard.unknown') }}
                                             </div>
                                         @endif
                                         @if($ud->diagnosed_at)
                                             <div class="text-muted" style="font-size:0.72rem;">
-                                                Since {{ \Carbon\Carbon::parse($ud->diagnosed_at)->format('M Y') }}
+                                                {{ __('ui.dashboard.since') }} {{ \Carbon\Carbon::parse($ud->diagnosed_at)->format('M Y') }}
                                             </div>
                                         @endif
                                     </div>
@@ -1362,15 +1362,15 @@
             <div class="col-lg-4 fade-in-up delay-5">
                 <div class="dash-card">
                     <div class="dash-card-header">
-                        <h6><i class="fas fa-notes-medical"></i> Recent Symptoms</h6>
-                        <a href="{{ route('health') }}" class="dash-card-link">View All <i class="fas fa-arrow-right"></i></a>
+                        <h6><i class="fas fa-notes-medical"></i> {{ __('ui.dashboard.recent_symptoms') }}</h6>
+                        <a href="{{ route('health') }}" class="dash-card-link">{{ __('ui.dashboard.view_all') }} <i class="fas fa-arrow-right"></i></a>
                     </div>
                     <div class="dash-card-body p-0">
                         @if($symptoms->isEmpty())
                             <div class="text-center py-4 px-3" style="color:#a0aec0;">
                                 <i class="fas fa-check-circle fa-2x mb-2" style="color:#38a169;"></i>
-                                <p class="mb-0 fw-semibold" style="font-size:0.88rem;color:#38a169;">No symptoms logged</p>
-                                <p class="mb-0 text-muted" style="font-size:0.75rem;">Feeling great!</p>
+                                <p class="mb-0 fw-semibold" style="font-size:0.88rem;color:#38a169;">{{ __('ui.dashboard.no_symptoms_logged') }}</p>
+                                <p class="mb-0 text-muted" style="font-size:0.75rem;">{{ __('ui.dashboard.feeling_great') }}</p>
                             </div>
                         @else
                             <div class="px-3 pt-2 pb-1">
@@ -1392,7 +1392,7 @@
                                                 </div>
                                             @endif
                                             <div class="text-muted" style="font-size:0.72rem;">
-                                                Severity {{ $sev }}/10 &middot; {{ $sym->recorded_at->format('M d') }}
+                                                {{ __('ui.dashboard.severity') }} {{ $sev }}/10 &middot; {{ $sym->recorded_at->format('M d') }}
                                             </div>
                                         </div>
                                     </div>
@@ -1407,15 +1407,15 @@
             <div class="col-lg-4 fade-in-up delay-6">
                 <div class="dash-card">
                     <div class="dash-card-header">
-                        <h6><i class="fas fa-file-medical-alt"></i> Recent Uploads</h6>
-                        <a href="{{ route('health') }}" class="dash-card-link">View All <i class="fas fa-arrow-right"></i></a>
+                        <h6><i class="fas fa-file-medical-alt"></i> {{ __('ui.dashboard.recent_uploads') }}</h6>
+                        <a href="{{ route('health') }}" class="dash-card-link">{{ __('ui.dashboard.view_all') }} <i class="fas fa-arrow-right"></i></a>
                     </div>
                     <div class="dash-card-body">
                         @if($recentUploads->isEmpty())
                             <div class="text-center py-3" style="color:#a0aec0;">
                                 <i class="fas fa-cloud-upload-alt fa-2x mb-2" style="color:#cbd5e0;"></i>
-                                <p class="mb-1" style="font-size:0.88rem;">No uploads yet</p>
-                                <a href="{{ route('health') }}" class="dash-card-link justify-content-center">Upload a document <i class="fas fa-arrow-right"></i></a>
+                                <p class="mb-1" style="font-size:0.88rem;">{{ __('ui.dashboard.no_uploads_yet') }}</p>
+                                <a href="{{ route('health') }}" class="dash-card-link justify-content-center">{{ __('ui.dashboard.upload_document') }} <i class="fas fa-arrow-right"></i></a>
                             </div>
                         @else
                             @foreach($recentUploads as $upload)
@@ -1447,8 +1447,8 @@
         <div class="section-divider"></div>
 
         <div class="section-title">
-            <i class="fas fa-th-large"></i> Explore Features
-            <span class="title-badge">All Access</span>
+            <i class="fas fa-th-large"></i> {{ __('ui.dashboard.explore_features') }}
+            <span class="title-badge">{{ __('ui.dashboard.all_access') }}</span>
         </div>
 
         <div class="row g-3 mb-4">
@@ -1459,8 +1459,8 @@
                     <div class="feature-nav-icon qa-icon-purple">
                         <i class="fas fa-heartbeat"></i>
                     </div>
-                    <div class="feature-nav-title">Health Dashboard</div>
-                    <div class="feature-nav-desc">Track metrics, symptoms & diseases</div>
+                    <div class="feature-nav-title">{{ __('ui.dashboard.health_dashboard') }}</div>
+                    <div class="feature-nav-desc">{{ __('ui.dashboard.health_dashboard_desc') }}</div>
                 </a>
             </div>
 
@@ -1470,8 +1470,8 @@
                     <div class="feature-nav-icon qa-icon-blue">
                         <i class="fas fa-chart-line"></i>
                     </div>
-                    <div class="feature-nav-title">Metrics</div>
-                    <div class="feature-nav-desc">View your recorded metrics</div>
+                    <div class="feature-nav-title">{{ __('ui.dashboard.metrics') }}</div>
+                    <div class="feature-nav-desc">{{ __('ui.dashboard.metrics_desc') }}</div>
                 </a>
             </div>
 
@@ -1481,8 +1481,8 @@
                     <div class="feature-nav-icon qa-icon-orange">
                         <i class="fas fa-notes-medical"></i>
                     </div>
-                    <div class="feature-nav-title">Symptoms</div>
-                    <div class="feature-nav-desc">Log & review symptoms</div>
+                    <div class="feature-nav-title">{{ __('ui.dashboard.symptoms') }}</div>
+                    <div class="feature-nav-desc">{{ __('ui.dashboard.symptoms_desc') }}</div>
                 </a>
             </div>
 
@@ -1492,8 +1492,8 @@
                     <div class="feature-nav-icon qa-icon-red">
                         <i class="fas fa-virus"></i>
                     </div>
-                    <div class="feature-nav-title">Diseases</div>
-                    <div class="feature-nav-desc">Manage diagnosed conditions</div>
+                    <div class="feature-nav-title">{{ __('ui.dashboard.diseases') }}</div>
+                    <div class="feature-nav-desc">{{ __('ui.dashboard.diseases_desc') }}</div>
                 </a>
             </div>
 
@@ -1503,8 +1503,8 @@
                     <div class="feature-nav-icon qa-icon-red">
                         <i class="fas fa-prescription-bottle-alt"></i>
                     </div>
-                    <div class="feature-nav-title">Prescriptions</div>
-                    <div class="feature-nav-desc">Store & manage prescriptions</div>
+                    <div class="feature-nav-title">{{ __('ui.dashboard.prescriptions') }}</div>
+                    <div class="feature-nav-desc">{{ __('ui.dashboard.prescriptions_desc') }}</div>
                 </a>
             </div>
 
@@ -1514,8 +1514,8 @@
                     <div class="feature-nav-icon qa-icon-blue">
                         <i class="fas fa-file-medical-alt"></i>
                     </div>
-                    <div class="feature-nav-title">Reports</div>
-                    <div class="feature-nav-desc">View medical reports</div>
+                    <div class="feature-nav-title">{{ __('ui.dashboard.reports') }}</div>
+                    <div class="feature-nav-desc">{{ __('ui.dashboard.reports_desc') }}</div>
                 </a>
             </div>
 
@@ -1525,8 +1525,8 @@
                     <div class="feature-nav-icon qa-icon-green">
                         <i class="fas fa-clipboard-list"></i>
                     </div>
-                    <div class="feature-nav-title">Medicine Logs</div>
-                    <div class="feature-nav-desc">Daily medication history</div>
+                    <div class="feature-nav-title">{{ __('ui.dashboard.medicine_logs') }}</div>
+                    <div class="feature-nav-desc">{{ __('ui.dashboard.medicine_logs_desc') }}</div>
                 </a>
             </div>
 
@@ -1536,8 +1536,8 @@
                     <div class="feature-nav-icon qa-icon-green">
                         <i class="fas fa-bell"></i>
                     </div>
-                    <div class="feature-nav-title">Medicine Reminders</div>
-                    <div class="feature-nav-desc">Never miss a dose again</div>
+                    <div class="feature-nav-title">{{ __('ui.dashboard.medicine_reminders') }}</div>
+                    <div class="feature-nav-desc">{{ __('ui.dashboard.medicine_reminders_desc') }}</div>
                 </a>
             </div>
 
@@ -1547,8 +1547,8 @@
                     <div class="feature-nav-icon qa-icon-teal">
                         <i class="fas fa-lightbulb"></i>
                     </div>
-                    <div class="feature-nav-title">Smart Suggestions</div>
-                    <div class="feature-nav-desc">Personalized health insights</div>
+                    <div class="feature-nav-title">{{ __('ui.dashboard.smart_suggestions') }}</div>
+                    <div class="feature-nav-desc">{{ __('ui.dashboard.smart_suggestions_desc') }}</div>
                 </a>
             </div>
 
@@ -1558,8 +1558,8 @@
                     <div class="feature-nav-icon qa-icon-yellow">
                         <i class="fas fa-question-circle"></i>
                     </div>
-                    <div class="feature-nav-title">Help Center</div>
-                    <div class="feature-nav-desc">FAQs, guides & support</div>
+                    <div class="feature-nav-title">{{ __('ui.dashboard.help_center') }}</div>
+                    <div class="feature-nav-desc">{{ __('ui.dashboard.help_center_desc') }}</div>
                 </a>
             </div>
 
@@ -1569,8 +1569,8 @@
                     <div class="feature-nav-icon qa-icon-indigo">
                         <i class="fas fa-pills"></i>
                     </div>
-                    <div class="feature-nav-title">My Medicines</div>
-                    <div class="feature-nav-desc">Your saved medicines list</div>
+                    <div class="feature-nav-title">{{ __('ui.dashboard.my_medicines') }}</div>
+                    <div class="feature-nav-desc">{{ __('ui.dashboard.my_medicines_desc') }}</div>
                 </a>
             </div>
 
@@ -1580,8 +1580,8 @@
                     <div class="feature-nav-icon qa-icon-pink">
                         <i class="fas fa-users"></i>
                     </div>
-                    <div class="feature-nav-title">Community</div>
-                    <div class="feature-nav-desc">Connect with others</div>
+                    <div class="feature-nav-title">{{ __('ui.dashboard.community') }}</div>
+                    <div class="feature-nav-desc">{{ __('ui.dashboard.community_desc') }}</div>
                 </a>
             </div>
 
@@ -1591,8 +1591,8 @@
                     <div class="feature-nav-icon qa-icon-orange">
                         <i class="fas fa-history"></i>
                     </div>
-                    <div class="feature-nav-title">Adherence Logs</div>
-                    <div class="feature-nav-desc">View medication adherence history</div>
+                    <div class="feature-nav-title">{{ __('ui.dashboard.adherence_logs') }}</div>
+                    <div class="feature-nav-desc">{{ __('ui.dashboard.adherence_logs_desc') }}</div>
                 </a>
             </div>
 
@@ -1602,8 +1602,8 @@
                     <div class="feature-nav-icon qa-icon-indigo">
                         <i class="fas fa-plus-circle"></i>
                     </div>
-                    <div class="feature-nav-title">Add Medicine</div>
-                    <div class="feature-nav-desc">Add a new medicine to your list</div>
+                    <div class="feature-nav-title">{{ __('ui.dashboard.add_medicine') }}</div>
+                    <div class="feature-nav-desc">{{ __('ui.dashboard.add_medicine_desc') }}</div>
                 </a>
             </div>
 
@@ -1613,8 +1613,8 @@
                     <div class="feature-nav-icon qa-icon-cyan">
                         <i class="fas fa-calendar-day"></i>
                     </div>
-                    <div class="feature-nav-title">Schedules</div>
-                    <div class="feature-nav-desc">View and manage medicine schedules</div>
+                    <div class="feature-nav-title">{{ __('ui.dashboard.schedules') }}</div>
+                    <div class="feature-nav-desc">{{ __('ui.dashboard.schedules_desc') }}</div>
                 </a>
             </div>
 
@@ -1624,8 +1624,8 @@
                     <div class="feature-nav-icon qa-icon-teal">
                         <i class="fas fa-user-cog"></i>
                     </div>
-                    <div class="feature-nav-title">My Profile</div>
-                    <div class="feature-nav-desc">Manage your account</div>
+                    <div class="feature-nav-title">{{ __('ui.dashboard.my_profile') }}</div>
+                    <div class="feature-nav-desc">{{ __('ui.dashboard.my_profile_desc') }}</div>
                 </a>
             </div>
         </div>
@@ -1650,7 +1650,7 @@ document.addEventListener('DOMContentLoaded', function () {
         new Chart(canvas, {
             type: 'doughnut',
             data: {
-                labels: ['Taken', 'Missed'],
+                labels: ['{{ __("ui.dashboard.taken") }}', '{{ __("ui.dashboard.missed") }}'],
                 datasets: [{
                     data: [taken, missed],
                     backgroundColor: [ringColor, '#edf2f7'],
@@ -1666,7 +1666,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     tooltip: {
                         callbacks: {
                             label: function(ctx) {
-                                return ctx.label + ': ' + ctx.raw + ' doses';
+                                return ctx.label + ': ' + ctx.raw + ' {{ __("ui.dashboard.doses") }}';
                             }
                         }
                     }
@@ -1712,4 +1712,3 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endpush
-

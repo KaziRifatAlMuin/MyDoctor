@@ -14,14 +14,14 @@
                 <div class="card-body p-4 p-md-5" style="background: linear-gradient(135deg, #0b57d0 0%, #1a73e8 48%, #2b7de9 100%); color: #fff;">
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
                         <div>
-                            <p class="mb-2" style="font-size:.85rem; opacity:.92;">{{ $isAdminCommunity ? 'Admin Community' : 'Community Post' }}</p>
-                            <h1 class="mb-0" style="font-size:1.7rem; font-weight:800;">Post #{{ $post->id }}</h1>
+                            <p class="mb-2" style="font-size:.85rem; opacity:.92;">{{ $isAdminCommunity ? __('ui.community.admin_community') : __('ui.community.community_post') }}</p>
+                            <h1 class="mb-0" style="font-size:1.7rem; font-weight:800;">{{ __('ui.community.post') }} #{{ $post->id }}</h1>
                         </div>
                         <div class="d-flex gap-2">
-                            <a href="{{ url()->previous() }}" class="btn btn-outline-light" style="border-radius: 12px; font-weight:700;">Back</a>
-                            <a href="{{ $feedRoute }}" class="btn btn-light" style="border-radius: 12px; color:#0b57d0; font-weight:700;">All Posts</a>
+                            <a href="{{ url()->previous() }}" class="btn btn-outline-light" style="border-radius: 12px; font-weight:700;">{{ __('ui.community.back') }}</a>
+                            <a href="{{ $feedRoute }}" class="btn btn-light" style="border-radius: 12px; color:#0b57d0; font-weight:700;">{{ __('ui.community.all_posts') }}</a>
                             @if($isAdminCommunity)
-                                <a href="{{ $pendingRoute }}" class="btn btn-outline-light" style="border-radius: 12px; font-weight:700;">Pending Queue</a>
+                                <a href="{{ $pendingRoute }}" class="btn btn-outline-light" style="border-radius: 12px; font-weight:700;">{{ __('ui.community.pending_queue') }}</a>
                             @endif
                         </div>
                     </div>

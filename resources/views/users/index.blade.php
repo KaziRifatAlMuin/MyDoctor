@@ -17,8 +17,8 @@
                             <i class="fas fa-users"></i>
                         </div>
                         <div>
-                            <h1 style="font-size: 2.8rem; font-weight: 800; margin: 0; text-shadow: 0 2px 8px rgba(0,0,0,0.15); line-height: 1.1;">Community Members Directory</h1>
-                            <p style="font-size: 1.05rem; margin: 0.5rem 0 0; opacity: 0.95;">Explore and connect with fellow health enthusiasts</p>
+                            <h1 style="font-size: 2.8rem; font-weight: 800; margin: 0; text-shadow: 0 2px 8px rgba(0,0,0,0.15); line-height: 1.1;">{{ __('ui.members.community_members_directory') }}</h1>
+                            <p style="font-size: 1.05rem; margin: 0.5rem 0 0; opacity: 0.95;">{{ __('ui.members.explore_connect_health_enthusiasts') }}</p>
                         </div>
                     </div>
                 </div>
@@ -30,28 +30,28 @@
                     <div style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 2px 20px rgba(0,0,0,0.06); transition: all 0.3s; text-align: center; border: 1px solid rgba(0,0,0,0.05);">
                         <div style="color: #667eea; font-size: 2.2rem; margin-bottom: 0.75rem;"><i class="fas fa-users"></i></div>
                         <div style="font-size: 1.8rem; font-weight: 800; color: #2d3748; margin-bottom: 0.25rem;">{{ $totalUsers }}</div>
-                        <div style="font-size: 0.9rem; color: #718096;">Total Members</div>
+                        <div style="font-size: 0.9rem; color: #718096;">{{ __('ui.members.total_members') }}</div>
                     </div>
                 </div>
                 <div class="col-md-3 col-sm-6">
                     <div style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 2px 20px rgba(0,0,0,0.06); transition: all 0.3s; text-align: center; border: 1px solid rgba(0,0,0,0.05);">
                         <div style="color: #38a169; font-size: 2.2rem; margin-bottom: 0.75rem;"><i class="fas fa-user-check"></i></div>
                         <div style="font-size: 1.8rem; font-weight: 800; color: #2d3748; margin-bottom: 0.25rem;">{{ $memberCount }}</div>
-                        <div style="font-size: 0.9rem; color: #718096;">Active Members</div>
+                        <div style="font-size: 0.9rem; color: #718096;">{{ __('ui.members.active_members') }}</div>
                     </div>
                 </div>
                 <div class="col-md-3 col-sm-6">
                     <div style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 2px 20px rgba(0,0,0,0.06); transition: all 0.3s; text-align: center; border: 1px solid rgba(0,0,0,0.05);">
                         <div style="color: #dd6b20; font-size: 2.2rem; margin-bottom: 0.75rem;"><i class="fas fa-crown"></i></div>
                         <div style="font-size: 1.8rem; font-weight: 800; color: #2d3748; margin-bottom: 0.25rem;">{{ $adminCount }}</div>
-                        <div style="font-size: 0.9rem; color: #718096;">Community Leaders</div>
+                        <div style="font-size: 0.9rem; color: #718096;">{{ __('ui.members.community_leaders') }}</div>
                     </div>
                 </div>
                 <div class="col-md-3 col-sm-6">
                     <div style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 2px 20px rgba(0,0,0,0.06); transition: all 0.3s; text-align: center; border: 1px solid rgba(0,0,0,0.05);">
                         <div style="color: #3182ce; font-size: 2.2rem; margin-bottom: 0.75rem;"><i class="fas fa-user-plus"></i></div>
                         <div style="font-size: 1.8rem; font-weight: 800; color: #2d3748; margin-bottom: 0.25rem;">{{ $recentUsers }}</div>
-                        <div style="font-size: 0.9rem; color: #718096;">New This Week</div>
+                        <div style="font-size: 0.9rem; color: #718096;">{{ __('ui.members.new_this_week') }}</div>
                     </div>
                 </div>
             </div>
@@ -61,7 +61,7 @@
                     <div style="display:flex; justify-content:flex-end; margin-bottom: 1rem;">
                         <div style="position: relative; width: min(430px, 100%);">
                             <i class="fas fa-search" style="position: absolute; left: 0.9rem; top: 50%; transform: translateY(-50%); color: #667eea; font-size: 0.95rem;"></i>
-                            <input type="text" id="searchInput" placeholder="Search users by name..." value="{{ request('search') }}" style="width: 100%; padding: 0.72rem 0.95rem 0.72rem 2.45rem; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 0.92rem; transition: all 0.3s; box-sizing: border-box; background: #fff;">
+                            <input type="text" id="searchInput" placeholder="{{ __('ui.members.search_users_by_name') }}" value="{{ request('search') }}" style="width: 100%; padding: 0.72rem 0.95rem 0.72rem 2.45rem; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 0.92rem; transition: all 0.3s; box-sizing: border-box; background: #fff;">
                         </div>
                     </div>
 
@@ -81,7 +81,7 @@
                                         @if($user->picture)
                                             <img src="{{ asset('storage/' . $user->picture) }}" alt="{{ $user->name }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
                                         @else
-                                            <img src="{{ asset('images/default-avatar.svg') }}" alt="Default avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                                            <img src="{{ asset('images/default-avatar.svg') }}" alt="{{ __('ui.members.default_avatar') }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
                                         @endif
                                     </div>
 
@@ -96,11 +96,11 @@
                                     <div style="margin: 0.75rem 0;">
                                         @if ($user->role === 'admin')
                                             <span style="display: inline-block; background: linear-gradient(135deg, #0b57d0, #1a73e8); color: white; padding: 0.35rem 0.85rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">
-                                                <i class="fas fa-crown me-1"></i>Community Leader
+                                                <i class="fas fa-crown me-1"></i>{{ __('ui.members.community_leader') }}
                                             </span>
                                         @else
                                             <span style="display: inline-block; background: rgba(56, 161, 105, 0.1); color: #38a169; padding: 0.35rem 0.85rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">
-                                                <i class="fas fa-user me-1"></i>Member
+                                                <i class="fas fa-user me-1"></i>{{ __('ui.members.member') }}
                                             </span>
                                         @endif
                                     </div>
@@ -109,11 +109,11 @@
                                     <div style="margin: 0.75rem 0;">
                                         @if ($user->email_verified_at)
                                             <span style="display: inline-block; background: rgba(56, 161, 105, 0.1); color: #38a169; padding: 0.35rem 0.8rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">
-                                                <i class="fas fa-check-circle me-1"></i>Verified
+                                                <i class="fas fa-check-circle me-1"></i>{{ __('ui.members.verified') }}
                                             </span>
                                         @else
                                             <span style="display: inline-block; background: rgba(237, 137, 54, 0.1); color: #dd6b20; padding: 0.35rem 0.8rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">
-                                                <i class="fas fa-clock me-1"></i>Pending
+                                                <i class="fas fa-clock me-1"></i>{{ __('ui.members.pending') }}
                                             </span>
                                         @endif
                                     </div>
@@ -121,29 +121,29 @@
                                     @if ($canShowPersonalInfo)
                                         <div style="font-size: 0.82rem; color: #51617e; margin-bottom: 0.45rem;">
                                             <i class="fas fa-person me-1"></i>
-                                            {{ $user->gender ? ucfirst($user->gender) : 'Not provided' }}
+                                            {{ $user->gender ? ucfirst($user->gender) : __('ui.members.not_provided') }}
                                         </div>
 
                                         <div style="font-size: 0.82rem; color: #51617e; margin-bottom: 0.75rem;">
                                             <i class="fas fa-location-dot me-1"></i>
-                                            {{ $user->address?->display_upazila ?: 'Not set' }}, {{ $user->address?->display_district ?: 'Not set' }}
+                                            {{ $user->address?->display_upazila ?: __('ui.members.not_set') }}, {{ $user->address?->display_district ?: __('ui.members.not_set') }}
                                         </div>
                                     @endif
 
                                     {{-- Join Info --}}
                                     <div style="font-size: 0.85rem; color: #718096; margin-top: auto; padding-top: 1rem; border-top: 1px solid #e0e0e0; margin-bottom: 1rem;">
-                                        <i class="fas fa-calendar-alt me-1"></i> Joined {{ $user->created_at->format('M d, Y') }}
+                                        <i class="fas fa-calendar-alt me-1"></i> {{ __('ui.members.joined') }} {{ $user->created_at->format('M d, Y') }}
                                     </div>
 
                                     <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                                         <a href="{{ auth()->user() && auth()->user()->isAdmin() ? route('admin.users.show', $user) : route('users.show', $user) }}" style="width: 100%; display: inline-flex; justify-content: center; align-items: center; gap: 0.4rem; text-decoration: none; padding: 0.45rem 0.5rem; border-radius: 8px; border: 1px solid #d2e3fc; background: #edf3fe; color: #0b57d0; font-size: 0.86rem; font-weight: 700; height: 36px;">
                                             <i class="fas fa-user"></i>
-                                            <span style="display:inline-block; margin-left:6px;">Profile</span>
+                                            <span style="display:inline-block; margin-left:6px;">{{ __('ui.members.profile') }}</span>
                                         </a>
                                         @if (auth()->id() !== $user->id)
                                             <a href="{{ route('profile.mailbox.compose', ['to' => $user->id]) }}" style="width: 100%; display: inline-flex; justify-content: center; align-items: center; gap: 0.4rem; text-decoration: none; padding: 0.45rem 0.5rem; border-radius: 8px; border: 1px solid #0b57d0; background: #0b57d0; color: #fff; font-size: 0.86rem; font-weight: 700; height: 36px;">
                                                 <i class="fas fa-paper-plane"></i>
-                                                <span style="display:inline-block; margin-left:6px;">Send Mail</span>
+                                                <span style="display:inline-block; margin-left:6px;">{{ __('ui.members.send_mail') }}</span>
                                             </a>
                                         @endif
                                     </div>
@@ -160,11 +160,11 @@
                             {{-- Previous --}}
                             @if ($users->onFirstPage())
                                 <span style="padding: 0.75rem 1rem; border-radius: 8px; color: #cbd5e0; cursor: not-allowed; background: #f7fafc;">
-                                    <i class="fas fa-chevron-left me-1"></i> Previous
+                                    <i class="fas fa-chevron-left me-1"></i> {{ __('ui.members.previous') }}
                                 </span>
                             @else
                                 <a href="{{ $users->appends(request()->query())->previousPageUrl() }}" style="padding: 0.75rem 1rem; border-radius: 8px; color: #667eea; font-weight: 600; background: rgba(102,126,234,0.1); text-decoration: none; transition: all 0.3s;">
-                                    <i class="fas fa-chevron-left me-1"></i> Previous
+                                    <i class="fas fa-chevron-left me-1"></i> {{ __('ui.members.previous') }}
                                 </a>
                             @endif
 
@@ -189,26 +189,26 @@
                             {{-- Next --}}
                             @if ($users->hasMorePages())
                                 <a href="{{ $users->appends(request()->query())->nextPageUrl() }}" style="padding: 0.75rem 1rem; border-radius: 8px; color: #667eea; font-weight: 600; background: rgba(102,126,234,0.1); text-decoration: none; transition: all 0.3s;">
-                                    Next <i class="fas fa-chevron-right ms-1"></i>
+                                    {{ __('ui.members.next') }} <i class="fas fa-chevron-right ms-1"></i>
                                 </a>
                             @else
                                 <span style="padding: 0.75rem 1rem; border-radius: 8px; color: #cbd5e0; cursor: not-allowed; background: #f7fafc;">
-                                    Next <i class="fas fa-chevron-right ms-1"></i>
+                                    {{ __('ui.members.next') }} <i class="fas fa-chevron-right ms-1"></i>
                                 </span>
                             @endif
                                 </nav>
                             </div>
                             <div style="text-align: center; margin-top: 1.5rem; color: #718096; font-size: 0.9rem;">
-                                Showing {{ $users->firstItem() }} to {{ $users->lastItem() }} of {{ $users->total() }} members
+                                {{ __('ui.members.showing') }} {{ $users->firstItem() }} {{ __('ui.members.to') }} {{ $users->lastItem() }} {{ __('ui.members.of') }} {{ $users->total() }} {{ __('ui.members.members') }}
                             </div>
                         @endif
                     @else
                         <div style="text-align: center; padding: 4rem 2rem; background: white; border-radius: 16px;">
                             <i class="fas fa-users" style="font-size: 3rem; color: #cbd5e0; margin-bottom: 1rem; display: block;"></i>
-                            <h4 style="color: #718096; margin-bottom: 0.5rem;">No members found</h4>
-                            <p style="color: #a0aec0; margin-bottom: 1.5rem;">Try adjusting your search criteria</p>
+                            <h4 style="color: #718096; margin-bottom: 0.5rem;">{{ __('ui.members.no_members_found') }}</h4>
+                            <p style="color: #a0aec0; margin-bottom: 1.5rem;">{{ __('ui.members.try_adjusting_search') }}</p>
                             <button onclick="clearFilters()" style="padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">
-                                <i class="fas fa-redo me-1"></i> Clear Filters
+                                <i class="fas fa-redo me-1"></i> {{ __('ui.members.clear_filters') }}
                             </button>
                         </div>
                     @endif

@@ -97,7 +97,63 @@
         html[lang^='bn'] .bn-label {
             display: inline !important;
         }
+/* Add to your existing styles in app.blade.php */
 
+/* Ensure all avatars are perfect circles */
+.user-avatar,
+.user-avatar img,
+.user-avatar div,
+.comment-avatar,
+.comment-avatar img,
+.comment-avatar div,
+.trigger-avatar,
+.trigger-avatar img,
+.trigger-avatar div,
+.modal-avatar,
+.modal-avatar img,
+.modal-avatar div,
+.user-circle,
+.user-circle img,
+.user-circle span {
+    border-radius: 50% !important;
+}
+
+/* Ensure comment avatars are properly sized */
+.comment-avatar {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    border-radius: 50% !important;
+    overflow: hidden !important;
+    flex-shrink: 0 !important;
+}
+
+.comment-avatar img,
+.comment-avatar .avatar-placeholder-small {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    border-radius: 50% !important;
+}
+
+/* User avatar in post cards */
+.user-avatar {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    min-height: 48px !important;
+    border-radius: 50% !important;
+    overflow: hidden !important;
+}
+
+.user-avatar img,
+.user-avatar .avatar-placeholder {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    border-radius: 50% !important;
+}
         /* Banner Styles */
         .banner {
             position: relative;
@@ -2669,8 +2725,6 @@
                     <ul class="footer-bottom-links">
                         <li><a href="{{ route('privacy.policy') }}">Privacy Policy</a></li>
                         <li><a href="{{ route('terms.service') }}">Terms of Service</a></li>
-                        <li><a href="{{ route('cookie.policy') }}">Cookie Policy</a></li>
-                        <li><a href="{{ route('sitemap') }}">Sitemap</a></li>
                     </ul>
                 </div>
             </div>
@@ -2723,50 +2777,69 @@
             return window.location.pathname.startsWith('/admin/community') ? '/admin/community' : '/community';
         };
 
-        window.openPostModal = function(postId) {
-            const modalBody = document.getElementById('postModalBody');
-            if (!modalBody) {
-                console.error('Post modal body not found');
-                return;
+
+
+window.openPostModal = function(postId, scrollToComments = false) {
+    const modalBody = document.getElementById('postModalBody');
+    if (!modalBody) {
+        console.error('Post modal body not found');
+        return;
+    }
+    
+    modalBody.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-3 text-muted">Loading post...</p></div>';
+    
+    // Show modal
+    const postModalEl = document.getElementById('postModal');
+    if (!postModalEl) {
+        console.error('Post modal element not found');
+        return;
+    }
+    
+    const postModal = new bootstrap.Modal(postModalEl);
+    postModal.show();
+    
+    // Store that we need to scroll to comments
+    window.scrollToCommentsInModal = scrollToComments || (window.scrollToCommentsPostId === postId);
+    if (window.scrollToCommentsInModal) {
+        delete window.scrollToCommentsPostId;
+    }
+    
+    // Fetch the post HTML
+    fetch(`${window.getCommunityBasePath()}/modal-post/${postId}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Post is deleted or cannot be loaded');
+            }
+            return response.text();
+        })
+        .then(html => {
+            modalBody.innerHTML = html;
+            
+            // Make sure comments section is visible
+            const commentsSection = document.getElementById(`comments-section-${postId}`);
+            if (commentsSection) {
+                commentsSection.style.display = 'block';
             }
             
-            modalBody.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-3 text-muted">Loading post...</p></div>';
-            
-            // Show modal
-            const postModalEl = document.getElementById('postModal');
-            if (!postModalEl) {
-                console.error('Post modal element not found');
-                return;
+            // Scroll to comments if requested
+            if (window.scrollToCommentsInModal) {
+                setTimeout(() => {
+                    const commentsContainer = document.getElementById(`comments-container-${postId}`);
+                    if (commentsContainer) {
+                        commentsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                    window.scrollToCommentsInModal = false;
+                }, 500);
             }
             
-            const postModal = new bootstrap.Modal(postModalEl);
-            postModal.show();
-            
-            // Fetch the post HTML
-            fetch(`${window.getCommunityBasePath()}/modal-post/${postId}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Post is deleted or cannot be loaded');
-                    }
-                    return response.text();
-                })
-                .then(html => {
-                    modalBody.innerHTML = html;
-                    
-                    // Make sure comments section is visible
-                    const commentsSection = document.getElementById(`comments-section-${postId}`);
-                    if (commentsSection) {
-                        commentsSection.style.display = 'block';
-                    }
-                    
-                    // Initialize modal interactions
-                    setupModalInteractions(postId);
-                })
-                .catch(error => {
-                    console.error('Error loading post:', error);
-                    modalBody.innerHTML = '<div class="alert alert-danger m-3">Post is deleted or cannot load</div>';
-                });
-        };
+            // Initialize modal interactions
+            setupModalInteractions(postId);
+        })
+        .catch(error => {
+            console.error('Error loading post:', error);
+            modalBody.innerHTML = '<div class="alert alert-danger m-3">Post is deleted or cannot load</div>';
+        });
+};
 
         window.setupModalInteractions = function(postId) {
             // Auto-resize textareas in modal

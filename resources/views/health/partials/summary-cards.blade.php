@@ -8,9 +8,9 @@
                 <i class="fas fa-chart-line"></i>
             </div>
             <div>
-                <div class="stat-summary-label">Metrics</div>
+                <div class="stat-summary-label">{{ __('ui.health.total_metrics') }}</div>
                 <div class="stat-summary-value">{{ $healthMetrics->count() }}</div>
-                <div class="stat-summary-sub">recorded</div>
+                <div class="stat-summary-sub">{{ __('ui.health.recorded') }}</div>
             </div>
         </div>
     </div>
@@ -22,9 +22,9 @@
                 <i class="fas fa-layer-group"></i>
             </div>
             <div>
-                <div class="stat-summary-label">Types</div>
+                <div class="stat-summary-label">{{ __('ui.health.metric_types') }}</div>
                 <div class="stat-summary-value">{{ $metricsByType->count() }}</div>
-                <div class="stat-summary-sub">tracked</div>
+                <div class="stat-summary-sub">{{ __('ui.health.tracked') }}</div>
             </div>
         </div>
     </div>
@@ -36,9 +36,9 @@
                 <i class="fas fa-notes-medical"></i>
             </div>
             <div>
-                <div class="stat-summary-label">Symptoms</div>
+                <div class="stat-summary-label">{{ __('ui.health.total_symptoms') }}</div>
                 <div class="stat-summary-value">{{ $symptoms->count() }}</div>
-                <div class="stat-summary-sub">logged</div>
+                <div class="stat-summary-sub">{{ __('ui.health.logged') }}</div>
             </div>
         </div>
     </div>
@@ -50,9 +50,9 @@
                 <i class="fas fa-pills"></i>
             </div>
             <div>
-                <div class="stat-summary-label">Medicines</div>
+                <div class="stat-summary-label">{{ __('ui.health.total_medicines') }}</div>
                 <div class="stat-summary-value">{{ $medicines->count() }}</div>
-                <div class="stat-summary-sub">prescribed</div>
+                <div class="stat-summary-sub">{{ __('ui.health.prescribed') }}</div>
             </div>
         </div>
     </div>
@@ -60,14 +60,13 @@
     {{-- Adherence Rate --}}
     <div class="col-6 col-md-4 col-lg-2">
         <div class="stat-summary-card">
-            <div
-                class="stat-summary-icon {{ $adherenceRate >= 80 ? 'green' : ($adherenceRate >= 50 ? 'orange' : 'red') }}">
+            <div class="stat-summary-icon {{ $adherenceRate >= 80 ? 'green' : ($adherenceRate >= 50 ? 'orange' : 'red') }}">
                 <i class="fas fa-check-double"></i>
             </div>
             <div>
-                <div class="stat-summary-label">Adherence</div>
+                <div class="stat-summary-label">{{ __('ui.health.adherence_rate') }}</div>
                 <div class="stat-summary-value">{{ $adherenceRate }}%</div>
-                <div class="stat-summary-sub">30-day</div>
+                <div class="stat-summary-sub">{{ __('ui.health.days_30') }}</div>
             </div>
         </div>
     </div>
@@ -79,9 +78,9 @@
                 <i class="fas fa-capsules"></i>
             </div>
             <div>
-                <div class="stat-summary-label">Taken</div>
+                <div class="stat-summary-label">{{ __('ui.health.total_taken') }}</div>
                 <div class="stat-summary-value">{{ $totalTaken }}</div>
-                <div class="stat-summary-sub">doses</div>
+                <div class="stat-summary-sub">{{ __('ui.health.doses') }}</div>
             </div>
         </div>
     </div>

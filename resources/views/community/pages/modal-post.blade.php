@@ -6,7 +6,7 @@
     $adminReadOnlyCommunity = $adminReadOnlyCommunity ?? false;
     $isAdminReadOnly = $isAdmin && $adminReadOnlyCommunity;
     $isAnonymous = (bool) $post->is_anonymous;
-    $displayName = $isAnonymous ? 'Anonymous Member' : $post->user->name;
+    $displayName = $isAnonymous ? __('ui.community.anonymous_member') : $post->user->name;   
     $userLiked = $isAuthenticated ? $post->likes()->where('user_id', Auth::id())->exists() : false;
     $userStarred = $isAuthenticated
         ? $post->likes()->where('user_id', Auth::id())->where('is_starred', true)->exists()
@@ -37,7 +37,7 @@
                             <span><i class="far fa-clock me-1"></i>{{ $post->created_at->diffForHumans() }}</span>
                         @endif
                         @if($post->is_edited)
-                            <span style="font-size:11px; font-weight:600; color:#65676b; background:#f0f2f5; border-radius:12px; padding:4px 8px;">Edited</span>
+                            <span style="font-size:11px; font-weight:600; color:#65676b; background:#f0f2f5; border-radius:12px; padding:4px 8px;">{{ __('ui.community.edited') }}</span>
                         @endif
                         @if($post->disease)
                             <a href="{{ route('public.disease.show', $post->disease) }}" style="background: #e7f3ff; color: #1877f2; padding: 4px 12px; border-radius: 4px; font-weight: 500; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; text-decoration: none;">
@@ -48,26 +48,51 @@
                 </div>
             </div>
             
-            <!-- Edit and Delete Icons -->
+            <!-- Action Buttons - Star, Report, Edit, Delete, Approve -->
             @auth
                 <div style="display: flex; gap: 8px;">
+                    <!-- Star Button -->
+                    @if(! $isAdminReadOnly && !$isAdmin)
+                        <button onclick="toggleStar({{ $post->id }}, this)" 
+                                id="star-btn-{{ $post->id }}" 
+                                style="width: 34px; height: 34px; border: none; border-radius: 50%; background: #f0f2f5; color: {{ $userStarred ? '#f7b500' : '#65676b' }}; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" 
+                                title="{{ $userStarred ? __('ui.community.unstar') : __('ui.community.star') }}">
+                            <i class="{{ $userStarred ? 'fas' : 'far' }} fa-star" style="color: {{ $userStarred ? '#f7b500' : 'inherit' }};"></i>
+                        </button>
+                    @endif
+                    
+                    <!-- Report Button -->
                     @if(! $isAdminReadOnly)
-                        <button onclick="reportPost({{ $post->id }})" style="width: 34px; height: 34px; border: none; border-radius: 50%; background: #f0f2f5; color: #dc3545; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" title="{{ $post->is_reported ? 'Reported' : 'Report Post' }}">
+                        <button onclick="reportPost({{ $post->id }})" 
+                                style="width: 34px; height: 34px; border: none; border-radius: 50%; background: #f0f2f5; color: #dc3545; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" 
+                                title="{{ __('ui.community.report_post') }}">
                             <i class="fas fa-flag"></i>
                         </button>
                     @endif
+                    
+                    <!-- Approve Button (Admin only for unapproved posts) -->
                     @if($isAdmin && !$post->is_approved)
-                        <button onclick="approvePost({{ $post->id }})" style="width: 34px; height: 34px; border: none; border-radius: 50%; background: #f0f2f5; color: #198754; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" title="Approve Post">
+                        <button onclick="approvePost({{ $post->id }})" 
+                                style="width: 34px; height: 34px; border: none; border-radius: 50%; background: #f0f2f5; color: #198754; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" 
+                                title="{{ __('ui.community.approve_post') }}">
                             <i class="fas fa-check-circle"></i>
                         </button>
                     @endif
+                    
+                    <!-- Edit Button (Owner only) -->
                     @if($isOwner && ! $isAdminReadOnly)
-                        <button onclick="editPost({{ $post->id }})" style="width: 34px; height: 34px; border: none; border-radius: 50%; background: #f0f2f5; color: #1877f2; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" title="Edit Post">
+                        <button onclick="editPost({{ $post->id }})" 
+                                style="width: 34px; height: 34px; border: none; border-radius: 50%; background: #f0f2f5; color: #1877f2; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" 
+                                title="{{ __('ui.community.edit_post') }}">
                             <i class="fas fa-edit"></i>
                         </button>
                     @endif
+                    
+                    <!-- Delete Button (Owner or Admin) -->
                     @if($isOwner || $isAdmin)
-                        <button onclick="confirmDelete({{ $post->id }}, 'post')" style="width: 34px; height: 34px; border: none; border-radius: 50%; background: #f0f2f5; color: #dc3545; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" title="Delete Post">
+                        <button onclick="confirmDelete({{ $post->id }}, 'post')" 
+                                style="width: 34px; height: 34px; border: none; border-radius: 50%; background: #f0f2f5; color: #dc3545; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" 
+                                title="{{ __('ui.community.delete_post') }}">
                             <i class="fas fa-trash"></i>
                         </button>
                     @endif
@@ -193,9 +218,6 @@
                         <i class="{{ $userLiked ? 'fas' : 'far' }} fa-heart" style="{{ $userLiked ? 'color: #dc3545;' : '' }}"></i>
                         <span class="like-count">{{ $post->like_count }}</span>
                     </button>
-                    <button onclick="toggleStar({{ $post->id }}, this)" id="star-btn-{{ $post->id }}" style="flex: 0 0 auto; min-width: 48px; padding: 10px; border: none; border-radius: 6px; background: #f0f2f5; color: #1a1a1a; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;" class="{{ $userStarred ? 'starred' : '' }}" title="{{ $userStarred ? 'Remove star' : 'Star this post' }}">
-                        <i class="{{ $userStarred ? 'fas text-warning' : 'far' }} fa-star"></i>
-                    </button>
                 @else
                     <div style="flex: 1; padding: 10px; border: none; border-radius: 6px; background: #f8f6ff; color: #4b5563; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;">
                         <i class="far fa-heart"></i>
@@ -222,15 +244,25 @@
                 @empty
                     <div style="text-align: center; padding: 20px; color: #65676b;">
                         <i class="fas fa-comment-slash fa-2x mb-2"></i>
-                        <p>No comments yet. Be the first!</p>
+                        <p>{{ __('ui.community.no_comments_yet') }}</p>
                     </div>
                 @endforelse
             </div>
+            
+            @if($post->comment_count > $post->comments->count())
+            <button class="load-more-comments-modal" 
+                    id="modal-load-more-{{ $post->id }}" 
+                    data-offset="{{ $post->comments->count() }}" 
+                    onclick="loadMoreModalComments({{ $post->id }})" 
+                    style="width:100%; padding:8px; background:none; border:1px solid #e4e6eb; border-radius:6px; color:#1877f2; font-size:13px; cursor:pointer; margin-top: 12px;">
+                <i class="fas fa-chevron-down me-1"></i> {{ __('ui.community.load_more_comments') }} ({{ $post->comment_count - $post->comments->count() }})
+            </button>
+            @endif
         </div>
 
     </div>
 
-    <!-- Sticky Comment Form at Bottom - USING MODAL-SPECIFIC IDs -->
+    <!-- Sticky Comment Form at Bottom -->
     @auth
         @if(! $isAdminReadOnly)
         <div style="border-top: 1px solid #e4e6eb; padding: 12px 16px; background: white; flex-shrink: 0;">
@@ -246,7 +278,7 @@
                     </div>
                     
                     <div style="flex: 1;">
-                        <!-- File Preview Container - MODAL SPECIFIC IDs -->
+                        <!-- File Preview Container -->
                         <div id="modal-comment-file-preview-{{ $post->id }}" class="comment-file-preview" style="display: none; margin-bottom: 8px;">
                             <div style="display: flex; align-items: center; justify-content: space-between; background: #f0f2f5; padding: 8px 12px; border-radius: 8px;">
                                 <div id="modal-comment-file-preview-content-{{ $post->id }}" class="file-preview-content" style="display: flex; align-items: center; gap: 8px; flex: 1;"></div>
@@ -256,11 +288,11 @@
                             </div>
                         </div>
                         
-                        <!-- Input Area - MODAL SPECIFIC IDs -->
+                        <!-- Input Area -->
                         <div style="display: flex; gap: 6px; background: #f0f2f5; border-radius: 20px; padding: 4px 4px 4px 12px; align-items: center;">
                             <textarea 
                                 id="modal-comment-input-{{ $post->id }}"
-                                placeholder="Write a comment..." 
+                                placeholder="{{ __('ui.community.write_comment') }}" 
                                 rows="1" 
                                 name="comment_details"
                                 style="flex: 1; border: none; background: transparent; padding: 8px 0; font-size: 13px; resize: none; outline: none; min-height: 32px; max-height: 80px; font-family: inherit; line-height: 1.4;"
@@ -295,7 +327,7 @@
 </div>
 
 <style>
-/* ==================== BASE STYLES ==================== */
+/* Base Styles */
 .modal-post-container {
     background: white;
     color: #1a1a1a;
@@ -329,14 +361,14 @@
     text-decoration: underline;
 }
 
-/* ==================== POST CONTENT ==================== */
+/* Post Content */
 .modal-post-container p {
     line-height: 1.5;
     font-size: 15px;
     color: #1a1a1a;
 }
 
-/* ==================== LIKE BUTTON ==================== */
+/* Like Button */
 button.liked {
     background: #fee !important;
     color: #dc3545 !important;
@@ -346,7 +378,17 @@ button.liked i {
     color: #dc3545 !important;
 }
 
-/* ==================== FILE PREVIEW ==================== */
+/* Star Button */
+button.starred {
+    background: #fff8e7 !important;
+    color: #f7b500 !important;
+}
+
+button.starred i {
+    color: #f7b500 !important;
+}
+
+/* File Preview */
 .comment-file-preview {
     display: none;
     margin-bottom: 8px;
@@ -379,9 +421,12 @@ button.liked i {
     color: #1877f2;
 }
 
-/* ==================== EDIT/DELETE BUTTONS ==================== */
+/* Edit/Delete Buttons */
 button[onclick*="editPost"]:hover,
-button[onclick*="confirmDelete"]:hover {
+button[onclick*="confirmDelete"]:hover,
+button[onclick*="reportPost"]:hover,
+button[onclick*="toggleStar"]:hover,
+button[onclick*="approvePost"]:hover {
     transform: scale(1.1);
 }
 
@@ -389,11 +434,20 @@ button[onclick*="editPost"]:hover {
     background: #e7f3ff !important;
 }
 
-button[onclick*="confirmDelete"]:hover {
+button[onclick*="confirmDelete"]:hover,
+button[onclick*="reportPost"]:hover {
     background: #fee !important;
 }
 
-/* ==================== COMMENTS ==================== */
+button[onclick*="toggleStar"]:hover {
+    background: #fff8e7 !important;
+}
+
+button[onclick*="approvePost"]:hover {
+    background: #e8f5e9 !important;
+}
+
+/* Comments */
 .modal-post-container .comment {
     display: flex;
     gap: 10px;
@@ -439,7 +493,17 @@ button[onclick*="confirmDelete"]:hover {
     overflow-wrap: break-word;
 }
 
-/* ==================== SPINNER ==================== */
+/* Load More Button */
+.load-more-comments-modal {
+    transition: all 0.2s ease;
+}
+
+.load-more-comments-modal:hover {
+    background: #e7f3ff;
+    border-color: #1877f2;
+}
+
+/* Spinner */
 .spinner-small {
     display: inline-block;
     width: 16px;
@@ -454,5 +518,3 @@ button[onclick*="confirmDelete"]:hover {
     to { transform: rotate(360deg); }
 }
 </style>
-
-<!-- NO JAVASCRIPT HERE - All functions are in app.blade.php -->

@@ -1,7 +1,6 @@
-{{-- resources/views/medicine/add.blade.php --}}
 @extends('layouts.app')
 
-@section('title', 'Add Medicine')
+@section('title', __('ui.medicine.add_medicine_title'))
 
 @section('content')
 <div class="container-fluid py-4">
@@ -9,15 +8,15 @@
         <div class="col-12">
             <nav aria-label="breadcrumb" class="mb-4">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('medicine.index') }}" class="text-decoration-none">Medicine</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('medicine.my-medicines') }}" class="text-decoration-none">My Medicines</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Add New Medicine</li>
+                    <li class="breadcrumb-item"><a href="{{ route('medicine.index') }}" class="text-decoration-none">{{ __('ui.medicine.medicine') }}</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('medicine.my-medicines') }}" class="text-decoration-none">{{ __('ui.medicine.my_medicines') }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ __('ui.medicine.add_new_medicine') }}</li>
                 </ol>
             </nav>
 
             <div class="card border-0 shadow-lg">
                 <div class="card-header bg-primary text-white py-3">
-                    <h4 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Add New Medicine</h4>
+                    <h4 class="mb-0"><i class="fas fa-plus-circle me-2"></i>{{ __('ui.medicine.add_new_medicine') }}</h4>
                 </div>
                 
                 <div class="card-body p-4">
@@ -26,14 +25,14 @@
                         
                         <div class="mb-4">
                             <label for="medicine_name" class="form-label fw-bold">
-                                <i class="fas fa-capsules me-2 text-primary"></i>Medicine Name
+                                <i class="fas fa-capsules me-2 text-primary"></i>{{ __('ui.medicine.medicine_name_label') }}
                             </label>
                             <input type="text" 
                                    class="form-control form-control-lg @error('medicine_name') is-invalid @enderror" 
                                    id="medicine_name" 
                                    name="medicine_name" 
                                    value="{{ old('medicine_name') }}" 
-                                   placeholder="e.g., Napa Extra, Metformin, etc."
+                                   placeholder="{{ __('ui.medicine.medicine_name_placeholder') }}"
                                    required>
                             @error('medicine_name')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -43,19 +42,19 @@
                         <div class="row">
                             <div class="col-md-6 mb-4">
                                 <label for="type" class="form-label fw-bold">
-                                    <i class="fas fa-tag me-2 text-primary"></i>Medicine Type
+                                    <i class="fas fa-tag me-2 text-primary"></i>{{ __('ui.medicine.medicine_type_label') }}
                                 </label>
                                 <select class="form-select form-select-lg @error('type') is-invalid @enderror" 
                                         id="type" name="type">
-                                    <option value="">Select Type (Optional)</option>
-                                    <option value="tablet" {{ old('type') == 'tablet' ? 'selected' : '' }}>Tablet</option>
-                                    <option value="capsule" {{ old('type') == 'capsule' ? 'selected' : '' }}>Capsule</option>
-                                    <option value="syrup" {{ old('type') == 'syrup' ? 'selected' : '' }}>Syrup</option>
-                                    <option value="injection" {{ old('type') == 'injection' ? 'selected' : '' }}>Injection</option>
-                                    <option value="drops" {{ old('type') == 'drops' ? 'selected' : '' }}>Drops</option>
-                                    <option value="cream" {{ old('type') == 'cream' ? 'selected' : '' }}>Cream</option>
-                                    <option value="inhaler" {{ old('type') == 'inhaler' ? 'selected' : '' }}>Inhaler</option>
-                                    <option value="other" {{ old('type') == 'other' ? 'selected' : '' }}>Other</option>
+                                    <option value="">{{ __('ui.medicine.select_type_optional') }}</option>
+                                    <option value="tablet" {{ old('type') == 'tablet' ? 'selected' : '' }}>{{ __('ui.medicine.tablet') }}</option>
+                                    <option value="capsule" {{ old('type') == 'capsule' ? 'selected' : '' }}>{{ __('ui.medicine.capsule') }}</option>
+                                    <option value="syrup" {{ old('type') == 'syrup' ? 'selected' : '' }}>{{ __('ui.medicine.syrup') }}</option>
+                                    <option value="injection" {{ old('type') == 'injection' ? 'selected' : '' }}>{{ __('ui.medicine.injection') }}</option>
+                                    <option value="drops" {{ old('type') == 'drops' ? 'selected' : '' }}>{{ __('ui.medicine.drops') }}</option>
+                                    <option value="cream" {{ old('type') == 'cream' ? 'selected' : '' }}>{{ __('ui.medicine.cream') }}</option>
+                                    <option value="inhaler" {{ old('type') == 'inhaler' ? 'selected' : '' }}>{{ __('ui.medicine.inhaler') }}</option>
+                                    <option value="other" {{ old('type') == 'other' ? 'selected' : '' }}>{{ __('ui.medicine.other') }}</option>
                                 </select>
                                 @error('type')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -64,16 +63,16 @@
 
                             <div class="col-md-6 mb-4">
                                 <label for="rule" class="form-label fw-bold">
-                                    <i class="fas fa-clock me-2 text-primary"></i>When to Take
+                                    <i class="fas fa-clock me-2 text-primary"></i>{{ __('ui.medicine.when_to_take_label') }}
                                 </label>
                                 <select class="form-select form-select-lg @error('rule') is-invalid @enderror" 
                                         id="rule" name="rule">
-                                    <option value="">Select Rule (Optional)</option>
-                                    <option value="before_food" {{ old('rule') == 'before_food' ? 'selected' : '' }}>Before Food</option>
-                                    <option value="after_food" {{ old('rule') == 'after_food' ? 'selected' : '' }}>After Food</option>
-                                    <option value="with_food" {{ old('rule') == 'with_food' ? 'selected' : '' }}>With Food</option>
-                                    <option value="before_sleep" {{ old('rule') == 'before_sleep' ? 'selected' : '' }}>Before Sleep</option>
-                                    <option value="anytime" {{ old('rule') == 'anytime' ? 'selected' : '' }}>Anytime</option>
+                                    <option value="">{{ __('ui.medicine.select_rule_optional') }}</option>
+                                    <option value="before_food" {{ old('rule') == 'before_food' ? 'selected' : '' }}>{{ __('ui.medicine.before_food') }}</option>
+                                    <option value="after_food" {{ old('rule') == 'after_food' ? 'selected' : '' }}>{{ __('ui.medicine.after_food') }}</option>
+                                    <option value="with_food" {{ old('rule') == 'with_food' ? 'selected' : '' }}>{{ __('ui.medicine.with_food') }}</option>
+                                    <option value="before_sleep" {{ old('rule') == 'before_sleep' ? 'selected' : '' }}>{{ __('ui.medicine.before_sleep') }}</option>
+                                    <option value="anytime" {{ old('rule') == 'anytime' ? 'selected' : '' }}>{{ __('ui.medicine.anytime') }}</option>
                                 </select>
                                 @error('rule')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -84,13 +83,13 @@
                         <div class="row">
                             <div class="col-md-4 mb-4">
                                 <label for="value_per_dose" class="form-label fw-bold">
-                                    <i class="fas fa-weight me-2 text-primary"></i>Value Per Dose
+                                    <i class="fas fa-weight me-2 text-primary"></i>{{ __('ui.medicine.value_per_dose_label') }}
                                 </label>
                                 <input type="number" step="0.01" min="0" 
                                        class="form-control form-control-lg @error('value_per_dose') is-invalid @enderror" 
                                        id="value_per_dose" name="value_per_dose" 
                                        value="{{ old('value_per_dose') }}" 
-                                       placeholder="e.g., 500">
+                                       placeholder="{{ __('ui.medicine.value_per_dose_placeholder') }}">
                                 @error('value_per_dose')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -98,20 +97,20 @@
 
                             <div class="col-md-4 mb-4">
                                 <label for="unit" class="form-label fw-bold">
-                                    <i class="fas fa-flask me-2 text-primary"></i>Unit
+                                    <i class="fas fa-flask me-2 text-primary"></i>{{ __('ui.medicine.unit_label') }}
                                 </label>
                                 <select class="form-select form-select-lg @error('unit') is-invalid @enderror" 
                                         id="unit" name="unit">
-                                    <option value="">Select Unit (Optional)</option>
-                                    <option value="mg" {{ old('unit') == 'mg' ? 'selected' : '' }}>mg (Milligram)</option>
-                                    <option value="ml" {{ old('unit') == 'ml' ? 'selected' : '' }}>ml (Milliliter)</option>
-                                    <option value="mcg" {{ old('unit') == 'mcg' ? 'selected' : '' }}>mcg (Microgram)</option>
-                                    <option value="g" {{ old('unit') == 'g' ? 'selected' : '' }}>g (Gram)</option>
-                                    <option value="IU" {{ old('unit') == 'IU' ? 'selected' : '' }}>IU (International Unit)</option>
-                                    <option value="tablet" {{ old('unit') == 'tablet' ? 'selected' : '' }}>Tablet(s)</option>
-                                    <option value="capsule" {{ old('unit') == 'capsule' ? 'selected' : '' }}>Capsule(s)</option>
-                                    <option value="drop" {{ old('unit') == 'drop' ? 'selected' : '' }}>Drop(s)</option>
-                                    <option value="puff" {{ old('unit') == 'puff' ? 'selected' : '' }}>Puff(s)</option>
+                                    <option value="">{{ __('ui.medicine.select_unit_optional') }}</option>
+                                    <option value="mg" {{ old('unit') == 'mg' ? 'selected' : '' }}>{{ __('ui.medicine.unit_mg') }}</option>
+                                    <option value="ml" {{ old('unit') == 'ml' ? 'selected' : '' }}>{{ __('ui.medicine.unit_ml') }}</option>
+                                    <option value="mcg" {{ old('unit') == 'mcg' ? 'selected' : '' }}>{{ __('ui.medicine.unit_mcg') }}</option>
+                                    <option value="g" {{ old('unit') == 'g' ? 'selected' : '' }}>{{ __('ui.medicine.unit_g') }}</option>
+                                    <option value="IU" {{ old('unit') == 'IU' ? 'selected' : '' }}>{{ __('ui.medicine.unit_iu') }}</option>
+                                    <option value="tablet" {{ old('unit') == 'tablet' ? 'selected' : '' }}>{{ __('ui.medicine.unit_tablet') }}</option>
+                                    <option value="capsule" {{ old('unit') == 'capsule' ? 'selected' : '' }}>{{ __('ui.medicine.unit_capsule') }}</option>
+                                    <option value="drop" {{ old('unit') == 'drop' ? 'selected' : '' }}>{{ __('ui.medicine.unit_drop') }}</option>
+                                    <option value="puff" {{ old('unit') == 'puff' ? 'selected' : '' }}>{{ __('ui.medicine.unit_puff') }}</option>
                                 </select>
                                 @error('unit')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -120,12 +119,12 @@
 
                             <div class="col-md-4 mb-4">
                                 <label for="dose_limit" class="form-label fw-bold">
-                                    <i class="fas fa-ban me-2 text-primary"></i>Daily Dose Limit
+                                    <i class="fas fa-ban me-2 text-primary"></i>{{ __('ui.medicine.daily_dose_limit_label') }}
                                 </label>
                                 <input type="number" class="form-control form-control-lg @error('dose_limit') is-invalid @enderror" 
                                     id="dose_limit" name="dose_limit" value="{{ old('dose_limit') }}" 
-                                    placeholder="Optional - max per day" min="1">
-                                <small class="text-muted">Leave empty for no limit</small>
+                                    placeholder="{{ __('ui.medicine.daily_dose_limit_placeholder') }}" min="1">
+                                <small class="text-muted">{{ __('ui.medicine.daily_dose_limit_hint') }}</small>
                                 @error('dose_limit')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -136,18 +135,18 @@
                             <div class="d-flex">
                                 <i class="fas fa-info-circle fa-2x text-info me-3"></i>
                                 <div>
-                                    <h6 class="fw-bold mb-1">Next Steps</h6>
-                                    <p class="mb-0 small">After adding the medicine, you can set up a schedule with reminder times. This will help you never miss a dose!</p>
+                                    <h6 class="fw-bold mb-1">{{ __('ui.medicine.next_steps_title') }}</h6>
+                                    <p class="mb-0 small">{{ __('ui.medicine.next_steps_message') }}</p>
                                 </div>
                             </div>
                         </div>
 
                         <div class="d-flex gap-3">
                             <a href="{{ route('medicine.my-medicines') }}" class="btn btn-outline-secondary btn-lg flex-grow-1">
-                                <i class="fas fa-times me-2"></i>Cancel
+                                <i class="fas fa-times me-2"></i>{{ __('ui.medicine.cancel') }}
                             </a>
                             <button type="submit" class="btn btn-primary btn-lg flex-grow-1">
-                                <i class="fas fa-save me-2"></i>Save Medicine
+                                <i class="fas fa-save me-2"></i>{{ __('ui.medicine.save_medicine') }}
                             </button>
                         </div>
                     </form>

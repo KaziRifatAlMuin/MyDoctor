@@ -4,11 +4,11 @@
         $isAdminReadOnly = Auth::check() && Auth::user()->isAdmin() && $adminReadOnlyCommunity;
         $isAdminManager = Auth::check() && Auth::user()->isAdmin();
     @endphp
-    <div class="comment-avatar" onclick="showUserModal({{ $comment->user->id }})" style="cursor: pointer;flex-shrink:0;">
+    <div class="comment-avatar" onclick="showUserModal({{ $comment->user->id }})" style="cursor: pointer; flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%; overflow: hidden;">
         @if($comment->user->picture)
-            <img src="{{ asset('storage/' . $comment->user->picture) }}" alt="{{ $comment->user->name }}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #e4e6eb;">
+            <img src="{{ asset('storage/' . $comment->user->picture) }}" alt="{{ $comment->user->name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
         @else
-            <div class="avatar-placeholder-small" style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:16px;">
+            <div class="avatar-placeholder-small" style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 16px;">
                 {{ strtoupper(substr($comment->user->name, 0, 1)) }}
             </div>
         @endif
@@ -21,10 +21,10 @@
             @auth
                 @if((Auth::id() === $comment->user_id || $isAdminManager) && ! $isAdminReadOnly)
                     <div class="comment-actions" style="display: flex; gap: 4px; margin-left: auto;">
-                        <button class="comment-action-btn" onclick="editComment({{ $comment->id }})" title="Edit" style="background: none; border: none; padding: 4px; color: #65676b; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; outline: none;">
+                        <button class="comment-action-btn" onclick="editComment({{ $comment->id }})" title="{{ __('ui.community.edit') }}" style="background: none; border: none; padding: 4px; color: #65676b; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; outline: none;">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="comment-action-btn text-danger" onclick="confirmDelete({{ $comment->id }}, 'comment')" title="Delete" style="background: none; border: none; padding: 4px; color: #dc3545; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; outline: none;">
+                        <button class="comment-action-btn text-danger" onclick="confirmDelete({{ $comment->id }}, 'comment')" title="{{ __('ui.community.delete') }}" style="background: none; border: none; padding: 4px; color: #dc3545; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; outline: none;">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -158,5 +158,24 @@
 .comment-text {
     word-wrap: break-word;
     overflow-wrap: break-word;
+}
+
+/* Ensure comment avatar is perfectly round */
+.comment-avatar {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    border-radius: 50% !important;
+    overflow: hidden !important;
+    flex-shrink: 0 !important;
+}
+
+.comment-avatar img,
+.comment-avatar .avatar-placeholder-small {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    border-radius: 50% !important;
 }
 </style>

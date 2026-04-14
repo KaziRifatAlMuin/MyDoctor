@@ -6,7 +6,7 @@
     $adminReadOnlyCommunity = $adminReadOnlyCommunity ?? false;
     $isAdminReadOnly = $isAdmin && $adminReadOnlyCommunity;
     $isAnonymous = (bool) $post->is_anonymous;
-    $displayName = $isAnonymous ? 'Anonymous Member' : $post->user->name;
+    $displayName = $isAnonymous ? __('ui.community.anonymous_member') : $post->user->name;
     $userLiked = $isAuthenticated ? $post->likes()->where('user_id', Auth::id())->exists() : false;
     $userStarred = $isAuthenticated
         ? $post->likes()->where('user_id', Auth::id())->where('is_starred', true)->exists()
@@ -29,9 +29,9 @@
         <div class="post-user" @if(!$isAnonymous) onclick="showUserModal({{ $post->user->id }})" @endif style="display:flex;gap:12px;cursor:{{ $isAnonymous ? 'default' : 'pointer' }};flex:1;min-width:0;">
             <div class="user-avatar" style="width:48px;height:48px;border-radius:50%;overflow:hidden;flex-shrink:0;">
                 @if(!$isAnonymous && $post->user->picture)
-                    <img src="{{ asset('storage/' . $post->user->picture) }}" alt="{{ $post->user->name }}" style="width:100%;height:100%;object-fit:cover;">
+                    <img src="{{ asset('storage/' . $post->user->picture) }}" alt="{{ $post->user->name }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
                 @else
-                    <div class="avatar-placeholder" style="width:100%;height:100%;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;">{{ $isAnonymous ? 'A' : strtoupper(substr($post->user->name,0,1)) }}</div>
+                    <div class="avatar-placeholder" style="width:100%;height:100%;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;border-radius:50%;">{{ $isAnonymous ? 'A' : strtoupper(substr($post->user->name,0,1)) }}</div>
                 @endif
             </div>
             <div class="user-info" style="min-width:0;flex:1;">
@@ -43,7 +43,7 @@
                         <span class="post-time"><i class="far fa-clock me-1"></i>{{ $post->created_at->diffForHumans() }}</span>
                     @endif
                     <a href="{{ route('community.post.show', $post) }}" class="text-decoration-none" style="font-weight:600; color:#1877f2;">
-                        Open Post
+                        {{ __('ui.community.open_post') }}
                     </a>
                     @if($post->disease)
                         <a href="{{ route('public.disease.show', $post->disease) }}" class="post-disease-badge text-decoration-none" title="{{ $post->disease->disease_name }}" style="background:#e7f3ff;color:#1877f2;padding:4px 12px;border-radius:4px;font-weight:500;font-size:12px;display:inline-flex;align-items:center;gap:4px;">
@@ -58,14 +58,14 @@
         @if($showPostMenu)
         <div class="post-actions-menu" style="position:relative; display:flex; align-items:center; gap:8px;flex-shrink:0;">
             @if($post->is_edited)
-                <span style="font-size:11px; font-weight:600; color:#65676b; background:#f0f2f5; border-radius:12px; padding:4px 8px;">Edited</span>
+                <span style="font-size:11px; font-weight:600; color:#65676b; background:#f0f2f5; border-radius:12px; padding:4px 8px;">{{ __('ui.community.edited') }}</span>
             @endif
             @if($isAuthenticated && ! $isAdmin)
-                <button class="post-menu-btn {{ $userStarred ? 'starred' : '' }}" id="star-btn-{{ $post->id }}" onclick="toggleStar({{ $post->id }}, this)" title="{{ $userStarred ? 'Remove star' : 'Star this post' }}" style="width:34px;height:34px;border:none;border-radius:50%;background:#f0f2f5;color:#65676b;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;">
+                <button class="post-menu-btn {{ $userStarred ? 'starred' : '' }}" id="star-btn-{{ $post->id }}" onclick="toggleStar({{ $post->id }}, this)" title="{{ $userStarred ? __('ui.community.unstar') : __('ui.community.star') }}" style="width:34px;height:34px;border:none;border-radius:50%;background:#f0f2f5;color:#65676b;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;">
                     <i class="{{ $userStarred ? 'fas text-warning' : 'far' }} fa-star"></i>
                 </button>
             @endif
-            <button class="post-menu-btn" onclick="togglePostMenu({{ $post->id }})" title="More options" style="width:34px;height:34px;border:none;border-radius:50%;background:#f0f2f5;color:#65676b;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;">
+            <button class="post-menu-btn" onclick="togglePostMenu({{ $post->id }})" title="{{ __('ui.community.more_options') }}" style="width:34px;height:34px;border:none;border-radius:50%;background:#f0f2f5;color:#65676b;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;">
                 <i class="fas fa-ellipsis-v"></i>
             </button>
             
@@ -74,14 +74,14 @@
                 <!-- View Full Post Page -->
                 <a class="dropdown-item" href="{{ route('community.post.show', $post) }}" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#1a1a1a; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb; text-decoration:none;">
                     <i class="fas fa-expand" style="width:18px; color:#1877f2;"></i>
-                    <span>View Full Post</span>
+                    <span>{{ __('ui.community.view_full_post') }}</span>
                 </a>
 
                 @auth
                     @if(! $isAdminReadOnly)
                         <button class="dropdown-item" onclick="toggleStar({{ $post->id }}, document.getElementById('star-btn-{{ $post->id }}'))" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#1a1a1a; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb;">
                             <i class="{{ $userStarred ? 'fas text-warning' : 'far' }} fa-star" style="width:18px;"></i>
-                            <span>{{ $userStarred ? 'Remove Star' : 'Star Post' }}</span>
+                            <span>{{ $userStarred ? __('ui.community.unstar') : __('ui.community.star') }}</span>
                         </button>
                     @endif
                 @endauth
@@ -91,7 +91,7 @@
                         <!-- Edit Post (only for owner) -->
                         <button class="dropdown-item" onclick="editPost({{ $post->id }})" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#1a1a1a; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb;">
                             <i class="fas fa-edit" style="width:18px; color:#1877f2;"></i>
-                            <span>Edit Post</span>
+                            <span>{{ __('ui.community.edit_post') }}</span>
                         </button>
                     @endif
 
@@ -99,21 +99,21 @@
                         <!-- Delete Post (owner/admin) -->
                         <button class="dropdown-item text-danger" onclick="confirmDelete({{ $post->id }},'post')" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#dc3545; cursor:pointer; transition:background 0.2s; text-align:left;">
                             <i class="fas fa-trash" style="width:18px; color:#dc3545;"></i>
-                            <span>Delete Post</span>
+                            <span>{{ __('ui.community.delete_post') }}</span>
                         </button>
                     @endif
 
                     @if(! $isAdminReadOnly)
                         <button class="dropdown-item" onclick="reportPost({{ $post->id }})" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#dc3545; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb;">
                             <i class="fas fa-flag" style="width:18px; color:#dc3545;"></i>
-                            <span>{{ $post->is_reported ? 'Reported' : 'Report Post' }}</span>
+                            <span>{{ $post->is_reported ? __('ui.community.reported') : __('ui.community.report_post') }}</span>
                         </button>
                     @endif
 
                     @if($isAdmin && !$post->is_approved)
                         <button class="dropdown-item" onclick="approvePost({{ $post->id }})" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#198754; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb;">
                             <i class="fas fa-check-circle" style="width:18px; color:#198754;"></i>
-                            <span>Approve Post</span>
+                            <span>{{ __('ui.community.approve_post') }}</span>
                         </button>
                     @endif
                 @endauth
@@ -121,7 +121,7 @@
                 <!-- Close option (useful for mobile) -->
                 <button class="dropdown-item" onclick="togglePostMenu({{ $post->id }})" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#65676b; cursor:pointer; transition:background 0.2s; text-align:left;">
                     <i class="fas fa-times" style="width:18px; color:#65676b;"></i>
-                    <span>Close Menu</span>
+                    <span>{{ __('ui.community.close_menu') }}</span>
                 </button>
             </div>
         </div>
@@ -165,7 +165,7 @@
                     @if($isLongText)
                         <div class="see-more-overlay" id="see-more-{{ $post->id }}" style="position:relative;margin-top:8px;text-align:left;">
                             <button class="see-more-btn" onclick="toggleSeeMore({{ $post->id }}, event)" style="background:none;border:none;color:#1877f2;font-size:14px;font-weight:500;cursor:pointer;padding:4px 0;display:inline-flex;align-items:center;gap:4px;">
-                                <span class="see-more-text">See More</span>
+                                <span class="see-more-text">{{ __('ui.community.see_more') }}</span>
                                 <i class="fas fa-chevron-down" style="font-size:12px;"></i>
                             </button>
                         </div>
@@ -274,21 +274,21 @@
         @if($isPendingAdminView)
             <button type="button" class="post-action-btn btn-preview" onclick="openPostModal({{ $post->id }})" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#1a1a1a;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;">
                 <i class="fas fa-eye"></i>
-                <span>Preview</span>
+                <span>{{ __('ui.community.preview') }}</span>
             </button>
 
             @auth
                 @if(Auth::user()->isAdmin())
                     <button type="button" class="post-action-btn btn-approve" onclick="approvePost({{ $post->id }})" style="flex:1;padding:10px;border:none;border-radius:6px;background:#198754;color:white;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;">
                         <i class="fas fa-check"></i>
-                        <span>Approve</span>
+                        <span>{{ __('ui.community.approve') }}</span>
                     </button>
                     <button type="button" class="post-action-btn btn-reject" onclick="confirmDelete({{ $post->id }}, 'post')" style="flex:1;padding:10px;border:none;border-radius:6px;background:#dc3545;color:white;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;">
                         <i class="fas fa-trash"></i>
-                        <span>Reject & Delete</span>
+                        <span>{{ __('ui.community.reject_delete') }}</span>
                     </button>
                 @else
-                    <div class="post-action-btn" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#6b7280;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;">Pending moderation</div>
+                    <div class="post-action-btn" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#6b7280;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;">{{ __('ui.community.pending_moderation') }}</div>
                 @endif
             @endauth
         @else
@@ -314,7 +314,7 @@
 
             <div class="post-action-btn" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#1a1a1a;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:default;">
                 <i class="far fa-comment"></i>
-                <span class="comment-count">{{ $post->comment_count > 0 ? 'Comments' : 'No comments' }}</span>
+                <span class="comment-count">{{ $post->comment_count > 0 ? __('ui.community.comments') : __('ui.community.no_comments') }}</span>
             </div>
         @endif
     </div>
@@ -328,8 +328,8 @@
         </div>
         
         @if($post->comment_count > 3)
-            <button class="load-more-comments" id="load-more-{{ $post->id }}" data-offset="3" onclick="loadMoreComments({{ $post->id }})" style="width:100%;padding:8px;background:none;border:1px solid #e4e6eb;border-radius:6px;color:#1877f2;font-size:13px;cursor:pointer;margin:0 0 12px 0;">
-                <i class="fas fa-chevron-down me-1"></i> Load more comments ({{ $post->comment_count - 3 }})
+            <button class="load-more-comments" id="load-more-{{ $post->id }}" data-offset="3" onclick="openPostModalForComments({{ $post->id }})" style="width:100%;padding:8px;background:none;border:1px solid #e4e6eb;border-radius:6px;color:#1877f2;font-size:13px;cursor:pointer;margin:0 0 12px 0;">
+                <i class="fas fa-chevron-down me-1"></i> {{ __('ui.community.load_more_comments') }} ({{ $post->comment_count - 3 }})
             </button>
         @endif
         
@@ -340,9 +340,9 @@
                 <div class="comment-input-group" style="display:flex;gap:8px;align-items:flex-start;margin:0;padding:0;">
                     <div class="user-avatar-small" onclick="showUserModal({{ Auth::id() }})" style="width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0;cursor:pointer;">
                         @if(Auth::user()->picture)
-                            <img src="{{ asset('storage/' . Auth::user()->picture) }}" alt="{{ Auth::user()->name }}" style="width:100%;height:100%;object-fit:cover;">
+                            <img src="{{ asset('storage/' . Auth::user()->picture) }}" alt="{{ Auth::user()->name }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
                         @else
-                            <div class="avatar-placeholder-small" style="width:100%;height:100%;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;">{{ strtoupper(substr(Auth::user()->name,0,1)) }}</div>
+                            <div class="avatar-placeholder-small" style="width:100%;height:100%;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;border-radius:50%;">{{ strtoupper(substr(Auth::user()->name,0,1)) }}</div>
                         @endif
                     </div>
                     
@@ -360,7 +360,7 @@
                         <!-- Input Area -->
                         <div class="comment-input-wrapper" style="display: flex; gap: 6px; background: #f0f2f5; border-radius: 20px; padding: 4px 4px 4px 12px; align-items: center;">
                             <textarea class="comment-textarea" 
-                                      placeholder="Write a comment..." 
+                                      placeholder="{{ __('ui.community.write_comment') }}" 
                                       rows="1" 
                                       id="comment-input-{{ $post->id }}" 
                                       name="comment_details"
@@ -386,7 +386,6 @@
                         </div>
                     </div>
                 </div>
-                <!-- REMOVED DUPLICATE PREVIEW CONTAINER -->
             </form>
             @endif
         @endauth
@@ -457,6 +456,13 @@ function toggleSeeMore(postId, event) {
             postCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 50);
     }
+}
+
+// Function to open post modal for loading more comments
+function openPostModalForComments(postId) {
+    // Store the post ID to scroll to comments after modal opens
+    window.scrollToCommentsPostId = postId;
+    openPostModal(postId);
 }
 </script>
 

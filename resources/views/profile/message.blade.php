@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Read Message')
+@section('title', __('ui.mailbox.read_message_title'))
 @section('main_content_class', 'main-content main-content--wide')
 
 @push('styles')
@@ -71,13 +71,13 @@
     <!-- Sidebar -->
     <div class="gmail-sidebar">
         <a href="{{ route('profile.mailbox.compose') }}" class="gmail-compose-btn">
-            <i class="fas fa-pen"></i> Compose
+            <i class="fas fa-pen"></i> {{ __('ui.mailbox.compose') }}
         </a>
         
         <ul class="gmail-nav">
             <li>
                 <a href="{{ route('profile.mailbox') }}" class="gmail-nav-item {{ request('folder') !== 'sent' ? 'active' : '' }}">
-                    <i class="fas fa-inbox"></i> Inbox
+                    <i class="fas fa-inbox"></i> {{ __('ui.mailbox.inbox') }}
                     @php $unreadCount = \App\Models\Mailing::where('receiver_id', auth()->id())->where('status', 'unread')->count(); @endphp
                     @if($unreadCount > 0)
                         <span class="badge">{{ $unreadCount }}</span>
@@ -86,22 +86,22 @@
             </li>
             <li>
                 <a href="{{ route('profile.mailbox.drafts') }}" class="gmail-nav-item">
-                    <i class="fas fa-file-alt"></i> Drafts
+                    <i class="fas fa-file-alt"></i> {{ __('ui.mailbox.drafts') }}
                 </a>
             </li>
             <li>
                 <a href="{{ route('profile.mailbox.sent') }}" class="gmail-nav-item {{ request('folder') === 'sent' ? 'active' : '' }}">
-                    <i class="fas fa-paper-plane"></i> Sent
+                    <i class="fas fa-paper-plane"></i> {{ __('ui.mailbox.sent') }}
                 </a>
             </li>
             <li>
                 <a href="{{ route('profile.mailbox.starred') }}" class="gmail-nav-item {{ request('folder') === 'starred' ? 'active' : '' }}">
-                    <i class="fas fa-star"></i> Starred
+                    <i class="fas fa-star"></i> {{ __('ui.mailbox.starred') }}
                 </a>
             </li>
             <li>
                 <a href="{{ route('profile.mailbox.archived') }}" class="gmail-nav-item {{ request('folder') === 'archived' ? 'active' : '' }}">
-                    <i class="fas fa-box-archive"></i> Archived
+                    <i class="fas fa-box-archive"></i> {{ __('ui.mailbox.archived') }}
                 </a>
             </li>
         </ul>
@@ -111,14 +111,14 @@
     <div class="gmail-main">
         <!-- Toolbar -->
         <div class="gmail-toolbar">
-            <a href="{{ request('folder') === 'sent' ? route('profile.mailbox.sent') : (request('folder') === 'starred' ? route('profile.mailbox.starred') : (request('folder') === 'archived' ? route('profile.mailbox.archived') : route('profile.mailbox'))) }}" class="gmail-icon-btn me-3" title="Back to mailbox">
+            <a href="{{ request('folder') === 'sent' ? route('profile.mailbox.sent') : (request('folder') === 'starred' ? route('profile.mailbox.starred') : (request('folder') === 'archived' ? route('profile.mailbox.archived') : route('profile.mailbox'))) }}" class="gmail-icon-btn me-3" title="{{ __('ui.mailbox.back_to_mailbox') }}">
                 <i class="fas fa-arrow-left"></i>
             </a>
             
-            <form method="POST" action="{{ route('profile.mailbox.destroy', $message) }}" class="d-inline mb-0" onsubmit="return confirm('Delete this message?');">
+            <form method="POST" action="{{ route('profile.mailbox.destroy', $message) }}" class="d-inline mb-0" onsubmit="return confirm('{{ __('ui.mailbox.delete_message_confirm') }}');">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="gmail-icon-btn" title="Delete">
+                <button type="submit" class="gmail-icon-btn" title="{{ __('ui.mailbox.delete') }}">
                     <i class="fas fa-trash-alt"></i>
                 </button>
             </form>
@@ -126,7 +126,7 @@
             <form method="POST" action="{{ route('profile.mailbox.star', $message) }}" class="d-inline mb-0">
                 @csrf
                 @method('PATCH')
-                <button type="submit" class="gmail-icon-btn" title="Toggle Star">
+                <button type="submit" class="gmail-icon-btn" title="{{ __('ui.mailbox.toggle_star') }}">
                     <i class="{{ $message->is_starred ? 'fas text-warning' : 'far' }} fa-star"></i>
                 </button>
             </form>
@@ -136,7 +136,7 @@
                     @csrf
                     @method('PATCH')
                     <input type="hidden" name="status" value="{{ $message->status === 'archived' ? 'read' : 'archived' }}">
-                    <button type="submit" class="gmail-icon-btn" title="{{ $message->status === 'archived' ? 'Unarchive' : 'Archive' }}">
+                    <button type="submit" class="gmail-icon-btn" title="{{ $message->status === 'archived' ? __('ui.mailbox.unarchive') : __('ui.mailbox.archive') }}">
                         <i class="fas fa-box-archive"></i>
                     </button>
                 </form>
@@ -150,7 +150,7 @@
         <!-- Read Container -->
         <div class="gmail-read-container">
             <div class="gmail-subject-header">
-                {{ $message->title ?: '(No subject)' }}
+                {{ $message->title ?: __('ui.mailbox.no_subject') }}
             </div>
             
             <div class="gmail-message-header">
@@ -167,10 +167,10 @@
                 <div class="gmail-sender-info">
                     <div class="gmail-sender-name">
                         @if (request('folder') === 'sent')
-                            To: {{ $message->receiver?->name ?? 'Unknown user' }}
+                            {{ __('ui.mailbox.to') }}: {{ $message->receiver?->name ?? __('ui.mailbox.unknown_user') }}
                             <span class="gmail-sender-email">&lt;{{ $message->receiver?->email ?? 'no-email' }}&gt;</span>
                         @else
-                            {{ $message->sender?->name ?? 'System User' }}
+                            {{ $message->sender?->name ?? __('ui.mailbox.system_user') }}
                             <span class="gmail-sender-email">&lt;{{ $message->sender?->email ?? 'noreply@system.com' }}&gt;</span>
                         @endif
                     </div>
@@ -179,7 +179,7 @@
                 <div class="gmail-date-info">
                     {{ optional($message->created_at)->format('M j, Y, g:i A') }} ({{ optional($message->created_at)->diffForHumans() }})
                     <div class="ms-3 d-flex gap-2">
-                        <a href="{{ route('profile.mailbox.compose', ['reply_to' => $message->id]) }}" class="gmail-icon-btn shadow-none m-0" style="width: 24px; height: 24px; color: #5f6368;" title="Reply">
+                        <a href="{{ route('profile.mailbox.compose', ['reply_to' => $message->id]) }}" class="gmail-icon-btn shadow-none m-0" style="width: 24px; height: 24px; color: #5f6368;" title="{{ __('ui.mailbox.reply') }}">
                             <i class="fas fa-reply fs-6"></i>
                         </a>
                     </div>
@@ -189,19 +189,19 @@
             <div class="gmail-message-body">
                 @if($message->message)
                     @php
-                        $allowedTags = '<p><br><strong><b><em><i><u><span><div><ul><ol><li><blockquote><a><h1><h2><h3><h4><h5><h6><table><thead><tbody><tr><th><td><hr><img><pre><code>';
+                        $allowedTags = '<p><br><strong><b><em><i><u><span><div><ul><ol><li><blockquote><a><h1><h2><h3><h4><h5><h6><td><thead><tbody><tr><th><td><hr><img><pre><code>';
                         $safeHtml = strip_tags($message->message, $allowedTags);
                     @endphp
                     {!! $safeHtml !!}
                 @else
-<em class="text-muted">No content provided.</em>
+                    <em class="text-muted">{{ __('ui.mailbox.no_content') }}</em>
                 @endif
             </div>
             
             <!-- Quick Reply Action -->
             <div class="gmail-reply-btn-area">
                 <a href="{{ route('profile.mailbox.compose', ['to' => request('folder') === 'sent' ? $message->receiver_id : $message->sender_id, 'title' => str_starts_with($message->title, 'Re:') ? $message->title : 'Re: ' . $message->title]) }}" class="gmail-action-btn-pill">
-                    <i class="fas fa-reply"></i> Reply
+                    <i class="fas fa-reply"></i> {{ __('ui.mailbox.reply') }}
                 </a>
             </div>
         </div>

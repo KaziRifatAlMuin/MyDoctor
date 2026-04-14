@@ -42,6 +42,7 @@ class NotificationController extends Controller
                         'data' => $notification->data,
                         'read_at' => $notification->read_at,
                         'created_at' => $notification->created_at->toISOString(),
+                        'is_starred' => $notification->isStarred(),
                     ];
                 });
                 
@@ -57,6 +58,61 @@ class NotificationController extends Controller
             ->paginate(20);
 
         return view('notifications.index', compact('notifications'));
+    }
+
+    /**
+     * Display starred notifications
+     */
+    public function starred(Request $request)
+    {
+        $user = Auth::user();
+        
+        if (!$user) {
+            if ($request->wantsJson()) {
+                return response()->json(['notifications' => [], 'total' => 0]);
+            }
+            return redirect()->route('login');
+        }
+
+        if ($request->wantsJson()) {
+            $limit = $request->get('limit', 20);
+            $starred = $user->notifications()
+                ->with('fromUser')
+                ->starred()
+                ->latest()
+                ->limit($limit)
+                ->get()
+                ->map(function($notification) {
+                    return [
+                        'id' => $notification->id,
+                        'user_id' => $notification->user_id,
+                        'from_user' => $notification->fromUser ? [
+                            'id' => $notification->fromUser->id,
+                            'name' => $notification->fromUser->name,
+                            'avatar' => $notification->fromUser->picture ? asset('storage/' . $notification->fromUser->picture) : null,
+                        ] : null,
+                        'type' => $notification->type,
+                        'message' => $notification->message,
+                        'data' => $notification->data,
+                        'read_at' => $notification->read_at,
+                        'created_at' => $notification->created_at->toISOString(),
+                        'is_starred' => true,
+                    ];
+                });
+                
+            return response()->json([
+                'notifications' => $starred,
+                'total' => $starred->count(),
+            ]);
+        }
+
+        $notifications = $user->notifications()
+            ->with('fromUser')
+            ->starred()
+            ->latest()
+            ->paginate(20);
+
+        return view('notifications.starred', compact('notifications'));
     }
 
     public function unreadCount()
@@ -86,7 +142,6 @@ class NotificationController extends Controller
 
             return response()->json(['success' => true]);
         } catch (ModelNotFoundException $e) {
-            // Notification doesn't exist or doesn't belong to user
             return response()->json(['success' => false, 'message' => 'Notification not found'], 404);
         } catch (\Exception $e) {
             Log::error('Failed to mark notification as read: ' . $e->getMessage());
@@ -113,6 +168,34 @@ class NotificationController extends Controller
     }
 
     /**
+     * Toggle star on a notification
+     */
+    public function toggleStar($id)
+    {
+        $user = Auth::user();
+        
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+        }
+        
+        try {
+            $notification = $user->notifications()->findOrFail($id);
+            $starred = $notification->toggleStar();
+            
+            return response()->json([
+                'success' => true,
+                'starred' => $starred,
+                'message' => $starred ? __('ui.notifications.starred') : __('ui.notifications.unstarred')
+            ]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['success' => false, 'message' => 'Notification not found'], 404);
+        } catch (\Exception $e) {
+            Log::error('Failed to toggle star: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to toggle star'], 500);
+        }
+    }
+
+    /**
      * Delete a single notification
      */
     public function delete($id)
@@ -129,7 +212,6 @@ class NotificationController extends Controller
             
             return response()->json(['success' => true]);
         } catch (ModelNotFoundException $e) {
-            // Notification doesn't exist or doesn't belong to user
             return response()->json(['success' => false, 'message' => 'Notification not found'], 404);
         } catch (\Exception $e) {
             Log::error('Failed to delete notification: ' . $e->getMessage());

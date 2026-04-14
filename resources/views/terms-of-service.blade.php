@@ -1,71 +1,63 @@
 @extends('layouts.app')
 
-@section('title', 'Terms of Service')
+@section('title', __('ui.terms.terms_of_service'))
 
 @section('content')
     <div class="legal-wrap">
         <div class="container py-5">
             <section class="legal-hero mb-4 mb-md-5">
-                <h1 class="mb-2"><i class="fas fa-file-contract me-2"></i>Terms of Service</h1>
-                <p class="mb-0">These terms govern your use of My Doctor services and features.</p>
-                <small class="d-block mt-2">Last updated: {{ now()->format('F d, Y') }}</small>
+                <h1 class="mb-2"><i class="fas fa-file-contract me-2"></i>{{ __('ui.terms.terms_of_service') }}</h1>
+                <p class="mb-0">{{ __('ui.terms.terms_govern_use') }}</p>
+                <small class="d-block mt-2">{{ __('ui.terms.last_updated') }}: {{ now()->format('F d, Y') }}</small>
             </section>
 
             <div class="row g-4">
                 <div class="col-lg-8">
                     <article class="legal-card mb-3">
-                        <h5>1. Eligibility and Account Responsibility</h5>
-                        <p>You are responsible for maintaining the confidentiality of your account credentials and for all
-                            activities performed under your account. You agree to provide accurate profile and health
-                            information when using My Doctor.</p>
+                        <h5>{{ __('ui.terms.eligibility_and_account_responsibility') }}</h5>
+                        <p>{{ __('ui.terms.eligibility_and_account_responsibility_answer') }}</p>
                     </article>
 
                     <article class="legal-card mb-3">
-                        <h5>2. Health Information and Guidance</h5>
-                        <p>My Doctor provides educational information, reminders, and AI-assisted guidance. It does not
-                            replace professional diagnosis, emergency services, or treatment from licensed healthcare
-                            providers.</p>
+                        <h5>{{ __('ui.terms.health_information_and_guidance') }}</h5>
+                        <p>{{ __('ui.terms.health_information_and_guidance_answer') }}</p>
                     </article>
 
                     <article class="legal-card mb-3">
-                        <h5>3. Community Standards</h5>
-                        <p>You agree not to post abusive, misleading, or harmful content. We may moderate, remove, or
-                            restrict content/accounts that violate community safety standards.</p>
+                        <h5>{{ __('ui.terms.community_standards') }}</h5>
+                        <p>{{ __('ui.terms.community_standards_answer') }}</p>
                     </article>
 
                     <article class="legal-card mb-3">
-                        <h5>4. Service Availability</h5>
-                        <p>We aim for continuous service reliability but cannot guarantee uninterrupted access. Scheduled
-                            maintenance or third-party outages may temporarily impact app functionality.</p>
+                        <h5>{{ __('ui.terms.service_availability') }}</h5>
+                        <p>{{ __('ui.terms.service_availability_answer') }}</p>
                     </article>
 
                     <article class="legal-card mb-3">
-                        <h5>5. Limitation of Liability</h5>
-                        <p>To the extent permitted by law, My Doctor is provided on an "as is" basis. We are not liable for
-                            indirect losses resulting from use of educational recommendations or interrupted service.</p>
+                        <h5>{{ __('ui.terms.limitation_of_liability') }}</h5>
+                        <p>{{ __('ui.terms.limitation_of_liability_answer') }}</p>
                     </article>
 
                     <article class="legal-card">
-                        <h5>6. Contact</h5>
-                        <p class="mb-0">For terms-related inquiries, contact us from the Help page or email support using
-                            your registered account details.</p>
+                        <h5>{{ __('ui.terms.contact') }}</h5>
+                        <p class="mb-0">{{ __('ui.terms.contact_answer') }}</p>
                     </article>
                 </div>
 
                 <div class="col-lg-4">
                     <aside class="legal-side-card mb-3">
-                        <h6><i class="fas fa-shield-alt me-2"></i>Platform Promise</h6>
+                        <h6><i class="fas fa-shield-alt me-2"></i>{{ __('ui.terms.platform_promise') }}</h6>
                         <ul class="mb-0">
-                            <li>Patient-first product decisions</li>
-                            <li>Respectful and safe community space</li>
-                            <li>Transparent service practices</li>
+                            <li>{{ __('ui.terms.patient_first_product_decisions') }}</li>
+                            <li>{{ __('ui.terms.respectful_safe_community') }}</li>
+                            <li>{{ __('ui.terms.transparent_service_practices') }}</li>
                         </ul>
                     </aside>
 
                     <aside class="legal-side-card">
-                        <h6><i class="fas fa-link me-2"></i>Related Pages</h6>
-                        <a href="{{ route('privacy.policy') }}" class="btn btn-outline-light w-100 mb-2">Privacy Policy</a>
-                        <a href="{{ route('help') }}" class="btn btn-light w-100">Help Center</a>
+                        <h6><i class="fas fa-link me-2"></i>{{ __('ui.terms.related_pages') }}</h6>
+                        <a href="{{ route('privacy.policy') }}" class="btn btn-outline-light w-100 mb-2">{{ __('ui.terms.privacy_policy') }}</a>
+                        <a href="{{ route('help') }}" class="btn btn-light w-100">{{ __('ui.terms.help_center') }}</a>
                     </aside>
                 </div>
             </div>

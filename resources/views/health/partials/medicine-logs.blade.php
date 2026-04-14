@@ -5,7 +5,7 @@
     <div class="col-md-4">
         <div class="health-card">
             <div class="health-card-header">
-                <h5><i class="fas fa-chart-pie"></i> 30-Day Summary</h5>
+                <h5><i class="fas fa-chart-pie"></i> {{ __('ui.health.days_30_summary') }}</h5>
             </div>
             <div class="health-card-body">
                 @if ($totalScheduled > 0)
@@ -14,14 +14,14 @@
                             style="font-size: 2.5rem; color: {{ $adherenceRate >= 80 ? '#38a169' : ($adherenceRate >= 50 ? '#dd6b20' : '#e53e3e') }};">
                             {{ $adherenceRate }}%
                         </span>
-                        <div class="text-muted" style="font-size: 0.85rem;">Overall Adherence</div>
+                        <div class="text-muted" style="font-size: 0.85rem;">{{ __('ui.health.overall_adherence') }}</div>
                     </div>
 
                     {{-- Progress bars --}}
                     <div class="mb-3">
                         <div class="d-flex justify-content-between mb-1" style="font-size: 0.8rem;">
                             <span class="fw-semibold" style="color: #38a169;"><i class="fas fa-check me-1"></i>
-                                Taken</span>
+                                {{ __('ui.health.taken') }}</span>
                             <span>{{ $totalTaken }}</span>
                         </div>
                         <div class="adherence-bar">
@@ -34,7 +34,7 @@
                     <div class="mb-3">
                         <div class="d-flex justify-content-between mb-1" style="font-size: 0.8rem;">
                             <span class="fw-semibold" style="color: #e53e3e;"><i class="fas fa-times me-1"></i>
-                                Missed</span>
+                                {{ __('ui.health.missed') }}</span>
                             <span>{{ $totalMissed }}</span>
                         </div>
                         <div class="adherence-bar">
@@ -47,7 +47,7 @@
                     <div>
                         <div class="d-flex justify-content-between mb-1" style="font-size: 0.8rem;">
                             <span class="fw-semibold" style="color: #667eea;"><i class="fas fa-calendar-check me-1"></i>
-                                Total Scheduled</span>
+                                {{ __('ui.health.total_scheduled') }}</span>
                             <span>{{ $totalScheduled }}</span>
                         </div>
                         <div class="adherence-bar">
@@ -57,7 +57,7 @@
                 @else
                     <div class="empty-state py-3">
                         <i class="fas fa-clipboard-list d-block"></i>
-                        <p>No medicine logs in the last 30 days.</p>
+                        <p>{{ __('ui.health.no_medicine_logs_30_days') }}</p>
                     </div>
                 @endif
             </div>
@@ -68,26 +68,26 @@
     <div class="col-md-8">
         <div class="health-card">
             <div class="health-card-header">
-                <h5><i class="fas fa-history"></i> Daily Medicine Logs</h5>
-                <span class="health-card-badge bg-light text-muted">{{ $medicineLogs->count() }} entries</span>
+                <h5><i class="fas fa-history"></i> {{ __('ui.health.daily_medicine_logs') }}</h5>
+                <span class="health-card-badge bg-light text-muted">{{ $medicineLogs->count() }} {{ __('ui.health.entries') }}</span>
             </div>
             <div class="health-card-body p-0">
                 @if ($medicineLogs->isEmpty())
                     <div class="empty-state">
                         <i class="fas fa-clipboard-list d-block"></i>
-                        <p>No medicine logs recorded in the last 30 days.</p>
+                        <p>{{ __('ui.health.no_medicine_logs_30_days') }}</p>
                     </div>
                 @else
                     <div class="table-responsive">
                         <table class="health-table">
                             <thead>
                                 <tr>
-                                    <th>Date</th>
-                                    <th>Medicine</th>
-                                    <th>Scheduled</th>
-                                    <th>Taken</th>
-                                    <th>Missed</th>
-                                    <th>Status</th>
+                                    <th>{{ __('ui.health.date') }}</th>
+                                    <th>{{ __('ui.health.medicine') }}</th>
+                                    <th>{{ __('ui.health.scheduled') }}</th>
+                                    <th>{{ __('ui.health.taken') }}</th>
+                                    <th>{{ __('ui.health.missed') }}</th>
+                                    <th>{{ __('ui.health.status') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -111,7 +111,7 @@
                                                     <i class="fas fa-pills"></i>
                                                 </div>
                                                 <span
-                                                    class="fw-semibold">{{ $log->medicine->medicine_name ?? 'Unknown' }}</span>
+                                                    class="fw-semibold">{{ $log->medicine->medicine_name ?? __('ui.health.unknown') }}</span>
                                             </div>
                                         </td>
                                         <td>{{ $log->total_scheduled }}</td>
@@ -120,13 +120,13 @@
                                         <td>
                                             @if ($logRate >= 100)
                                                 <span class="severity-badge severity-1"><i class="fas fa-check"></i>
-                                                    Perfect</span>
+                                                    {{ __('ui.health.perfect') }}</span>
                                             @elseif($logRate >= 50)
                                                 <span class="severity-badge severity-4"><i class="fas fa-minus"></i>
-                                                    Partial</span>
+                                                    {{ __('ui.health.partial') }}</span>
                                             @else
                                                 <span class="severity-badge severity-8"><i class="fas fa-times"></i>
-                                                    Missed</span>
+                                                    {{ __('ui.health.missed') }}</span>
                                             @endif
                                         </td>
                                     </tr>

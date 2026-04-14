@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Profile Settings')
+@section('title', __('ui.profile_settings.title'))
 
 @push('styles')
     <style>
@@ -116,11 +116,11 @@
             <div class="settings-shell">
                 <div class="settings-top">
                     <div>
-                        <h4 class="settings-title"><i class="fas fa-sliders-h me-2"></i>Profile Settings</h4>
-                        <p class="settings-subtitle">Control alerts and public visibility from one place.</p>
+                        <h4 class="settings-title"><i class="fas fa-sliders-h me-2"></i>{{ __('ui.profile_settings.title') }}</h4>
+                        <p class="settings-subtitle">{{ __('ui.profile_settings.subtitle') }}</p>
                     </div>
                     <a href="{{ route('profile') }}" class="btn btn-light btn-sm fw-semibold">
-                        <i class="fas fa-arrow-left me-1"></i>Back to Profile
+                        <i class="fas fa-arrow-left me-1"></i>{{ __('ui.profile_settings.back_to_profile') }}
                     </a>
                 </div>
 
@@ -142,90 +142,88 @@
 
                         <div class="settings-grid">
                             <div class="settings-card">
-                                <h5><i class="fas fa-envelope text-primary me-2"></i>Email Alerts</h5>
-                                <p class="settings-help">Get medicine reminder emails before scheduled time.</p>
+                                <h5><i class="fas fa-envelope text-primary me-2"></i>{{ __('ui.profile_settings.email_alerts') }}</h5>
+                                <p class="settings-help">{{ __('ui.profile_settings.email_alerts_help') }}</p>
                                 <div class="form-check form-switch mt-2 mb-2">
                                     <input class="form-check-input" type="checkbox" name="email_notifications"
                                         id="email_notifications" value="1"
                                         {{ $settings->email_notifications ? 'checked' : '' }}>
-                                    <label class="form-check-label fw-semibold" for="email_notifications">Enable Email Alerts</label>
+                                    <label class="form-check-label fw-semibold" for="email_notifications">{{ __('ui.profile_settings.enable_email_alerts') }}</label>
                                 </div>
-                                <label class="form-label small fw-semibold mb-1">Reminder Timing</label>
+                                <label class="form-label small fw-semibold mb-1">{{ __('ui.profile_settings.reminder_timing') }}</label>
                                 <select name="reminder_before_minutes" class="form-select form-select-sm">
-                                    <option value="5" {{ $user->getNotificationSetting('reminder_before_minutes', 5) == 5 ? 'selected' : '' }}>5 minutes before</option>
-                                    <option value="10" {{ $user->getNotificationSetting('reminder_before_minutes', 5) == 10 ? 'selected' : '' }}>10 minutes before</option>
-                                    <option value="15" {{ $user->getNotificationSetting('reminder_before_minutes', 5) == 15 ? 'selected' : '' }}>15 minutes before</option>
-                                    <option value="30" {{ $user->getNotificationSetting('reminder_before_minutes', 5) == 30 ? 'selected' : '' }}>30 minutes before</option>
+                                    <option value="5" {{ $user->getNotificationSetting('reminder_before_minutes', 5) == 5 ? 'selected' : '' }}>{{ __('ui.profile_settings.minutes_before_5') }}</option>
+                                    <option value="10" {{ $user->getNotificationSetting('reminder_before_minutes', 5) == 10 ? 'selected' : '' }}>{{ __('ui.profile_settings.minutes_before_10') }}</option>
+                                    <option value="15" {{ $user->getNotificationSetting('reminder_before_minutes', 5) == 15 ? 'selected' : '' }}>{{ __('ui.profile_settings.minutes_before_15') }}</option>
+                                    <option value="30" {{ $user->getNotificationSetting('reminder_before_minutes', 5) == 30 ? 'selected' : '' }}>{{ __('ui.profile_settings.minutes_before_30') }}</option>
                                 </select>
                             </div>
 
-        
-
                             @if (!$user->isAdmin())
                                 <div class="settings-card">
-                                    <h5><i class="fas fa-comments text-info me-2"></i>Chatbot Bubble</h5>
-                                    <p class="settings-help">Show or hide the floating AI assistant bubble across your account.</p>
+                                    <h5><i class="fas fa-comments text-info me-2"></i>{{ __('ui.profile_settings.chatbot_bubble') }}</h5>
+                                    <p class="settings-help">{{ __('ui.profile_settings.chatbot_bubble_help') }}</p>
                                     <div class="form-check form-switch mt-2 mb-0">
                                         <input class="form-check-input" type="checkbox" name="show_chatbot" id="show_chatbot"
                                             value="1" {{ $settings->show_chatbot ? 'checked' : '' }}>
-                                        <label class="form-check-label fw-semibold" for="show_chatbot">Show Chatbot Bubble</label>
+                                        <label class="form-check-label fw-semibold" for="show_chatbot">{{ __('ui.profile_settings.show_chatbot_bubble') }}</label>
                                     </div>
                                 </div>
                             @endif
 
                             <div class="settings-card">
-                                <h5><i class="fas fa-tags text-secondary me-2"></i>Badge Visibility</h5>
-                                <p class="settings-help mb-2">Control whether unread badges appear in the top navigation.</p>
+                                <h5><i class="fas fa-tags text-secondary me-2"></i>{{ __('ui.profile_settings.badge_visibility') }}</h5>
+                                <p class="settings-help mb-2">{{ __('ui.profile_settings.badge_visibility_help') }}</p>
 
                                 <div class="form-check form-switch mb-2">
                                     <input class="form-check-input" type="checkbox" name="show_notification_badge"
                                         id="show_notification_badge" value="1" {{ $settings->show_notification_badge ? 'checked' : '' }}>
-                                    <label class="form-check-label fw-semibold" for="show_notification_badge">Show Notification Badge</label>
+                                    <label class="form-check-label fw-semibold" for="show_notification_badge">{{ __('ui.profile_settings.show_notification_badge') }}</label>
                                 </div>
-                                <p class="settings-help mt-0 mb-2">If disabled, the bell badge count will stay hidden even when you have unread notifications.</p>
+                                <p class="settings-help mt-0 mb-2">{{ __('ui.profile_settings.notification_badge_note') }}</p>
 
                                 <div class="form-check form-switch mb-2">
                                     <input class="form-check-input" type="checkbox" name="show_mail_badge"
                                         id="show_mail_badge" value="1" {{ $settings->show_mail_badge ? 'checked' : '' }}>
-                                    <label class="form-check-label fw-semibold" for="show_mail_badge">Show Mail Badge</label>
+                                    <label class="form-check-label fw-semibold" for="show_mail_badge">{{ __('ui.profile_settings.show_mail_badge') }}</label>
                                 </div>
-                                <p class="settings-help mt-0 mb-0">If disabled, unread mailbox count badges remain hidden in navbar and dropdown.</p>
+                                <p class="settings-help mt-0 mb-0">{{ __('ui.profile_settings.mail_badge_note') }}</p>
                             </div>
 
                             <div class="settings-card">
-                                <h5><i class="fas fa-user-shield text-warning me-2"></i>Public Profile Permissions</h5>
-                                <p class="settings-help mb-2">Choose what visitors can see on your public profile page.</p>
+                                <h5><i class="fas fa-user-shield text-warning me-2"></i>{{ __('ui.profile_settings.public_profile_permissions') }}</h5>
+                                <p class="settings-help mb-2">{{ __('ui.profile_settings.public_profile_help') }}</p>
 
                                 <div class="form-check form-switch mb-2">
                                     <input class="form-check-input" type="checkbox" name="show_personal_info"
                                         id="show_personal_info" value="1" {{ $settings->show_personal_info ? 'checked' : '' }}>
-                                    <label class="form-check-label fw-semibold" for="show_personal_info">Show Personal Info</label>
+                                    <label class="form-check-label fw-semibold" for="show_personal_info">{{ __('ui.profile_settings.show_personal_info') }}</label>
                                 </div>
-                                <p class="settings-help mt-0 mb-2">If enabled, visitors can see: date of birth, phone number, occupation, blood group, gender, and address (district + upazila only). Street and house are never shown publicly.</p>
+                                <p class="settings-help mt-0 mb-2">{{ __('ui.profile_settings.personal_info_note') }}</p>
 
                                 <div class="form-check form-switch mb-2">
                                     <input class="form-check-input" type="checkbox" name="show_diseases" id="show_diseases"
                                         value="1" {{ $settings->show_diseases ? 'checked' : '' }}>
-                                    <label class="form-check-label fw-semibold" for="show_diseases">Show Disease History</label>
+                                    <label class="form-check-label fw-semibold" for="show_diseases">{{ __('ui.profile_settings.show_disease_history') }}</label>
                                 </div>
-                                <p class="settings-help mt-0 mb-0">If enabled, public visitors can see your listed disease names and status.</p>
+                                <p class="settings-help mt-0 mb-0">{{ __('ui.profile_settings.disease_history_note') }}</p>
                             </div>
                         </div>
 
                         <div class="consent-panel">
-                            <h6><i class="fas fa-file-contract me-1"></i>Consent & Terms Acknowledgement</h6>
+                            <h6><i class="fas fa-file-contract me-1"></i>{{ __('ui.profile_settings.consent_title') }}</h6>
                             <ul>
-                                <li>By turning ON a public permission, you agree that the selected information is visible on your public profile.</li>
-                                <li>"Show Personal Info" exposes date of birth, phone number, occupation, blood group, gender, and address (district + upazila only).</li>
-                                <li>Street and house are always private and are never shown in public profile views.</li>
-                                <li>"Show Disease History" exposes your disease names and disease status only.</li>
-                                <li>You can turn these permissions OFF anytime from this settings page.</li>
+                                <li>{{ __('ui.profile_settings.consent_line_1') }}</li>
+                                <li>{{ __('ui.profile_settings.consent_line_2') }}</li>
+                                <li>{{ __('ui.profile_settings.consent_line_3') }}</li>
+                                <li>{{ __('ui.profile_settings.consent_line_4') }}</li>
+                                <li>{{ __('ui.profile_settings.consent_line_5') }}</li>
                             </ul>
                         </div>
 
                         <div class="d-flex justify-content-end mt-3">
                             <button type="submit" class="btn btn-primary px-4 fw-semibold">
-                                <i class="fas fa-save me-2"></i>Save Settings
+                                <i class="fas fa-save me-2"></i>{{ __('ui.profile_settings.save_settings') }}
                             </button>
                         </div>
                     </form>

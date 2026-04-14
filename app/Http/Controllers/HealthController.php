@@ -506,33 +506,41 @@ class HealthController extends Controller
         return HealthMetric::query()->orderBy('metric_name')->get();
     }
 
-    private function buildMetricConfig($definitions): array
-    {
-        $config = [];
-        foreach ($definitions as $definition) {
-            $metricName = (string) $definition->metric_name;
-            $fields = array_values((array) $definition->fields);
-            $config[$metricName] = [
-                'en' => ucwords(str_replace('_', ' ', $metricName)),
-                'bn' => '',
-                'unit' => '',
-                'fields' => $fields,
-                'js_fields' => collect($fields)->values()->map(function (string $field, int $index): array {
-                    return [
-                        'name' => 'value_' . $index,
-                        'field_key' => $field,
-                        'label' => $field,
-                        'placeholder' => 'Enter ' . $field,
-                        'min' => 0,
-                        'max' => 100000,
-                        'step' => '0.01',
-                    ];
-                })->all(),
-            ];
+private function buildMetricConfig($definitions): array
+{
+    $config = [];
+    foreach ($definitions as $definition) {
+        $metricName = (string) $definition->metric_name;
+        $fields = array_values((array) $definition->fields);
+        
+        // Get Bengali name from translation
+        $bnName = __('ui.health.metric_config.' . $metricName, [], 'bn');
+        if ($bnName === 'ui.health.metric_config.' . $metricName) {
+            // Fallback: convert underscore to space and capitalize
+            $bnName = ucwords(str_replace('_', ' ', $metricName));
         }
-
-        return $config;
+        
+        $config[$metricName] = [
+            'en' => ucwords(str_replace('_', ' ', $metricName)),
+            'bn' => $bnName,
+            'unit' => '',
+            'fields' => $fields,
+            'js_fields' => collect($fields)->values()->map(function (string $field, int $index): array {
+                return [
+                    'name' => 'value_' . $index,
+                    'field_key' => $field,
+                    'label' => $field,
+                    'placeholder' => 'Enter ' . $field,
+                    'min' => 0,
+                    'max' => 100000,
+                    'step' => '0.01',
+                ];
+            })->all(),
+        ];
     }
+
+    return $config;
+}
 
     private function extractMetricValuesFromRequest(Request $request, string $metricType, array $fields): array
     {

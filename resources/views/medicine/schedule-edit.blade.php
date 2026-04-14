@@ -1,7 +1,6 @@
-{{-- resources/views/medicine/schedule-edit.blade.php --}}
 @extends('layouts.app')
 
-@section('title', 'Edit Schedule')
+@section('title', __('ui.medicine.edit_schedule_title'))
 
 @section('content')
 <div class="container py-4">
@@ -9,10 +8,10 @@
         <div class="col-lg-10">
             <nav aria-label="breadcrumb" class="mb-4">
                 <ol class="breadcrumb bg-light p-3 rounded-3">
-                    <li class="breadcrumb-item"><a href="{{ route('medicine.index') }}" class="text-decoration-none"><i class="fas fa-home me-1"></i>Medicine</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('medicine.my-medicines') }}" class="text-decoration-none"><i class="fas fa-pills me-1"></i>My Medicines</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('medicine.schedules', ['medicine_id' => $schedule->medicine->id]) }}" class="text-decoration-none"><i class="fas fa-clock me-1"></i>Schedules</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Edit Schedule</li>
+                    <li class="breadcrumb-item"><a href="{{ route('medicine.index') }}" class="text-decoration-none"><i class="fas fa-home me-1"></i>{{ __('ui.medicine.medicine') }}</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('medicine.my-medicines') }}" class="text-decoration-none"><i class="fas fa-pills me-1"></i>{{ __('ui.medicine.my_medicines') }}</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('medicine.schedules', ['medicine_id' => $schedule->medicine->id]) }}" class="text-decoration-none"><i class="fas fa-clock me-1"></i>{{ __('ui.medicine.schedules') }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ __('ui.medicine.edit_schedule') }}</li>
                 </ol>
             </nav>
 
@@ -25,9 +24,9 @@
                         <div>
                             <h5 class="fw-bold mb-1">{{ $schedule->medicine->medicine_name }}</h5>
                             <p class="text-muted mb-0">
-                                {{ $schedule->medicine->typeLabel ?? 'Medicine' }} • 
+                                {{ $schedule->medicine->typeLabel ?? __('ui.medicine.medicine') }} • 
                                 {{ $schedule->medicine->value_per_dose ?? '' }} {{ $schedule->medicine->unitLabel ?? '' }} •
-                                {{ $schedule->medicine->ruleLabel ?? 'Anytime' }}
+                                {{ $schedule->medicine->ruleLabel ?? __('ui.medicine.anytime') }}
                             </p>
                         </div>
                     </div>
@@ -36,7 +35,7 @@
 
             <div class="card border-0 shadow-lg">
                 <div class="card-header bg-primary text-white py-3">
-                    <h4 class="mb-0"><i class="fas fa-edit me-2"></i>Edit Schedule</h4>
+                    <h4 class="mb-0"><i class="fas fa-edit me-2"></i>{{ __('ui.medicine.edit_schedule') }}</h4>
                 </div>
                 
                 <div class="card-body p-4 p-lg-5">
@@ -47,17 +46,17 @@
                         <div class="row g-4 mb-4">
                             <div class="col-md-6">
                                 <label for="dosage_period_days" class="form-label fw-bold">
-                                    <i class="fas fa-calendar me-2 text-primary"></i>Dosage Period
+                                    <i class="fas fa-calendar me-2 text-primary"></i>{{ __('ui.medicine.dosage_period') }}
                                 </label>
                                 <select class="form-select form-select-lg @error('dosage_period_days') is-invalid @enderror" 
                                         id="dosage_period_days" name="dosage_period_days" required>
-                                    <option value="1" {{ (old('dosage_period_days', $schedule->dosage_period_days) == 1) ? 'selected' : '' }}>Daily</option>
-                                    <option value="7" {{ (old('dosage_period_days', $schedule->dosage_period_days) == 7) ? 'selected' : '' }}>Weekly</option>
-                                    <option value="14" {{ (old('dosage_period_days', $schedule->dosage_period_days) == 14) ? 'selected' : '' }}>Every 14 days</option>
-                                    <option value="30" {{ (old('dosage_period_days', $schedule->dosage_period_days) == 30) ? 'selected' : '' }}>Monthly</option>
-                                    <option value="0" {{ (old('dosage_period_days', $schedule->dosage_period_days) == 0) ? 'selected' : '' }}>As needed (once)</option>
+                                    <option value="1" {{ (old('dosage_period_days', $schedule->dosage_period_days) == 1) ? 'selected' : '' }}>{{ __('ui.medicine.daily') }}</option>
+                                    <option value="7" {{ (old('dosage_period_days', $schedule->dosage_period_days) == 7) ? 'selected' : '' }}>{{ __('ui.medicine.weekly') }}</option>
+                                    <option value="14" {{ (old('dosage_period_days', $schedule->dosage_period_days) == 14) ? 'selected' : '' }}>{{ __('ui.medicine.every_14_days') }}</option>
+                                    <option value="30" {{ (old('dosage_period_days', $schedule->dosage_period_days) == 30) ? 'selected' : '' }}>{{ __('ui.medicine.monthly') }}</option>
+                                    <option value="0" {{ (old('dosage_period_days', $schedule->dosage_period_days) == 0) ? 'selected' : '' }}>{{ __('ui.medicine.as_needed_once') }}</option>
                                 </select>
-                                <small class="text-muted">How often does this schedule repeat?</small>
+                                <small class="text-muted">{{ __('ui.medicine.dosage_period_help') }}</small>
                                 @error('dosage_period_days')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -65,13 +64,13 @@
 
                             <div class="col-md-6">
                                 <label for="frequency_per_day" class="form-label fw-bold">
-                                    <i class="fas fa-sync-alt me-2 text-primary"></i>Times Per Day
+                                    <i class="fas fa-sync-alt me-2 text-primary"></i>{{ __('ui.medicine.times_per_day') }}
                                 </label>
                                 <input type="number" class="form-control form-control-lg @error('frequency_per_day') is-invalid @enderror" 
                                     id="frequency_per_day" name="frequency_per_day" 
                                     value="{{ old('frequency_per_day', $schedule->frequency_per_day) }}" 
                                     min="1" max="24" required>
-                                <small class="text-muted">How many times a day?</small>
+                                <small class="text-muted">{{ __('ui.medicine.times_per_day_help') }}</small>
                                 @error('frequency_per_day')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -80,13 +79,13 @@
 
                         <div class="mb-4">
                             <label for="interval_hours" class="form-label fw-bold">
-                                <i class="fas fa-hourglass-half me-2 text-primary"></i>Interval Between Doses (Hours)
+                                <i class="fas fa-hourglass-half me-2 text-primary"></i>{{ __('ui.medicine.interval_between_doses') }}
                             </label>
                             <input type="number" class="form-control form-control-lg @error('interval_hours') is-invalid @enderror" 
                                 id="interval_hours" name="interval_hours" 
                                 value="{{ old('interval_hours', $schedule->interval_hours) }}" 
-                                min="1" max="24" placeholder="e.g., 8 for every 8 hours">
-                            <small class="text-muted">Optional: Leave empty if not needed</small>
+                                min="1" max="24" placeholder="{{ __('ui.medicine.interval_placeholder') }}">
+                            <small class="text-muted">{{ __('ui.medicine.interval_help') }}</small>
                             @error('interval_hours')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -94,13 +93,13 @@
 
                         <div class="mb-4">
                             <label class="form-label fw-bold">
-                                <i class="fas fa-clock me-2 text-primary"></i>Dosage Times
+                                <i class="fas fa-clock me-2 text-primary"></i>{{ __('ui.medicine.dosage_times') }}
                             </label>
                             <div class="alert alert-info d-flex align-items-center">
                                 <i class="fas fa-info-circle fa-2x me-3"></i>
                                 <div>
-                                    <strong>Select your medication times</strong><br>
-                                    <small>You can select multiple times. Choose the times when you need to take this medicine.</small>
+                                    <strong>{{ __('ui.medicine.select_medication_times') }}</strong><br>
+                                    <small>{{ __('ui.medicine.select_times_help') }}</small>
                                 </div>
                             </div>
                             
@@ -146,14 +145,14 @@
                                 <div class="text-danger small mt-2">{{ $message }}</div>
                             @enderror
                             <div class="mt-3">
-                                <span class="selected-count badge bg-primary p-2">Selected: <span id="selectedCount">0</span> times</span>
+                                <span class="selected-count badge bg-primary p-2">{{ __('ui.medicine.selected') }}: <span id="selectedCount">0</span> {{ __('ui.medicine.times') }}</span>
                             </div>
                         </div>
 
                         <div class="row g-4 mb-4">
                             <div class="col-md-6">
                                 <label for="start_date" class="form-label fw-bold">
-                                    <i class="fas fa-play me-2 text-primary"></i>Start Date
+                                    <i class="fas fa-play me-2 text-primary"></i>{{ __('ui.medicine.start_date') }}
                                 </label>
                                 <input type="date" class="form-control form-control-lg @error('start_date') is-invalid @enderror" 
                                     id="start_date" name="start_date" 
@@ -165,12 +164,12 @@
 
                             <div class="col-md-6">
                                 <label for="end_date" class="form-label fw-bold">
-                                    <i class="fas fa-stop me-2 text-primary"></i>End Date
+                                    <i class="fas fa-stop me-2 text-primary"></i>{{ __('ui.medicine.end_date') }}
                                 </label>
                                 <input type="date" class="form-control form-control-lg @error('end_date') is-invalid @enderror" 
                                     id="end_date" name="end_date" 
                                     value="{{ old('end_date', $schedule->end_date ? \Carbon\Carbon::parse($schedule->end_date)->format('Y-m-d') : '') }}">
-                                <small class="text-muted">Leave empty for ongoing schedule</small>
+                                <small class="text-muted">{{ __('ui.medicine.end_date_help') }}</small>
                                 @error('end_date')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -182,22 +181,22 @@
                                 <input class="form-check-input" type="checkbox" name="is_active" id="is_active" 
                                     {{ old('is_active', $schedule->is_active) ? 'checked' : '' }} value="1" style="transform: scale(1.2);">
                                 <label class="form-check-label fw-bold ms-2" for="is_active">
-                                    <i class="fas fa-power-off me-2 text-primary"></i>Active Schedule
+                                    <i class="fas fa-power-off me-2 text-primary"></i>{{ __('ui.medicine.active_schedule') }}
                                 </label>
                             </div>
-                            <small class="text-muted d-block mt-2 ms-4">Inactive schedules won't generate reminders</small>
+                            <small class="text-muted d-block mt-2 ms-4">{{ __('ui.medicine.inactive_schedule_help') }}</small>
                         </div>
 
                         <div class="alert alert-warning d-flex align-items-center mb-4">
                             <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
                             <div>
-                                <strong class="d-block">Important Note</strong>
-                                Changing schedule times or dates will delete all future reminders and generate new ones based on your updates.
+                                <strong class="d-block">{{ __('ui.medicine.important_note') }}</strong>
+                                {{ __('ui.medicine.schedule_change_warning') }}
                             </div>
                         </div>
 
                         <div class="alert alert-primary bg-primary-soft border-0 rounded-3 p-4 mb-4" id="scheduleSummary" style="display: none;">
-                            <h6 class="fw-bold mb-3"><i class="fas fa-info-circle me-2"></i>Schedule Summary</h6>
+                            <h6 class="fw-bold mb-3"><i class="fas fa-info-circle me-2"></i>{{ __('ui.medicine.schedule_summary') }}</h6>
                             <p class="mb-2" id="summaryText"></p>
                             <div class="summary-details small" id="summaryDetails"></div>
                         </div>
@@ -205,10 +204,10 @@
                         <div class="d-flex gap-3">
                             <a href="{{ route('medicine.schedules', ['medicine_id' => $schedule->medicine->id]) }}" 
                                class="btn btn-outline-secondary btn-lg flex-grow-1 rounded-pill">
-                                <i class="fas fa-times me-2"></i>Cancel
+                                <i class="fas fa-times me-2"></i>{{ __('ui.medicine.cancel') }}
                             </a>
                             <button type="submit" class="btn btn-primary btn-lg flex-grow-1 rounded-pill">
-                                <i class="fas fa-save me-2"></i>Update Schedule
+                                <i class="fas fa-save me-2"></i>{{ __('ui.medicine.update_schedule') }}
                             </button>
                         </div>
                     </form>
@@ -220,6 +219,7 @@
 
 @push('scripts')
 <script>
+    // All JavaScript remains exactly the same
     document.addEventListener('DOMContentLoaded', function() {
         updateBinaryTime();
         updateSummary();
@@ -283,14 +283,14 @@
         const summaryDetails = document.getElementById('summaryDetails');
         
         if (selectedTimes.length > 0) {
-            let summary = `You'll take this medicine <strong>${selectedTimes.length} time(s) per day</strong>`;
+            let summary = `{{ __('ui.medicine.you_will_take') }} <strong>${selectedTimes.length} {{ __('ui.medicine.times_per_day_lower') }}</strong>`;
             if (frequency && frequency != selectedTimes.length) {
-                summary += ` <span class="text-warning">(warning: selected ${selectedTimes.length} times, but frequency is set to ${frequency})</span>`;
+                summary += ` <span class="text-warning">({{ __('ui.medicine.warning_selected_vs_frequency') }} ${selectedTimes.length} {{ __('ui.medicine.times') }}, {{ __('ui.medicine.but_frequency_is') }} ${frequency})</span>`;
             }
             
             summaryText.innerHTML = summary;
             
-            let details = '<strong>Selected times:</strong> ';
+            let details = '<strong>{{ __("ui.medicine.selected_times") }}</strong> ';
             details += selectedTimes.map(time => {
                 const [hour, minute] = time.split(':');
                 const hourNum = parseInt(hour);
@@ -299,7 +299,7 @@
                 return `${hour12}:${minute} ${ampm}`;
             }).join(', ');
             
-            details += `<br><strong>Schedule repeats:</strong> ${period.toLowerCase()}`;
+            details += `<br><strong>{{ __("ui.medicine.schedule_repeats") }}</strong> ${period.toLowerCase()}`;
             summaryDetails.innerHTML = details;
             
             summaryDiv.style.display = 'block';
@@ -312,6 +312,7 @@
 
 @push('styles')
 <style>
+    /* All existing styles remain exactly the same */
     .bg-primary-soft {
         background: rgba(102, 126, 234, 0.05);
     }

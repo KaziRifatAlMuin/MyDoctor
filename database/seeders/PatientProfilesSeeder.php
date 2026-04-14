@@ -55,7 +55,7 @@ class PatientProfilesSeeder extends Seeder
         // ── Profile ──────────────────────────────────────
         $this->upsertUser(1, [
             'name'          => 'Rahim Uddin',
-            'email'         => 'user1@gmail.com',
+            'email'         => 'diptachy117@gmail.com',
             'phone'         => '01700000001',
             'date_of_birth' => '1972-04-15',
             'occupation'    => 'Business Owner',
