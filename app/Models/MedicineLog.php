@@ -50,20 +50,20 @@ class MedicineLog extends Model
     }
 
     /**
-     * Get adherence rate with color class.
+     * Get adherence rate with translated status text.
      */
     public function getAdherenceStatusAttribute()
     {
         $rate = $this->adherenceRate;
         
         if ($rate >= 90) {
-            return ['class' => 'success', 'text' => 'Excellent'];
+            return ['class' => 'success', 'text' => __('ui.medicine.status_excellent')];
         } elseif ($rate >= 75) {
-            return ['class' => 'info', 'text' => 'Good'];
+            return ['class' => 'info', 'text' => __('ui.medicine.status_good')];
         } elseif ($rate >= 50) {
-            return ['class' => 'warning', 'text' => 'Fair'];
+            return ['class' => 'warning', 'text' => __('ui.medicine.status_fair')];
         } else {
-            return ['class' => 'danger', 'text' => 'Poor'];
+            return ['class' => 'danger', 'text' => __('ui.medicine.status_poor')];
         }
     }
 }

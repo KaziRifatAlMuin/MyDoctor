@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Admin Health Metrics')
+@section('title', __('ui.admin_health.title'))
 
 @push('styles')
 <style>
@@ -119,6 +119,7 @@
         font-weight: 700;
         padding: 0.35rem 0.6rem;
         min-width: 38px;
+        cursor: pointer;
     }
 
     .cards-grid {
@@ -208,8 +209,8 @@
 <div class="admin-catalog-surface">
     <div class="container" style="max-width: 1400px;">
         <div class="catalog-hero">
-            <h1><i class="fas fa-heartbeat me-2"></i>Admin Health Metrics Catalog</h1>
-            <p>Manage the most important metric definitions. Field labels support units in brackets and are fully editable.</p>
+            <h1><i class="fas fa-heartbeat me-2"></i>{{ __('ui.admin_health.title') }}</h1>
+            <p>{{ __('ui.admin_health.subtitle') }}</p>
         </div>
 
         @if (session('success'))
@@ -228,26 +229,26 @@
 
         <section class="catalog-toolbar">
             <form class="toolbar-grid" method="GET" action="{{ route('admin.health.index') }}">
-                <input type="text" name="q" value="{{ $search }}" placeholder="Search health metrics by name...">
-                <button class="btn-main" type="submit"><i class="fas fa-magnifying-glass"></i>Search</button>
-                <a href="{{ route('admin.dashboard') }}" class="btn-ghost"><i class="fas fa-arrow-left"></i>Back</a>
+                <input type="text" name="q" value="{{ $search }}" placeholder="{{ __('ui.admin_health.search_placeholder') }}">
+                <button class="btn-main" type="submit"><i class="fas fa-magnifying-glass"></i>{{ __('ui.admin_health.search') }}</button>
+                <a href="{{ route('admin.dashboard') }}" class="btn-ghost"><i class="fas fa-arrow-left"></i>{{ __('ui.admin_health.back') }}</a>
             </form>
         </section>
 
         <section class="catalog-panel">
             <form class="create-grid" method="POST" action="{{ route('admin.health.store') }}" id="createMetricForm">
                 @csrf
-                <input class="form-input" type="text" name="metric_name" placeholder="metric name (e.g. blood_pressure)" required>
+                <input class="form-input" type="text" name="metric_name" placeholder="{{ __('ui.admin_health.metric_name_placeholder') }}" required>
 
                 <div class="field-builder" data-field-builder="create">
                     <div class="field-row">
-                        <input class="form-input" type="text" name="fields[]" placeholder="Field label (e.g. Heart Rate (bpm))" required>
+                        <input class="form-input" type="text" name="fields[]" placeholder="{{ __('ui.admin_health.field_label_placeholder') }}" required>
                     </div>
                 </div>
 
                 <div class="d-flex flex-column gap-2">
-                    <button class="btn-add-field" type="button" data-add-field="create"><i class="fas fa-plus"></i>Add Field</button>
-                    <button class="btn-main" type="submit"><i class="fas fa-plus"></i>Create</button>
+                    <button class="btn-add-field" type="button" data-add-field="create"><i class="fas fa-plus"></i>{{ __('ui.admin_health.add_field') }}</button>
+                    <button class="btn-main" type="submit"><i class="fas fa-plus"></i>{{ __('ui.admin_health.create') }}</button>
                 </div>
             </form>
         </section>
@@ -257,17 +258,17 @@
                 <article class="item-card">
                     <h2 class="item-title">{{ ucwords(str_replace('_', ' ', $metric->metric_name)) }}</h2>
                     <div class="item-badges">
-                        <span class="item-badge">{{ number_format($metric->user_health_records_count) }} user logs</span>
-                        <span class="item-badge">{{ count((array) $metric->fields) }} field(s)</span>
+                        <span class="item-badge">{{ number_format($metric->user_health_records_count) }} {{ __('ui.admin_health.user_logs') }}</span>
+                        <span class="item-badge">{{ count((array) $metric->fields) }} {{ __('ui.admin_health.fields') }}</span>
                     </div>
                     <p class="item-copy">{{ implode(' | ', (array) $metric->fields) }}</p>
                     <div class="item-actions">
-                        <a href="{{ route('admin.metrics.show', $metric) }}" class="btn-open"><i class="fas fa-eye"></i>Open</a>
-                        <button type="button" class="btn-edit js-toggle-edit" data-target="metric-edit-{{ $metric->id }}"><i class="fas fa-pen"></i>Edit</button>
-                        <form method="POST" action="{{ route('admin.metrics.destroy', $metric) }}" onsubmit="return confirm('Delete this metric definition?');">
+                        <a href="{{ route('admin.metrics.show', $metric) }}" class="btn-open"><i class="fas fa-eye"></i>{{ __('ui.admin_health.open') }}</a>
+                        <button type="button" class="btn-edit js-toggle-edit" data-target="metric-edit-{{ $metric->id }}"><i class="fas fa-pen"></i>{{ __('ui.admin_health.edit') }}</button>
+                        <form method="POST" action="{{ route('admin.metrics.destroy', $metric) }}" onsubmit="return confirm('{{ __('ui.admin_health.delete_confirm') }}');">
                             @csrf
                             @method('DELETE')
-                            <button class="btn-delete" type="submit"><i class="fas fa-trash"></i>Delete</button>
+                            <button class="btn-delete" type="submit"><i class="fas fa-trash"></i>{{ __('ui.admin_health.delete') }}</button>
                         </form>
                     </div>
 
@@ -284,21 +285,21 @@
                                 @foreach ((array) $metric->fields as $field)
                                     <div class="field-row">
                                         <input class="form-input" type="text" name="fields[]" value="{{ $field }}" required>
-                                        <button type="button" class="btn-remove-field" title="Remove field">-</button>
+                                        <button type="button" class="btn-remove-field" title="{{ __('ui.admin_health.remove_field') }}">-</button>
                                     </div>
                                 @endforeach
                             </div>
 
                             <div class="d-flex gap-2 mt-2">
-                                <button class="btn-add-field" type="button" data-add-field="edit-{{ $metric->id }}"><i class="fas fa-plus"></i>Add Field</button>
-                                <button class="btn-main" type="submit"><i class="fas fa-floppy-disk"></i>Save</button>
+                                <button class="btn-add-field" type="button" data-add-field="edit-{{ $metric->id }}"><i class="fas fa-plus"></i>{{ __('ui.admin_health.add_field') }}</button>
+                                <button class="btn-main" type="submit"><i class="fas fa-floppy-disk"></i>{{ __('ui.admin_health.save') }}</button>
                             </div>
                         </form>
                     </div>
                 </article>
             @empty
                 <div class="item-card" style="grid-column: 1 / -1; text-align: center;">
-                    <p class="mb-0 text-muted">No health metrics found for this search.</p>
+                    <p class="mb-0 text-muted">{{ __('ui.admin_health.no_metrics_found') }}</p>
                 </div>
             @endforelse
         </div>
@@ -316,7 +317,7 @@
         function createFieldRow() {
             const row = document.createElement('div');
             row.className = 'field-row';
-            row.innerHTML = '<input class="form-input" type="text" name="fields[]" placeholder="Field label (e.g. Glucose Level (mg/dL))" required><button type="button" class="btn-remove-field" title="Remove field">-</button>';
+            row.innerHTML = '<input class="form-input" type="text" name="fields[]" placeholder="{{ __('ui.admin_health.field_label_placeholder') }}" required><button type="button" class="btn-remove-field" title="{{ __('ui.admin_health.remove_field') }}">-</button>';
             return row;
         }
 

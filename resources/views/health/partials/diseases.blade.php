@@ -5,13 +5,13 @@
     <div class="col-md-4">
         <div class="health-card">
             <div class="health-card-header">
-                <h5><i class="fas fa-chart-pie"></i> Status Overview</h5>
+                <h5><i class="fas fa-chart-pie"></i> {{ __('ui.health.status_overview') }}</h5>
             </div>
             <div class="health-card-body">
                 @if ($userDiseases->isEmpty())
                     <div class="empty-state py-3">
                         <i class="fas fa-virus-slash d-block"></i>
-                        <p>No disease records yet.</p>
+                        <p>{{ __('ui.health.no_disease_records_yet') }}</p>
                     </div>
                 @else
                     @php
@@ -28,7 +28,7 @@
                             <div class="d-flex justify-content-between align-items-center py-2 {{ !$loop->last ? 'border-bottom' : '' }}">
                                 <div class="d-flex align-items-center gap-2">
                                     <i class="fas fa-circle" style="font-size: 0.5rem; color: {{ $statusColors[$status] }};"></i>
-                                    <span class="fw-semibold text-capitalize" style="font-size: 0.88rem;">{{ $status }}</span>
+                                    <span class="fw-semibold text-capitalize" style="font-size: 0.88rem;">{{ __("ui.health.$status") }}</span>
                                 </div>
                                 <span class="fw-bold" style="color: {{ $statusColors[$status] }};">
                                     {{ $statusCounts->get($status, 0) }}
@@ -38,14 +38,14 @@
                     </div>
                     <div class="text-center mt-3">
                         <span class="fw-bold" style="font-size: 1.8rem; color: #2d3748;">{{ $userDiseases->count() }}</span>
-                        <div class="text-muted" style="font-size: 0.82rem;">Total Conditions</div>
+                        <div class="text-muted" style="font-size: 0.82rem;">{{ __('ui.health.total_conditions') }}</div>
                     </div>
                 @endif
 
                 <div class="mt-3">
                     <button class="btn w-100 text-white" data-bs-toggle="modal" data-bs-target="#addDiseaseModal"
                         style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px; font-size: 0.88rem;">
-                        <i class="fas fa-plus me-1"></i> Add Disease Record
+                        <i class="fas fa-plus me-1"></i> {{ __('ui.health.add_disease_record') }}
                     </button>
                 </div>
             </div>
@@ -56,25 +56,25 @@
     <div class="col-md-8">
         <div class="health-card">
             <div class="health-card-header">
-                <h5><i class="fas fa-list-ul"></i> My Disease Records</h5>
-                <span class="health-card-badge bg-light text-muted">{{ $userDiseases->count() }} total</span>
+                <h5><i class="fas fa-list-ul"></i> {{ __('ui.health.my_disease_records') }}</h5>
+                <span class="health-card-badge bg-light text-muted">{{ $userDiseases->count() }} {{ __('ui.health.total') }}</span>
             </div>
             <div class="health-card-body p-0">
                 @if ($userDiseases->isEmpty())
                     <div class="empty-state">
                         <i class="fas fa-virus d-block"></i>
-                        <p>No disease records found.<br>Track your medical conditions here.</p>
+                        <p>{{ __('ui.health.no_disease_records_yet') }}</p>
                     </div>
                 @else
                     <div class="table-responsive">
                         <table class="health-table">
                             <thead>
                                 <tr>
-                                    <th>Disease</th>
-                                    <th>Status</th>
-                                    <th>Diagnosed</th>
-                                    <th>Notes</th>
-                                    <th>Actions</th>
+                                    <th>{{ __('ui.health.disease') }}</th>
+                                    <th>{{ __('ui.health.status') }}</th>
+                                    <th>{{ __('ui.health.diagnosed_date') }}</th>
+                                    <th>{{ __('ui.health.notes') }}</th>
+                                    <th>{{ __('ui.health.actions') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -92,7 +92,7 @@
                                                             {{ $ud->disease->disease_name }}
                                                         </a>
                                                     @else
-                                                        <span class="fw-semibold">Unknown</span>
+                                                        <span class="fw-semibold">{{ __('ui.health.unknown') }}</span>
                                                     @endif
                                                 </div>
                                             </div>
@@ -109,7 +109,7 @@
                                             @endphp
                                             <span class="severity-badge {{ $badgeClass }} text-capitalize">
                                                 <i class="fas fa-circle" style="font-size: 0.4rem;"></i>
-                                                {{ $ud->status }}
+                                                {{ __("ui.health.{$ud->status}") }}
                                             </span>
                                         </td>
                                         <td>
@@ -126,13 +126,13 @@
                                             <div class="action-btn-group">
                                                 <button type="button" class="btn btn-sm btn-outline-primary"
                                                     onclick="openEditDisease({{ $ud->id }}, {{ $ud->disease_id }}, '{{ addslashes($ud->disease->disease_name ?? '') }}', '{{ $ud->status }}', '{{ $ud->diagnosed_at ? $ud->diagnosed_at->format('Y-m-d') : '' }}', '{{ addslashes($ud->notes ?? '') }}')">
-                                                    <i class="fas fa-edit"></i>
+                                                    <i class="fas fa-edit"></i> {{ __('ui.health.edit') }}
                                                 </button>
                                                 <form action="{{ route('health.disease.destroy', $ud) }}" method="POST"
-                                                    onsubmit="return confirm('Remove this disease record?')" class="d-inline">
+                                                    onsubmit="return confirm('{{ __('ui.health.delete_disease_confirm') }}')" class="d-inline">
                                                     @csrf @method('DELETE')
                                                     <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                        <i class="fas fa-trash"></i>
+                                                        <i class="fas fa-trash"></i> {{ __('ui.health.delete') }}
                                                     </button>
                                                 </form>
                                             </div>
@@ -147,4 +147,3 @@
         </div>
     </div>
 </div>
-

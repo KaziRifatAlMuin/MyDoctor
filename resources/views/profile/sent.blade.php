@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Sent')
+@section('title', __('ui.mailbox.sent_title'))
 @section('main_content_class', 'main-content main-content--wide')
 
 <!-- Gmail-like Custom Styles -->
@@ -64,13 +64,13 @@
     <!-- Sidebar -->
     <div class="gmail-sidebar">
         <a href="{{ route('profile.mailbox.compose') }}" class="gmail-compose-btn">
-            <i class="fas fa-pen"></i> Compose
+            <i class="fas fa-pen"></i> {{ __('ui.mailbox.compose') }}
         </a>
         
         <ul class="gmail-nav">
             <li>
                 <a href="{{ route('profile.mailbox') }}" class="gmail-nav-item">
-                    <i class="fas fa-inbox"></i> Inbox
+                    <i class="fas fa-inbox"></i> {{ __('ui.mailbox.inbox') }}
                     @php $unreadCount = \App\Models\Mailing::where('receiver_id', auth()->id())->where('status', 'unread')->count(); @endphp
                     @if($unreadCount > 0)
                         <span class="badge">{{ $unreadCount }}</span>
@@ -79,22 +79,22 @@
             </li>
             <li>
                 <a href="{{ route('profile.mailbox.drafts') }}" class="gmail-nav-item">
-                    <i class="fas fa-file-alt"></i> Drafts
+                    <i class="fas fa-file-alt"></i> {{ __('ui.mailbox.drafts') }}
                 </a>
             </li>
             <li>
                 <a href="{{ route('profile.mailbox.sent') }}" class="gmail-nav-item active">
-                    <i class="fas fa-paper-plane"></i> Sent
+                    <i class="fas fa-paper-plane"></i> {{ __('ui.mailbox.sent') }}
                 </a>
             </li>
             <li>
                 <a href="{{ route('profile.mailbox.starred') }}" class="gmail-nav-item">
-                    <i class="fas fa-star"></i> Starred
+                    <i class="fas fa-star"></i> {{ __('ui.mailbox.starred') }}
                 </a>
             </li>
             <li>
                 <a href="{{ route('profile.mailbox.archived') }}" class="gmail-nav-item">
-                    <i class="fas fa-box-archive"></i> Archived
+                    <i class="fas fa-box-archive"></i> {{ __('ui.mailbox.archived') }}
                 </a>
             </li>
         </ul>
@@ -104,20 +104,20 @@
     <div class="gmail-main">
         <!-- Toolbar -->
         <div class="gmail-toolbar">
-            <button class="gmail-icon-btn d-none d-md-flex me-2" onclick="window.location.reload();" title="Refresh">
+            <button class="gmail-icon-btn d-none d-md-flex me-2" onclick="window.location.reload();" title="{{ __('ui.mailbox.refresh') }}">
                 <i class="fas fa-redo-alt fs-6 text-muted"></i>
             </button>
             <form id="bulkStatusFormSent" method="POST" action="{{ route('profile.mailbox.bulk-status') }}" class="gmail-bulk-form">
                 @csrf
                 @method('PATCH')
-                <input id="bulkSelectAllSent" type="checkbox" class="gmail-bulk-select" title="Select all on this page">
+                <input id="bulkSelectAllSent" type="checkbox" class="gmail-bulk-select" title="{{ __('ui.mailbox.select_all') }}">
                 <input type="hidden" name="status" id="bulkStatusInputSent" value="">
-                <button type="button" class="gmail-bulk-btn bulk-action-btn-sent" data-status="archived" disabled>Archive</button>
+                <button type="button" class="gmail-bulk-btn bulk-action-btn-sent" data-status="archived" disabled>{{ __('ui.mailbox.archive') }}</button>
             </form>
 
             <div class="ms-auto d-flex align-items-center">
                 @if ($messages->hasPages())
-                    <span class="text-muted small me-3">{{ $messages->firstItem() }}-{{ $messages->lastItem() }} of {{ $messages->total() }}</span>
+                    <span class="text-muted small me-3">{{ $messages->firstItem() }}-{{ $messages->lastItem() }} {{ __('ui.mailbox.of') }} {{ $messages->total() }}</span>
                     <a href="{{ $messages->previousPageUrl() }}" class="gmail-icon-btn {{ $messages->onFirstPage() ? 'disabled opacity-50' : '' }}">
                         <i class="fas fa-chevron-left"></i>
                     </a>
@@ -139,12 +139,12 @@
             @forelse($messages as $message)
                 <div class="gmail-row">
                     <div class="gmail-row-icons">
-                        <input type="checkbox" class="gmail-row-select-sent" name="mailing_ids[]" value="{{ $message->id }}" form="bulkStatusFormSent" title="Select message">
+                        <input type="checkbox" class="gmail-row-select-sent" name="mailing_ids[]" value="{{ $message->id }}" form="bulkStatusFormSent" title="{{ __('ui.mailbox.select_message') }}">
 
                         <form method="POST" action="{{ route('profile.mailbox.star', $message) }}" class="d-inline" onclick="event.stopPropagation();">
                             @csrf
                             @method('PATCH')
-                            <button type="submit" class="p-0 border-0 bg-transparent" title="Toggle star">
+                            <button type="submit" class="p-0 border-0 bg-transparent" title="{{ __('ui.mailbox.toggle_star') }}">
                                 <i class="{{ $message->is_starred ? 'fas text-warning' : 'far' }} fa-star"></i>
                             </button>
                         </form>
@@ -152,11 +152,11 @@
 
                     <a href="{{ route('profile.mailbox.show', ['mailing' => $message->id, 'folder' => 'sent']) }}" class="d-flex align-items-center flex-grow-1 text-decoration-none text-reset">
                         <div class="gmail-sender">
-                            To: {{ $message->receiver?->name ?? 'Unknown user' }}
+                            {{ __('ui.mailbox.to_label') }}: {{ $message->receiver?->name ?? __('ui.mailbox.unknown_user') }}
                         </div>
 
                         <div class="gmail-subject-container">
-                            <span class="gmail-subject">{{ $message->title ?: '(No subject)' }}</span>
+                            <span class="gmail-subject">{{ $message->title ?: __('ui.mailbox.no_subject') }}</span>
                             <span class="gmail-snippet">- {{ \Illuminate\Support\Str::limit($message->message, 80) }}</span>
                         </div>
 
@@ -168,7 +168,7 @@
             @empty
                 <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted opacity-75">
                     <i class="fas fa-paper-plane mb-3" style="font-size: 3rem;"></i>
-                    <h5>No sent messages</h5>
+                    <h5>{{ __('ui.mailbox.no_sent_messages') }}</h5>
                 </div>
             @endforelse
         </div>

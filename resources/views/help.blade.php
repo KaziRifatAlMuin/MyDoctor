@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', __('ui.auto.Help'))
+@section('title', __('ui.help.help'))
 
 @push('styles')
     <style>
@@ -300,8 +300,8 @@
 
             {{-- Hero --}}
             <div class="help-hero">
-                <h2><i class="fas fa-question-circle me-2"></i>How can we help you?</h2>
-                <p>Find answers to common questions, guides, and support</p>
+                <h2><i class="fas fa-question-circle me-2"></i>{{ __('ui.help.how_can_we_help_you') }}</h2>
+                <p>{{ __('ui.help.find_answers_guides_support') }}</p>
                 {{-- search and Ask AI moved below, just above General Questions --}}
             </div>
 
@@ -310,43 +310,43 @@
                 <div class="col-6 col-md-4 col-lg-2">
                     <a href="#faq-general" class="quick-link-card" onclick="scrollToFaq('general')">
                         <div class="quick-link-icon ql-purple"><i class="fas fa-info-circle"></i></div>
-                        <div class="quick-link-title">General</div>
-                        <p class="quick-link-desc">About MyDoctor</p>
+                        <div class="quick-link-title">{{ __('ui.help.general') }}</div>
+                        <p class="quick-link-desc">{{ __('ui.help.about_mydoctor') }}</p>
                     </a>
                 </div>
                 <div class="col-6 col-md-4 col-lg-2">
                     <a href="#faq-health" class="quick-link-card" onclick="scrollToFaq('health')">
                         <div class="quick-link-icon ql-green"><i class="fas fa-heartbeat"></i></div>
-                        <div class="quick-link-title">Health</div>
-                        <p class="quick-link-desc">Metrics & tracking</p>
+                        <div class="quick-link-title">{{ __('ui.help.health') }}</div>
+                        <p class="quick-link-desc">{{ __('ui.help.metrics_tracking') }}</p>
                     </a>
                 </div>
                 <div class="col-6 col-md-4 col-lg-2">
                     <a href="#faq-medicine" class="quick-link-card" onclick="scrollToFaq('medicine')">
                         <div class="quick-link-icon ql-orange"><i class="fas fa-pills"></i></div>
-                        <div class="quick-link-title">Medicine</div>
-                        <p class="quick-link-desc">Reminders & logs</p>
+                        <div class="quick-link-title">{{ __('ui.help.medicine') }}</div>
+                        <p class="quick-link-desc">{{ __('ui.help.reminders_logs') }}</p>
                     </a>
                 </div>
                 <div class="col-6 col-md-4 col-lg-2">
                     <a href="#faq-uploads" class="quick-link-card" onclick="scrollToFaq('uploads')">
                         <div class="quick-link-icon ql-red"><i class="fas fa-file-medical"></i></div>
-                        <div class="quick-link-title">Uploads</div>
-                        <p class="quick-link-desc">Prescriptions & reports</p>
+                        <div class="quick-link-title">{{ __('ui.help.uploads') }}</div>
+                        <p class="quick-link-desc">{{ __('ui.help.prescriptions_reports') }}</p>
                     </a>
                 </div>
                 <div class="col-6 col-md-4 col-lg-2">
                     <a href="#faq-account" class="quick-link-card" onclick="scrollToFaq('account')">
                         <div class="quick-link-icon ql-blue"><i class="fas fa-user-cog"></i></div>
-                        <div class="quick-link-title">Account</div>
-                        <p class="quick-link-desc">Profile & settings</p>
+                        <div class="quick-link-title">{{ __('ui.help.account') }}</div>
+                        <p class="quick-link-desc">{{ __('ui.help.profile_settings') }}</p>
                     </a>
                 </div>
                 <div class="col-6 col-md-4 col-lg-2">
                     <a href="#getting-started" class="quick-link-card">
                         <div class="quick-link-icon ql-teal"><i class="fas fa-rocket"></i></div>
-                        <div class="quick-link-title">Get Started</div>
-                        <p class="quick-link-desc">Step-by-step guide</p>
+                        <div class="quick-link-title">{{ __('ui.help.get_started') }}</div>
+                        <p class="quick-link-desc">{{ __('ui.help.step_by_step_guide') }}</p>
                     </a>
                 </div>
             </div>
@@ -359,17 +359,17 @@
                     <div class="d-flex flex-column flex-md-row align-items-center justify-content-between mb-3">
                         <div class="help-search me-md-3" style="flex:1; max-width:560px;">
                             <i class="fas fa-search search-icon"></i>
-                            <input type="text" id="helpSearchInput" placeholder="Search for help topics..." autocomplete="off" class="form-control">
+                            <input type="text" id="helpSearchInput" placeholder="{{ __('ui.help.search_help_topics') }}" autocomplete="off" class="form-control">
                         </div>
                         <div class="mt-3 mt-md-0 ms-md-3" style="white-space:nowrap;">
                             @if(!auth()->check() || !auth()->user()->isAdmin())
                                 @auth
                                     <button onclick="toggleChatbot()" class="btn btn-sm btn-light" style="border-radius:12px;border:1px solid rgba(0,0,0,0.06);">
-                                        <i class="fas fa-user-md me-1"></i> Ask MyDoctor AI
+                                        <i class="fas fa-user-md me-1"></i> {{ __('ui.help.ask_mydoctor_ai') }}
                                     </button>
                                 @else
                                     <a href="{{ route('login') }}?redirect={{ urlencode(request()->fullUrl()) }}" class="btn btn-sm btn-light" style="border-radius:12px;border:1px solid rgba(0,0,0,0.06);">
-                                        <i class="fas fa-user-md me-1"></i> Ask MyDoctor AI
+                                        <i class="fas fa-user-md me-1"></i> {{ __('ui.help.ask_mydoctor_ai') }}
                                     </a>
                                 @endauth
                             @endif
@@ -379,54 +379,47 @@
                     {{-- General FAQ --}}
                     <div class="faq-card searchable-item" id="faq-general">
                         <div class="faq-card-header">
-                            <h5><i class="fas fa-info-circle me-2"></i>General Questions</h5>
+                            <h5><i class="fas fa-info-circle me-2"></i>{{ __('ui.help.general_questions') }}</h5>
                         </div>
                         <div class="faq-card-body">
                             <div class="accordion" id="accGeneral">
                                 <div class="accordion-item searchable-item">
                                     <h2 class="accordion-header"><button class="accordion-button collapsed" type="button"
-                                            data-bs-toggle="collapse" data-bs-target="#g1">What is MyDoctor?</button></h2>
+                                            data-bs-toggle="collapse" data-bs-target="#g1">{{ __('ui.help.what_is_mydoctor') }}</button></h2>
                                     <div id="g1" class="accordion-collapse collapse" data-bs-parent="#accGeneral">
-                                        <div class="accordion-body">MyDoctor is a comprehensive personal health management
-                                            platform that helps you track health metrics, manage medicines, log symptoms,
-                                            store medical records, and get personalized health suggestions — all from one
-                                            place.</div>
+                                        <div class="accordion-body">{{ __('ui.help.what_is_mydoctor_answer') }}</div>
                                     </div>
                                 </div>
                                 <div class="accordion-item searchable-item">
                                     <h2 class="accordion-header"><button class="accordion-button collapsed" type="button"
-                                            data-bs-toggle="collapse" data-bs-target="#g2">Is MyDoctor free to use?</button>
+                                            data-bs-toggle="collapse" data-bs-target="#g2">{{ __('ui.help.is_mydoctor_free') }}</button>
                                     </h2>
                                     <div id="g2" class="accordion-collapse collapse" data-bs-parent="#accGeneral">
-                                        <div class="accordion-body">Yes! MyDoctor is completely free. All features including
-                                            health tracking, medicine reminders, prescription uploads, and smart suggestions
-                                            are available at no cost.</div>
+                                        <div class="accordion-body">{{ __('ui.help.is_mydoctor_free_answer') }}</div>
                                     </div>
                                 </div>
                                 <div class="accordion-item searchable-item">
                                     <h2 class="accordion-header"><button class="accordion-button collapsed" type="button"
-                                            data-bs-toggle="collapse" data-bs-target="#g3">Is my health data safe?</button>
+                                            data-bs-toggle="collapse" data-bs-target="#g3">{{ __('ui.help.is_health_data_safe') }}</button>
                                     </h2>
                                     <div id="g3" class="accordion-collapse collapse" data-bs-parent="#accGeneral">
-                                        <div class="accordion-body">Absolutely. Your data is stored securely and is only
-                                            accessible to you. We use industry-standard encryption and never share your
-                                            health information with third parties.</div>
+                                        <div class="accordion-body">{{ __('ui.help.is_health_data_safe_answer') }}</div>
                                     </div>
                                 </div>
                                 <div class="accordion-item searchable-item">
                                     <h2 class="accordion-header"><button class="accordion-button collapsed" type="button"
-                                            data-bs-toggle="collapse" data-bs-target="#g4">Do I need medical knowledge to use MyDoctor?</button>
+                                            data-bs-toggle="collapse" data-bs-target="#g4">{{ __('ui.help.need_medical_knowledge') }}</button>
                                     </h2>
                                     <div id="g4" class="accordion-collapse collapse" data-bs-parent="#accGeneral">
-                                        <div class="accordion-body">No. The platform is designed for everyday users. Most actions are guided with simple forms, clear labels, and easy-to-read summaries. If you are unsure where to start, follow the step-by-step guide on this page.</div>
+                                        <div class="accordion-body">{{ __('ui.help.need_medical_knowledge_answer') }}</div>
                                     </div>
                                 </div>
                                 <div class="accordion-item searchable-item">
                                     <h2 class="accordion-header"><button class="accordion-button collapsed" type="button"
-                                            data-bs-toggle="collapse" data-bs-target="#g5">Does MyDoctor replace a doctor visit?</button>
+                                            data-bs-toggle="collapse" data-bs-target="#g5">{{ __('ui.help.does_mydoctor_replace_doctor') }}</button>
                                     </h2>
                                     <div id="g5" class="accordion-collapse collapse" data-bs-parent="#accGeneral">
-                                        <div class="accordion-body">No. MyDoctor helps you organize and understand your health data, but it does not replace professional diagnosis or emergency care. Always consult a licensed physician for medical decisions.</div>
+                                        <div class="accordion-body">{{ __('ui.help.does_mydoctor_replace_doctor_answer') }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -436,64 +429,50 @@
                     {{-- Health FAQ --}}
                     <div class="faq-card searchable-item" id="faq-health">
                         <div class="faq-card-header">
-                            <h5><i class="fas fa-heartbeat me-2"></i>Health Tracking</h5>
+                            <h5><i class="fas fa-heartbeat me-2"></i>{{ __('ui.help.health_tracking') }}</h5>
                         </div>
                         <div class="faq-card-body">
                             <div class="accordion" id="accHealth">
                                 <div class="accordion-item searchable-item">
                                     <h2 class="accordion-header"><button class="accordion-button collapsed"
-                                            type="button" data-bs-toggle="collapse" data-bs-target="#h1">What health
-                                            metrics can I track?</button></h2>
+                                            type="button" data-bs-toggle="collapse" data-bs-target="#h1">{{ __('ui.help.what_health_metrics_can_i_track') }}</button></h2>
                                     <div id="h1" class="accordion-collapse collapse" data-bs-parent="#accHealth">
-                                        <div class="accordion-body">You can track 15+ metric types including blood
-                                            pressure, blood glucose, heart rate, body weight, BMI, oxygen saturation,
-                                            temperature, cholesterol, hemoglobin, creatinine, and more. Each metric supports
-                                            Bangla translations.</div>
+                                        <div class="accordion-body">{{ __('ui.help.what_health_metrics_can_i_track_answer') }}</div>
                                     </div>
                                 </div>
                                 <div class="accordion-item searchable-item">
                                     <h2 class="accordion-header"><button class="accordion-button collapsed"
-                                            type="button" data-bs-toggle="collapse" data-bs-target="#h2">How do I record
-                                            a health metric?</button></h2>
+                                            type="button" data-bs-toggle="collapse" data-bs-target="#h2">{{ __('ui.help.how_to_record_health_metric') }}</button></h2>
                                     <div id="h2" class="accordion-collapse collapse" data-bs-parent="#accHealth">
-                                        <div class="accordion-body">Go to <strong>Health Dashboard → Metrics</strong> tab
-                                            and click "Record Metric". Select the metric type, enter the values, and save.
-                                            Your readings will be charted over time for easy tracking.</div>
+                                        <div class="accordion-body">{{ __('ui.help.how_to_record_health_metric_answer') }}</div>
                                     </div>
                                 </div>
                                 <div class="accordion-item searchable-item">
                                     <h2 class="accordion-header"><button class="accordion-button collapsed"
-                                            type="button" data-bs-toggle="collapse" data-bs-target="#h3">How do I log
-                                            symptoms?</button></h2>
+                                            type="button" data-bs-toggle="collapse" data-bs-target="#h3">{{ __('ui.help.how_to_log_symptoms') }}</button></h2>
                                     <div id="h3" class="accordion-collapse collapse" data-bs-parent="#accHealth">
-                                        <div class="accordion-body">Go to <strong>Health Dashboard → Symptoms</strong> tab
-                                            and click "Log Symptom". You can search from 100+ symptoms (with Bangla names),
-                                            set severity level (1-10), and add optional notes.</div>
+                                        <div class="accordion-body">{{ __('ui.help.how_to_log_symptoms_answer') }}</div>
                                     </div>
                                 </div>
                                 <div class="accordion-item searchable-item">
                                     <h2 class="accordion-header"><button class="accordion-button collapsed"
-                                            type="button" data-bs-toggle="collapse" data-bs-target="#h4">What are Smart
-                                            Suggestions?</button></h2>
+                                            type="button" data-bs-toggle="collapse" data-bs-target="#h4">{{ __('ui.help.what_are_smart_suggestions') }}</button></h2>
                                     <div id="h4" class="accordion-collapse collapse" data-bs-parent="#accHealth">
-                                        <div class="accordion-body">Smart Suggestions analyzes your recorded metrics,
-                                            symptoms, conditions, and medicine adherence to provide personalized health
-                                            recommendations. For example, if your blood pressure is high, you'll get
-                                            specific dietary and lifestyle tips.</div>
+                                        <div class="accordion-body">{{ __('ui.help.what_are_smart_suggestions_answer') }}</div>
                                     </div>
                                 </div>
                                 <div class="accordion-item searchable-item">
                                     <h2 class="accordion-header"><button class="accordion-button collapsed"
-                                            type="button" data-bs-toggle="collapse" data-bs-target="#h5">How often should I log my health metrics?</button></h2>
+                                            type="button" data-bs-toggle="collapse" data-bs-target="#h5">{{ __('ui.help.how_often_log_health_metrics') }}</button></h2>
                                     <div id="h5" class="accordion-collapse collapse" data-bs-parent="#accHealth">
-                                        <div class="accordion-body">For stable monitoring, log key metrics at the same time each day or as advised by your doctor. Consistency improves trend analysis and helps Smart Suggestions generate better recommendations.</div>
+                                        <div class="accordion-body">{{ __('ui.help.how_often_log_health_metrics_answer') }}</div>
                                     </div>
                                 </div>
                                 <div class="accordion-item searchable-item">
                                     <h2 class="accordion-header"><button class="accordion-button collapsed"
-                                            type="button" data-bs-toggle="collapse" data-bs-target="#h6">Can I view my progress over time?</button></h2>
+                                            type="button" data-bs-toggle="collapse" data-bs-target="#h6">{{ __('ui.help.can_view_progress_over_time') }}</button></h2>
                                     <div id="h6" class="accordion-collapse collapse" data-bs-parent="#accHealth">
-                                        <div class="accordion-body">Yes. Your recorded data is shown as history and trends in the Health dashboard. You can compare readings by date, identify patterns, and share a summary with your physician during consultation.</div>
+                                        <div class="accordion-body">{{ __('ui.help.can_view_progress_over_time_answer') }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -503,69 +482,56 @@
                     {{-- Medicine FAQ --}}
                     <div class="faq-card searchable-item" id="faq-medicine">
                         <div class="faq-card-header">
-                            <h5><i class="fas fa-pills me-2"></i>Medicine Management</h5>
+                            <h5><i class="fas fa-pills me-2"></i>{{ __('ui.help.medicine_management') }}</h5>
                         </div>
                         <div class="faq-card-body">
                             <div class="accordion" id="accMedicine">
                                 <div class="accordion-item searchable-item">
                                     <h2 class="accordion-header"><button class="accordion-button collapsed"
-                                            type="button" data-bs-toggle="collapse" data-bs-target="#m1">How do I add a
-                                            medicine?</button></h2>
+                                            type="button" data-bs-toggle="collapse" data-bs-target="#m1">{{ __('ui.help.how_to_add_medicine') }}</button></h2>
                                     <div id="m1" class="accordion-collapse collapse"
                                         data-bs-parent="#accMedicine">
-                                        <div class="accordion-body">Go to <strong>Medicine → Add Medicine</strong>. Enter
-                                            the medicine name, dosage, form (tablet/syrup/etc.), and any additional notes.
-                                            Then create a schedule to set when you should take it.</div>
+                                        <div class="accordion-body">{{ __('ui.help.how_to_add_medicine_answer') }}</div>
                                     </div>
                                 </div>
                                 <div class="accordion-item searchable-item">
                                     <h2 class="accordion-header"><button class="accordion-button collapsed"
-                                            type="button" data-bs-toggle="collapse" data-bs-target="#m2">How do medicine
-                                            reminders work?</button></h2>
+                                            type="button" data-bs-toggle="collapse" data-bs-target="#m2">{{ __('ui.help.how_medicine_reminders_work') }}</button></h2>
                                     <div id="m2" class="accordion-collapse collapse"
                                         data-bs-parent="#accMedicine">
-                                        <div class="accordion-body">After adding medicine schedules, reminders
-                                            automatically appear at the set times. You can mark each dose as "Taken" or
-                                            "Missed". You can also snooze reminders. Enable push notifications in your
-                                            profile to get browser alerts.</div>
+                                        <div class="accordion-body">{{ __('ui.help.how_medicine_reminders_work_answer') }}</div>
                                     </div>
                                 </div>
                                 <div class="accordion-item searchable-item">
                                     <h2 class="accordion-header"><button class="accordion-button collapsed"
-                                            type="button" data-bs-toggle="collapse" data-bs-target="#m3">What is
-                                            adherence rate?</button></h2>
+                                            type="button" data-bs-toggle="collapse" data-bs-target="#m3">{{ __('ui.help.what_is_adherence_rate') }}</button></h2>
                                     <div id="m3" class="accordion-collapse collapse"
                                         data-bs-parent="#accMedicine">
-                                        <div class="accordion-body">Adherence rate shows what percentage of your scheduled
-                                            medicines you've taken over the last 30 days. A rate above 80% is ideal. Low
-                                            adherence will trigger helpful suggestions to improve your routine.</div>
+                                        <div class="accordion-body">{{ __('ui.help.what_is_adherence_rate_answer') }}</div>
                                     </div>
                                 </div>
                                 <div class="accordion-item searchable-item">
                                     <h2 class="accordion-header"><button class="accordion-button collapsed"
-                                            type="button" data-bs-toggle="collapse" data-bs-target="#m4">Can I export my
-                                            medicine logs?</button></h2>
+                                            type="button" data-bs-toggle="collapse" data-bs-target="#m4">{{ __('ui.help.can_export_medicine_logs') }}</button></h2>
                                     <div id="m4" class="accordion-collapse collapse"
                                         data-bs-parent="#accMedicine">
-                                        <div class="accordion-body">Yes! Go to <strong>Medicine → Adherence Logs</strong>
-                                            and use the "Export CSV" button to download your medication history. You can
-                                            filter by date range and specific medicines before exporting.</div>
+                                        <div class="accordion-body">{{ __('ui.help.can_export_medicine_logs_answer') }}</div>
                                     </div>
                                 </div>
                                 <div class="accordion-item searchable-item">
                                     <h2 class="accordion-header"><button class="accordion-button collapsed"
-                                            type="button" data-bs-toggle="collapse" data-bs-target="#m5">What should I do if I miss a dose?</button></h2>
+                                            type="button" data-bs-toggle="collapse" data-bs-target="#m5">{{ __('ui.help.what_if_miss_dose') }}</button></h2>
                                     <div id="m5" class="accordion-collapse collapse"
                                         data-bs-parent="#accMedicine">
-                                        <div class="accordion-body">Mark it as "Missed" in your log so your adherence stays accurate. Do not double-dose unless your doctor has explicitly advised it. Use reminder timing adjustments to prevent repeated misses.</div>
+                                        <div class="accordion-body">{{ __('ui.help.what_if_miss_dose_answer') }}</div>
                                     </div>
                                 </div>
                                 <div class="accordion-item searchable-item">
                                     <h2 class="accordion-header"><button class="accordion-button collapsed"
-                                            type="button" data-bs-toggle="collapse" data-bs-target="#m6">Can I set multiple reminder times for one medicine?</button></h2>
+                                            type="button" data-bs-toggle="collapse" data-bs-target="#m6">{{ __('ui.help.can_set_multiple_reminder_times') }}</button></h2>
                                     <div id="m6" class="accordion-collapse collapse"
                                         data-bs-parent="#accMedicine">
-                                        <div class="accordion-body">Yes. You can configure schedules based on your prescription, including multiple doses per day. This is useful for morning-evening medications or interval-based plans.</div>
+                                        <div class="accordion-body">{{ __('ui.help.can_set_multiple_reminder_times_answer') }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -575,35 +541,29 @@
                     {{-- Uploads FAQ --}}
                     <div class="faq-card searchable-item" id="faq-uploads">
                         <div class="faq-card-header">
-                            <h5><i class="fas fa-file-medical me-2"></i>Prescriptions & Reports</h5>
+                            <h5><i class="fas fa-file-medical me-2"></i>{{ __('ui.help.prescriptions_reports_title') }}</h5>
                         </div>
                         <div class="faq-card-body">
                             <div class="accordion" id="accUploads">
                                 <div class="accordion-item searchable-item">
                                     <h2 class="accordion-header"><button class="accordion-button collapsed"
-                                            type="button" data-bs-toggle="collapse" data-bs-target="#u1">How do I upload
-                                            a prescription?</button></h2>
+                                            type="button" data-bs-toggle="collapse" data-bs-target="#u1">{{ __('ui.help.how_to_upload_prescription') }}</button></h2>
                                     <div id="u1" class="accordion-collapse collapse" data-bs-parent="#accUploads">
-                                        <div class="accordion-body">Go to <strong>Health Dashboard → Prescriptions</strong>
-                                            tab and click "Upload". Take a photo or upload an image (JPG/PNG, max 5MB). Add
-                                            the doctor name, institution, and date for easy reference.</div>
+                                        <div class="accordion-body">{{ __('ui.help.how_to_upload_prescription_answer') }}</div>
                                     </div>
                                 </div>
                                 <div class="accordion-item searchable-item">
                                     <h2 class="accordion-header"><button class="accordion-button collapsed"
-                                            type="button" data-bs-toggle="collapse" data-bs-target="#u2">Can I upload
-                                            medical reports?</button></h2>
+                                            type="button" data-bs-toggle="collapse" data-bs-target="#u2">{{ __('ui.help.can_upload_medical_reports') }}</button></h2>
                                     <div id="u2" class="accordion-collapse collapse" data-bs-parent="#accUploads">
-                                        <div class="accordion-body">Yes! Go to the <strong>Reports</strong> tab in the
-                                            Health Dashboard. Upload lab results, X-rays, or other medical documents. Add
-                                            notes and summaries for quick reference during doctor visits.</div>
+                                        <div class="accordion-body">{{ __('ui.help.can_upload_medical_reports_answer') }}</div>
                                     </div>
                                 </div>
                                 <div class="accordion-item searchable-item">
                                     <h2 class="accordion-header"><button class="accordion-button collapsed"
-                                            type="button" data-bs-toggle="collapse" data-bs-target="#u3">Which file formats are supported?</button></h2>
+                                            type="button" data-bs-toggle="collapse" data-bs-target="#u3">{{ __('ui.help.which_file_formats_supported') }}</button></h2>
                                     <div id="u3" class="accordion-collapse collapse" data-bs-parent="#accUploads">
-                                        <div class="accordion-body">For best compatibility, use clear JPG or PNG images for prescriptions and report snapshots. Keep file size reasonable and avoid blurry captures so text can be reviewed later.</div>
+                                        <div class="accordion-body">{{ __('ui.help.which_file_formats_supported_answer') }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -613,53 +573,43 @@
                     {{-- Account FAQ --}}
                     <div class="faq-card searchable-item" id="faq-account">
                         <div class="faq-card-header">
-                            <h5><i class="fas fa-user-cog me-2"></i>Account & Settings</h5>
+                            <h5><i class="fas fa-user-cog me-2"></i>{{ __('ui.help.account_settings') }}</h5>
                         </div>
                         <div class="faq-card-body">
                             <div class="accordion" id="accAccount">
                                 <div class="accordion-item searchable-item">
                                     <h2 class="accordion-header"><button class="accordion-button collapsed"
-                                            type="button" data-bs-toggle="collapse" data-bs-target="#a1">How do I update
-                                            my profile?</button></h2>
+                                            type="button" data-bs-toggle="collapse" data-bs-target="#a1">{{ __('ui.help.how_to_update_profile') }}</button></h2>
                                     <div id="a1" class="accordion-collapse collapse" data-bs-parent="#accAccount">
-                                        <div class="accordion-body">Go to <strong>My Profile</strong> from the dashboard or
-                                            user menu. You can update your name, phone, date of birth, occupation, blood
-                                            group, and profile picture.</div>
+                                        <div class="accordion-body">{{ __('ui.help.how_to_update_profile_answer') }}</div>
                                     </div>
                                 </div>
                                 <div class="accordion-item searchable-item">
                                     <h2 class="accordion-header"><button class="accordion-button collapsed"
-                                            type="button" data-bs-toggle="collapse" data-bs-target="#a2">How do I enable
-                                            push notifications?</button></h2>
+                                            type="button" data-bs-toggle="collapse" data-bs-target="#a2">{{ __('ui.help.how_to_enable_push_notifications') }}</button></h2>
                                     <div id="a2" class="accordion-collapse collapse" data-bs-parent="#accAccount">
-                                        <div class="accordion-body">Go to <strong>Profile → Notification
-                                                Preferences</strong>. Toggle on push notifications and allow browser
-                                            notifications when prompted. This ensures you receive medicine reminders on
-                                            time.</div>
+                                        <div class="accordion-body">{{ __('ui.help.how_to_enable_push_notifications_answer') }}</div>
                                     </div>
                                 </div>
                                 <div class="accordion-item searchable-item">
                                     <h2 class="accordion-header"><button class="accordion-button collapsed"
-                                            type="button" data-bs-toggle="collapse" data-bs-target="#a3">Can I change my
-                                            password?</button></h2>
+                                            type="button" data-bs-toggle="collapse" data-bs-target="#a3">{{ __('ui.help.can_change_password') }}</button></h2>
                                     <div id="a3" class="accordion-collapse collapse" data-bs-parent="#accAccount">
-                                        <div class="accordion-body">Yes, go to <strong>My Profile</strong> and scroll to
-                                            the password section. Enter your current password and your new password to
-                                            update it securely.</div>
+                                        <div class="accordion-body">{{ __('ui.help.can_change_password_answer') }}</div>
                                     </div>
                                 </div>
                                 <div class="accordion-item searchable-item">
                                     <h2 class="accordion-header"><button class="accordion-button collapsed"
-                                            type="button" data-bs-toggle="collapse" data-bs-target="#a4">How do I manage privacy settings?</button></h2>
+                                            type="button" data-bs-toggle="collapse" data-bs-target="#a4">{{ __('ui.help.how_to_manage_privacy_settings') }}</button></h2>
                                     <div id="a4" class="accordion-collapse collapse" data-bs-parent="#accAccount">
-                                        <div class="accordion-body">Open <strong>Profile → Settings</strong> and adjust profile visibility options. You can control what appears publicly and keep personal information private unless you explicitly consent.</div>
+                                        <div class="accordion-body">{{ __('ui.help.how_to_manage_privacy_settings_answer') }}</div>
                                     </div>
                                 </div>
                                 <div class="accordion-item searchable-item">
                                     <h2 class="accordion-header"><button class="accordion-button collapsed"
-                                            type="button" data-bs-toggle="collapse" data-bs-target="#a5">Can I switch language between English and Bangla?</button></h2>
+                                            type="button" data-bs-toggle="collapse" data-bs-target="#a5">{{ __('ui.help.can_switch_language') }}</button></h2>
                                     <div id="a5" class="accordion-collapse collapse" data-bs-parent="#accAccount">
-                                        <div class="accordion-body">Yes. Use the language toggle in the top navigation bar. The interface updates instantly so you can choose whichever language is easier for your daily use.</div>
+                                        <div class="accordion-body">{{ __('ui.help.can_switch_language_answer') }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -673,16 +623,15 @@
                     {{-- Getting Started Guide --}}
                     <div class="faq-card" id="getting-started">
                         <div class="faq-card-header">
-                            <h5><i class="fas fa-rocket me-2"></i>Getting Started</h5>
+                            <h5><i class="fas fa-rocket me-2"></i>{{ __('ui.help.getting_started') }}</h5>
                         </div>
                         <div class="faq-card-body" style="padding: 1rem 1.5rem;">
                             <div class="guide-card">
                                 <div class="d-flex align-items-start gap-3">
                                     <div class="guide-step">1</div>
                                     <div>
-                                        <div class="guide-title">Create Your Profile</div>
-                                        <p class="guide-desc">Add your basic info, blood group, and profile picture for a
-                                            personalized experience.</p>
+                                        <div class="guide-title">{{ __('ui.help.create_your_profile') }}</div>
+                                        <p class="guide-desc">{{ __('ui.help.create_your_profile_desc') }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -690,9 +639,8 @@
                                 <div class="d-flex align-items-start gap-3">
                                     <div class="guide-step">2</div>
                                     <div>
-                                        <div class="guide-title">Add Your Medicines</div>
-                                        <p class="guide-desc">Enter the medicines you take daily and create schedules so
-                                            reminders can work for you.</p>
+                                        <div class="guide-title">{{ __('ui.help.add_your_medicines') }}</div>
+                                        <p class="guide-desc">{{ __('ui.help.add_your_medicines_desc') }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -700,9 +648,8 @@
                                 <div class="d-flex align-items-start gap-3">
                                     <div class="guide-step">3</div>
                                     <div>
-                                        <div class="guide-title">Record Health Metrics</div>
-                                        <p class="guide-desc">Start logging your BP, glucose, weight, and other vitals to
-                                            visualize trends.</p>
+                                        <div class="guide-title">{{ __('ui.help.record_health_metrics') }}</div>
+                                        <p class="guide-desc">{{ __('ui.help.record_health_metrics_desc') }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -710,9 +657,8 @@
                                 <div class="d-flex align-items-start gap-3">
                                     <div class="guide-step">4</div>
                                     <div>
-                                        <div class="guide-title">Upload Prescriptions</div>
-                                        <p class="guide-desc">Take photos of your prescriptions and reports to keep them
-                                            safely organized.</p>
+                                        <div class="guide-title">{{ __('ui.help.upload_prescriptions') }}</div>
+                                        <p class="guide-desc">{{ __('ui.help.upload_prescriptions_desc') }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -720,9 +666,8 @@
                                 <div class="d-flex align-items-start gap-3">
                                     <div class="guide-step">5</div>
                                     <div>
-                                        <div class="guide-title">Check Suggestions</div>
-                                        <p class="guide-desc">Visit Smart Suggestions to get personalized health
-                                            recommendations based on your data.</p>
+                                        <div class="guide-title">{{ __('ui.help.check_suggestions') }}</div>
+                                        <p class="guide-desc">{{ __('ui.help.check_suggestions_desc') }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -730,8 +675,8 @@
                                 <div class="d-flex align-items-start gap-3">
                                     <div class="guide-step">6</div>
                                     <div>
-                                        <div class="guide-title">Review Weekly Trends</div>
-                                        <p class="guide-desc">Open your dashboard at least once a week to review metric trends and adherence performance.</p>
+                                        <div class="guide-title">{{ __('ui.help.review_weekly_trends') }}</div>
+                                        <p class="guide-desc">{{ __('ui.help.review_weekly_trends_desc') }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -739,8 +684,8 @@
                                 <div class="d-flex align-items-start gap-3">
                                     <div class="guide-step">7</div>
                                     <div>
-                                        <div class="guide-title">Share During Checkups</div>
-                                        <p class="guide-desc">Use your logs and uploaded reports during doctor visits for faster and clearer consultation.</p>
+                                        <div class="guide-title">{{ __('ui.help.share_during_checkups') }}</div>
+                                        <p class="guide-desc">{{ __('ui.help.share_during_checkups_desc') }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -750,27 +695,27 @@
                     {{-- Contact & Support --}}
                     <div class="contact-card mt-3">
                         <h6 class="fw-bold mb-3" style="color: #667eea;">
-                            <i class="fas fa-headset me-2"></i>Need More Help?
+                            <i class="fas fa-headset me-2"></i>{{ __('ui.help.need_more_help') }}
                         </h6>
                         <div class="contact-item">
                             <div class="contact-icon"><i class="fas fa-envelope"></i></div>
                             <div>
-                                <div class="fw-semibold" style="font-size: 0.85rem;">Email Support</div>
+                                <div class="fw-semibold" style="font-size: 0.85rem;">{{ __('ui.help.email_support') }}</div>
                                 <div class="text-muted" style="font-size: 0.8rem;">support@mydoctor.com</div>
                             </div>
                         </div>
                         <div class="contact-item">
                             <div class="contact-icon"><i class="fas fa-phone"></i></div>
                             <div>
-                                <div class="fw-semibold" style="font-size: 0.85rem;">Phone Support</div>
+                                <div class="fw-semibold" style="font-size: 0.85rem;">{{ __('ui.help.phone_support') }}</div>
                                 <div class="text-muted" style="font-size: 0.8rem;">+880 1XXX-XXXXXX</div>
                             </div>
                         </div>
                         <div class="contact-item">
                             <div class="contact-icon"><i class="fas fa-clock"></i></div>
                             <div>
-                                <div class="fw-semibold" style="font-size: 0.85rem;">Available</div>
-                                <div class="text-muted" style="font-size: 0.8rem;">Sat–Thu, 9AM – 6PM BST</div>
+                                <div class="fw-semibold" style="font-size: 0.85rem;">{{ __('ui.help.available') }}</div>
+                                <div class="text-muted" style="font-size: 0.8rem;">{{ __('ui.help.available_hours') }}</div>
                             </div>
                         </div>
                     </div>
@@ -778,28 +723,28 @@
                     {{-- Useful Links --}}
                     <div class="summary-card mt-3">
                         <div class="summary-card-header">
-                            <h6><i class="fas fa-link me-2"></i>Useful Links</h6>
+                            <h6><i class="fas fa-link me-2"></i>{{ __('ui.help.useful_links') }}</h6>
                         </div>
                         <div class="summary-card-body">
                             <a href="{{ $protectUrl(route('health')) }}" class="d-block text-decoration-none mb-2"
                                 style="font-size: 0.85rem; color: #667eea;">
-                                <i class="fas fa-heartbeat me-2"></i>Health Dashboard
+                                <i class="fas fa-heartbeat me-2"></i>{{ __('ui.help.health_dashboard') }}
                             </a>
                             <a href="{{ $protectUrl(route('medicine.reminders')) }}" class="d-block text-decoration-none mb-2"
                                 style="font-size: 0.85rem; color: #667eea;">
-                                <i class="fas fa-bell me-2"></i>Medicine Reminders
+                                <i class="fas fa-bell me-2"></i>{{ __('ui.help.medicine_reminders') }}
                             </a>
                             <a href="{{ $protectUrl(route('suggestions')) }}" class="d-block text-decoration-none mb-2"
                                 style="font-size: 0.85rem; color: #667eea;">
-                                <i class="fas fa-lightbulb me-2"></i>Smart Suggestions
+                                <i class="fas fa-lightbulb me-2"></i>{{ __('ui.help.smart_suggestions') }}
                             </a>
                             <a href="{{ $protectUrl(route('dashboard')) }}" class="d-block text-decoration-none mb-2"
                                 style="font-size: 0.85rem; color: #667eea;">
-                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                                <i class="fas fa-tachometer-alt me-2"></i>{{ __('ui.help.dashboard') }}
                             </a>
                             <a href="{{ $protectUrl(route('community.landing')) }}" class="d-block text-decoration-none"
                                 style="font-size: 0.85rem; color: #667eea;">
-                                <i class="fas fa-users me-2"></i>Community
+                                <i class="fas fa-users me-2"></i>{{ __('ui.help.community') }}
                             </a>
                         </div>
                     </div>

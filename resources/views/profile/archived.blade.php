@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Archived')
+@section('title', __('ui.mailbox.archived_title'))
 @section('main_content_class', 'main-content main-content--wide')
 
 <style>
@@ -23,27 +23,33 @@
     .gmail-subject { font-weight: 600; color: #1f1f1f; margin-right: 6px; }
     .gmail-snippet { color: #5f6368; font-weight: 400; }
     .gmail-date { width: 80px; text-align: right; font-size: 12px; color: #5f6368; }
+
+    @media (max-width: 768px) {
+        .gmail-sidebar { display: none; }
+        .gmail-main { width: 100%; margin: 0; border-radius: 0; }
+        .gmail-sender { width: 140px; }
+    }
 </style>
 
 @section('content')
 <div class="gmail-layout">
     <div class="gmail-sidebar">
         <a href="{{ route('profile.mailbox.compose') }}" class="gmail-compose-btn">
-            <i class="fas fa-pen"></i> Compose
+            <i class="fas fa-pen"></i> {{ __('ui.mailbox.compose') }}
         </a>
 
         <ul class="gmail-nav">
-            <li><a href="{{ route('profile.mailbox') }}" class="gmail-nav-item"><i class="fas fa-inbox"></i> Inbox</a></li>
-            <li><a href="{{ route('profile.mailbox.drafts') }}" class="gmail-nav-item"><i class="fas fa-file-alt"></i> Drafts</a></li>
-            <li><a href="{{ route('profile.mailbox.sent') }}" class="gmail-nav-item"><i class="fas fa-paper-plane"></i> Sent</a></li>
-            <li><a href="{{ route('profile.mailbox.starred') }}" class="gmail-nav-item"><i class="fas fa-star"></i> Starred</a></li>
-            <li><a href="{{ route('profile.mailbox.archived') }}" class="gmail-nav-item active"><i class="fas fa-box-archive"></i> Archived</a></li>
+            <li><a href="{{ route('profile.mailbox') }}" class="gmail-nav-item"><i class="fas fa-inbox"></i> {{ __('ui.mailbox.inbox') }}</a></li>
+            <li><a href="{{ route('profile.mailbox.drafts') }}" class="gmail-nav-item"><i class="fas fa-file-alt"></i> {{ __('ui.mailbox.drafts') }}</a></li>
+            <li><a href="{{ route('profile.mailbox.sent') }}" class="gmail-nav-item"><i class="fas fa-paper-plane"></i> {{ __('ui.mailbox.sent') }}</a></li>
+            <li><a href="{{ route('profile.mailbox.starred') }}" class="gmail-nav-item"><i class="fas fa-star"></i> {{ __('ui.mailbox.starred') }}</a></li>
+            <li><a href="{{ route('profile.mailbox.archived') }}" class="gmail-nav-item active"><i class="fas fa-box-archive"></i> {{ __('ui.mailbox.archived') }}</a></li>
         </ul>
     </div>
 
     <div class="gmail-main">
         <div class="gmail-toolbar">
-            <h6 class="mb-0">Archived</h6>
+            <h6 class="mb-0">{{ __('ui.mailbox.archived_title') }}</h6>
         </div>
 
         <div class="gmail-list">
@@ -52,9 +58,9 @@
                     <div class="gmail-row-icons">
                         <i class="fas fa-box-archive text-muted"></i>
                     </div>
-                    <div class="gmail-sender">{{ $message->sender?->name ?? 'System User' }}</div>
+                    <div class="gmail-sender">{{ $message->sender?->name ?? __('ui.mailbox.system_user') }}</div>
                     <div class="gmail-subject-container">
-                        <span class="gmail-subject">{{ $message->title ?: '(No subject)' }}</span>
+                        <span class="gmail-subject">{{ $message->title ?: __('ui.mailbox.no_subject') }}</span>
                         <span class="gmail-snippet">- {{ \Illuminate\Support\Str::limit($message->message, 80) }}</span>
                     </div>
                     <div class="gmail-date">
@@ -64,7 +70,7 @@
             @empty
                 <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted opacity-75">
                     <i class="fas fa-box-archive mb-3" style="font-size: 3rem;"></i>
-                    <h5>No archived messages</h5>
+                    <h5>{{ __('ui.mailbox.no_archived_messages') }}</h5>
                 </div>
             @endforelse
         </div>

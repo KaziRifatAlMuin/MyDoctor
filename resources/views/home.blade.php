@@ -28,7 +28,7 @@
     $healthSuggestionsUrl = $protectUrl(route('suggestions', [], false));
     $healthTipsUrl = $protectUrl(route('help', [], false));
     $programsUrl = $protectUrl(route('appointments', [], false));
-    $ctaPrimaryUrl = $isAuthenticated ? route('health', [], false) : ($loginUrl . '?redirect=' . urlencode(route('dashboard', [], false)));
+    $ctaPrimaryUrl = $isAuthenticated ? route('medicine.index', [], false) : ($loginUrl . '?redirect=' . urlencode(route('medicine.index', [], false)));
     $ctaSecondaryUrl = $isAuthenticated ? route('community.home', [], false) : ($loginUrl . '?redirect=' . urlencode(route('community.home', [], false)));
 @endphp
 

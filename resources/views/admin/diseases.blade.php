@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Admin Diseases')
+@section('title', __('ui.admin_diseases.title'))
 
 @push('styles')
 <style>
@@ -190,8 +190,8 @@
 <div class="admin-catalog-surface">
     <div class="container" style="max-width: 1240px;">
         <div class="catalog-hero">
-            <h1><i class="fas fa-virus me-2"></i>Admin Diseases Catalog</h1>
-            <p>Same card-based look and size as symptoms page. Open each item to public view with extra admin controls.</p>
+            <h1><i class="fas fa-virus me-2"></i>{{ __('ui.admin_diseases.title') }}</h1>
+            <p>{{ __('ui.admin_diseases.subtitle') }}</p>
         </div>
 
         @if (session('success'))
@@ -210,18 +210,18 @@
 
         <section class="catalog-toolbar">
             <form class="toolbar-grid" method="GET" action="{{ route('admin.diseases.index') }}">
-                <input type="text" name="q" value="{{ $search }}" placeholder="Search diseases by name...">
-                <button class="btn-main" type="submit"><i class="fas fa-magnifying-glass"></i>Search</button>
-                <a href="{{ route('admin.dashboard') }}" class="btn-ghost"><i class="fas fa-arrow-left"></i>Back</a>
+                <input type="text" name="q" value="{{ $search }}" placeholder="{{ __('ui.admin_diseases.search_placeholder') }}">
+                <button class="btn-main" type="submit"><i class="fas fa-magnifying-glass"></i>{{ __('ui.admin_diseases.search') }}</button>
+                <a href="{{ route('admin.dashboard') }}" class="btn-ghost"><i class="fas fa-arrow-left"></i>{{ __('ui.admin_diseases.back') }}</a>
             </form>
         </section>
 
         <section class="catalog-panel">
             <form class="create-grid" method="POST" action="{{ route('admin.diseases.store') }}">
                 @csrf
-                <input class="form-input" type="text" name="disease_name" placeholder="New disease name" required>
-                <textarea class="form-textarea" name="description" placeholder="Description (optional)"></textarea>
-                <button class="btn-main" type="submit"><i class="fas fa-plus"></i>Create</button>
+                <input class="form-input" type="text" name="disease_name" placeholder="{{ __('ui.admin_diseases.new_disease_name') }}" required>
+                <textarea class="form-textarea" name="description" placeholder="{{ __('ui.admin_diseases.description_optional') }}"></textarea>
+                <button class="btn-main" type="submit"><i class="fas fa-plus"></i>{{ __('ui.admin_diseases.create') }}</button>
             </form>
         </section>
 
@@ -230,17 +230,17 @@
                 <article class="item-card">
                     <h2 class="item-title">{{ $disease->disease_name }}</h2>
                     <div class="item-badges">
-                        <span class="item-badge">{{ number_format($disease->user_diseases_count) }} users</span>
-                        <span class="item-badge">{{ number_format($disease->symptoms_count) }} symptoms</span>
+                        <span class="item-badge">{{ number_format($disease->user_diseases_count) }} {{ __('ui.admin_diseases.users') }}</span>
+                        <span class="item-badge">{{ number_format($disease->symptoms_count) }} {{ __('ui.admin_diseases.symptoms') }}</span>
                     </div>
-                    <p class="item-copy">{{ \Illuminate\Support\Str::limit($disease->description ?: 'Open this disease in public view to inspect linked content and navigation.', 120) }}</p>
+                    <p class="item-copy">{{ \Illuminate\Support\Str::limit($disease->description ?: __('ui.admin_diseases.default_description'), 120) }}</p>
                     <div class="item-actions">
-                        <a href="{{ route('public.disease.show', $disease) }}" class="btn-open"><i class="fas fa-arrow-up-right-from-square"></i>Public View</a>
-                        <button type="button" class="btn-edit js-toggle-edit" data-target="disease-edit-{{ $disease->id }}"><i class="fas fa-pen"></i>Edit</button>
-                        <form method="POST" action="{{ route('admin.diseases.destroy', $disease) }}" onsubmit="return confirm('Delete this disease?');">
+                        <a href="{{ route('public.disease.show', $disease) }}" class="btn-open"><i class="fas fa-arrow-up-right-from-square"></i>{{ __('ui.admin_diseases.public_view') }}</a>
+                        <button type="button" class="btn-edit js-toggle-edit" data-target="disease-edit-{{ $disease->id }}"><i class="fas fa-pen"></i>{{ __('ui.admin_diseases.edit') }}</button>
+                        <form method="POST" action="{{ route('admin.diseases.destroy', $disease) }}" onsubmit="return confirm('{{ __('ui.admin_diseases.delete_confirm') }}');">
                             @csrf
                             @method('DELETE')
-                            <button class="btn-delete" type="submit"><i class="fas fa-trash"></i>Delete</button>
+                            <button class="btn-delete" type="submit"><i class="fas fa-trash"></i>{{ __('ui.admin_diseases.delete') }}</button>
                         </form>
                     </div>
 
@@ -254,13 +254,13 @@
                             <div class="mb-2">
                                 <textarea class="form-textarea" name="description">{{ $disease->description }}</textarea>
                             </div>
-                            <button class="btn-main" type="submit"><i class="fas fa-floppy-disk"></i>Save</button>
+                            <button class="btn-main" type="submit"><i class="fas fa-floppy-disk"></i>{{ __('ui.admin_diseases.save') }}</button>
                         </form>
                     </div>
                 </article>
             @empty
                 <div class="item-card" style="grid-column: 1 / -1; text-align: center;">
-                    <p class="mb-0 text-muted">No diseases found for this search.</p>
+                    <p class="mb-0 text-muted">{{ __('ui.admin_diseases.no_diseases_found') }}</p>
                 </div>
             @endforelse
         </div>

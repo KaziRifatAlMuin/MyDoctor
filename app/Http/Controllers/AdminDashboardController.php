@@ -81,15 +81,17 @@ class AdminDashboardController extends Controller
 
         if ($user->id === $request->user()->id && $validated['role'] !== 'admin') {
             return back()->withErrors([
-                'role' => 'You cannot remove your own admin access.',
+                'role' => __('ui.admin_messages.cannot_remove_own_admin'),
             ])->withInput();
         }
 
         $user->update($validated);
 
+        $message = __('ui.admin_messages.user_updated_successfully', ['name' => $user->name]);
+
         return redirect()
             ->route('admin.dashboard')
-            ->with('success', "{$user->name} was updated successfully.");
+            ->with('success', $message);
     }
 
     private function getDashboardStats()
@@ -134,9 +136,9 @@ class AdminDashboardController extends Controller
                 'uploads' => Upload::count(),
             ],
             'operations' => [
-            'active_reminders' => MedicineReminder::whereHas('schedule', function($q) {
-                $q->where('is_active', true);
-            })->count(),
+                'active_reminders' => MedicineReminder::whereHas('schedule', function($q) {
+                    $q->where('is_active', true);
+                })->count(),
                 'new_metrics_this_week' => UserHealth::whereDate('created_at', '>=', $weekAgo)->count(),
                 'new_logs_this_week' => MedicineLog::whereDate('created_at', '>=', $weekAgo)->count(),
             ],
@@ -148,43 +150,43 @@ class AdminDashboardController extends Controller
     {
         return [
             [
-                'title' => 'User Management',
-                'description' => 'Review accounts, role distribution, and member access.',
+                'title' => __('ui.admin_nav.user_management'),
+                'description' => __('ui.admin_nav.user_management_desc'),
                 'icon' => 'fa-users-cog',
                 'route' => route('admin.users.index'),
                 'accent' => 'accent-users',
             ],
             [
-                'title' => 'Disease Catalog',
-                'description' => 'Manage diseases with public-facing detail links.',
+                'title' => __('ui.admin_nav.disease_catalog'),
+                'description' => __('ui.admin_nav.disease_catalog_desc'),
                 'icon' => 'fa-virus',
                 'route' => route('admin.diseases.index'),
                 'accent' => 'accent-diseases',
             ],
             [
-                'title' => 'Symptoms Catalog',
-                'description' => 'Maintain symptom entries with linked public pages.',
+                'title' => __('ui.admin_nav.symptoms_catalog'),
+                'description' => __('ui.admin_nav.symptoms_catalog_desc'),
                 'icon' => 'fa-stethoscope',
                 'route' => route('admin.symptoms.index'),
                 'accent' => 'accent-symptoms',
             ],
             [
-                'title' => 'Health Metrics Catalog',
-                'description' => 'Define custom metric names and fields for user tracking.',
+                'title' => __('ui.admin_nav.health_metrics_catalog'),
+                'description' => __('ui.admin_nav.health_metrics_catalog_desc'),
                 'icon' => 'fa-heartbeat',
                 'route' => route('admin.health.index'),
                 'accent' => 'accent-public',
             ],
             [
-                'title' => 'Public Diseases',
-                'description' => 'Open the public diseases directory as visitors see it.',
+                'title' => __('ui.admin_nav.public_diseases'),
+                'description' => __('ui.admin_nav.public_diseases_desc'),
                 'icon' => 'fa-earth-asia',
                 'route' => route('public.diseases.index'),
                 'accent' => 'accent-public',
             ],
             [
-                'title' => 'Public Symptoms',
-                'description' => 'Open the public symptoms directory and verify navigation.',
+                'title' => __('ui.admin_nav.public_symptoms'),
+                'description' => __('ui.admin_nav.public_symptoms_desc'),
                 'icon' => 'fa-globe',
                 'route' => route('public.symptoms.index'),
                 'accent' => 'accent-public',
@@ -204,7 +206,7 @@ class AdminDashboardController extends Controller
 
         foreach ($recentUsers as $user) {
             $activities->push([
-                'message' => "New user registered: {$user->name}",
+                'message' => __('ui.admin_activities.new_user_registered', ['name' => $user->name]),
                 'time' => $user->created_at->diffForHumans(),
                 'type' => 'user_registered',
                 'icon' => 'fa-user-plus'
@@ -220,7 +222,7 @@ class AdminDashboardController extends Controller
 
         foreach ($recentPosts as $post) {
             $activities->push([
-                'message' => "New post by {$post->user->name}",
+                'message' => __('ui.admin_activities.new_post_by', ['name' => $post->user->name]),
                 'time' => $post->created_at->diffForHumans(),
                 'type' => 'post_created',
                 'icon' => 'fa-newspaper'
@@ -235,13 +237,13 @@ class AdminDashboardController extends Controller
             ->get();
 
         foreach ($recentReminders as $reminder) {
-            $actorName = 'Unknown';
+            $actorName = __('ui.admin_activities.unknown');
             if ($reminder->schedule && $reminder->schedule->medicine && $reminder->schedule->medicine->user) {
                 $actorName = $reminder->schedule->medicine->user->name;
             }
 
             $activities->push([
-                'message' => "Medicine reminder set by {$actorName}",
+                'message' => __('ui.admin_activities.medicine_reminder_set', ['name' => $actorName]),
                 'time' => $reminder->created_at->diffForHumans(),
                 'type' => 'reminder_created',
                 'icon' => 'fa-bell'
@@ -308,7 +310,7 @@ class AdminDashboardController extends Controller
                     $q->where('user_id', $user->id);
                 })->where('is_active', true);
             })->count(),
-            'likes' => 0 // Placeholder for post likes received
+            'likes' => 0
         ];
         
         // Get recent activities
@@ -322,8 +324,8 @@ class AdminDashboardController extends Controller
             
         foreach ($recentPosts as $post) {
             $recentActivities->push([
-                'title' => 'Created a new post',
-                'description' => Str::limit($post->title ?? 'Untitled Post', 50),
+                'title' => __('ui.admin_user_activities.created_new_post'),
+                'description' => Str::limit($post->title ?? __('ui.admin_user_activities.untitled_post'), 50),
                 'time' => $post->created_at->diffForHumans(),
                 'icon' => 'fa-newspaper',
                 'color' => 'success'
@@ -338,7 +340,7 @@ class AdminDashboardController extends Controller
             
         foreach ($recentMedicines as $medicine) {
             $recentActivities->push([
-                'title' => 'Added new medicine',
+                'title' => __('ui.admin_user_activities.added_new_medicine'),
                 'description' => $medicine->medicine_name,
                 'time' => $medicine->created_at->diffForHumans(),
                 'icon' => 'fa-pills',
@@ -355,8 +357,8 @@ class AdminDashboardController extends Controller
             
         foreach ($recentMetrics as $metric) {
             $recentActivities->push([
-                'title' => 'Recorded health data',
-                'description' => ucfirst($metric->metric_type ?? 'Health metric'),
+                'title' => __('ui.admin_user_activities.recorded_health_data'),
+                'description' => ucfirst($metric->metric_type ?? __('ui.admin_user_activities.health_metric')),
                 'time' => $metric->recorded_at?->diffForHumans() ?? $metric->created_at->diffForHumans(),
                 'icon' => 'fa-heartbeat',
                 'color' => 'danger'

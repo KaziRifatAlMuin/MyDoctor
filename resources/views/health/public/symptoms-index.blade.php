@@ -9,11 +9,11 @@
             <div class="card-body p-4 p-md-5" style="background: linear-gradient(135deg, #b45309 0%, #d97706 52%, #f59e0b 100%); color: #fff;">
                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
                     <div>
-                        <h1 class="mb-2" style="font-size: 2rem; font-weight: 800;">Symptoms Directory</h1>
-                        <p class="mb-0" style="opacity: 0.93;">Browse all symptoms and open details with connected diseases.</p>
+                        <h1 class="mb-2" style="font-size: 2rem; font-weight: 800;">{{ __('ui.symptoms.symptoms_directory') }}</h1>
+                        <p class="mb-0" style="opacity: 0.93;">{{ __('ui.symptoms.browse_all_symptoms') }}</p>
                     </div>
                     <a href="{{ route('public.diseases.index') }}" class="btn btn-light" style="border-radius: 12px; font-weight: 700; color: #92400e;">
-                        Explore Diseases
+                        {{ __('ui.symptoms.explore_diseases') }}
                     </a>
                 </div>
             </div>
@@ -22,10 +22,10 @@
         <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
             <div class="card-body p-3 p-md-4">
                 <form method="GET" action="{{ route('public.symptoms.index') }}" class="d-flex flex-wrap gap-2">
-                    <input type="text" name="q" value="{{ $query }}" class="form-control" placeholder="Search symptom by name..." style="flex: 1 1 300px; border-radius: 10px;">
-                    <button class="btn btn-warning" style="border-radius: 10px; min-width: 120px; color: #1f2937; font-weight: 700;">Search</button>
+                    <input type="text" name="q" value="{{ $query }}" class="form-control" placeholder="{{ __('ui.symptoms.search_symptom_by_name') }}" style="flex: 1 1 300px; border-radius: 10px;">
+                    <button class="btn btn-warning" style="border-radius: 10px; min-width: 120px; color: #1f2937; font-weight: 700;">{{ __('ui.symptoms.search') }}</button>
                     @if($query !== '')
-                        <a href="{{ route('public.symptoms.index') }}" class="btn btn-outline-secondary" style="border-radius: 10px;">Reset</a>
+                        <a href="{{ route('public.symptoms.index') }}" class="btn btn-outline-secondary" style="border-radius: 10px;">{{ __('ui.symptoms.reset') }}</a>
                     @endif
                 </form>
             </div>
@@ -39,9 +39,9 @@
                             <div class="card-body p-4">
                                 <div class="d-flex align-items-start justify-content-between gap-2">
                                     <h2 class="h6 mb-0" style="font-weight: 800; color: #7c2d12;">{{ $symptom->name }}</h2>
-                                    <span class="badge text-bg-light border">{{ $symptom->diseases_count }} diseases</span>
+                                    <span class="badge text-bg-light border">{{ $symptom->diseases_count }} {{ __('ui.symptoms.diseases') }}</span>
                                 </div>
-                                <p class="mb-0 mt-3 text-muted" style="font-size: .9rem;">Open details to inspect linked diseases and navigate quickly.</p>
+                                <p class="mb-0 mt-3 text-muted" style="font-size: .9rem;">{{ __('ui.symptoms.open_details_to_inspect') }}</p>
                             </div>
                         </div>
                     </a>
@@ -50,7 +50,7 @@
                 <div class="col-12">
                     <div class="card border-0" style="border-radius: 16px; box-shadow: 0 10px 25px rgba(90,45,6,0.08);">
                         <div class="card-body p-4 text-center text-muted">
-                            No symptoms found for this search.
+                            {{ __('ui.symptoms.no_symptoms_found') }}
                         </div>
                     </div>
                 </div>

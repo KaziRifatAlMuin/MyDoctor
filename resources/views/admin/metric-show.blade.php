@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Admin Metric Details')
+@section('title', __('ui.admin_metric.title', ['name' => ucwords(str_replace('_', ' ', $healthMetric->metric_name))]))
 
 @push('styles')
 <style>
@@ -28,6 +28,7 @@
         justify-content: space-between;
         align-items: center;
         gap: 1rem;
+        flex-wrap: wrap;
     }
 
     .detail-hero h1 {
@@ -128,6 +129,7 @@
         font-weight: 700;
         padding: 0.35rem 0.6rem;
         min-width: 38px;
+        cursor: pointer;
     }
 
     .table-wrap {
@@ -170,14 +172,14 @@
         <section class="detail-hero">
             <div>
                 <h1><i class="fas fa-wave-square me-2"></i>{{ ucwords(str_replace('_', ' ', $healthMetric->metric_name)) }}</h1>
-                <div class="detail-sub">Metric id: {{ $healthMetric->id }} | {{ number_format($healthMetric->user_health_records_count) }} user records</div>
+                <div class="detail-sub">{{ __('ui.admin_metric.metric_id') }}: {{ $healthMetric->id }} | {{ number_format($healthMetric->user_health_records_count) }} {{ __('ui.admin_metric.user_records') }}</div>
                 <div class="pill-wrap">
                     @foreach ((array) $healthMetric->fields as $field)
                         <span class="field-pill">{{ $field }}</span>
                     @endforeach
                 </div>
             </div>
-            <a href="{{ route('admin.health.index') }}" class="btn-soft"><i class="fas fa-arrow-left"></i>Back To Admin Health</a>
+            <a href="{{ route('admin.health.index') }}" class="btn-soft"><i class="fas fa-arrow-left"></i>{{ __('ui.admin_metric.back') }}</a>
         </section>
 
         @if (session('success'))
@@ -196,50 +198,50 @@
 
         <div class="detail-grid">
             <section class="detail-card">
-                <h2><i class="fas fa-pen me-2"></i>Edit Definition</h2>
+                <h2><i class="fas fa-pen me-2"></i>{{ __('ui.admin_metric.edit_definition') }}</h2>
                 <form method="POST" action="{{ route('admin.metrics.update', $healthMetric) }}">
                     @csrf
                     @method('PATCH')
-                    <label class="form-label fw-semibold">Metric Name</label>
+                    <label class="form-label fw-semibold">{{ __('ui.admin_metric.metric_name_label') }}</label>
                     <input class="form-input" type="text" name="metric_name" value="{{ $healthMetric->metric_name }}" required>
 
-                    <label class="form-label fw-semibold">Fields</label>
+                    <label class="form-label fw-semibold">{{ __('ui.admin_metric.fields_label') }}</label>
                     <div class="field-builder" data-field-builder="metric-show">
                         @foreach ((array) $healthMetric->fields as $field)
                             <div class="field-row">
                                 <input class="form-input" type="text" name="fields[]" value="{{ $field }}" required>
-                                <button type="button" class="btn-remove-field" title="Remove field">-</button>
+                                <button type="button" class="btn-remove-field" title="{{ __('ui.admin_metric.remove_field') }}">-</button>
                             </div>
                         @endforeach
                     </div>
 
-                    <button class="btn-add-field mb-2" type="button" data-add-field="metric-show"><i class="fas fa-plus"></i>Add Field</button>
+                    <button class="btn-add-field mb-2" type="button" data-add-field="metric-show"><i class="fas fa-plus"></i>{{ __('ui.admin_metric.add_field') }}</button>
 
-                    <button class="btn-main" type="submit"><i class="fas fa-floppy-disk"></i>Save Changes</button>
+                    <button class="btn-main" type="submit"><i class="fas fa-floppy-disk"></i>{{ __('ui.admin_metric.save_changes') }}</button>
                 </form>
 
-                <form method="POST" action="{{ route('admin.metrics.destroy', $healthMetric) }}" class="mt-2" onsubmit="return confirm('Delete this metric definition?');">
+                <form method="POST" action="{{ route('admin.metrics.destroy', $healthMetric) }}" class="mt-2" onsubmit="return confirm('{{ __('ui.admin_metric.delete_confirm') }}');">
                     @csrf
                     @method('DELETE')
-                    <button class="btn-delete" type="submit"><i class="fas fa-trash"></i>Delete Definition</button>
+                    <button class="btn-delete" type="submit"><i class="fas fa-trash"></i>{{ __('ui.admin_metric.delete_definition') }}</button>
                 </form>
             </section>
 
             <section class="detail-card">
-                <h2><i class="fas fa-table me-2"></i>Recent User Records</h2>
+                <h2><i class="fas fa-table me-2"></i>{{ __('ui.admin_metric.recent_user_records') }}</h2>
                 <div class="table-wrap">
                     <table>
                         <thead>
                             <tr>
-                                <th>User</th>
-                                <th>Values</th>
-                                <th>Recorded</th>
+                                <th>{{ __('ui.admin_metric.user') }}</th>
+                                <th>{{ __('ui.admin_metric.values') }}</th>
+                                <th>{{ __('ui.admin_metric.recorded') }}</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse ($recentEntries as $entry)
                                 <tr>
-                                    <td>{{ $entry->user->name ?? 'Unknown' }}</td>
+                                    <td>{{ $entry->user->name ?? __('ui.admin_metric.unknown') }}</td>
                                     <td>
                                         @foreach ((array) $entry->value as $key => $val)
                                             <div><strong>{{ $key }}:</strong> {{ $val }}</div>
@@ -249,7 +251,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="3" class="text-center text-muted">No user records yet for this metric.</td>
+                                    <td colspan="3" class="text-center text-muted">{{ __('ui.admin_metric.no_user_records') }}</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -290,7 +292,7 @@
         addButton.addEventListener('click', function () {
             const row = document.createElement('div');
             row.className = 'field-row';
-            row.innerHTML = '<input class="form-input" type="text" name="fields[]" placeholder="Field label (e.g. Heart Rate (bpm))" required><button type="button" class="btn-remove-field" title="Remove field">-</button>';
+            row.innerHTML = '<input class="form-input" type="text" name="fields[]" placeholder="{{ __('ui.admin_metric.field_label_placeholder') }}" required><button type="button" class="btn-remove-field" title="{{ __('ui.admin_metric.remove_field') }}">-</button>';
             container.appendChild(row);
             bindRemoveButtons();
         });

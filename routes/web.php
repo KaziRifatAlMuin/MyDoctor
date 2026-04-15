@@ -234,14 +234,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     | Notification Routes
     |--------------------------------------------------------------------------
     */
+
+
     Route::prefix('notifications')->name('notifications.')->group(function () {
-        Route::get('/', [App\Http\Controllers\NotificationController::class, 'index'])->name('index');
-        Route::get('/unread-count', [App\Http\Controllers\NotificationController::class, 'unreadCount'])->name('unread-count');
-        Route::post('/{id}/read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('read');
-        Route::post('/mark-all-read', [App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
-        Route::delete('/{id}/delete', [App\Http\Controllers\NotificationController::class, 'delete'])->name('delete');
-        Route::delete('/clear-all', [App\Http\Controllers\NotificationController::class, 'clearAll'])->name('clear-all');
-    });
+    Route::get('/', [App\Http\Controllers\NotificationController::class, 'index'])->name('index');
+    Route::get('/starred', [App\Http\Controllers\NotificationController::class, 'starred'])->name('starred');
+    Route::get('/unread-count', [App\Http\Controllers\NotificationController::class, 'unreadCount'])->name('unread-count');
+    Route::post('/{id}/read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('read');
+    Route::post('/mark-all-read', [App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
+    Route::post('/{id}/star', [App\Http\Controllers\NotificationController::class, 'toggleStar'])->name('star');
+    Route::delete('/{id}/delete', [App\Http\Controllers\NotificationController::class, 'delete'])->name('delete');
+    Route::delete('/clear-all', [App\Http\Controllers\NotificationController::class, 'clearAll'])->name('clear-all');
+});
 
     // Suggestions
     Route::get('/suggestions', [SuggestionsController::class, 'index'])->name('suggestions');

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $user->name . ' - Admin Profile View')
+@section('title', $user->name . ' - ' . __('ui.admin_profile.page_title'))
 
 @push('styles')
     <style>
@@ -632,7 +632,7 @@
                             </span>
                             @if ($user->email_verified_at)
                                 <span class="hero-badge verified">
-                                    <i class="fas fa-circle-check"></i>Verified
+                                    <i class="fas fa-circle-check"></i>{{ __('ui.admin_profile.verified') }}
                                 </span>
                             @endif
                             <span class="hero-badge">
@@ -655,7 +655,7 @@
                                 </a>
                             @empty
                                 <span class="hero-disease-tag" style="background: rgba(255,255,255,0.14); color: #f1f5f9; border-color: rgba(255,255,255,0.25);">
-                                    No disease tags yet
+                                    {{ __('ui.admin_profile.no_disease_tags') }}
                                 </span>
                             @endforelse
                         </div>
@@ -668,7 +668,7 @@
                                 <div class="hero-detail">
                                     <div class="hero-detail-icon"><i class="fas fa-birthday-cake"></i></div>
                                     <div class="hero-detail-text">
-                                        <small>Date of Birth</small>
+                                        <small>{{ __('ui.admin_profile.date_of_birth') }}</small>
                                         <strong>{{ $user->date_of_birth->format('M d, Y') }}</strong>
                                     </div>
                                 </div>
@@ -677,7 +677,7 @@
                                 <div class="hero-detail">
                                     <div class="hero-detail-icon"><i class="fas fa-droplet"></i></div>
                                     <div class="hero-detail-text">
-                                        <small>Blood Group</small>
+                                        <small>{{ __('ui.admin_profile.blood_group') }}</small>
                                         <strong>{{ $user->blood_group }}</strong>
                                     </div>
                                 </div>
@@ -686,7 +686,7 @@
                                 <div class="hero-detail">
                                     <div class="hero-detail-icon"><i class="fas fa-briefcase"></i></div>
                                     <div class="hero-detail-text">
-                                        <small>Occupation</small>
+                                        <small>{{ __('ui.admin_profile.occupation') }}</small>
                                         <strong>{{ $user->occupation }}</strong>
                                     </div>
                                 </div>
@@ -695,7 +695,7 @@
                                 <div class="hero-detail">
                                     <div class="hero-detail-icon"><i class="fas fa-person"></i></div>
                                     <div class="hero-detail-text">
-                                        <small>Gender</small>
+                                        <small>{{ __('ui.admin_profile.gender') }}</small>
                                         <strong>{{ ucfirst($user->gender) }}</strong>
                                     </div>
                                 </div>
@@ -704,7 +704,7 @@
                                 <div class="hero-detail">
                                     <div class="hero-detail-icon"><i class="fas fa-location-dot"></i></div>
                                     <div class="hero-detail-text">
-                                        <small>Address</small>
+                                        <small>{{ __('ui.admin_profile.address') }}</small>
                                         <strong>{{ $user->address->display_upazila }}, {{ $user->address->display_district }}</strong>
                                     </div>
                                 </div>
@@ -714,15 +714,15 @@
 
                     <div class="hero-actions">
                         <a href="{{ route('admin.dashboard') }}" class="btn btn-light btn-action">
-                            <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                            <i class="fas fa-arrow-left me-1"></i>{{ __('ui.admin_profile.back_to_dashboard') }}
                         </a>
                         @if (auth()->id() !== $user->id)
                             <a href="{{ route('profile.mailbox.compose', ['to' => $user->id]) }}" class="btn btn-light btn-action">
-                                <i class="fas fa-paper-plane me-1"></i>Send Mail
+                                <i class="fas fa-paper-plane me-1"></i>{{ __('ui.admin_profile.send_mail') }}
                             </a>
                         @endif
                         <button class="btn btn-light btn-action" data-bs-toggle="modal" data-bs-target="#editUserModal">
-                            <i class="fas fa-user-edit me-1"></i>Edit Profile
+                            <i class="fas fa-user-edit me-1"></i>{{ __('ui.admin_profile.edit_profile') }}
                         </button>
                     </div>
                 </div>
@@ -733,49 +733,49 @@
                 <div class="col-6 col-md-4 col-lg-2">
                     <div class="stat-summary-card">
                         <div class="stat-summary-icon purple"><i class="fas fa-chart-line"></i></div>
-                        <div class="stat-summary-label">Metrics</div>
+                        <div class="stat-summary-label">{{ __('ui.admin_profile.metrics') }}</div>
                         <div class="stat-summary-value">{{ $healthMetrics->count() }}</div>
-                        <div class="stat-summary-sub">recorded</div>
+                        <div class="stat-summary-sub">{{ __('ui.admin_profile.recorded') }}</div>
                     </div>
                 </div>
                 <div class="col-6 col-md-4 col-lg-2">
                     <div class="stat-summary-card">
                         <div class="stat-summary-icon blue"><i class="fas fa-layer-group"></i></div>
-                        <div class="stat-summary-label">Types</div>
+                        <div class="stat-summary-label">{{ __('ui.admin_profile.types') }}</div>
                         <div class="stat-summary-value">{{ $metricsByType->count() }}</div>
-                        <div class="stat-summary-sub">tracked</div>
+                        <div class="stat-summary-sub">{{ __('ui.admin_profile.tracked') }}</div>
                     </div>
                 </div>
                 <div class="col-6 col-md-4 col-lg-2">
                     <div class="stat-summary-card">
                         <div class="stat-summary-icon orange"><i class="fas fa-notes-medical"></i></div>
-                        <div class="stat-summary-label">Symptoms</div>
+                        <div class="stat-summary-label">{{ __('ui.admin_profile.symptoms') }}</div>
                         <div class="stat-summary-value">{{ $symptoms->count() }}</div>
-                        <div class="stat-summary-sub">logged</div>
+                        <div class="stat-summary-sub">{{ __('ui.admin_profile.logged') }}</div>
                     </div>
                 </div>
                 <div class="col-6 col-md-4 col-lg-2">
                     <div class="stat-summary-card">
                         <div class="stat-summary-icon green"><i class="fas fa-pills"></i></div>
-                        <div class="stat-summary-label">Medicines</div>
+                        <div class="stat-summary-label">{{ __('ui.admin_profile.medicines') }}</div>
                         <div class="stat-summary-value">{{ $medicines->count() }}</div>
-                        <div class="stat-summary-sub">tracked</div>
+                        <div class="stat-summary-sub">{{ __('ui.admin_profile.tracked') }}</div>
                     </div>
                 </div>
                 <div class="col-6 col-md-4 col-lg-2">
                     <div class="stat-summary-card">
                         <div class="stat-summary-icon red"><i class="fas fa-virus"></i></div>
-                        <div class="stat-summary-label">Diseases</div>
+                        <div class="stat-summary-label">{{ __('ui.admin_profile.diseases') }}</div>
                         <div class="stat-summary-value">{{ $userDiseases->count() }}</div>
-                        <div class="stat-summary-sub">managed</div>
+                        <div class="stat-summary-sub">{{ __('ui.admin_profile.managed') }}</div>
                     </div>
                 </div>
                 <div class="col-6 col-md-4 col-lg-2">
                     <div class="stat-summary-card">
                         <div class="stat-summary-icon purple"><i class="fas fa-check-circle"></i></div>
-                        <div class="stat-summary-label">Adherence</div>
+                        <div class="stat-summary-label">{{ __('ui.admin_profile.adherence') }}</div>
                         <div class="stat-summary-value">{{ $adherenceRate }}%</div>
-                        <div class="stat-summary-sub">completion</div>
+                        <div class="stat-summary-sub">{{ __('ui.admin_profile.completion') }}</div>
                     </div>
                 </div>
             </div>
@@ -785,43 +785,43 @@
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview"
                         type="button" role="tab">
-                        <i class="fas fa-th-large me-1"></i> Overview
+                        <i class="fas fa-th-large me-1"></i> {{ __('ui.admin_profile.overview') }}
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="metrics-tab" data-bs-toggle="tab" data-bs-target="#metrics"
                         type="button" role="tab">
-                        <i class="fas fa-chart-line me-1"></i> Health Metrics
+                        <i class="fas fa-chart-line me-1"></i> {{ __('ui.admin_profile.health_metrics') }}
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="symptoms-tab" data-bs-toggle="tab" data-bs-target="#symptomsPane"
                         type="button" role="tab">
-                        <i class="fas fa-notes-medical me-1"></i> Symptoms
+                        <i class="fas fa-notes-medical me-1"></i> {{ __('ui.admin_profile.symptoms_tab') }}
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="diseases-tab" data-bs-toggle="tab" data-bs-target="#diseasesPane"
                         type="button" role="tab">
-                        <i class="fas fa-virus me-1"></i> Diseases
+                        <i class="fas fa-virus me-1"></i> {{ __('ui.admin_profile.diseases_tab') }}
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="prescriptions-tab" data-bs-toggle="tab" data-bs-target="#prescriptions"
                         type="button" role="tab">
-                        <i class="fas fa-prescription-bottle-alt me-1"></i> Prescriptions
+                        <i class="fas fa-prescription-bottle-alt me-1"></i> {{ __('ui.admin_profile.prescriptions') }}
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="reports-tab" data-bs-toggle="tab" data-bs-target="#reportsPane"
                         type="button" role="tab">
-                        <i class="fas fa-file-medical-alt me-1"></i> Reports
+                        <i class="fas fa-file-medical-alt me-1"></i> {{ __('ui.admin_profile.reports') }}
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="logs-tab" data-bs-toggle="tab" data-bs-target="#logs" type="button"
                         role="tab">
-                        <i class="fas fa-clipboard-list me-1"></i> Medicine Logs
+                        <i class="fas fa-clipboard-list me-1"></i> {{ __('ui.admin_profile.medicine_logs') }}
                     </button>
                 </li>
             </ul>
@@ -883,7 +883,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">
-                        <i class="fas fa-user-edit me-2"></i>Edit User Profile
+                        <i class="fas fa-user-edit me-2"></i>{{ __('ui.admin_profile.edit_user_profile') }}
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
                         <span class="close-x" aria-hidden="true">&times;</span>
@@ -896,51 +896,51 @@
                     <div class="modal-body">
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold">Full Name</label>
+                                <label class="form-label fw-semibold">{{ __('ui.admin_profile.full_name') }}</label>
                                 <input type="text" name="name" class="form-control" value="{{ $user->name }}"
                                     required>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold">Email</label>
+                                <label class="form-label fw-semibold">{{ __('ui.admin_profile.email') }}</label>
                                 <input type="email" name="email" class="form-control" value="{{ $user->email }}"
                                     required>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold">Phone</label>
+                                <label class="form-label fw-semibold">{{ __('ui.admin_profile.phone') }}</label>
                                 <input type="tel" name="phone" class="form-control"
                                     value="{{ $user->phone ?? '' }}">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold">Occupation</label>
+                                <label class="form-label fw-semibold">{{ __('ui.admin_profile.occupation_label') }}</label>
                                 <input type="text" name="occupation" class="form-control"
                                     value="{{ $user->occupation ?? '' }}">
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold">Date of Birth</label>
+                                <label class="form-label fw-semibold">{{ __('ui.admin_profile.date_of_birth_label') }}</label>
                                 <input type="date" name="date_of_birth" class="form-control"
                                     value="{{ $user->date_of_birth ?? '' }}">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold">Gender</label>
+                                <label class="form-label fw-semibold">{{ __('ui.admin_profile.gender_label') }}</label>
                                 <select name="gender" class="form-select">
-                                    <option value="">Select...</option>
-                                    <option value="male" {{ $user->gender === 'male' ? 'selected' : '' }}>Male</option>
-                                    <option value="female" {{ $user->gender === 'female' ? 'selected' : '' }}>Female
+                                    <option value="">{{ __('ui.admin_profile.select_gender') }}</option>
+                                    <option value="male" {{ $user->gender === 'male' ? 'selected' : '' }}>{{ __('ui.admin_profile.male') }}</option>
+                                    <option value="female" {{ $user->gender === 'female' ? 'selected' : '' }}>{{ __('ui.admin_profile.female') }}
                                     </option>
-                                    <option value="other" {{ $user->gender === 'other' ? 'selected' : '' }}>Other
+                                    <option value="other" {{ $user->gender === 'other' ? 'selected' : '' }}>{{ __('ui.admin_profile.other') }}
                                     </option>
                                 </select>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold">Blood Group</label>
+                                <label class="form-label fw-semibold">{{ __('ui.admin_profile.blood_group_label') }}</label>
                                 <select name="blood_group" class="form-select">
-                                    <option value="">Select...</option>
+                                    <option value="">{{ __('ui.admin_profile.select_blood_group') }}</option>
                                     <option value="O+" {{ $user->blood_group === 'O+' ? 'selected' : '' }}>O+</option>
                                     <option value="O-" {{ $user->blood_group === 'O-' ? 'selected' : '' }}>O-</option>
                                     <option value="A+" {{ $user->blood_group === 'A+' ? 'selected' : '' }}>A+</option>
@@ -954,31 +954,31 @@
                                 </select>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold">Account Role</label>
+                                <label class="form-label fw-semibold">{{ __('ui.admin_profile.account_role') }}</label>
                                 <select name="role" class="form-select" required>
-                                    <option value="member" {{ $user->role === 'member' ? 'selected' : '' }}>Member
+                                    <option value="member" {{ $user->role === 'member' ? 'selected' : '' }}>{{ __('ui.admin_profile.member') }}
                                     </option>
-                                    <option value="admin" {{ $user->role === 'admin' ? 'selected' : '' }}>Administrator
+                                    <option value="admin" {{ $user->role === 'admin' ? 'selected' : '' }}>{{ __('ui.admin_profile.administrator') }}
                                     </option>
                                 </select>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold">Account Status</label>
+                                <label class="form-label fw-semibold">{{ __('ui.admin_profile.account_status') }}</label>
                                 <select name="is_active" class="form-select" required>
-                                    <option value="1" {{ $user->is_active ? 'selected' : '' }}>Active</option>
-                                    <option value="0" {{ !$user->is_active ? 'selected' : '' }}>Inactive</option>
+                                    <option value="1" {{ $user->is_active ? 'selected' : '' }}>{{ __('ui.admin_profile.active') }}</option>
+                                    <option value="0" {{ !$user->is_active ? 'selected' : '' }}>{{ __('ui.admin_profile.inactive') }}</option>
                                 </select>
                             </div>
                             <div class="col-md-6 mb-3">
                                 @php
                                     $isBnLocale = str_starts_with((string) app()->getLocale(), 'bn');
                                 @endphp
-                                <label class="form-label fw-semibold">Division</label>
+                                <label class="form-label fw-semibold">{{ __('ui.admin_profile.division') }}</label>
                                 <select id="adminDivisionSelect" class="form-select" data-current-id="{{ $user->address?->division_id }}">
                                     @if($user->address?->division)
                                         <option value="{{ $user->address->division }}" data-id="{{ $user->address->division_id }}" data-bn="{{ $user->address->division_bn }}" selected>{{ $isBnLocale ? ($user->address->division_bn ?: $user->address->division) : $user->address->division }}</option>
                                     @else
-                                        <option value="">{{ $isBnLocale ? 'বিভাগ নির্বাচন করুন' : 'Select division' }}</option>
+                                        <option value="">{{ __('ui.admin_profile.select_division') }}</option>
                                     @endif
                                 </select>
                                 <input type="hidden" name="division_id" id="adminDivisionId" value="{{ $user->address?->division_id }}">
@@ -986,36 +986,36 @@
                                 <input type="hidden" name="division_bn" id="adminDivisionBn" value="{{ $user->address?->division_bn }}">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold">District</label>
+                                <label class="form-label fw-semibold">{{ __('ui.admin_profile.district') }}</label>
                                 <select name="district" id="adminDistrictSelect" class="form-select" required data-current="{{ $user->address?->district }}" data-current-id="{{ $user->address?->district_id }}">
-                                    <option value="{{ $user->address?->district ?? '' }}" selected>{{ $user->address?->district ? ($isBnLocale ? ($user->address?->district_bn ?: $user->address?->district) : $user->address?->district) : ($isBnLocale ? 'জেলা নির্বাচন করুন' : 'Select district') }}</option>
+                                    <option value="{{ $user->address?->district ?? '' }}" selected>{{ $user->address?->district ? ($isBnLocale ? ($user->address?->district_bn ?: $user->address?->district) : $user->address?->district) : __('ui.admin_profile.select_district') }}</option>
                                 </select>
                                 <input type="hidden" name="district_id" id="adminDistrictId" value="{{ $user->address?->district_id }}">
                                 <input type="hidden" name="district_bn" id="adminDistrictBn" value="{{ $user->address?->district_bn }}">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold">Upazila</label>
+                                <label class="form-label fw-semibold">{{ __('ui.admin_profile.upazila') }}</label>
                                 <select name="upazila" id="adminUpazilaSelect" class="form-select" required data-current="{{ $user->address?->upazila }}" data-current-id="{{ $user->address?->upazila_id }}">
-                                    <option value="{{ $user->address?->upazila ?? '' }}" selected>{{ $user->address?->upazila ? ($isBnLocale ? ($user->address?->upazila_bn ?: $user->address?->upazila) : $user->address?->upazila) : ($isBnLocale ? 'উপজেলা নির্বাচন করুন' : 'Select upazila') }}</option>
+                                    <option value="{{ $user->address?->upazila ?? '' }}" selected>{{ $user->address?->upazila ? ($isBnLocale ? ($user->address?->upazila_bn ?: $user->address?->upazila) : $user->address?->upazila) : __('ui.admin_profile.select_upazila') }}</option>
                                 </select>
                                 <input type="hidden" name="upazila_id" id="adminUpazilaId" value="{{ $user->address?->upazila_id }}">
                                 <input type="hidden" name="upazila_bn" id="adminUpazilaBn" value="{{ $user->address?->upazila_bn }}">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold">Street</label>
+                                <label class="form-label fw-semibold">{{ __('ui.admin_profile.street') }}</label>
                                 <input type="text" name="street" class="form-control" value="{{ $user->address?->street ?? '' }}">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold">House</label>
+                                <label class="form-label fw-semibold">{{ __('ui.admin_profile.house') }}</label>
                                 <input type="text" name="house" class="form-control" value="{{ $user->address?->house ?? '' }}">
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ __('ui.admin_profile.cancel') }}</button>
                         <button type="submit" class="btn text-white"
                             style="background: linear-gradient(135deg, #667eea, #764ba2);">
-                            <i class="fas fa-save me-1"></i>Save Changes
+                            <i class="fas fa-save me-1"></i>{{ __('ui.admin_profile.save_changes') }}
                         </button>
                     </div>
                 </form>
@@ -1029,7 +1029,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">
-                        <i class="fas fa-chart-line me-2"></i><span id="metricModalLabel">Record Health Metric</span>
+                        <i class="fas fa-chart-line me-2"></i><span id="metricModalLabel">{{ __('ui.admin_profile.record_health_metric') }}</span>
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
@@ -1039,9 +1039,9 @@
                     <input type="hidden" name="user_id" value="{{ $user->id }}">
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Metric Type</label>
+                            <label class="form-label fw-semibold">{{ __('ui.admin_profile.metric_type') }}</label>
                             <select name="metric_type" id="metricTypeSelect" class="form-select" required>
-                                <option value="">Select metric type...</option>
+                                <option value="">{{ __('ui.admin_profile.select_metric_type') }}</option>
                                 @foreach ($metricConfig as $key => $cfg)
                                     <option value="{{ $key }}">{{ $cfg['en'] }} ({{ $cfg['bn'] ?? '' }})
                                     </option>
@@ -1050,16 +1050,16 @@
                         </div>
                         <div id="metricFieldsContainer"></div>
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Recorded At</label>
+                            <label class="form-label fw-semibold">{{ __('ui.admin_profile.recorded_at') }}</label>
                             <input type="datetime-local" name="recorded_at" id="metricRecordedAt" class="form-control"
                                 value="{{ now()->format('Y-m-d\TH:i') }}" required>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ __('ui.admin_profile.cancel_button') }}</button>
                         <button type="submit" class="btn text-white"
                             style="background: linear-gradient(135deg, #667eea, #764ba2);">
-                            <i class="fas fa-save me-1"></i> <span id="metricSubmitLabel">Save Metric</span>
+                            <i class="fas fa-save me-1"></i> <span id="metricSubmitLabel">{{ __('ui.admin_profile.save_metric') }}</span>
                         </button>
                     </div>
                 </form>
@@ -1073,7 +1073,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">
-                        <i class="fas fa-notes-medical me-2"></i><span id="symptomModalLabel">Log Symptom</span>
+                        <i class="fas fa-notes-medical me-2"></i><span id="symptomModalLabel">{{ __('ui.admin_profile.log_symptom') }}</span>
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
@@ -1083,42 +1083,42 @@
                     <input type="hidden" name="user_id" value="{{ $user->id }}">
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Symptom</label>
+                            <label class="form-label fw-semibold">{{ __('ui.admin_profile.symptom_label') }}</label>
                             <div class="position-relative" id="symptomDropdownWrap">
                                 <input type="text" id="symptomSearchInput" class="form-control"
-                                    placeholder="Search symptom..." autocomplete="off">
+                                    placeholder="{{ __('ui.admin_profile.search_symptom') }}" autocomplete="off">
                                 <input type="hidden" name="symptom_name" id="symptomNameHidden" required>
                                 <div id="symptomDropdownList" class="dropdown-menu w-100 shadow-sm"
                                     style="max-height: 220px; overflow-y: auto; display: none;"></div>
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Severity Level (1-10)</label>
+                            <label class="form-label fw-semibold">{{ __('ui.admin_profile.severity_level') }}</label>
                             <input type="range" name="severity_level" id="severityRange" class="form-range"
                                 min="1" max="10" value="5"
                                 oninput="document.getElementById('severityValue').textContent=this.value">
                             <div class="d-flex justify-content-between" style="font-size: 0.78rem; color: #a0aec0;">
-                                <span>Mild</span>
+                                <span>{{ __('ui.admin_profile.mild') }}</span>
                                 <span class="fw-bold" id="severityValue"
                                     style="color: #667eea; font-size: 1.1rem;">5</span>
-                                <span>Severe</span>
+                                <span>{{ __('ui.admin_profile.severe') }}</span>
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Recorded At</label>
+                            <label class="form-label fw-semibold">{{ __('ui.admin_profile.recorded_at') }}</label>
                             <input type="datetime-local" name="recorded_at" id="symptomRecordedAt" class="form-control"
                                 value="{{ now()->format('Y-m-d\TH:i') }}" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Note (Optional)</label>
-                            <textarea name="note" id="symptomNote" class="form-control" rows="2" placeholder="Additional details..."></textarea>
+                            <label class="form-label fw-semibold">{{ __('ui.admin_profile.note_optional') }}</label>
+                            <textarea name="note" id="symptomNote" class="form-control" rows="2" placeholder="{{ __('ui.admin_profile.additional_details') }}"></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ __('ui.admin_profile.cancel_button') }}</button>
                         <button type="submit" class="btn text-white"
                             style="background: linear-gradient(135deg, #667eea, #764ba2);">
-                            <i class="fas fa-save me-1"></i> <span id="symptomSubmitLabel">Log Symptom</span>
+                            <i class="fas fa-save me-1"></i> <span id="symptomSubmitLabel">{{ __('ui.admin_profile.log_symptom_button') }}</span>
                         </button>
                     </div>
                 </form>
@@ -1132,7 +1132,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">
-                        <i class="fas fa-virus me-2"></i><span id="diseaseModalLabel">Add Disease Record</span>
+                        <i class="fas fa-virus me-2"></i><span id="diseaseModalLabel">{{ __('ui.admin_profile.add_disease_record') }}</span>
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
@@ -1142,38 +1142,38 @@
                     <input type="hidden" name="user_id" value="{{ $user->id }}">
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Disease</label>
+                            <label class="form-label fw-semibold">{{ __('ui.admin_profile.disease_label') }}</label>
                             <div class="position-relative" id="diseaseDropdownWrap">
                                 <input type="text" id="diseaseSearchInput" class="form-control"
-                                    placeholder="Search disease..." autocomplete="off">
+                                    placeholder="{{ __('ui.admin_profile.search_disease') }}" autocomplete="off">
                                 <input type="hidden" name="disease_id" id="diseaseIdHidden" required>
                                 <div id="diseaseDropdownList" class="dropdown-menu w-100 shadow-sm"
                                     style="max-height: 220px; overflow-y: auto; display: none;"></div>
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Status</label>
+                            <label class="form-label fw-semibold">{{ __('ui.admin_profile.status') }}</label>
                             <select name="status" id="diseaseStatus" class="form-select" required>
-                                <option value="active">Active</option>
-                                <option value="chronic">Chronic</option>
-                                <option value="managed">Managed</option>
-                                <option value="recovered">Recovered</option>
+                                <option value="active">{{ __('ui.admin_profile.active_status') }}</option>
+                                <option value="chronic">{{ __('ui.admin_profile.chronic') }}</option>
+                                <option value="managed">{{ __('ui.admin_profile.managed_status') }}</option>
+                                <option value="recovered">{{ __('ui.admin_profile.recovered') }}</option>
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Diagnosed Date</label>
+                            <label class="form-label fw-semibold">{{ __('ui.admin_profile.diagnosed_date') }}</label>
                             <input type="date" name="diagnosed_at" id="diseaseDiagnosedAt" class="form-control" value="{{ now()->format('Y-m-d') }}">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Notes (Optional)</label>
-                            <textarea name="notes" id="diseaseNotes" class="form-control" rows="2" placeholder="Any relevant notes..."></textarea>
+                            <label class="form-label fw-semibold">{{ __('ui.admin_profile.notes_optional') }}</label>
+                            <textarea name="notes" id="diseaseNotes" class="form-control" rows="2" placeholder="{{ __('ui.admin_profile.any_relevant_notes') }}"></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ __('ui.admin_profile.cancel_button') }}</button>
                         <button type="submit" class="btn text-white"
                             style="background: linear-gradient(135deg, #667eea, #764ba2);">
-                            <i class="fas fa-save me-1"></i> <span id="diseaseSubmitLabel">Add Disease</span>
+                            <i class="fas fa-save me-1"></i> <span id="diseaseSubmitLabel">{{ __('ui.admin_profile.add_disease_button') }}</span>
                         </button>
                     </div>
                 </form>
@@ -1187,7 +1187,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">
-                        <i class="fas fa-cloud-upload-alt me-2"></i><span id="uploadModalLabel">Upload Document</span>
+                        <i class="fas fa-cloud-upload-alt me-2"></i><span id="uploadModalLabel">{{ __('ui.admin_profile.upload_document') }}</span>
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
@@ -1199,54 +1199,54 @@
                     <div class="modal-body">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Title</label>
+                                <label class="form-label fw-semibold">{{ __('ui.admin_profile.title') }}</label>
                                 <input type="text" name="title" id="uploadTitle" class="form-control"
-                                    placeholder="e.g., Blood Test Report" required>
+                                    placeholder="{{ __('ui.admin_profile.title_placeholder') }}" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Document Type</label>
+                                <label class="form-label fw-semibold">{{ __('ui.admin_profile.document_type') }}</label>
                                 <select name="type" id="uploadType" class="form-select" required>
-                                    <option value="prescription">Prescription</option>
-                                    <option value="report">Medical Report</option>
+                                    <option value="prescription">{{ __('ui.admin_profile.prescription') }}</option>
+                                    <option value="report">{{ __('ui.admin_profile.medical_report') }}</option>
                                 </select>
                             </div>
                             <div class="col-12">
-                                <label class="form-label fw-semibold">Upload Image</label>
+                                <label class="form-label fw-semibold">{{ __('ui.admin_profile.upload_image') }}</label>
                                 <input type="file" name="file" class="form-control"
                                     accept="image/jpeg,image/png,image/jpg,image/gif,image/webp" id="uploadFileInput"
                                     required>
-                                <div class="form-text" id="uploadFileHint">Accepted: JPG, PNG, GIF, WebP. Max 5MB.</div>
+                                <div class="form-text" id="uploadFileHint">{{ __('ui.admin_profile.file_hint') }}</div>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Doctor Name</label>
+                                <label class="form-label fw-semibold">{{ __('ui.admin_profile.doctor_name') }}</label>
                                 <input type="text" name="doctor_name" id="uploadDoctorName" class="form-control"
-                                    placeholder="Dr. ...">
+                                    placeholder="{{ __('ui.admin_profile.doctor_placeholder') }}">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Institution</label>
+                                <label class="form-label fw-semibold">{{ __('ui.admin_profile.institution') }}</label>
                                 <input type="text" name="institution" id="uploadInstitution" class="form-control"
-                                    placeholder="Hospital/Clinic">
+                                    placeholder="{{ __('ui.admin_profile.institution_placeholder') }}">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Document Date</label>
+                                <label class="form-label fw-semibold">{{ __('ui.admin_profile.document_date') }}</label>
                                 <input type="date" name="document_date" id="uploadDocumentDate" class="form-control">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Notes</label>
+                                <label class="form-label fw-semibold">{{ __('ui.admin_profile.notes') }}</label>
                                 <input type="text" name="notes" id="uploadNotes" class="form-control"
-                                    placeholder="Quick note (optional)">
+                                    placeholder="{{ __('ui.admin_profile.quick_note') }}">
                             </div>
                             <div class="col-12">
-                                <label class="form-label fw-semibold">Summary</label>
-                                <textarea name="summary" id="uploadSummary" class="form-control" rows="2" placeholder="Brief summary..."></textarea>
+                                <label class="form-label fw-semibold">{{ __('ui.admin_profile.summary') }}</label>
+                                <textarea name="summary" id="uploadSummary" class="form-control" rows="2" placeholder="{{ __('ui.admin_profile.summary_placeholder') }}"></textarea>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ __('ui.admin_profile.cancel_button') }}</button>
                         <button type="submit" class="btn text-white"
                             style="background: linear-gradient(135deg, #667eea, #764ba2);">
-                            <i class="fas fa-cloud-upload-alt me-1"></i> <span id="uploadSubmitLabel">Upload</span>
+                            <i class="fas fa-cloud-upload-alt me-1"></i> <span id="uploadSubmitLabel">{{ __('ui.admin_profile.upload_button') }}</span>
                         </button>
                     </div>
                 </form>
@@ -1293,7 +1293,7 @@
                     });
                     symptomDropdown.style.display = 'block';
                 } else if (query) {
-                    symptomDropdown.innerHTML = '<div class="dropdown-item text-muted" style="font-size:0.85rem;">No results found</div>';
+                    symptomDropdown.innerHTML = '<div class="dropdown-item text-muted" style="font-size:0.85rem;">{{ __("ui.admin_profile.no_results_found") }}</div>';
                     symptomDropdown.style.display = 'block';
                 }
             }
@@ -1343,7 +1343,7 @@
                     });
                     diseaseDropdown.style.display = 'block';
                 } else if (query) {
-                    diseaseDropdown.innerHTML = '<div class="dropdown-item text-muted" style="font-size:0.85rem;">No results found</div>';
+                    diseaseDropdown.innerHTML = '<div class="dropdown-item text-muted" style="font-size:0.85rem;">{{ __("ui.admin_profile.no_results_found") }}</div>';
                     diseaseDropdown.style.display = 'block';
                 }
             }
@@ -1625,9 +1625,9 @@
 
             const locale = document.documentElement.lang?.startsWith('bn') ? 'bn' : 'en';
             const apiBase = '{{ url('/geo/v2.0') }}';
-            const divisionPlaceholder = locale === 'bn' ? 'বিভাগ নির্বাচন করুন' : 'Select division';
-            const districtPlaceholder = locale === 'bn' ? 'জেলা নির্বাচন করুন' : 'Select district';
-            const upazilaPlaceholder = locale === 'bn' ? 'উপজেলা নির্বাচন করুন' : 'Select upazila';
+            const divisionPlaceholder = locale === 'bn' ? '{{ __("ui.admin_profile.select_division") }}' : '{{ __("ui.admin_profile.select_division") }}';
+            const districtPlaceholder = locale === 'bn' ? '{{ __("ui.admin_profile.select_district") }}' : '{{ __("ui.admin_profile.select_district") }}';
+            const upazilaPlaceholder = locale === 'bn' ? '{{ __("ui.admin_profile.select_upazila") }}' : '{{ __("ui.admin_profile.select_upazila") }}';
             const currentDistrict = districtSelect.dataset.current || '';
             const currentUpazila = upazilaSelect.dataset.current || '';
             const currentDivisionId = divisionSelect.dataset.currentId || '';
@@ -1768,4 +1768,3 @@
         }
     </script>
 @endpush
-

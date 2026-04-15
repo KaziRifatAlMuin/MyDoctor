@@ -1,9 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'My Profile')
+@section('title', __('ui.profile.my_profile_title'))
 
 @push('styles')
     <style>
+        /* All existing styles remain exactly the same */
         .profile-avatar-ring {
             width: 110px;
             height: 110px;
@@ -264,14 +265,14 @@
     @if (session('success'))
         <div class="alert alert-success alert-dismissible fade show m-3 rounded-3 border-0 shadow-sm" role="alert">
             <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ __('ui.actions.close') }}"></button>
         </div>
     @endif
 
     @if ($errors->any())
         <div class="alert alert-danger alert-dismissible fade show m-3 rounded-3 border-0 shadow-sm" role="alert">
             <i class="fas fa-exclamation-circle me-2"></i>{{ $errors->first() }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ __('ui.actions.close') }}"></button>
         </div>
     @endif
 
@@ -286,7 +287,7 @@
                     <div class="col-auto">
                         <div class="position-relative" style="width:110px;">
                             @if (auth()->user()->picture)
-                                <img src="{{ asset('storage/' . auth()->user()->picture) }}" alt="Profile Picture"
+                                <img src="{{ asset('storage/' . auth()->user()->picture) }}" alt="{{ __('ui.profile.profile_picture') }}"
                                     class="profile-avatar-ring">
                             @else
                                 <div class="profile-avatar-initials">
@@ -294,7 +295,7 @@
                                 </div>
                             @endif
                             <button class="camera-btn" data-bs-toggle="modal" data-bs-target="#changePictureModal"
-                                title="Change picture">
+                                title="{{ __('ui.profile.change_picture') }}">
                                 <i class="fas fa-camera"></i>
                             </button>
                         </div>
@@ -348,7 +349,7 @@
                                 </a>
                             @empty
                                 <span class="profile-disease-tag" style="background: #f1f5f9; color: #64748b; border-color: #e2e8f0;">
-                                    No disease tags yet
+                                    {{ __('ui.profile.no_disease_tags') }}
                                 </span>
                             @endforelse
                         </div>
@@ -357,7 +358,7 @@
                     {{-- Edit button --}}
                     <div class="col-auto">
                         <button class="gradient-btn btn" data-bs-toggle="modal" data-bs-target="#editProfileModal">
-                            <i class="fas fa-user-edit me-2"></i>Edit Profile
+                            <i class="fas fa-user-edit me-2"></i>{{ __('ui.profile.edit_profile') }}
                         </button>
                     </div>
 
@@ -370,15 +371,15 @@
                 <div class="col-md-6">
                     <div class="info-card">
                         <div class="card-header-custom">
-                            <h5><i class="fas fa-id-card me-2"></i>Personal Information</h5>
+                            <h5><i class="fas fa-id-card me-2"></i>{{ __('ui.profile.personal_information') }}</h5>
                         </div>
 
                         <div class="info-item">
                             <div class="info-icon purple"><i class="fas fa-calendar-alt"></i></div>
                             <div>
-                                <div class="info-label">Date of Birth</div>
+                                <div class="info-label">{{ __('ui.profile.date_of_birth') }}</div>
                                 <div class="info-value">
-                                    {{ auth()->user()->date_of_birth ? auth()->user()->date_of_birth->format('d M, Y') : 'Not provided' }}
+                                    {{ auth()->user()->date_of_birth ? auth()->user()->date_of_birth->format('d M, Y') : __('ui.profile.not_provided') }}
                                 </div>
                             </div>
                         </div>
@@ -386,9 +387,9 @@
                         <div class="info-item">
                             <div class="info-icon purple"><i class="fas fa-phone-alt"></i></div>
                             <div>
-                                <div class="info-label">Phone Number</div>
+                                <div class="info-label">{{ __('ui.profile.phone_number') }}</div>
                                 <div class="info-value">
-                                    {{ auth()->user()->phone ?? 'Not provided' }}
+                                    {{ auth()->user()->phone ?? __('ui.profile.not_provided') }}
                                 </div>
                             </div>
                         </div>
@@ -396,9 +397,9 @@
                         <div class="info-item">
                             <div class="info-icon orange"><i class="fas fa-briefcase"></i></div>
                             <div>
-                                <div class="info-label">Occupation</div>
+                                <div class="info-label">{{ __('ui.profile.occupation') }}</div>
                                 <div class="info-value">
-                                    {{ auth()->user()->occupation ?? 'Not provided' }}
+                                    {{ auth()->user()->occupation ?? __('ui.profile.not_provided') }}
                                 </div>
                             </div>
                         </div>
@@ -406,9 +407,9 @@
                         <div class="info-item">
                             <div class="info-icon red"><i class="fas fa-tint"></i></div>
                             <div>
-                                <div class="info-label">Blood Group</div>
+                                <div class="info-label">{{ __('ui.profile.blood_group') }}</div>
                                 <div class="info-value">
-                                    {{ auth()->user()->blood_group ?? 'Not provided' }}
+                                    {{ auth()->user()->blood_group ?? __('ui.profile.not_provided') }}
                                 </div>
                             </div>
                         </div>
@@ -416,9 +417,9 @@
                         <div class="info-item">
                             <div class="info-icon gray"><i class="fas fa-person"></i></div>
                             <div>
-                                <div class="info-label">Gender</div>
+                                <div class="info-label">{{ __('ui.profile.gender') }}</div>
                                 <div class="info-value">
-                                    {{ auth()->user()->gender ? ucfirst(auth()->user()->gender) : 'Not provided' }}
+                                    {{ auth()->user()->gender ? ucfirst(auth()->user()->gender) : __('ui.profile.not_provided') }}
                                 </div>
                             </div>
                         </div>
@@ -426,9 +427,9 @@
                         <div class="info-item">
                             <div class="info-icon green"><i class="fas fa-location-dot"></i></div>
                             <div>
-                                <div class="info-label">Address</div>
+                                <div class="info-label">{{ __('ui.profile.address') }}</div>
                                 <div class="info-value">
-                                    {{ auth()->user()->address?->display_address ?? 'Not set' }}
+                                    {{ auth()->user()->address?->display_address ?? __('ui.profile.not_set') }}
                                 </div>
                             </div>
                         </div>
@@ -436,15 +437,15 @@
                         <div class="info-item">
                             <div class="info-icon green"><i class="fas fa-shield-alt"></i></div>
                             <div>
-                                <div class="info-label">Email Verification</div>
+                                <div class="info-label">{{ __('ui.profile.email_verification') }}</div>
                                 <div class="info-value mt-1">
                                     @if (auth()->user()->email_verified_at)
                                         <span class="verified-badge">
-                                            <i class="fas fa-check-circle"></i> Verified
+                                            <i class="fas fa-check-circle"></i> {{ __('ui.profile.verified') }}
                                         </span>
                                     @else
                                         <span class="unverified-badge">
-                                            <i class="fas fa-exclamation-circle"></i> Not Verified
+                                            <i class="fas fa-exclamation-circle"></i> {{ __('ui.profile.not_verified') }}
                                         </span>
                                     @endif
                                 </div>
@@ -454,7 +455,7 @@
                         <div class="info-item">
                             <div class="info-icon gray"><i class="fas fa-clock"></i></div>
                             <div>
-                                <div class="info-label">Member Since</div>
+                                <div class="info-label">{{ __('ui.profile.member_since') }}</div>
                                 <div class="info-value">
                                     {{ auth()->user()->created_at ? auth()->user()->created_at->format('d M, Y') : 'N/A' }}
                                 </div>
@@ -468,50 +469,47 @@
                 <div class="col-md-6">
                     <div class="info-card">
                         <div class="card-header-custom">
-                            <h5><i class="fas fa-lock me-2"></i>Account &amp; Security</h5>
+                            <h5><i class="fas fa-lock me-2"></i>{{ __('ui.profile.account_security') }}</h5>
                         </div>
 
                         <div class="p-3 d-flex flex-column gap-2">
 
                             <p class="text-muted small px-2 mb-1">
-                                Manage your account settings and keep your information secure.
+                                {{ __('ui.profile.account_security_desc') }}
                             </p>
 
                             <button class="action-btn text-start" data-bs-toggle="modal" data-bs-target="#editProfileModal">
-                                <span><i class="fas fa-user me-2" style="color:#667eea;"></i>Update Personal Info</span>
+                                <span><i class="fas fa-user me-2" style="color:#667eea;"></i>{{ __('ui.profile.update_personal_info') }}</span>
                                 <i class="fas fa-chevron-right text-muted" style="font-size:0.8rem;"></i>
                             </button>
 
                             <button class="action-btn text-start" data-bs-toggle="modal"
                                 data-bs-target="#changePasswordModal">
-                                <span><i class="fas fa-key me-2" style="color:#667eea;"></i>Change Password</span>
+                                <span><i class="fas fa-key me-2" style="color:#667eea;"></i>{{ __('ui.profile.change_password') }}</span>
                                 <i class="fas fa-chevron-right text-muted" style="font-size:0.8rem;"></i>
                             </button>
 
                             <button class="action-btn text-start" data-bs-toggle="modal"
                                 data-bs-target="#changePictureModal">
-                                <span><i class="fas fa-camera me-2" style="color:#667eea;"></i>Change Profile
-                                    Picture</span>
+                                <span><i class="fas fa-camera me-2" style="color:#667eea;"></i>{{ __('ui.profile.change_profile_picture') }}</span>
                                 <i class="fas fa-chevron-right text-muted" style="font-size:0.8rem;"></i>
                             </button>
 
                             <a href="{{ route('profile.setting') }}" class="action-btn text-start">
-                                <span><i class="fas fa-cog me-2" style="color:#667eea;"></i>Settings</span>
+                                <span><i class="fas fa-cog me-2" style="color:#667eea;"></i>{{ __('ui.profile.settings') }}</span>
                                 <i class="fas fa-chevron-right text-muted" style="font-size:0.8rem;"></i>
                             </a>
 
                             <button type="button" class="action-btn danger text-start" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
-                                <span><i class="fas fa-trash-alt me-2"></i>Delete Account</span>
+                                <span><i class="fas fa-trash-alt me-2"></i>{{ __('ui.profile.delete_account') }}</span>
                                 <i class="fas fa-chevron-right" style="font-size:0.8rem;"></i>
                             </button>
-
-                            {{-- Email verification UI removed (handled elsewhere) --}}
 
                             <div class="mt-2">
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
                                     <button type="submit" class="action-btn danger text-start w-100">
-                                        <span><i class="fas fa-sign-out-alt me-2"></i>Sign Out</span>
+                                        <span><i class="fas fa-sign-out-alt me-2"></i>{{ __('ui.profile.sign_out') }}</span>
                                         <i class="fas fa-chevron-right" style="font-size:0.8rem;"></i>
                                     </button>
                                 </form>
@@ -536,9 +534,9 @@
                 <div class="modal-header border-0 px-4 pt-4">
                     <h5 class="modal-title fw-bold" id="editProfileLabel">
                         <i class="fas fa-user-edit me-2 text-primary" style="color:#667eea!important;"></i>
-                        Edit Personal Information
+                        {{ __('ui.profile.edit_personal_information') }}
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('ui.actions.close') }}"></button>
                 </div>
 
                 <form method="POST" action="{{ route('profile.update') }}">
@@ -549,19 +547,19 @@
                         <div class="row g-3">
 
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold small">Full Name</label>
+                                <label class="form-label fw-semibold small">{{ __('ui.profile.full_name') }}</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-white border-end-0">
                                         <i class="fas fa-user text-primary" style="color:#667eea!important;"></i>
                                     </span>
                                     <input type="text" name="name" class="form-control border-start-0"
-                                        value="{{ old('name', auth()->user()->name) }}" placeholder="Your full name"
+                                        value="{{ old('name', auth()->user()->name) }}" placeholder="{{ __('ui.profile.full_name_placeholder') }}"
                                         required>
                                 </div>
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold small">Date of Birth</label>
+                                <label class="form-label fw-semibold small">{{ __('ui.profile.date_of_birth') }}</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-white border-end-0">
                                         <i class="fas fa-calendar text-primary" style="color:#667eea!important;"></i>
@@ -572,37 +570,37 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold small">Phone Number</label>
+                                <label class="form-label fw-semibold small">{{ __('ui.profile.phone_number') }}</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-white border-end-0">
                                         <i class="fas fa-phone text-primary" style="color:#667eea!important;"></i>
                                     </span>
                                     <input type="text" name="phone" class="form-control border-start-0"
                                         value="{{ old('phone', auth()->user()->phone) }}"
-                                        placeholder="e.g. +880 1234 567890">
+                                        placeholder="{{ __('ui.profile.phone_placeholder') }}">
                                 </div>
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold small">Occupation</label>
+                                <label class="form-label fw-semibold small">{{ __('ui.profile.occupation') }}</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-white border-end-0">
                                         <i class="fas fa-briefcase text-primary" style="color:#667eea!important;"></i>
                                     </span>
                                     <input type="text" name="occupation" class="form-control border-start-0"
                                         value="{{ old('occupation', auth()->user()->occupation) }}"
-                                        placeholder="e.g. Software Engineer">
+                                        placeholder="{{ __('ui.profile.occupation_placeholder') }}">
                                 </div>
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold small">Blood Group</label>
+                                <label class="form-label fw-semibold small">{{ __('ui.profile.blood_group') }}</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-white border-end-0">
                                         <i class="fas fa-tint" style="color:#e53e3e;"></i>
                                     </span>
                                     <select name="blood_group" class="form-select border-start-0">
-                                        <option value="">-- Select Blood Group --</option>
+                                        <option value="">-- {{ __('ui.profile.select_blood_group') }} --</option>
                                         @foreach (['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] as $bg)
                                             <option value="{{ $bg }}"
                                                 {{ old('blood_group', auth()->user()->blood_group) === $bg ? 'selected' : '' }}>
@@ -614,16 +612,16 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold small">Gender</label>
+                                <label class="form-label fw-semibold small">{{ __('ui.profile.gender') }}</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-white border-end-0">
                                         <i class="fas fa-person text-primary" style="color:#667eea!important;"></i>
                                     </span>
                                     <select name="gender" class="form-select border-start-0">
-                                        <option value="">-- Select Gender --</option>
-                                        <option value="male" {{ old('gender', auth()->user()->gender) === 'male' ? 'selected' : '' }}>Male</option>
-                                        <option value="female" {{ old('gender', auth()->user()->gender) === 'female' ? 'selected' : '' }}>Female</option>
-                                        <option value="other" {{ old('gender', auth()->user()->gender) === 'other' ? 'selected' : '' }}>Other</option>
+                                        <option value="">-- {{ __('ui.profile.select_gender') }} --</option>
+                                        <option value="male" {{ old('gender', auth()->user()->gender) === 'male' ? 'selected' : '' }}>{{ __('ui.profile.male') }}</option>
+                                        <option value="female" {{ old('gender', auth()->user()->gender) === 'female' ? 'selected' : '' }}>{{ __('ui.profile.female') }}</option>
+                                        <option value="other" {{ old('gender', auth()->user()->gender) === 'other' ? 'selected' : '' }}>{{ __('ui.profile.other') }}</option>
                                     </select>
                                 </div>
                             </div>
@@ -632,12 +630,12 @@
                                 @php
                                     $isBnLocale = str_starts_with((string) app()->getLocale(), 'bn');
                                 @endphp
-                                <label class="form-label fw-semibold small">Division</label>
+                                <label class="form-label fw-semibold small">{{ __('ui.profile.division') }}</label>
                                 <select id="profileDivision" class="form-select" data-current-id="{{ old('division_id', auth()->user()->address?->division_id) }}">
                                     @if (old('division', auth()->user()->address?->division))
                                         <option value="{{ old('division', auth()->user()->address?->division) }}" data-id="{{ old('division_id', auth()->user()->address?->division_id) }}" data-bn="{{ old('division_bn', auth()->user()->address?->division_bn) }}" selected>{{ $isBnLocale ? (old('division_bn', auth()->user()->address?->division_bn) ?: old('division', auth()->user()->address?->division)) : old('division', auth()->user()->address?->division) }}</option>
                                     @else
-                                        <option value="">{{ $isBnLocale ? 'বিভাগ নির্বাচন করুন' : 'Select Division' }}</option>
+                                        <option value="">{{ $isBnLocale ? __('ui.profile.select_division') : __('ui.profile.select_division') }}</option>
                                     @endif
                                 </select>
                                 <input type="hidden" name="division_id" id="profileDivisionId" value="{{ old('division_id', auth()->user()->address?->division_id) }}">
@@ -646,31 +644,31 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold small">District <span class="text-danger">*</span></label>
+                                <label class="form-label fw-semibold small">{{ __('ui.profile.district') }} <span class="text-danger">*</span></label>
                                 <select name="district" id="profileDistrict" class="form-select" required data-current="{{ old('district', auth()->user()->address?->district) }}" data-current-id="{{ old('district_id', auth()->user()->address?->district_id) }}">
-                                    <option value="{{ old('district', auth()->user()->address?->district) }}" selected>{{ old('district', auth()->user()->address?->district) ? ($isBnLocale ? (old('district_bn', auth()->user()->address?->district_bn) ?: old('district', auth()->user()->address?->district)) : old('district', auth()->user()->address?->district)) : ($isBnLocale ? 'জেলা নির্বাচন করুন' : 'Select District') }}</option>
+                                    <option value="{{ old('district', auth()->user()->address?->district) }}" selected>{{ old('district', auth()->user()->address?->district) ? ($isBnLocale ? (old('district_bn', auth()->user()->address?->district_bn) ?: old('district', auth()->user()->address?->district)) : old('district', auth()->user()->address?->district)) : ($isBnLocale ? __('ui.profile.select_district') : __('ui.profile.select_district')) }}</option>
                                 </select>
                                 <input type="hidden" name="district_id" id="profileDistrictId" value="{{ old('district_id', auth()->user()->address?->district_id) }}">
                                 <input type="hidden" name="district_bn" id="profileDistrictBn" value="{{ old('district_bn', auth()->user()->address?->district_bn) }}">
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold small">Upazila <span class="text-danger">*</span></label>
+                                <label class="form-label fw-semibold small">{{ __('ui.profile.upazila') }} <span class="text-danger">*</span></label>
                                 <select name="upazila" id="profileUpazila" class="form-select" required data-current="{{ old('upazila', auth()->user()->address?->upazila) }}" data-current-id="{{ old('upazila_id', auth()->user()->address?->upazila_id) }}">
-                                    <option value="{{ old('upazila', auth()->user()->address?->upazila) }}" selected>{{ old('upazila', auth()->user()->address?->upazila) ? ($isBnLocale ? (old('upazila_bn', auth()->user()->address?->upazila_bn) ?: old('upazila', auth()->user()->address?->upazila)) : old('upazila', auth()->user()->address?->upazila)) : ($isBnLocale ? 'উপজেলা নির্বাচন করুন' : 'Select Upazila') }}</option>
+                                    <option value="{{ old('upazila', auth()->user()->address?->upazila) }}" selected>{{ old('upazila', auth()->user()->address?->upazila) ? ($isBnLocale ? (old('upazila_bn', auth()->user()->address?->upazila_bn) ?: old('upazila', auth()->user()->address?->upazila)) : old('upazila', auth()->user()->address?->upazila)) : ($isBnLocale ? __('ui.profile.select_upazila') : __('ui.profile.select_upazila')) }}</option>
                                 </select>
                                 <input type="hidden" name="upazila_id" id="profileUpazilaId" value="{{ old('upazila_id', auth()->user()->address?->upazila_id) }}">
                                 <input type="hidden" name="upazila_bn" id="profileUpazilaBn" value="{{ old('upazila_bn', auth()->user()->address?->upazila_bn) }}">
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold small">Street</label>
-                                <input type="text" name="street" class="form-control" value="{{ old('street', auth()->user()->address?->street) }}" placeholder="Street / Road">
+                                <label class="form-label fw-semibold small">{{ __('ui.profile.street') }}</label>
+                                <input type="text" name="street" class="form-control" value="{{ old('street', auth()->user()->address?->street) }}" placeholder="{{ __('ui.profile.street_placeholder') }}">
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold small">House</label>
-                                <input type="text" name="house" class="form-control" value="{{ old('house', auth()->user()->address?->house) }}" placeholder="House / Building">
+                                <label class="form-label fw-semibold small">{{ __('ui.profile.house') }}</label>
+                                <input type="text" name="house" class="form-control" value="{{ old('house', auth()->user()->address?->house) }}" placeholder="{{ __('ui.profile.house_placeholder') }}">
                             </div>
 
                         </div>
@@ -678,9 +676,9 @@
 
                     <div class="modal-footer border-0 px-4 pb-4">
                         <button type="button" class="btn btn-light rounded-pill px-4"
-                            data-bs-dismiss="modal">Cancel</button>
+                            data-bs-dismiss="modal">{{ __('ui.profile.cancel') }}</button>
                         <button type="submit" class="gradient-btn btn px-4">
-                            <i class="fas fa-save me-2"></i>Save Changes
+                            <i class="fas fa-save me-2"></i>{{ __('ui.profile.save_changes') }}
                         </button>
                     </div>
                 </form>
@@ -701,9 +699,9 @@
                 <div class="modal-header border-0 px-4 pt-4">
                     <h5 class="modal-title fw-bold" id="changePictureLabel">
                         <i class="fas fa-camera me-2" style="color:#667eea;"></i>
-                        Change Profile Picture
+                        {{ __('ui.profile.change_profile_picture') }}
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('ui.actions.close') }}"></button>
                 </div>
 
                 <form method="POST" action="{{ route('profile.picture') }}" enctype="multipart/form-data">
@@ -732,18 +730,18 @@
                         </div>
 
                         <div class="mb-2">
-                            <label class="form-label fw-semibold small">Choose New Picture</label>
+                            <label class="form-label fw-semibold small">{{ __('ui.profile.choose_new_picture') }}</label>
                             <input type="file" name="picture" id="pictureInput" class="form-control rounded-3"
                                 accept="image/png, image/jpeg, image/jpg, image/webp" required>
-                            <div class="form-text">Allowed: JPG, PNG, WEBP &mdash; Max 2 MB</div>
+                            <div class="form-text">{{ __('ui.profile.picture_allowed_formats') }}</div>
                         </div>
                     </div>
 
                     <div class="modal-footer border-0 px-4 pb-4">
                         <button type="button" class="btn btn-light rounded-pill px-4"
-                            data-bs-dismiss="modal">Cancel</button>
+                            data-bs-dismiss="modal">{{ __('ui.profile.cancel') }}</button>
                         <button type="submit" class="gradient-btn btn px-4">
-                            <i class="fas fa-cloud-upload-alt me-2"></i>Upload
+                            <i class="fas fa-cloud-upload-alt me-2"></i>{{ __('ui.profile.upload') }}
                         </button>
                     </div>
                 </form>
@@ -764,9 +762,9 @@
                 <div class="modal-header border-0 px-4 pt-4">
                     <h5 class="modal-title fw-bold" id="changePasswordLabel">
                         <i class="fas fa-key me-2" style="color:#667eea;"></i>
-                        Change Password
+                        {{ __('ui.profile.change_password') }}
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('ui.actions.close') }}"></button>
                 </div>
 
                 <form method="POST" action="{{ route('profile.password') }}">
@@ -775,42 +773,42 @@
 
                     <div class="modal-body px-4">
                         <div class="mb-3">
-                            <label class="form-label fw-semibold small">Current Password</label>
+                            <label class="form-label fw-semibold small">{{ __('ui.profile.current_password') }}</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white border-end-0">
                                     <i class="fas fa-lock" style="color:#667eea;"></i>
                                 </span>
                                 <input type="password" name="current_password" class="form-control border-start-0"
-                                    placeholder="Enter current password" required>
+                                    placeholder="{{ __('ui.profile.current_password_placeholder') }}" required>
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-semibold small">New Password</label>
+                            <label class="form-label fw-semibold small">{{ __('ui.profile.new_password') }}</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white border-end-0">
                                     <i class="fas fa-lock" style="color:#667eea;"></i>
                                 </span>
                                 <input type="password" name="password" class="form-control border-start-0"
-                                    placeholder="At least 8 characters" required>
+                                    placeholder="{{ __('ui.profile.new_password_placeholder') }}" required>
                             </div>
                         </div>
                         <div class="mb-1">
-                            <label class="form-label fw-semibold small">Confirm New Password</label>
+                            <label class="form-label fw-semibold small">{{ __('ui.profile.confirm_new_password') }}</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white border-end-0">
                                     <i class="fas fa-lock" style="color:#667eea;"></i>
                                 </span>
                                 <input type="password" name="password_confirmation" class="form-control border-start-0"
-                                    placeholder="Repeat new password" required>
+                                    placeholder="{{ __('ui.profile.confirm_password_placeholder') }}" required>
                             </div>
                         </div>
                     </div>
 
                     <div class="modal-footer border-0 px-4 pb-4">
                         <button type="button" class="btn btn-light rounded-pill px-4"
-                            data-bs-dismiss="modal">Cancel</button>
+                            data-bs-dismiss="modal">{{ __('ui.profile.cancel') }}</button>
                         <button type="submit" class="gradient-btn btn px-4">
-                            <i class="fas fa-save me-2"></i>Update Password
+                            <i class="fas fa-save me-2"></i>{{ __('ui.profile.update_password') }}
                         </button>
                     </div>
                 </form>
@@ -829,9 +827,9 @@
                 <div class="modal-header border-0 px-4 pt-4">
                     <h5 class="modal-title fw-bold text-danger" id="deleteAccountLabel">
                         <i class="fas fa-trash-alt me-2"></i>
-                        Delete Account
+                        {{ __('ui.profile.delete_account') }}
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('ui.actions.close') }}"></button>
                 </div>
 
                 <form method="POST" action="{{ route('profile.destroy') }}">
@@ -840,17 +838,17 @@
 
                     <div class="modal-body px-4">
                         <p class="text-danger fw-semibold">
-                            This action is permanent. Your profile, settings, and all personal data will be deleted.
+                            {{ __('ui.profile.delete_account_warning') }}
                         </p>
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold small">Confirm Password</label>
+                            <label class="form-label fw-semibold small">{{ __('ui.profile.confirm_password') }}</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white border-end-0">
                                     <i class="fas fa-lock text-danger"></i>
                                 </span>
                                 <input type="password" name="delete_password" class="form-control border-start-0"
-                                    placeholder="Enter your password" required>
+                                    placeholder="{{ __('ui.profile.enter_password') }}" required>
                             </div>
                             @error('delete_password')
                                 <div class="text-danger small mt-2">{{ $message }}</div>
@@ -859,15 +857,15 @@
 
                         <div class="alert alert-warning mb-0" role="alert">
                             <i class="fas fa-exclamation-triangle me-2"></i>
-                            You will be logged out immediately after account deletion.
+                            {{ __('ui.profile.delete_account_logout_warning') }}
                         </div>
                     </div>
 
                     <div class="modal-footer border-0 px-4 pb-4">
                         <button type="button" class="btn btn-light rounded-pill px-4"
-                            data-bs-dismiss="modal">Cancel</button>
+                            data-bs-dismiss="modal">{{ __('ui.profile.cancel') }}</button>
                         <button type="submit" class="btn btn-danger rounded-pill px-4">
-                            <i class="fas fa-trash-alt me-2"></i>Delete My Account
+                            <i class="fas fa-trash-alt me-2"></i>{{ __('ui.profile.delete_my_account') }}
                         </button>
                     </div>
                 </form>
@@ -914,6 +912,7 @@
         initializeBdAddressSelector();
 
         async function initializeBdAddressSelector() {
+            // ... keep existing address API code exactly as is ...
             const divisionSelect = document.getElementById('profileDivision');
             const districtSelect = document.getElementById('profileDistrict');
             const upazilaSelect = document.getElementById('profileUpazila');
@@ -1073,4 +1072,3 @@
         }
     </script>
 @endpush
-

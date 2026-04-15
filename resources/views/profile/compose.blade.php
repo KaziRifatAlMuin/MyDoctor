@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Compose Message')
+@section('title', __('ui.mailbox.compose_title'))
 @section('main_content_class', 'main-content main-content--wide')
 
 @push('styles')
@@ -292,13 +292,13 @@
         <!-- Sidebar -->
         <div class="gmail-sidebar">
             <a href="{{ route('profile.mailbox.compose') }}" class="gmail-compose-btn">
-                <i class="fas fa-pen"></i> Compose
+                <i class="fas fa-pen"></i> {{ __('ui.mailbox.compose') }}
             </a>
 
             <ul class="gmail-nav">
                 <li>
                     <a href="{{ route('profile.mailbox') }}" class="gmail-nav-item">
-                        <i class="fas fa-inbox"></i> Inbox
+                        <i class="fas fa-inbox"></i> {{ __('ui.mailbox.inbox') }}
                         @php
                             $unreadCount = \App\Models\Mailing::where('receiver_id', auth()->id())
                                 ->where('status', 'unread')
@@ -311,22 +311,22 @@
                 </li>
                 <li>
                     <a href="{{ route('profile.mailbox.drafts') }}" class="gmail-nav-item">
-                        <i class="fas fa-file-alt"></i> Drafts
+                        <i class="fas fa-file-alt"></i> {{ __('ui.mailbox.drafts') }}
                     </a>
                 </li>
                 <li>
                     <a href="{{ route('profile.mailbox.sent') }}" class="gmail-nav-item">
-                        <i class="fas fa-paper-plane"></i> Sent
+                        <i class="fas fa-paper-plane"></i> {{ __('ui.mailbox.sent') }}
                     </a>
                 </li>
                 <li>
                     <a href="{{ route('profile.mailbox.starred') }}" class="gmail-nav-item">
-                        <i class="fas fa-star"></i> Starred
+                        <i class="fas fa-star"></i> {{ __('ui.mailbox.starred') }}
                     </a>
                 </li>
                 <li>
                     <a href="{{ route('profile.mailbox.archived') }}" class="gmail-nav-item">
-                        <i class="fas fa-box-archive"></i> Archived
+                        <i class="fas fa-box-archive"></i> {{ __('ui.mailbox.archived') }}
                     </a>
                 </li>
             </ul>
@@ -335,9 +335,9 @@
         <!-- Main Content -->
         <div class="gmail-main">
             <div class="gmail-compose-header">
-                <span>New Message</span>
+                <span>{{ __('ui.mailbox.new_message') }}</span>
                 <a href="{{ route('profile.mailbox') }}" class="gmail-icon-btn" style="width: 24px; height: 24px;"
-                    title="Close">
+                    title="{{ __('ui.mailbox.close') }}">
                     <i class="fas fa-times fs-6"></i>
                 </a>
             </div>
@@ -360,10 +360,10 @@
                 @endif
 
                 <div class="gmail-input-row">
-                    <span class="gmail-input-label">To</span>
+                    <span class="gmail-input-label">{{ __('ui.mailbox.to') }}</span>
                     <div class="flex-grow-1" id="receiver_id_wrapper">
                         <input type="text" class="gmail-input-field" id="receiver_id_input"
-                            placeholder="Type recipient name or email..." autocomplete="off">
+                            placeholder="{{ __('ui.mailbox.recipient_placeholder') }}" autocomplete="off">
                         <div id="recipient_dropdown"></div>
                         <input type="hidden" id="receiver_id" name="receiver_id"
                             value="{{ old('receiver_id', $toUserId ?? '') }}">
@@ -371,8 +371,8 @@
                 </div>
 
                 <div class="gmail-input-row">
-                    <span class="gmail-input-label d-none">Subject</span>
-                    <input type="text" class="gmail-input-field" placeholder="Subject" name="title"
+                    <span class="gmail-input-label d-none">{{ __('ui.mailbox.subject') }}</span>
+                    <input type="text" class="gmail-input-field" placeholder="{{ __('ui.mailbox.subject_placeholder') }}" name="title"
                         value="{{ old('title', $title ?? '') }}">
                 </div>
 
@@ -382,17 +382,17 @@
 
                 <div class="gmail-compose-footer">
                     <button type="submit" name="action" value="send" class="gmail-send-btn me-3" id="btnSend">
-                        <i class="fas fa-paper-plane"></i> Send
+                        <i class="fas fa-paper-plane"></i> {{ __('ui.mailbox.send') }}
                     </button>
 
                     <button type="submit" name="save_draft" value="1"
                         class="btn text-muted fw-medium d-inline-flex align-items-center bg-transparent border-0"
                         id="btnDraft">
-                        <i class="fas fa-save me-2"></i> Save draft
+                        <i class="fas fa-save me-2"></i> {{ __('ui.mailbox.save_draft') }}
                     </button>
 
                     <div class="ms-auto">
-                        <a href="{{ route('profile.mailbox') }}" class="gmail-icon-btn" title="Discard">
+                        <a href="{{ route('profile.mailbox') }}" class="gmail-icon-btn" title="{{ __('ui.mailbox.discard') }}">
                             <i class="fas fa-trash-alt fs-6"></i>
                         </a>
                     </div>
@@ -454,7 +454,7 @@
 
             const renderOptions = (users) => {
                 if (!Array.isArray(users) || users.length === 0) {
-                    showMessage('No recipients found');
+                    showMessage('{{ __("ui.mailbox.no_recipients_found") }}');
                     return;
                 }
 
@@ -501,7 +501,7 @@
                     });
 
                     if (!response.ok) {
-                        showMessage('Unable to search recipients');
+                        showMessage('{{ __("ui.mailbox.unable_to_search") }}');
                         return;
                     }
 
@@ -509,7 +509,7 @@
                     renderOptions(users);
                 } catch (error) {
                     if (error.name !== 'AbortError') {
-                        showMessage('Unable to search recipients');
+                        showMessage('{{ __("ui.mailbox.unable_to_search") }}');
                     }
                 }
             };
@@ -573,7 +573,7 @@
                 resize: false,
                 convert_urls: false,
                 content_style: 'body { font-family: Roboto, Arial, sans-serif; font-size:14px; line-height:1.6; margin: 16px; }',
-                placeholder: 'Write your message...',
+                placeholder: '{{ __("ui.mailbox.write_message_placeholder") }}',
                 setup: function(editor) {
                     editor.on('change keyup blur', function() {
                         editor.save();
@@ -623,13 +623,13 @@
 
                 if (!recipientId && submitAction !== 'draft') {
                     e.preventDefault();
-                    alert('Please select a recipient.');
+                    alert('{{ __("ui.mailbox.please_select_recipient") }}');
                     return false;
                 }
 
                 if (!plainText || plainText.length < 2) {
                     e.preventDefault();
-                    alert('Please write a message.');
+                    alert('{{ __("ui.mailbox.please_write_message") }}');
                     return false;
                 }
 
@@ -637,11 +637,11 @@
                 const isDraft = submitAction === 'draft';
 
                 if (isDraft) {
-                    draftButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Saving...';
+                    draftButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> {{ __("ui.mailbox.saving") }}...';
                     draftButton.disabled = true;
                     sendButton.disabled = true;
                 } else {
-                    sendButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Sending...';
+                    sendButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> {{ __("ui.mailbox.sending") }}...';
                     sendButton.disabled = true;
                     draftButton.disabled = true;
                 }

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Admin Dashboard')
+@section('title', __('ui.admin_dashboard.title'))
 
 @push('styles')
 <style>
@@ -252,27 +252,27 @@
 <div class="admin-hub-surface">
     <div class="container" style="max-width: 1240px;">
         <div class="hub-hero">
-            <h1 class="hub-hero-title"><i class="fas fa-chart-line me-2"></i>Admin Command Dashboard</h1>
-            <p class="hub-hero-sub">Central management cards plus complete website statistics from your database.</p>
+            <h1 class="hub-hero-title"><i class="fas fa-chart-line me-2"></i>{{ __('ui.admin_dashboard.title') }}</h1>
+            <p class="hub-hero-sub">{{ __('ui.admin_dashboard.subtitle') }}</p>
             <div class="hub-pill-grid">
                 <div class="hub-pill">
-                    <small>Total Users</small>
+                    <small>{{ __('ui.admin_dashboard.total_users') }}</small>
                     <strong>{{ number_format($stats['users']['total'] ?? 0) }}</strong>
                 </div>
                 <div class="hub-pill">
-                    <small>Active Reminders</small>
+                    <small>{{ __('ui.admin_dashboard.active_reminders') }}</small>
                     <strong>{{ number_format($stats['operations']['active_reminders'] ?? 0) }}</strong>
                 </div>
                 <div class="hub-pill">
-                    <small>Community Posts</small>
+                    <small>{{ __('ui.admin_dashboard.community_posts') }}</small>
                     <strong>{{ number_format($stats['community']['posts'] ?? 0) }}</strong>
                 </div>
                 <div class="hub-pill" style="background: rgba(255, 255, 255, 0.2); border-color: rgba(255, 208, 0, 0.45);">
-                    <small>Pending Posts</small>
+                    <small>{{ __('ui.admin_dashboard.pending_posts') }}</small>
                     <strong>{{ number_format($stats['community']['pending_posts'] ?? 0) }}</strong>
                 </div>
                 <div class="hub-pill">
-                    <small>Health Metrics</small>
+                    <small>{{ __('ui.admin_dashboard.health_metrics') }}</small>
                     <strong>{{ number_format($stats['medical']['health_metrics'] ?? 0) }}</strong>
                 </div>
             </div>
@@ -296,29 +296,29 @@
             <div class="col-lg-6">
                 <section class="hub-block h-100">
                     <div class="hub-block-head">
-                        <h2><i class="fas fa-users me-2"></i>User Statistics</h2>
+                        <h2><i class="fas fa-users me-2"></i>{{ __('ui.admin_dashboard.user_statistics') }}</h2>
                     </div>
                     <div class="stats-grid">
-                        <div class="stat-item"><small>Admins</small><strong>{{ number_format($stats['users']['admins'] ?? 0) }}</strong></div>
-                        <div class="stat-item"><small>Members</small><strong>{{ number_format($stats['users']['members'] ?? 0) }}</strong></div>
-                        <div class="stat-item"><small>Joined Today</small><strong>{{ number_format($stats['users']['new_today'] ?? 0) }}</strong></div>
-                        <div class="stat-item"><small>Joined This Week</small><strong>{{ number_format($stats['users']['new_this_week'] ?? 0) }}</strong></div>
+                        <div class="stat-item"><small>{{ __('ui.admin_dashboard.admins') }}</small><strong>{{ number_format($stats['users']['admins'] ?? 0) }}</strong></div>
+                        <div class="stat-item"><small>{{ __('ui.admin_dashboard.members') }}</small><strong>{{ number_format($stats['users']['members'] ?? 0) }}</strong></div>
+                        <div class="stat-item"><small>{{ __('ui.admin_dashboard.joined_today') }}</small><strong>{{ number_format($stats['users']['new_today'] ?? 0) }}</strong></div>
+                        <div class="stat-item"><small>{{ __('ui.admin_dashboard.joined_this_week') }}</small><strong>{{ number_format($stats['users']['new_this_week'] ?? 0) }}</strong></div>
                     </div>
                 </section>
             </div>
             <div class="col-lg-6">
                 <section class="hub-block h-100">
                     <div class="hub-block-head">
-                        <h2><i class="fas fa-comments me-2"></i>Community Statistics</h2>
+                        <h2><i class="fas fa-comments me-2"></i>{{ __('ui.admin_dashboard.community_statistics') }}</h2>
                     </div>
                     <div class="stats-grid">
-                        <div class="stat-item"><small>Posts</small><strong>{{ number_format($stats['community']['posts'] ?? 0) }}</strong></div>
-                        <div class="stat-item"><small>Pending Posts</small><strong style="color:#b45309;">{{ number_format($stats['community']['pending_posts'] ?? 0) }}</strong></div>
-                        <div class="stat-item"><small>Approved Posts</small><strong>{{ number_format($stats['community']['approved_posts'] ?? 0) }}</strong></div>
-                        <div class="stat-item"><small>Approved Today</small><strong>{{ number_format($stats['community']['approved_today'] ?? 0) }}</strong></div>
-                        <div class="stat-item"><small>Comments</small><strong>{{ number_format($stats['community']['comments'] ?? 0) }}</strong></div>
-                        <div class="stat-item"><small>Post Likes</small><strong>{{ number_format($stats['community']['post_likes'] ?? 0) }}</strong></div>
-                        <div class="stat-item"><small>Comment Likes</small><strong>{{ number_format($stats['community']['comment_likes'] ?? 0) }}</strong></div>
+                        <div class="stat-item"><small>{{ __('ui.admin_dashboard.posts') }}</small><strong>{{ number_format($stats['community']['posts'] ?? 0) }}</strong></div>
+                        <div class="stat-item"><small>{{ __('ui.admin_dashboard.pending_posts_stat') }}</small><strong style="color:#b45309;">{{ number_format($stats['community']['pending_posts'] ?? 0) }}</strong></div>
+                        <div class="stat-item"><small>{{ __('ui.admin_dashboard.approved_posts') }}</small><strong>{{ number_format($stats['community']['approved_posts'] ?? 0) }}</strong></div>
+                        <div class="stat-item"><small>{{ __('ui.admin_dashboard.approved_today') }}</small><strong>{{ number_format($stats['community']['approved_today'] ?? 0) }}</strong></div>
+                        <div class="stat-item"><small>{{ __('ui.admin_dashboard.comments') }}</small><strong>{{ number_format($stats['community']['comments'] ?? 0) }}</strong></div>
+                        <div class="stat-item"><small>{{ __('ui.admin_dashboard.post_likes') }}</small><strong>{{ number_format($stats['community']['post_likes'] ?? 0) }}</strong></div>
+                        <div class="stat-item"><small>{{ __('ui.admin_dashboard.comment_likes') }}</small><strong>{{ number_format($stats['community']['comment_likes'] ?? 0) }}</strong></div>
                     </div>
                 </section>
             </div>
@@ -328,37 +328,37 @@
             <div class="col-12">
                 <section class="hub-block" style="border-left: 6px solid #f59e0b;">
                     <div class="hub-block-head d-flex justify-content-between align-items-center">
-                        <h2><i class="fas fa-hourglass-half me-2"></i>Pending Post Moderation Queue</h2>
+                        <h2><i class="fas fa-hourglass-half me-2"></i>{{ __('ui.admin_dashboard.pending_moderation_queue') }}</h2>
                         <a href="{{ route('admin.community.posts.pending') }}" class="btn btn-sm btn-outline-warning rounded-pill">
-                            <i class="fas fa-list me-1"></i>View All Pending
+                            <i class="fas fa-list me-1"></i>{{ __('ui.admin_dashboard.view_all_pending') }}
                         </a>
                     </div>
                     <div class="table-shell table-responsive">
                         @if($pendingPosts->isEmpty())
                             <div class="alert alert-success mb-0">
-                                <i class="fas fa-check-circle me-2"></i>No pending community posts right now.
+                                <i class="fas fa-check-circle me-2"></i>{{ __('ui.admin_dashboard.no_pending_posts') }}
                             </div>
                         @else
                             <table class="table-hub">
                                 <thead>
                                     <tr>
-                                        <th>Author</th>
-                                        <th>Disease</th>
-                                        <th>Preview</th>
-                                        <th>Submitted</th>
-                                        <th>Action</th>
+                                        <th>{{ __('ui.admin_dashboard.author') }}</th>
+                                        <th>{{ __('ui.admin_dashboard.disease') }}</th>
+                                        <th>{{ __('ui.admin_dashboard.preview') }}</th>
+                                        <th>{{ __('ui.admin_dashboard.submitted') }}</th>
+                                        <th>{{ __('ui.admin_dashboard.action') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($pendingPosts as $pendingPost)
                                         <tr style="background: linear-gradient(90deg, rgba(245, 158, 11, 0.08) 0%, rgba(255, 255, 255, 1) 28%);">
-                                            <td>{{ $pendingPost->is_anonymous ? 'Anonymous Member' : ($pendingPost->user->name ?? 'Unknown') }}</td>
-                                            <td>{{ $pendingPost->disease->disease_name ?? 'General' }}</td>
+                                            <td>{{ $pendingPost->is_anonymous ? __('ui.admin_dashboard.anonymous_member') : ($pendingPost->user->name ?? __('ui.admin_dashboard.unknown')) }}</td>
+                                            <td>{{ $pendingPost->disease->disease_name ?? __('ui.admin_dashboard.general') }}</td>
                                             <td>{{ \Illuminate\Support\Str::limit($pendingPost->description, 80) }}</td>
                                             <td>{{ $pendingPost->created_at->diffForHumans() }}</td>
                                             <td>
                                                 <a href="{{ route('community.post.show', $pendingPost) }}" class="btn btn-sm btn-outline-primary">
-                                                    Review
+                                                    {{ __('ui.admin_dashboard.review') }}
                                                 </a>
                                             </td>
                                         </tr>
@@ -375,27 +375,27 @@
             <div class="col-lg-8">
                 <section class="hub-block h-100">
                     <div class="hub-block-head">
-                        <h2><i class="fas fa-heart-pulse me-2"></i>Medical and Engagement Statistics</h2>
+                        <h2><i class="fas fa-heart-pulse me-2"></i>{{ __('ui.admin_dashboard.medical_engagement_statistics') }}</h2>
                     </div>
                     <div class="stats-grid">
-                        <div class="stat-item"><small>Medicines</small><strong>{{ number_format($stats['medical']['medicines'] ?? 0) }}</strong></div>
-                        <div class="stat-item"><small>Medicine Logs</small><strong>{{ number_format($stats['medical']['medicine_logs'] ?? 0) }}</strong></div>
-                        <div class="stat-item"><small>Health Metrics</small><strong>{{ number_format($stats['medical']['health_metrics'] ?? 0) }}</strong></div>
-                        <div class="stat-item"><small>User Symptoms</small><strong>{{ number_format($stats['medical']['user_symptoms'] ?? 0) }}</strong></div>
-                        <div class="stat-item"><small>User Diseases</small><strong>{{ number_format($stats['medical']['user_diseases'] ?? 0) }}</strong></div>
-                        <div class="stat-item"><small>Disease Catalog</small><strong>{{ number_format($stats['medical']['reference_diseases'] ?? 0) }}</strong></div>
-                        <div class="stat-item"><small>Symptom Catalog</small><strong>{{ number_format($stats['medical']['reference_symptoms'] ?? 0) }}</strong></div>
-                        <div class="stat-item"><small>Notifications</small><strong>{{ number_format($stats['engagement']['notifications'] ?? 0) }}</strong></div>
-                        <div class="stat-item"><small>Mailings</small><strong>{{ number_format($stats['engagement']['mailings'] ?? 0) }}</strong></div>
-                        <div class="stat-item"><small>Uploads</small><strong>{{ number_format($stats['engagement']['uploads'] ?? 0) }}</strong></div>
-                        <div class="stat-item"><small>New Logs (7d)</small><strong>{{ number_format($stats['operations']['new_logs_this_week'] ?? 0) }}</strong></div>
+                        <div class="stat-item"><small>{{ __('ui.admin_dashboard.medicines') }}</small><strong>{{ number_format($stats['medical']['medicines'] ?? 0) }}</strong></div>
+                        <div class="stat-item"><small>{{ __('ui.admin_dashboard.medicine_logs') }}</small><strong>{{ number_format($stats['medical']['medicine_logs'] ?? 0) }}</strong></div>
+                        <div class="stat-item"><small>{{ __('ui.admin_dashboard.health_metrics_stat') }}</small><strong>{{ number_format($stats['medical']['health_metrics'] ?? 0) }}</strong></div>
+                        <div class="stat-item"><small>{{ __('ui.admin_dashboard.user_symptoms') }}</small><strong>{{ number_format($stats['medical']['user_symptoms'] ?? 0) }}</strong></div>
+                        <div class="stat-item"><small>{{ __('ui.admin_dashboard.user_diseases') }}</small><strong>{{ number_format($stats['medical']['user_diseases'] ?? 0) }}</strong></div>
+                        <div class="stat-item"><small>{{ __('ui.admin_dashboard.disease_catalog') }}</small><strong>{{ number_format($stats['medical']['reference_diseases'] ?? 0) }}</strong></div>
+                        <div class="stat-item"><small>{{ __('ui.admin_dashboard.symptom_catalog') }}</small><strong>{{ number_format($stats['medical']['reference_symptoms'] ?? 0) }}</strong></div>
+                        <div class="stat-item"><small>{{ __('ui.admin_dashboard.notifications') }}</small><strong>{{ number_format($stats['engagement']['notifications'] ?? 0) }}</strong></div>
+                        <div class="stat-item"><small>{{ __('ui.admin_dashboard.mailings') }}</small><strong>{{ number_format($stats['engagement']['mailings'] ?? 0) }}</strong></div>
+                        <div class="stat-item"><small>{{ __('ui.admin_dashboard.uploads') }}</small><strong>{{ number_format($stats['engagement']['uploads'] ?? 0) }}</strong></div>
+                        <div class="stat-item"><small>{{ __('ui.admin_dashboard.new_logs_7d') }}</small><strong>{{ number_format($stats['operations']['new_logs_this_week'] ?? 0) }}</strong></div>
                     </div>
                 </section>
             </div>
             <div class="col-lg-4">
                 <section class="hub-block h-100">
                     <div class="hub-block-head">
-                        <h2><i class="fas fa-clock-rotate-left me-2"></i>Recent Activities</h2>
+                        <h2><i class="fas fa-clock-rotate-left me-2"></i>{{ __('ui.admin_dashboard.recent_activities') }}</h2>
                     </div>
                     <ul class="activity-list">
                         @forelse ($recentActivities as $activity)
@@ -409,7 +409,7 @@
                         @empty
                             <li class="activity-item">
                                 <span class="activity-icon"><i class="fas fa-info"></i></span>
-                                <div class="activity-copy">No recent activities yet.</div>
+                                <div class="activity-copy">{{ __('ui.admin_dashboard.no_recent_activities') }}</div>
                             </li>
                         @endforelse
                     </ul>
@@ -421,42 +421,42 @@
             <div class="col-12">
                 <section class="hub-block">
                     <div class="hub-block-head">
-                        <h2><i class="fas fa-notes-medical me-2"></i>Latest Records</h2>
+                        <h2><i class="fas fa-notes-medical me-2"></i>{{ __('ui.admin_dashboard.latest_records') }}</h2>
                     </div>
                     <div class="table-shell table-responsive">
                         <table class="table-hub">
                             <thead>
                                 <tr>
-                                    <th>Type</th>
-                                    <th>Entry</th>
-                                    <th>User</th>
+                                    <th>{{ __('ui.admin_dashboard.type') }}</th>
+                                    <th>{{ __('ui.admin_dashboard.entry') }}</th>
+                                    <th>{{ __('ui.admin_dashboard.user') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($latestDiseaseRecords as $record)
                                     <tr>
-                                        <td>Disease</td>
+                                        <td>{{ __('ui.admin_dashboard.disease_type') }}</td>
                                         <td>{{ $record->disease->disease_name ?? 'N/A' }}</td>
-                                        <td>{{ $record->user->name ?? 'Unknown' }}</td>
+                                        <td>{{ $record->user->name ?? __('ui.admin_dashboard.unknown') }}</td>
                                     </tr>
                                 @endforeach
                                 @foreach ($latestMedicines as $record)
                                     <tr>
-                                        <td>Medicine</td>
+                                        <td>{{ __('ui.admin_dashboard.medicine_type') }}</td>
                                         <td>{{ $record->medicine_name }}</td>
-                                        <td>{{ $record->user->name ?? 'Unknown' }}</td>
+                                        <td>{{ $record->user->name ?? __('ui.admin_dashboard.unknown') }}</td>
                                     </tr>
                                 @endforeach
                                 @foreach ($latestMetrics as $record)
                                     <tr>
-                                        <td>Metric</td>
-                                        <td>{{ ucfirst($record->metric_type ?? 'Metric') }}</td>
-                                        <td>{{ $record->user->name ?? 'Unknown' }}</td>
+                                        <td>{{ __('ui.admin_dashboard.metric_type') }}</td>
+                                        <td>{{ ucfirst($record->metric_type ?? __('ui.admin_dashboard.metric')) }}</td>
+                                        <td>{{ $record->user->name ?? __('ui.admin_dashboard.unknown') }}</td>
                                     </tr>
                                 @endforeach
                                 @if ($latestDiseaseRecords->isEmpty() && $latestMedicines->isEmpty() && $latestMetrics->isEmpty())
                                     <tr>
-                                        <td colspan="3" class="text-center text-muted">No latest records available.</td>
+                                        <td colspan="3" class="text-center text-muted">{{ __('ui.admin_dashboard.no_latest_records') }}</td>
                                     </tr>
                                 @endif
                             </tbody>

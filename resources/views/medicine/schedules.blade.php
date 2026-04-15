@@ -1,7 +1,6 @@
-{{-- resources/views/medicine/schedules.blade.php --}}
 @extends('layouts.app')
 
-@section('title', 'Medicine Schedules')
+@section('title', __('ui.medicine.schedules_title'))
 
 @section('content')
 <div class="container py-4">
@@ -12,14 +11,14 @@
                 @if(isset($medicine))
                     {{ $medicine->medicine_name }}
                 @else
-                    Medicine Schedules
+                    {{ __('ui.medicine.medicine_schedules') }}
                 @endif
             </h1>
             <p class="text-muted lead fs-6">
                 @if(isset($medicine))
-                    Manage schedules for <span class="fw-semibold">{{ $medicine->medicine_name }}</span>
+                    {{ __('ui.medicine.manage_schedules_for') }} <span class="fw-semibold">{{ $medicine->medicine_name }}</span>
                 @else
-                    Manage all your medication schedules
+                    {{ __('ui.medicine.manage_all_schedules') }}
                 @endif
             </p>
         </div>
@@ -27,11 +26,11 @@
             @if(isset($medicine))
                 <a href="{{ route('medicine.schedules.create', ['medicine_id' => $medicine->id]) }}" 
                    class="btn btn-primary btn-lg rounded-pill px-4 shadow-sm">
-                    <i class="fas fa-plus-circle me-2"></i>Add Schedule
+                    <i class="fas fa-plus-circle me-2"></i>{{ __('ui.medicine.add_schedule') }}
                 </a>
             @else
                 <a href="{{ route('medicine.my-medicines') }}" class="btn btn-outline-primary btn-lg rounded-pill px-4">
-                    <i class="fas fa-pills me-2"></i>My Medicines
+                    <i class="fas fa-pills me-2"></i>{{ __('ui.medicine.my_medicines') }}
                 </a>
             @endif
         </div>
@@ -47,14 +46,14 @@
                 <div>
                     <h4 class="fw-bold mb-1">{{ $medicine->medicine_name }}</h4>
                     <p class="text-muted mb-0">
-                        {{ $medicine->typeLabel ?? 'Medicine' }} • 
+                        {{ $medicine->typeLabel ?? __('ui.medicine.medicine') }} • 
                         {{ $medicine->value_per_dose ?? '' }} {{ $medicine->unitLabel ?? '' }} •
-                        {{ $medicine->ruleLabel ?? 'Anytime' }}
+                        {{ $medicine->ruleLabel ?? __('ui.medicine.anytime') }}
                     </p>
                 </div>
                 <div class="ms-auto">
                     <span class="badge bg-primary px-3 py-2 rounded-pill fs-6">
-                        <i class="fas fa-clock me-1"></i>{{ $schedules->count() }} Schedule(s)
+                        <i class="fas fa-clock me-1"></i>{{ $schedules->count() }} {{ __('ui.medicine.schedule_count') }}
                     </span>
                 </div>
             </div>
@@ -65,7 +64,7 @@
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 border-start border-4 border-success mb-4" role="alert">
             <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ __('ui.actions.close') }}"></button>
         </div>
     @endif
 
@@ -83,17 +82,17 @@
                                         </div>
                                         <div>
                                             <h5 class="fw-bold mb-0">{{ $schedule->medicine->medicine_name }}</h5>
-                                            <span class="badge bg-primary-soft text-primary mt-1">{{ $schedule->medicine->typeLabel ?? 'Medicine' }}</span>
+                                            <span class="badge bg-primary-soft text-primary mt-1">{{ $schedule->medicine->typeLabel ?? __('ui.medicine.medicine') }}</span>
                                         </div>
                                     @else
                                         <div class="schedule-number bg-primary-soft rounded-3 px-3 py-2">
-                                            <span class="fw-bold text-primary fs-5">Schedule #{{ $loop->iteration }}</span>
+                                            <span class="fw-bold text-primary fs-5">{{ __('ui.medicine.schedule_hash') }}#{{ $loop->iteration }}</span>
                                         </div>
                                     @endif
                                 </div>
                                 <span class="badge {{ $schedule->is_active ? 'bg-success' : 'bg-secondary' }} px-3 py-2 rounded-pill">
                                     <i class="fas fa-{{ $schedule->is_active ? 'check-circle' : 'minus-circle' }} me-1"></i>
-                                    {{ $schedule->is_active ? 'Active' : 'Inactive' }}
+                                    {{ $schedule->is_active ? __('ui.medicine.active') : __('ui.medicine.inactive') }}
                                 </span>
                             </div>
 
@@ -102,7 +101,7 @@
                                     <div class="col-md-6">
                                         <div class="bg-light rounded-3 p-3">
                                             <small class="text-muted d-block mb-1">
-                                                <i class="fas fa-calendar me-1"></i>Period
+                                                <i class="fas fa-calendar me-1"></i>{{ __('ui.medicine.period') }}
                                             </small>
                                             <span class="fw-semibold fs-6">{{ $schedule->periodLabel }}</span>
                                         </div>
@@ -110,9 +109,9 @@
                                     <div class="col-md-6">
                                         <div class="bg-light rounded-3 p-3">
                                             <small class="text-muted d-block mb-1">
-                                                <i class="fas fa-sync-alt me-1"></i>Frequency
+                                                <i class="fas fa-sync-alt me-1"></i>{{ __('ui.medicine.frequency') }}
                                             </small>
-                                            <span class="fw-semibold fs-6">{{ $schedule->frequency_per_day ?? 'N/A' }}/day</span>
+                                            <span class="fw-semibold fs-6">{{ $schedule->frequency_per_day ?? 'N/A' }}/{{ __('ui.medicine.day') }}</span>
                                         </div>
                                     </div>
                                     
@@ -120,9 +119,9 @@
                                     <div class="col-12">
                                         <div class="bg-light rounded-3 p-3">
                                             <small class="text-muted d-block mb-1">
-                                                <i class="fas fa-hourglass-half me-1"></i>Interval
+                                                <i class="fas fa-hourglass-half me-1"></i>{{ __('ui.medicine.interval') }}
                                             </small>
-                                            <span class="fw-semibold fs-6">Every {{ $schedule->interval_hours }} hours</span>
+                                            <span class="fw-semibold fs-6">{{ __('ui.medicine.every') }} {{ $schedule->interval_hours }} {{ __('ui.medicine.hours') }}</span>
                                         </div>
                                     </div>
                                     @endif
@@ -130,7 +129,7 @@
                                     <div class="col-12">
                                         <div class="bg-light rounded-3 p-3">
                                             <small class="text-muted d-block mb-2">
-                                                <i class="fas fa-clock me-1"></i>Dosage Times
+                                                <i class="fas fa-clock me-1"></i>{{ __('ui.medicine.dosage_times') }}
                                             </small>
                                             <div class="d-flex flex-wrap gap-2">
                                                 @foreach($schedule->dosageTimesArray as $time)
@@ -153,7 +152,7 @@
                                     <div class="col-md-6">
                                         <div class="bg-light rounded-3 p-3">
                                             <small class="text-muted d-block mb-1">
-                                                <i class="fas fa-play me-1"></i>Start
+                                                <i class="fas fa-play me-1"></i>{{ __('ui.medicine.start') }}
                                             </small>
                                             <span class="fw-semibold">{{ \Carbon\Carbon::parse($schedule->start_date)->format('M d, Y') }}</span>
                                         </div>
@@ -161,9 +160,9 @@
                                     <div class="col-md-6">
                                         <div class="bg-light rounded-3 p-3">
                                             <small class="text-muted d-block mb-1">
-                                                <i class="fas fa-stop me-1"></i>End
+                                                <i class="fas fa-stop me-1"></i>{{ __('ui.medicine.end') }}
                                             </small>
-                                            <span class="fw-semibold">{{ $schedule->end_date ? \Carbon\Carbon::parse($schedule->end_date)->format('M d, Y') : 'Ongoing' }}</span>
+                                            <span class="fw-semibold">{{ $schedule->end_date ? \Carbon\Carbon::parse($schedule->end_date)->format('M d, Y') : __('ui.medicine.ongoing') }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -181,21 +180,21 @@
                                     <div class="text-center p-3 bg-success-soft rounded-3">
                                         <i class="fas fa-check-circle text-success fs-4 mb-1"></i>
                                         <div class="fw-bold fs-5">{{ $takenReminders }}</div>
-                                        <small class="text-muted">Taken</small>
+                                        <small class="text-muted">{{ __('ui.medicine.taken') }}</small>
                                     </div>
                                 </div>
                                 <div class="col-4">
                                     <div class="text-center p-3 bg-warning-soft rounded-3">
                                         <i class="fas fa-clock text-warning fs-4 mb-1"></i>
                                         <div class="fw-bold fs-5">{{ $pendingReminders }}</div>
-                                        <small class="text-muted">Pending</small>
+                                        <small class="text-muted">{{ __('ui.medicine.pending') }}</small>
                                     </div>
                                 </div>
                                 <div class="col-4">
                                     <div class="text-center p-3 bg-danger-soft rounded-3">
                                         <i class="fas fa-exclamation-circle text-danger fs-4 mb-1"></i>
                                         <div class="fw-bold fs-5">{{ $missedReminders }}</div>
-                                        <small class="text-muted">Missed</small>
+                                        <small class="text-muted">{{ __('ui.medicine.missed') }}</small>
                                     </div>
                                 </div>
                             </div>
@@ -203,21 +202,21 @@
                             <div class="d-flex gap-3">
                                 <a href="{{ route('medicine.schedules.edit', $schedule->id) }}" 
                                    class="btn btn-outline-primary flex-grow-1 rounded-pill py-2">
-                                    <i class="fas fa-edit me-2"></i>Edit
+                                    <i class="fas fa-edit me-2"></i>{{ __('ui.medicine.edit') }}
                                 </a>
                                 <form method="POST" action="{{ route('medicine.schedules.generate-reminders', $schedule->id) }}" 
                                       class="flex-grow-1">
                                     @csrf
                                     <button type="submit" class="btn btn-outline-success w-100 rounded-pill py-2" 
-                                            onclick="return confirm('Generate new reminders for this schedule?')">
-                                        <i class="fas fa-bell me-2"></i>Generate Reminders
+                                            onclick="return confirm('{{ __('ui.medicine.generate_reminders_confirm') }}')">
+                                        <i class="fas fa-bell me-2"></i>{{ __('ui.medicine.generate_reminders') }}
                                     </button>
                                 </form>
                                 <form method="POST" action="{{ route('medicine.schedules.destroy', $schedule->id) }}">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-outline-danger rounded-pill px-4 py-2" 
-                                            onclick="return confirm('Delete this schedule?')">
+                                            onclick="return confirm('{{ __('ui.medicine.delete_schedule_confirm') }}')">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </form>
@@ -234,22 +233,22 @@
                     <i class="fas fa-clock fa-4x text-primary"></i>
                 </div>
             </div>
-            <h3 class="fw-bold mb-3">No Schedules Found</h3>
+            <h3 class="fw-bold mb-3">{{ __('ui.medicine.no_schedules_found') }}</h3>
             <p class="text-muted mb-4 col-md-6 mx-auto">
                 @if(isset($medicine))
-                    <strong>{{ $medicine->medicine_name }}</strong> doesn't have any schedules yet.
+                    {{ __('ui.medicine.no_schedules_for_medicine', ['name' => $medicine->medicine_name]) }}
                 @else
-                    You haven't created any medicine schedules yet.
+                    {{ __('ui.medicine.no_schedules_created') }}
                 @endif
             </p>
             @if(isset($medicine))
                 <a href="{{ route('medicine.schedules.create', ['medicine_id' => $medicine->id]) }}" 
                    class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm">
-                    <i class="fas fa-plus-circle me-2"></i>Add First Schedule
+                    <i class="fas fa-plus-circle me-2"></i>{{ __('ui.medicine.add_first_schedule') }}
                 </a>
             @else
                 <a href="{{ route('medicine.my-medicines') }}" class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm">
-                    <i class="fas fa-pills me-2"></i>Go to Medicines
+                    <i class="fas fa-pills me-2"></i>{{ __('ui.medicine.go_to_medicines') }}
                 </a>
             @endif
         </div>
@@ -258,6 +257,7 @@
 
 @push('styles')
 <style>
+    /* All existing styles remain exactly the same */
     .schedule-card {
         transition: all 0.3s ease;
         border-radius: 20px;

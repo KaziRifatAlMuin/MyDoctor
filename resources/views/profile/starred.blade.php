@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Starred')
+@section('title', __('ui.mailbox.starred_title'))
 @section('main_content_class', 'main-content main-content--wide')
 
 <style>
@@ -29,34 +29,40 @@
 <div class="gmail-layout">
     <div class="gmail-sidebar">
         <a href="{{ route('profile.mailbox.compose') }}" class="gmail-compose-btn">
-            <i class="fas fa-pen"></i> Compose
+            <i class="fas fa-pen"></i> {{ __('ui.mailbox.compose') }}
         </a>
 
         <ul class="gmail-nav">
-            <li><a href="{{ route('profile.mailbox') }}" class="gmail-nav-item"><i class="fas fa-inbox"></i> Inbox</a></li>
-            <li><a href="{{ route('profile.mailbox.drafts') }}" class="gmail-nav-item"><i class="fas fa-file-alt"></i> Drafts</a></li>
-            <li><a href="{{ route('profile.mailbox.sent') }}" class="gmail-nav-item"><i class="fas fa-paper-plane"></i> Sent</a></li>
-            <li><a href="{{ route('profile.mailbox.starred') }}" class="gmail-nav-item active"><i class="fas fa-star"></i> Starred</a></li>
-            <li><a href="{{ route('profile.mailbox.archived') }}" class="gmail-nav-item"><i class="fas fa-box-archive"></i> Archived</a></li>
+            <li><a href="{{ route('profile.mailbox') }}" class="gmail-nav-item"><i class="fas fa-inbox"></i> {{ __('ui.mailbox.inbox') }}</a></li>
+            <li><a href="{{ route('profile.mailbox.drafts') }}" class="gmail-nav-item"><i class="fas fa-file-alt"></i> {{ __('ui.mailbox.drafts') }}</a></li>
+            <li><a href="{{ route('profile.mailbox.sent') }}" class="gmail-nav-item"><i class="fas fa-paper-plane"></i> {{ __('ui.mailbox.sent') }}</a></li>
+            <li><a href="{{ route('profile.mailbox.starred') }}" class="gmail-nav-item active"><i class="fas fa-star"></i> {{ __('ui.mailbox.starred') }}</a></li>
+            <li><a href="{{ route('profile.mailbox.archived') }}" class="gmail-nav-item"><i class="fas fa-box-archive"></i> {{ __('ui.mailbox.archived') }}</a></li>
         </ul>
     </div>
 
     <div class="gmail-main">
         <div class="gmail-toolbar">
-            <h6 class="mb-0">Starred</h6>
+            <h6 class="mb-0">{{ __('ui.mailbox.starred_title') }}</h6>
         </div>
 
         <div class="gmail-list">
+            @if(session('success'))
+                <div class="alert alert-success m-3 py-2 px-3 border-0 bg-success bg-opacity-10 text-success rounded-3">
+                    {{ session('success') }}
+                </div>
+            @endif
+
             @forelse($messages as $message)
                 <a href="{{ route('profile.mailbox.show', ['mailing' => $message->id, 'folder' => 'starred']) }}" class="gmail-row">
                     <div class="gmail-row-icons">
                         <i class="fas fa-star text-warning"></i>
                     </div>
                     <div class="gmail-sender">
-                        {{ $message->sender_id === auth()->id() ? 'To: ' . ($message->receiver?->name ?? 'Unknown') : ($message->sender?->name ?? 'System User') }}
+                        {{ $message->sender_id === auth()->id() ? __('ui.mailbox.to_label') . ': ' . ($message->receiver?->name ?? __('ui.mailbox.unknown')) : ($message->sender?->name ?? __('ui.mailbox.system_user')) }}
                     </div>
                     <div class="gmail-subject-container">
-                        <span class="gmail-subject">{{ $message->title ?: '(No subject)' }}</span>
+                        <span class="gmail-subject">{{ $message->title ?: __('ui.mailbox.no_subject') }}</span>
                         <span class="gmail-snippet">- {{ \Illuminate\Support\Str::limit($message->message, 80) }}</span>
                     </div>
                     <div class="gmail-date">
@@ -66,7 +72,7 @@
             @empty
                 <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted opacity-75">
                     <i class="fas fa-star mb-3" style="font-size: 3rem;"></i>
-                    <h5>No starred messages</h5>
+                    <h5>{{ __('ui.mailbox.no_starred_messages') }}</h5>
                 </div>
             @endforelse
         </div>

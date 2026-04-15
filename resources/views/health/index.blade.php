@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'My Health')
+@section('title', __('ui.health.my_health_title'))
 
 @push('styles')
     <style>
+        /* All existing styles remain exactly the same */
         /* ── Page Section ── */
         .health-section {
             background: #f8f9fb;
-            /* let the section height be determined by content for a dynamic white background */
             min-height: auto;
             padding: 2.5rem 0 3rem;
         }
@@ -414,14 +414,14 @@
                 <div class="alert alert-success alert-dismissible fade show mb-3" role="alert"
                     style="border-radius: 12px; border: none; font-size: 0.9rem;">
                     <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ __('ui.actions.close') }}"></button>
                 </div>
             @endif
             @if (session('error'))
                 <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert"
                     style="border-radius: 12px; border: none; font-size: 0.9rem;">
                     <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ __('ui.actions.close') }}"></button>
                 </div>
             @endif
 
@@ -429,16 +429,16 @@
             <div class="d-flex align-items-center justify-content-between mb-4">
                 <div>
                     <h3 class="fw-bold mb-1" style="color: #2d3748;">
-                        <i class="fas fa-heartbeat me-2" style="color: #667eea;"></i>My Health
+                        <i class="fas fa-heartbeat me-2" style="color: #667eea;"></i>{{ __('ui.health.my_health') }}
                     </h3>
                     <p class="text-muted mb-0" style="font-size: 0.9rem;">
-                        Your complete health overview &middot; last updated {{ now()->format('M d, Y') }}
+                        {{ __('ui.health.complete_health_overview') }} &middot; {{ __('ui.health.last_updated') }} {{ now()->format('M d, Y') }}
                     </p>
                 </div>
                 @if(!auth()->check() || !auth()->user()->isAdmin())
                     <div>
                         <button onclick="toggleChatbot()" class="btn btn-sm btn-outline-primary" style="border-radius:10px;">
-                            <i class="fas fa-user-md me-1"></i> Ask MyDoctor AI
+                            <i class="fas fa-user-md me-1"></i> {{ __('ui.health.ask_mydoctor_ai') }}
                         </button>
                     </div>
                 @endif
@@ -452,43 +452,43 @@
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview"
                         type="button" role="tab">
-                        <i class="fas fa-th-large me-1"></i> Overview
+                        <i class="fas fa-th-large me-1"></i> {{ __('ui.health.overview') }}
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="metrics-tab" data-bs-toggle="tab" data-bs-target="#metrics" type="button"
                         role="tab">
-                        <i class="fas fa-chart-line me-1"></i> Metrics
+                        <i class="fas fa-chart-line me-1"></i> {{ __('ui.health.metrics') }}
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="symptoms-tab" data-bs-toggle="tab" data-bs-target="#symptomsPane"
                         type="button" role="tab">
-                        <i class="fas fa-notes-medical me-1"></i> Symptoms
+                        <i class="fas fa-notes-medical me-1"></i> {{ __('ui.health.symptoms') }}
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="diseases-tab" data-bs-toggle="tab" data-bs-target="#diseasesPane"
                         type="button" role="tab">
-                        <i class="fas fa-virus me-1"></i> Diseases
+                        <i class="fas fa-virus me-1"></i> {{ __('ui.health.diseases') }}
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="prescriptions-tab" data-bs-toggle="tab" data-bs-target="#prescriptions"
                         type="button" role="tab">
-                        <i class="fas fa-prescription-bottle-alt me-1"></i> Prescriptions
+                        <i class="fas fa-prescription-bottle-alt me-1"></i> {{ __('ui.health.prescriptions') }}
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="reports-tab" data-bs-toggle="tab" data-bs-target="#reportsPane"
                         type="button" role="tab">
-                        <i class="fas fa-file-medical-alt me-1"></i> Reports
+                        <i class="fas fa-file-medical-alt me-1"></i> {{ __('ui.health.reports') }}
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="logs-tab" data-bs-toggle="tab" data-bs-target="#logs" type="button"
                         role="tab">
-                        <i class="fas fa-clipboard-list me-1"></i> Medicine Logs
+                        <i class="fas fa-clipboard-list me-1"></i> {{ __('ui.health.medicine_logs') }}
                     </button>
                 </li>
             </ul>
@@ -545,9 +545,9 @@
             <div class="modal-content" style="border-radius: 16px; border: none;">
                 <div class="modal-header" style="border-bottom: 1px solid #f0f0f0; padding: 1.25rem 1.5rem;">
                     <h5 class="modal-title fw-bold" style="color: #667eea;">
-                        <i class="fas fa-chart-line me-2"></i><span id="metricModalLabel">Record Health Metric</span>
+                        <i class="fas fa-chart-line me-2"></i><span id="metricModalLabel">{{ __('ui.health.record_health_metric') }}</span>
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('ui.actions.close') }}"></button>
                 </div>
                 <form id="metricForm" action="{{ route('health.metric.store') }}" method="POST">
                     @csrf
@@ -556,7 +556,7 @@
                         <div class="mb-3">
                             <label class="form-label fw-semibold" style="font-size: 0.85rem;">{{ __('ui.health.metric_type') }}</label>
                             <select name="metric_type" id="metricTypeSelect" class="form-select" style="border-radius: 10px;" required>
-                                <option value="">Select metric type...</option>
+                                <option value="">{{ __('ui.health.select_metric_type') }}</option>
                                 @foreach ($metricConfig as $key => $cfg)
                                     <option value="{{ $key }}">{{ app()->getLocale() === 'bn' ? $cfg['bn'] : $cfg['en'] }}</option>
                                 @endforeach
@@ -564,15 +564,15 @@
                         </div>
                         <div id="metricFieldsContainer"></div>
                         <div class="mb-3">
-                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Recorded At</label>
+                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">{{ __('ui.health.recorded_at') }}</label>
                             <input type="datetime-local" name="recorded_at" id="metricRecordedAt" class="form-control"
                                 style="border-radius: 10px;" value="{{ now()->format('Y-m-d\TH:i') }}" required>
                         </div>
                     </div>
                     <div class="modal-footer" style="border-top: 1px solid #f0f0f0; padding: 1rem 1.5rem;">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 10px;">Cancel</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 10px;">{{ __('ui.health.cancel') }}</button>
                         <button type="submit" class="btn text-white" style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px;">
-                            <i class="fas fa-save me-1"></i> <span id="metricSubmitLabel">Save Metric</span>
+                            <i class="fas fa-save me-1"></i> <span id="metricSubmitLabel">{{ __('ui.health.save_metric') }}</span>
                         </button>
                     </div>
                 </form>
@@ -586,9 +586,9 @@
             <div class="modal-content" style="border-radius: 16px; border: none;">
                 <div class="modal-header" style="border-bottom: 1px solid #f0f0f0; padding: 1.25rem 1.5rem;">
                     <h5 class="modal-title fw-bold" style="color: #667eea;">
-                        <i class="fas fa-notes-medical me-2"></i><span id="symptomModalLabel">Log Symptom</span>
+                        <i class="fas fa-notes-medical me-2"></i><span id="symptomModalLabel">{{ __('ui.health.log_symptom') }}</span>
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('ui.actions.close') }}"></button>
                 </div>
                 <form id="symptomForm" action="{{ route('health.symptom.store') }}" method="POST">
                     @csrf
@@ -615,20 +615,20 @@
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Recorded At</label>
+                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">{{ __('ui.health.recorded_at') }}</label>
                             <input type="datetime-local" name="recorded_at" id="symptomRecordedAt" class="form-control"
                                 style="border-radius: 10px;" value="{{ now()->format('Y-m-d\TH:i') }}" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Note (Optional)</label>
+                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">{{ __('ui.health.note_optional') }}</label>
                             <textarea name="note" id="symptomNote" class="form-control" style="border-radius: 10px;" rows="2"
-                                placeholder="Any additional details..."></textarea>
+                                placeholder="{{ __('ui.health.note_placeholder') }}"></textarea>
                         </div>
                     </div>
                     <div class="modal-footer" style="border-top: 1px solid #f0f0f0; padding: 1rem 1.5rem;">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 10px;">Cancel</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 10px;">{{ __('ui.health.cancel') }}</button>
                         <button type="submit" class="btn text-white" style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px;">
-                            <i class="fas fa-save me-1"></i> <span id="symptomSubmitLabel">Log Symptom</span>
+                            <i class="fas fa-save me-1"></i> <span id="symptomSubmitLabel">{{ __('ui.health.log_symptom') }}</span>
                         </button>
                     </div>
                 </form>
@@ -642,9 +642,9 @@
             <div class="modal-content" style="border-radius: 16px; border: none;">
                 <div class="modal-header" style="border-bottom: 1px solid #f0f0f0; padding: 1.25rem 1.5rem;">
                     <h5 class="modal-title fw-bold" style="color: #667eea;">
-                        <i class="fas fa-virus me-2"></i><span id="diseaseModalLabel">Add Disease Record</span>
+                        <i class="fas fa-virus me-2"></i><span id="diseaseModalLabel">{{ __('ui.health.add_disease_record') }}</span>
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('ui.actions.close') }}"></button>
                 </div>
                 <form id="diseaseForm" action="{{ route('health.disease.store') }}" method="POST">
                     @csrf
@@ -673,15 +673,15 @@
                             <input type="date" name="diagnosed_at" id="diseaseDiagnosedAt" class="form-control" style="border-radius: 10px;">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">Notes (Optional)</label>
+                            <label class="form-label fw-semibold" style="font-size: 0.85rem;">{{ __('ui.health.notes_optional') }}</label>
                             <textarea name="notes" id="diseaseNotes" class="form-control" style="border-radius: 10px;" rows="2"
-                                placeholder="Any relevant notes about this condition..."></textarea>
+                                placeholder="{{ __('ui.health.notes_placeholder') }}"></textarea>
                         </div>
                     </div>
                     <div class="modal-footer" style="border-top: 1px solid #f0f0f0; padding: 1rem 1.5rem;">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 10px;">Cancel</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 10px;">{{ __('ui.health.cancel') }}</button>
                         <button type="submit" class="btn text-white" style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px;">
-                            <i class="fas fa-save me-1"></i> <span id="diseaseSubmitLabel">Add Disease</span>
+                            <i class="fas fa-save me-1"></i> <span id="diseaseSubmitLabel">{{ __('ui.health.add_disease') }}</span>
                         </button>
                     </div>
                 </form>
@@ -695,9 +695,9 @@
             <div class="modal-content" style="border-radius: 16px; border: none;">
                 <div class="modal-header" style="border-bottom: 1px solid #f0f0f0; padding: 1.25rem 1.5rem;">
                     <h5 class="modal-title fw-bold" style="color: #667eea;">
-                        <i class="fas fa-cloud-upload-alt me-2"></i><span id="uploadModalLabel">Upload Document</span>
+                        <i class="fas fa-cloud-upload-alt me-2"></i><span id="uploadModalLabel">{{ __('ui.health.upload_document') }}</span>
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('ui.actions.close') }}"></button>
                 </div>
                 <form id="uploadForm" action="{{ route('health.upload.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
@@ -707,7 +707,7 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold" style="font-size: 0.85rem;">{{ __('ui.health.title') }}</label>
                                 <input type="text" name="title" id="uploadTitle" class="form-control" style="border-radius: 10px;"
-                                    placeholder="e.g., Blood Test Report" required>
+                                    placeholder="{{ __('ui.health.title_placeholder') }}" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold" style="font-size: 0.85rem;">{{ __('ui.health.document_type') }}</label>
@@ -717,11 +717,11 @@
                                 </select>
                             </div>
                             <div class="col-12">
-                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Upload Image</label>
+                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">{{ __('ui.health.upload_image') }}</label>
                                 <input type="file" name="file" class="form-control" style="border-radius: 10px;"
                                     accept="image/jpeg,image/png,image/jpg,image/gif,image/webp"
                                     id="uploadFileInput">
-                                <div class="form-text" id="uploadFileHint">Accepted: JPG, PNG, GIF, WebP. Max 5MB.</div>
+                                <div class="form-text" id="uploadFileHint">{{ __('ui.health.image_formats_hint') }}</div>
                                 <div id="imagePreviewContainer" class="mt-2 d-none">
                                     <img id="imagePreview" src="" alt="Preview"
                                         style="max-height: 150px; border-radius: 10px; border: 2px solid #edf2f7;">
@@ -730,33 +730,33 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold" style="font-size: 0.85rem;">{{ __('ui.health.doctor_name') }}</label>
                                 <input type="text" name="doctor_name" id="uploadDoctorName" class="form-control" style="border-radius: 10px;"
-                                    placeholder="Dr. ...">
+                                    placeholder="{{ __('ui.health.doctor_placeholder') }}">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold" style="font-size: 0.85rem;">{{ __('ui.health.institution') }}</label>
                                 <input type="text" name="institution" id="uploadInstitution" class="form-control" style="border-radius: 10px;"
-                                    placeholder="Hospital/Clinic name">
+                                    placeholder="{{ __('ui.health.institution_placeholder') }}">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold" style="font-size: 0.85rem;">{{ __('ui.health.document_date') }}</label>
                                 <input type="date" name="document_date" id="uploadDocumentDate" class="form-control" style="border-radius: 10px;">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">Notes</label>
+                                <label class="form-label fw-semibold" style="font-size: 0.85rem;">{{ __('ui.health.notes') }}</label>
                                 <input type="text" name="notes" id="uploadNotes" class="form-control" style="border-radius: 10px;"
-                                    placeholder="Quick note (optional)">
+                                    placeholder="{{ __('ui.health.notes_optional_placeholder') }}">
                             </div>
                             <div class="col-12">
                                 <label class="form-label fw-semibold" style="font-size: 0.85rem;">{{ __('ui.health.summary') }}</label>
                                 <textarea name="summary" id="uploadSummary" class="form-control" style="border-radius: 10px;" rows="2"
-                                    placeholder="Brief summary of the document..."></textarea>
+                                    placeholder="{{ __('ui.health.summary_placeholder') }}"></textarea>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer" style="border-top: 1px solid #f0f0f0; padding: 1rem 1.5rem;">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 10px;">Cancel</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 10px;">{{ __('ui.health.cancel') }}</button>
                         <button type="submit" class="btn text-white" style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px;">
-                            <i class="fas fa-save me-1"></i> <span id="uploadSubmitLabel">Upload</span>
+                            <i class="fas fa-save me-1"></i> <span id="uploadSubmitLabel">{{ __('ui.health.upload') }}</span>
                         </button>
                     </div>
                 </form>
@@ -915,8 +915,8 @@
                 if (!el) return;
                 el.addEventListener('hidden.bs.modal', function() {
                     if (modalId === 'addMetricModal') {
-                        document.getElementById('metricModalLabel').textContent = 'Record Health Metric';
-                        document.getElementById('metricSubmitLabel').textContent = 'Save Metric';
+                        document.getElementById('metricModalLabel').textContent = '{{ __("ui.health.record_health_metric") }}';
+                        document.getElementById('metricSubmitLabel').textContent = '{{ __("ui.health.save_metric") }}';
                         document.getElementById('metricForm').action = '{{ route("health.metric.store") }}';
                         document.getElementById('metricFormMethod').value = 'POST';
                         metricTypeSelect.value = '';
@@ -924,8 +924,8 @@
                         document.getElementById('metricRecordedAt').value = '{{ now()->format("Y-m-d\\TH:i") }}';
                     }
                     if (modalId === 'addSymptomModal') {
-                        document.getElementById('symptomModalLabel').textContent = 'Log Symptom';
-                        document.getElementById('symptomSubmitLabel').textContent = 'Log Symptom';
+                        document.getElementById('symptomModalLabel').textContent = '{{ __("ui.health.log_symptom") }}';
+                        document.getElementById('symptomSubmitLabel').textContent = '{{ __("ui.health.log_symptom") }}';
                         document.getElementById('symptomForm').action = '{{ route("health.symptom.store") }}';
                         document.getElementById('symptomFormMethod').value = 'POST';
                         document.getElementById('symptomSearchInput').value = '';
@@ -936,8 +936,8 @@
                         document.getElementById('symptomNote').value = '';
                     }
                     if (modalId === 'addDiseaseModal') {
-                        document.getElementById('diseaseModalLabel').textContent = 'Add Disease Record';
-                        document.getElementById('diseaseSubmitLabel').textContent = 'Add Disease';
+                        document.getElementById('diseaseModalLabel').textContent = '{{ __("ui.health.add_disease_record") }}';
+                        document.getElementById('diseaseSubmitLabel').textContent = '{{ __("ui.health.add_disease") }}';
                         document.getElementById('diseaseForm').action = '{{ route("health.disease.store") }}';
                         document.getElementById('diseaseFormMethod').value = 'POST';
                         document.getElementById('diseaseSelectWrapper').style.display = '';
@@ -949,12 +949,12 @@
                         document.getElementById('diseaseNotes').value = '';
                     }
                     if (modalId === 'addUploadModal') {
-                        document.getElementById('uploadModalLabel').textContent = 'Upload Document';
-                        document.getElementById('uploadSubmitLabel').textContent = 'Upload';
+                        document.getElementById('uploadModalLabel').textContent = '{{ __("ui.health.upload_document") }}';
+                        document.getElementById('uploadSubmitLabel').textContent = '{{ __("ui.health.upload") }}';
                         document.getElementById('uploadForm').action = '{{ route("health.upload.store") }}';
                         document.getElementById('uploadFormMethod').value = 'POST';
                         document.getElementById('uploadFileInput').setAttribute('required', 'required');
-                        document.getElementById('uploadFileHint').textContent = 'Accepted: JPG, PNG, GIF, WebP. Max 5MB.';
+                        document.getElementById('uploadFileHint').textContent = '{{ __("ui.health.image_formats_hint") }}';
                         document.getElementById('uploadTitle').value = '';
                         document.getElementById('uploadType').value = 'prescription';
                         document.getElementById('uploadDoctorName').value = '';
@@ -999,7 +999,7 @@
             if (adhCtx) {
                 new Chart(adhCtx, {
                     type: 'doughnut',
-                    data: { labels: ['Taken', 'Missed'], datasets: [{ data: [{{ $totalTaken }}, {{ $totalMissed }}], backgroundColor: ['#38a169', '#e53e3e'], borderWidth: 0, hoverOffset: 6 }] },
+                    data: { labels: ['{{ __("ui.health.taken") }}', '{{ __("ui.health.missed") }}'], datasets: [{ data: [{{ $totalTaken }}, {{ $totalMissed }}], backgroundColor: ['#38a169', '#e53e3e'], borderWidth: 0, hoverOffset: 6 }] },
                     options: { responsive: true, maintainAspectRatio: false, cutout: '72%', plugins: { legend: { display: false } } }
                 });
             }
@@ -1016,7 +1016,7 @@
                 });
                 new Chart(sevCtx, {
                     type: 'bar',
-                    data: { labels: sevLabels, datasets: [{ label: 'Count', data: sevData, backgroundColor: sevColors, borderRadius: 6, barThickness: 28 }] },
+                    data: { labels: sevLabels, datasets: [{ label: '{{ __("ui.health.count") }}', data: sevData, backgroundColor: sevColors, borderRadius: 6, barThickness: 28 }] },
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#a0aec0' } }, y: { beginAtZero: true, grid: { color: '#f0f0f0' }, ticks: { stepSize: 1, font: { size: 10 }, color: '#a0aec0' } } } }
                 });
             }

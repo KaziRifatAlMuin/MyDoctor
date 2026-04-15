@@ -5,10 +5,10 @@
         <div class="health-card-body">
             <div class="empty-state">
                 <i class="fas fa-chart-line d-block"></i>
-                <p>No health metrics recorded yet.<br>Start tracking your blood pressure, heart rate, weight, and more.</p>
+                <p>{{ __('ui.health.no_metrics_recorded_yet') }}</p>
                 <button class="btn text-white mt-3" data-bs-toggle="modal" data-bs-target="#addMetricModal"
                     style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px; font-size: 0.88rem;">
-                    <i class="fas fa-plus me-1"></i> Record Your First Metric
+                    <i class="fas fa-plus me-1"></i> {{ __('ui.health.record_first_metric') }}
                 </button>
             </div>
         </div>
@@ -18,7 +18,7 @@
     <div class="d-flex justify-content-end mb-3">
         <button class="btn text-white" data-bs-toggle="modal" data-bs-target="#addMetricModal"
             style="background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px; font-size: 0.88rem;">
-            <i class="fas fa-plus me-1"></i> Record Metric
+            <i class="fas fa-plus me-1"></i> {{ __('ui.health.record_metric') }}
         </button>
     </div>
 
@@ -33,7 +33,7 @@
                             {{ $metricConfig[$type]['en'] ?? ucfirst(str_replace('_', ' ', $type)) }}
                             <span class="bn-label">({{ $metricConfig[$type]['bn'] ?? '' }})</span>
                         </h5>
-                        <span class="health-card-badge bg-light text-muted">{{ $records->count() }} records</span>
+                        <span class="health-card-badge bg-light text-muted">{{ $records->count() }} {{ __('ui.health.records') }}</span>
                     </div>
                     <div class="health-card-body">
                         <div class="chart-container">
@@ -48,18 +48,18 @@
     {{-- Full metrics history table --}}
     <div class="health-card">
         <div class="health-card-header">
-            <h5><i class="fas fa-table"></i> Metrics History</h5>
-            <span class="health-card-badge bg-light text-muted">{{ $healthMetrics->count() }} entries</span>
+            <h5><i class="fas fa-table"></i> {{ __('ui.health.metrics_history') }}</h5>
+            <span class="health-card-badge bg-light text-muted">{{ $healthMetrics->count() }} {{ __('ui.health.entries') }}</span>
         </div>
         <div class="health-card-body p-0">
             <div class="table-responsive">
                 <table class="health-table">
                     <thead>
                         <tr>
-                            <th>Type</th>
-                            <th>Values</th>
-                            <th>Recorded At</th>
-                            <th>Actions</th>
+                            <th>{{ __('ui.health.type') }}</th>
+                            <th>{{ __('ui.health.values') }}</th>
+                            <th>{{ __('ui.health.recorded_at') }}</th>
+                            <th>{{ __('ui.health.actions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -88,13 +88,13 @@
                                     <div class="action-btn-group">
                                         <button type="button" class="btn btn-sm btn-outline-primary"
                                             onclick="openEditMetric({{ $metric->id }}, '{{ $metric->metric_type }}', {{ json_encode($metric->value) }}, '{{ $metric->recorded_at->format('Y-m-d\TH:i') }}')">
-                                            <i class="fas fa-edit"></i>
+                                            <i class="fas fa-edit"></i> {{ __('ui.health.edit') }}
                                         </button>
                                         <form action="{{ route('health.metric.destroy', $metric) }}" method="POST"
-                                            onsubmit="return confirm('Delete this metric?')" class="d-inline">
+                                            onsubmit="return confirm('{{ __('ui.health.delete_metric_confirm') }}')" class="d-inline">
                                             @csrf @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                <i class="fas fa-trash"></i>
+                                                <i class="fas fa-trash"></i> {{ __('ui.health.delete') }}
                                             </button>
                                         </form>
                                     </div>

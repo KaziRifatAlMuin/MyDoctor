@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Admin Users')
+@section('title', __('ui.admin_users.title'))
 
 @push('styles')
 <style>
@@ -222,13 +222,13 @@
 <div class="admin-users-surface">
     <div class="container" style="max-width: 1240px;">
         <div class="users-hero">
-            <h1><i class="fas fa-users me-2"></i>Admin Users Directory</h1>
-            <p>All user accounts are now listed here. Dashboard is reserved for cards and system-wide statistics.</p>
+            <h1><i class="fas fa-users me-2"></i>{{ __('ui.admin_users.title') }}</h1>
+            <p>{{ __('ui.admin_users.subtitle') }}</p>
             <div class="hero-stats">
-                <div class="hero-stat"><small>Total Users</small><strong>{{ number_format($users->total()) }}</strong></div>
-                <div class="hero-stat"><small>Admins</small><strong>{{ number_format($adminCount) }}</strong></div>
-                <div class="hero-stat"><small>Members</small><strong>{{ number_format($memberCount) }}</strong></div>
-                <div class="hero-stat"><small>Active</small><strong>{{ number_format($activeCount) }}</strong></div>
+                <div class="hero-stat"><small>{{ __('ui.admin_users.total_users') }}</small><strong>{{ number_format($users->total()) }}</strong></div>
+                <div class="hero-stat"><small>{{ __('ui.admin_users.admins') }}</small><strong>{{ number_format($adminCount) }}</strong></div>
+                <div class="hero-stat"><small>{{ __('ui.admin_users.members') }}</small><strong>{{ number_format($memberCount) }}</strong></div>
+                <div class="hero-stat"><small>{{ __('ui.admin_users.active') }}</small><strong>{{ number_format($activeCount) }}</strong></div>
             </div>
         </div>
 
@@ -249,9 +249,9 @@
         <section class="users-panel">
             <div class="users-panel-head">
                 <form class="filter-form" method="GET" action="{{ route('admin.users.index') }}">
-                    <input type="text" name="q" value="{{ $search }}" placeholder="Search by name or email...">
-                    <button class="btn-main" type="submit"><i class="fas fa-magnifying-glass me-1"></i>Search</button>
-                    <a href="{{ route('admin.dashboard') }}" class="btn-ghost"><i class="fas fa-arrow-left me-1"></i>Dashboard</a>
+                    <input type="text" name="q" value="{{ $search }}" placeholder="{{ __('ui.admin_users.search_placeholder') }}">
+                    <button class="btn-main" type="submit"><i class="fas fa-magnifying-glass me-1"></i>{{ __('ui.admin_users.search') }}</button>
+                    <a href="{{ route('admin.dashboard') }}" class="btn-ghost"><i class="fas fa-arrow-left me-1"></i>{{ __('ui.admin_users.dashboard') }}</a>
                 </form>
             </div>
 
@@ -259,14 +259,14 @@
                 <table class="table-users" id="usersTable">
                     <thead>
                         <tr>
-                            <th>User</th>
-                            <th>Email</th>
-                            <th>Gender</th>
-                            <th>Address</th>
-                            <th>Role</th>
-                            <th>Status</th>
-                            <th>Joined</th>
-                            <th>Actions</th>
+                            <th>{{ __('ui.admin_users.user') }}</th>
+                            <th>{{ __('ui.admin_users.email') }}</th>
+                            <th>{{ __('ui.admin_users.gender') }}</th>
+                            <th>{{ __('ui.admin_users.address') }}</th>
+                            <th>{{ __('ui.admin_users.role') }}</th>
+                            <th>{{ __('ui.admin_users.status') }}</th>
+                            <th>{{ __('ui.admin_users.joined') }}</th>
+                            <th>{{ __('ui.admin_users.actions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -281,33 +281,33 @@
                                         @endif
                                         <div>
                                             <div class="user-name">{{ $user->name }}</div>
-                                            <div class="user-sub">ID #{{ $user->id }}</div>
+                                            <div class="user-sub">{{ __('ui.admin_users.id') }} #{{ $user->id }}</div>
                                         </div>
                                     </div>
                                 </td>
                                 <td>{{ $user->email }}</td>
-                                <td>{{ $user->gender ? ucfirst($user->gender) : 'N/A' }}</td>
+                                <td>{{ $user->gender ? ucfirst($user->gender) : __('ui.admin_users.na') }}</td>
                                 <td>
-                                    {{ $user->address?->display_upazila ?: 'Not set' }}, {{ $user->address?->display_district ?: 'Not set' }}
+                                    {{ $user->address?->display_upazila ?: __('ui.admin_users.not_set') }}, {{ $user->address?->display_district ?: __('ui.admin_users.not_set') }}
                                 </td>
                                 <td>
                                     <span class="role-badge role-{{ strtolower($user->role) }}">
                                         <i class="fas {{ $user->role === 'admin' ? 'fa-crown' : 'fa-user' }}"></i>
-                                        {{ ucfirst($user->role) }}
+                                        {{ $user->role === 'admin' ? __('ui.admin_users.admin') : __('ui.admin_users.member') }}
                                     </span>
                                 </td>
                                 <td>
                                     @if ($user->is_active)
-                                        <span class="status-badge status-ok"><i class="fas fa-circle-check"></i>Active</span>
+                                        <span class="status-badge status-ok"><i class="fas fa-circle-check"></i>{{ __('ui.admin_users.active_status') }}</span>
                                     @else
-                                        <span class="status-badge status-pending"><i class="fas fa-user-slash"></i>Inactive</span>
+                                        <span class="status-badge status-pending"><i class="fas fa-user-slash"></i>{{ __('ui.admin_users.inactive_status') }}</span>
                                     @endif
                                 </td>
                                 <td>{{ optional($user->created_at)->format('M d, Y') }}</td>
                                 <td>
                                     <div class="d-flex flex-wrap gap-2">
                                         <a href="{{ route('admin.users.show', $user) }}" class="action-link">
-                                            <i class="fas fa-arrow-up-right-from-square"></i>View
+                                            <i class="fas fa-arrow-up-right-from-square"></i>{{ __('ui.admin_users.view') }}
                                         </a>
                                         @if (auth()->id() !== $user->id)
                                             <form method="POST" action="{{ route('admin.users.toggle-active', $user) }}">
@@ -315,7 +315,7 @@
                                                 @method('PATCH')
                                                 <button type="submit" class="action-link" style="border-color: {{ $user->is_active ? 'rgba(220, 38, 38, 0.3)' : 'rgba(22, 163, 74, 0.3)' }}; color: {{ $user->is_active ? '#dc2626' : '#16a34a' }}; background: #fff;">
                                                     <i class="fas {{ $user->is_active ? 'fa-user-slash' : 'fa-user-check' }}"></i>
-                                                    {{ $user->is_active ? 'Deactivate' : 'Activate' }}
+                                                    {{ $user->is_active ? __('ui.admin_users.deactivate') : __('ui.admin_users.activate') }}
                                                 </button>
                                             </form>
                                         @endif
@@ -324,7 +324,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center text-muted py-4">No users found.</td>
+                                <td colspan="8" class="text-center text-muted py-4">{{ __('ui.admin_users.no_users_found') }}</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -334,7 +334,7 @@
             @if ($users->hasPages())
                 <div class="pagination-wrap d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2">
                     <div class="small text-muted">
-                        Showing {{ $users->firstItem() }} to {{ $users->lastItem() }} of {{ $users->total() }} users
+                        {{ __('ui.admin_users.showing') }} {{ $users->firstItem() }} {{ __('ui.admin_users.to') }} {{ $users->lastItem() }} {{ __('ui.admin_users.of') }} {{ $users->total() }} {{ __('ui.admin_users.users') }}
                     </div>
                     <div>{{ $users->links() }}</div>
                 </div>
