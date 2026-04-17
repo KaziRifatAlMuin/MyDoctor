@@ -35,4 +35,23 @@ class UserSymptom extends Model
     {
         return $this->symptom?->name;
     }
+
+    public function getSymptomDisplayNameAttribute(): ?string
+    {
+        if ($this->symptom?->display_name) {
+            return $this->symptom->display_name;
+        }
+
+        $name = trim((string) ($this->symptom?->name ?? ''));
+        if ($name === '') {
+            return null;
+        }
+
+        $bangla = Translation::banglaFor(Translation::TYPE_SYMPTOM, $name, '');
+        if ($bangla !== '') {
+            return $name . ' (' . $bangla . ')';
+        }
+
+        return $name;
+    }
 }

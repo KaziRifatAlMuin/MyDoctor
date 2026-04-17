@@ -35,7 +35,7 @@
                                     <h2 class="h6 mb-0" style="font-weight: 800; color: #0f2f6b; font-size: clamp(0.875rem, 2vw, 1rem);">
                                         <a href="{{ route('public.disease.show', $disease) }}" class="text-decoration-none"
                                             style="color: #0f2f6b;">
-                                            {{ $disease->disease_name }}
+                                            {{ $disease->display_name }}
                                         </a>
                                     </h2>
                                     <span class="badge text-bg-light border" style="font-size: clamp(0.65rem, 1.5vw, 0.8rem);">{{ $disease->posts_count }}</span>

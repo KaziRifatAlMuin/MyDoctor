@@ -1335,7 +1335,7 @@
                                     <div>
                                         @if($ud->disease)
                                             <a href="{{ route('public.disease.show', $ud->disease) }}" class="fw-semibold text-decoration-none" style="font-size:0.88rem;color:#2d3748;">
-                                                {{ $ud->disease->disease_name }}
+                                                {{ $ud->disease->display_name }}
                                             </a>
                                         @else
                                             <div class="fw-semibold" style="font-size:0.88rem;color:#2d3748;">
@@ -1384,11 +1384,11 @@
                                         <div class="flex-grow-1" style="min-width:0;">
                                             @if($sym->symptom)
                                                 <a href="{{ route('public.symptoms.show', $sym->symptom) }}" class="fw-semibold text-truncate text-decoration-none d-inline-block" style="font-size:0.85rem;color:#2d3748;max-width:100%;">
-                                                    {{ $sym->symptom_name }}
+                                                    {{ $sym->symptom_display_name }}
                                                 </a>
                                             @else
                                                 <div class="fw-semibold text-truncate" style="font-size:0.85rem;color:#2d3748;">
-                                                    {{ $sym->symptom_name }}
+                                                    {{ $sym->symptom_display_name }}
                                                 </div>
                                             @endif
                                             <div class="text-muted" style="font-size:0.72rem;">

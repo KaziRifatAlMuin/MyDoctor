@@ -183,15 +183,12 @@
                             <div class="flex-grow-1" style="min-width:0;">
                                 @if($sym->symptom)
                                     <a href="{{ route('public.symptoms.show', $sym->symptom) }}" class="fw-semibold text-truncate text-decoration-none d-inline-block" style="font-size:0.88rem;color:#2d3748; max-width: 100%;">
-                                        {{ $sym->symptom_name }}
+                                        {{ $sym->symptom_display_name }}
                                     </a>
                                 @else
                                     <div class="fw-semibold text-truncate" style="font-size:0.88rem;color:#2d3748;">
-                                        {{ $sym->symptom_name }}
+                                        {{ $sym->symptom_display_name }}
                                     </div>
-                                @endif
-                                @if(!empty($symptomsBn[$sym->symptom_name]))
-                                    <div class="bn-label text-truncate">{{ $symptomsBn[$sym->symptom_name] }}</div>
                                 @endif
                                 <div class="small text-muted">{{ $sym->recorded_at->format('M d, Y') }}</div>
                                 @if($sym->note)
@@ -243,7 +240,7 @@
                             <div class="flex-grow-1" style="min-width:0;">
                                 @if($ud->disease)
                                     <a href="{{ route('public.disease.show', $ud->disease) }}" class="fw-semibold text-truncate text-decoration-none d-inline-block" style="font-size:0.88rem;color:#2d3748; max-width: 100%;">
-                                        {{ $ud->disease->disease_name }}
+                                        {{ $ud->disease->display_name }}
                                     </a>
                                 @else
                                     <div class="fw-semibold text-truncate" style="font-size:0.88rem;color:#2d3748;">

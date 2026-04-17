@@ -84,6 +84,7 @@ return [
         'Bloating' => 'পেট ফাঁপা',
         'Swollen Abdomen' => 'পেট ফোলা',
         'Heartburn' => 'বুক জ্বালা',
+        'Burning Stomach' => 'পেটে জ্বালাপোড়া',
         'Abdominal Pain' => 'পেটে ব্যথা',
         'Gas Pain' => 'গ্যাসের ব্যথা',
         'Hiccups' => 'হেঁচকি',
@@ -100,6 +101,7 @@ return [
 
         // Musculoskeletal
         'Body Pain' => 'শরীর ব্যথা',
+        'Body Heaviness' => 'শরীর ভারীভাব',
         'Joint Pain' => 'জয়েন্টে ব্যথা',
         'Muscle Pain' => 'পেশী ব্যথা',
         'Back Pain' => 'পিঠে ব্যথা',
@@ -111,8 +113,12 @@ return [
         'Ankle Pain' => 'গোড়ালিতে ব্যথা',
         'Elbow Pain' => 'কনুইতে ব্যথা',
         'Leg Cramps' => 'পায়ে খিল ধরা',
+        'Burning Feet' => 'পায়ে জ্বালাপোড়া',
         'Stiffness' => 'জড়তা',
         'Pelvic Pain' => 'পেলভিক ব্যথা',
+        'Breast Tenderness' => 'স্তনে ব্যথা',
+        'Breathlessness at Rest' => 'বিশ্রামে শ্বাসকষ্ট',
+        'Breathlessness on Exertion' => 'পরিশ্রমে শ্বাসকষ্ট',
         'Groin Pain' => 'কুঁচকিতে ব্যথা',
         'Rib Pain' => 'পাঁজরে ব্যথা',
 
@@ -377,7 +383,7 @@ return [
         'Vertigo' => 'ভার্টিগো',
         'Otitis Media' => 'কানের মধ্যে সংক্রমণ',
         'Deviated Septum' => 'নাকের হাড় বাঁকা',
-        'Atrial Fibrillation' => 'অ্যাট্রিয়াল ফিব্রিলেশন',
+        'Atrial Fibrillation' => 'এট্রিয়াল ফাইব্রিলেশন',
         'Deep Vein Thrombosis' => 'ডিপ ভেইন থ্রম্বোসিস',
         'Pulmonary Embolism' => 'পালমোনারি এম্বোলিজম',
         'Peripheral Artery Disease' => 'পেরিফেরাল ধমনী রোগ',

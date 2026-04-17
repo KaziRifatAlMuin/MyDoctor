@@ -38,7 +38,7 @@
                         <div class="card border-0 h-100" style="border-radius: 16px; box-shadow: 0 10px 25px rgba(90,45,6,0.08); transition: transform .2s ease, box-shadow .2s ease;">
                             <div class="card-body p-4">
                                 <div class="d-flex align-items-start justify-content-between gap-2">
-                                    <h2 class="h6 mb-0" style="font-weight: 800; color: #7c2d12;">{{ $symptom->name }}</h2>
+                                    <h2 class="h6 mb-0" style="font-weight: 800; color: #7c2d12;">{{ $symptom->display_name }}</h2>
                                     <span class="badge text-bg-light border">{{ $symptom->diseases_count }} {{ __('ui.symptoms.diseases') }}</span>
                                 </div>
                                 <p class="mb-0 mt-3 text-muted" style="font-size: .9rem;">{{ __('ui.symptoms.open_details_to_inspect') }}</p>

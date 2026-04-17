@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Disease;
 use App\Models\HealthMetric;
 use App\Models\Symptom;
+use App\Models\Translation;
 use App\Models\User;
 use App\Models\UserHealth;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class AdminManagementController extends Controller
@@ -214,7 +216,15 @@ class AdminManagementController extends Controller
         $diseases = Disease::query()
             ->withCount(['userDiseases', 'symptoms'])
             ->when($search !== '', function ($query) use ($search) {
-                $query->where('disease_name', 'like', "%{$search}%");
+                $query->where(function ($inner) use ($search) {
+                    $inner->where('disease_name', 'like', "%{$search}%");
+                    if (Schema::hasColumn('diseases', 'bangla_name')) {
+                        $inner->orWhere('bangla_name', 'like', "%{$search}%");
+                    }
+                    if (Schema::hasColumn('diseases', 'disease_name_bn')) {
+                        $inner->orWhere('disease_name_bn', 'like', "%{$search}%");
+                    }
+                });
             })
             ->orderBy('disease_name')
             ->paginate(60)
@@ -230,8 +240,23 @@ class AdminManagementController extends Controller
     {
         $validated = $request->validate([
             'disease_name' => ['required', 'string', 'max:255', 'unique:diseases,disease_name'],
+            'disease_name_bn' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:3000'],
         ]);
+
+        [$englishName, $inlineBangla] = $this->splitBilingualName($validated['disease_name']);
+        $validated['disease_name'] = $englishName;
+        $manualBangla = trim((string) ($validated['disease_name_bn'] ?? ''));
+        unset($validated['disease_name_bn']);
+
+        $bangla = $manualBangla !== ''
+            ? $manualBangla
+            : ($inlineBangla ?: $this->resolveBanglaName(
+            Translation::TYPE_DISEASE,
+            $validated['disease_name'],
+            config('health.diseases', [])
+        ));
+        $validated = array_merge($validated, $this->diseaseBanglaPayload($bangla));
 
         Disease::create($validated);
 
@@ -244,8 +269,23 @@ class AdminManagementController extends Controller
     {
         $validated = $request->validate([
             'disease_name' => ['required', 'string', 'max:255', 'unique:diseases,disease_name,' . $disease->id],
+            'disease_name_bn' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:3000'],
         ]);
+
+        [$englishName, $inlineBangla] = $this->splitBilingualName($validated['disease_name']);
+        $validated['disease_name'] = $englishName;
+        $manualBangla = trim((string) ($validated['disease_name_bn'] ?? ''));
+        unset($validated['disease_name_bn']);
+
+        $bangla = $manualBangla !== ''
+            ? $manualBangla
+            : ($inlineBangla ?: $this->resolveBanglaName(
+            Translation::TYPE_DISEASE,
+            $validated['disease_name'],
+            config('health.diseases', [])
+        ));
+        $validated = array_merge($validated, $this->diseaseBanglaPayload($bangla));
 
         $disease->update($validated);
 
@@ -276,7 +316,15 @@ class AdminManagementController extends Controller
         $symptoms = Symptom::query()
             ->withCount(['userSymptoms', 'diseases'])
             ->when($search !== '', function ($query) use ($search) {
-                $query->where('name', 'like', "%{$search}%");
+                $query->where(function ($inner) use ($search) {
+                    $inner->where('name', 'like', "%{$search}%");
+                    if (Schema::hasColumn('symptoms', 'bangla_name')) {
+                        $inner->orWhere('bangla_name', 'like', "%{$search}%");
+                    }
+                    if (Schema::hasColumn('symptoms', 'name_bn')) {
+                        $inner->orWhere('name_bn', 'like', "%{$search}%");
+                    }
+                });
             })
             ->orderBy('name')
             ->paginate(60)
@@ -292,7 +340,22 @@ class AdminManagementController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:symptoms,name'],
+            'name_bn' => ['nullable', 'string', 'max:255'],
         ]);
+
+        [$englishName, $inlineBangla] = $this->splitBilingualName($validated['name']);
+        $validated['name'] = $englishName;
+        $manualBangla = trim((string) ($validated['name_bn'] ?? ''));
+        unset($validated['name_bn']);
+
+        $bangla = $manualBangla !== ''
+            ? $manualBangla
+            : ($inlineBangla ?: $this->resolveBanglaName(
+            Translation::TYPE_SYMPTOM,
+            $validated['name'],
+            config('health.symptoms', [])
+        ));
+        $validated = array_merge($validated, $this->symptomBanglaPayload($bangla));
 
         Symptom::create($validated);
 
@@ -305,7 +368,22 @@ class AdminManagementController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:symptoms,name,' . $symptom->id],
+            'name_bn' => ['nullable', 'string', 'max:255'],
         ]);
+
+        [$englishName, $inlineBangla] = $this->splitBilingualName($validated['name']);
+        $validated['name'] = $englishName;
+        $manualBangla = trim((string) ($validated['name_bn'] ?? ''));
+        unset($validated['name_bn']);
+
+        $bangla = $manualBangla !== ''
+            ? $manualBangla
+            : ($inlineBangla ?: $this->resolveBanglaName(
+            Translation::TYPE_SYMPTOM,
+            $validated['name'],
+            config('health.symptoms', [])
+        ));
+        $validated = array_merge($validated, $this->symptomBanglaPayload($bangla));
 
         $symptom->update($validated);
 
@@ -429,5 +507,80 @@ class AdminManagementController extends Controller
         }
 
         return $parts;
+    }
+
+    private function resolveBanglaName(string $type, string $englishName, array $map): ?string
+    {
+        $name = trim($englishName);
+        if ($name === '') {
+            return null;
+        }
+
+        if (isset($map[$name]) && trim((string) $map[$name]) !== '') {
+            return trim((string) $map[$name]);
+        }
+
+        // If admin enters Bangla directly, persist that value as bangla_name.
+        if (preg_match('/[\x{0980}-\x{09FF}]/u', $name) === 1) {
+            return $name;
+        }
+
+        return Translation::banglaFor($type, $name, $name);
+    }
+
+    private function diseaseBanglaPayload(?string $bangla): array
+    {
+        $value = trim((string) $bangla);
+        if ($value === '') {
+            return [];
+        }
+
+        $payload = [];
+        if (Schema::hasColumn('diseases', 'bangla_name')) {
+            $payload['bangla_name'] = $value;
+        }
+        if (Schema::hasColumn('diseases', 'disease_name_bn')) {
+            $payload['disease_name_bn'] = $value;
+        }
+
+        return $payload;
+    }
+
+    private function symptomBanglaPayload(?string $bangla): array
+    {
+        $value = trim((string) $bangla);
+        if ($value === '') {
+            return [];
+        }
+
+        $payload = [];
+        if (Schema::hasColumn('symptoms', 'bangla_name')) {
+            $payload['bangla_name'] = $value;
+        }
+        if (Schema::hasColumn('symptoms', 'name_bn')) {
+            $payload['name_bn'] = $value;
+        }
+
+        return $payload;
+    }
+
+    /**
+     * Accept either "English" or "English (বাংলা)" from UI fields.
+     * Returns [english, banglaOrNull].
+     */
+    private function splitBilingualName(string $value): array
+    {
+        $raw = trim($value);
+        if ($raw === '') {
+            return ['', null];
+        }
+
+        if (preg_match('/^(.*?)\s*\(([^)]*[\x{0980}-\x{09FF}][^)]*)\)\s*$/u', $raw, $m) === 1) {
+            $english = trim((string) $m[1]);
+            $bangla = trim((string) $m[2]);
+            return [$english !== '' ? $english : $raw, $bangla !== '' ? $bangla : null];
+        }
+
+        return [$raw, null];
     }
 }

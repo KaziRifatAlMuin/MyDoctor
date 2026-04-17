@@ -8,7 +8,7 @@
                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
                     <div>
                         <p class="mb-2" style="font-size: .85rem; opacity: .92;">{{ __('ui.symptom.symptom_profile') }}</p>
-                        <h1 class="mb-2" style="font-size: 2rem; font-weight: 800;">{{ $symptom->name }}</h1>
+                        <h1 class="mb-2" style="font-size: 2rem; font-weight: 800;">{{ $symptom->display_name }}</h1>
                         <p class="mb-0" style="opacity: 0.93;">{{ __('ui.symptom.public_symptom_details') }}</p>
                     </div>
                     <div class="d-flex gap-2">
@@ -28,7 +28,7 @@
                     <div class="d-flex flex-wrap gap-2">
                         @foreach($symptom->diseases as $disease)
                             <a href="{{ route('public.disease.show', $disease) }}" class="badge rounded-pill text-bg-light border text-decoration-none px-3 py-2">
-                                {{ $disease->disease_name }}
+                                {{ $disease->display_name }}
                             </a>
                         @endforeach
                     </div>

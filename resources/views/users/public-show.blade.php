@@ -101,7 +101,7 @@
                                             @foreach ($publicDiseases as $item)
                                                 <a href="{{ $item->disease ? route('public.disease.show', $item->disease) : '#' }}" style="display:inline-flex; align-items:center; gap:0.35rem; background:#eef8f2; color:#1f6f45; border:1px solid #cfe9da; border-radius:999px; padding:0.35rem 0.68rem; font-size:0.8rem; font-weight:700; text-decoration:none;">
                                                     <i class="fas fa-leaf" style="font-size:0.7rem;"></i>
-                                                    {{ $item->disease->disease_name ?? __('ui.user_profile.unknown_disease') }}
+                                                    {{ $item->disease->display_name ?? __('ui.user_profile.unknown_disease') }}
                                                     @if (!empty($item->status))
                                                         <span style="opacity:0.85; font-weight:600;">({{ $item->status_label }})</span>
                                                     @endif

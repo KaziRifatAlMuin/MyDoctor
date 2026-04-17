@@ -448,7 +448,7 @@
                                     <div>
                                         @if($cond->disease)
                                             <a href="{{ route('public.disease.show', $cond->disease) }}" class="fw-semibold text-decoration-none">
-                                                {{ $cond->disease->disease_name }}
+                                                {{ $cond->disease->display_name }}
                                             </a>
                                         @else
                                             <span class="fw-semibold">{{ __('ui.suggestions.unknown') }}</span>
@@ -477,10 +477,10 @@
                                     <div class="flex-grow-1">
                                         @if($sym->symptom)
                                             <a href="{{ route('public.symptoms.show', $sym->symptom) }}" class="text-decoration-none">
-                                                {{ $sym->symptom_name }}
+                                                {{ $sym->symptom_display_name }}
                                             </a>
                                         @else
-                                            <span>{{ $sym->symptom_name }}</span>
+                                            <span>{{ $sym->symptom_display_name }}</span>
                                         @endif
                                     </div>
                                     <span class="text-muted"

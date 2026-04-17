@@ -2199,37 +2199,37 @@
                         <li class="banner-nav-item">
                             <a href="{{ route('admin.dashboard') }}"
                                 class="banner-nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-                                Dashboard
+                                {{ __('ui.admin_tabs.dashboard') }}
                             </a>
                         </li>
                         <li class="banner-nav-item">
                             <a href="{{ route('admin.users.index') }}"
                                 class="banner-nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
-                                Users
+                                {{ __('ui.admin_tabs.users') }}
                             </a>
                         </li>
                         <li class="banner-nav-item">
                             <a href="{{ route('admin.diseases.index') }}"
                                 class="banner-nav-link {{ request()->routeIs('admin.diseases.*') ? 'active' : '' }}">
-                                Diseases
+                                {{ __('ui.admin_tabs.diseases') }}
                             </a>
                         </li>
                         <li class="banner-nav-item">
                             <a href="{{ route('admin.symptoms.index') }}"
                                 class="banner-nav-link {{ request()->routeIs('admin.symptoms.*') ? 'active' : '' }}">
-                                Symptoms
+                                {{ __('ui.admin_tabs.symptoms') }}
                             </a>
                         </li>
                         <li class="banner-nav-item">
                             <a href="{{ route('admin.health.index') }}"
                                 class="banner-nav-link {{ request()->routeIs('admin.health.*') || request()->routeIs('admin.metrics.*') ? 'active' : '' }}">
-                                Health
+                                {{ __('ui.admin_tabs.health') }}
                             </a>
                         </li>
                         <li class="banner-nav-item">
                             <a href="{{ route('admin.community.posts.index') }}"
                                 class="banner-nav-link {{ request()->routeIs('admin.community.*') ? 'active' : '' }}">
-                                Community
+                                {{ __('ui.admin_tabs.community') }}
                             </a>
                         </li>
                     @else
@@ -2660,11 +2660,10 @@
                 <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
                     <div class="footer-logo mb-3">
                         <img src="{{ asset('images/logos/applogo.png') }}" alt="MyDoctor" height="40">
-                        <span class="fw-bold text-white ms-2">MyDoctor</span>
+                        <span class="fw-bold text-white ms-2">{{ __('ui.meta.app_name') }}</span>
                     </div>
                     <p class="footer-text">
-                        Your complete healthcare companion. Track health metrics, get medicine reminders, consult AI,
-                        and manage medical records all in one place.
+                        {{ __('ui.footer.about_text') }}
                     </p>
                     <div class="social-links">
                         <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
@@ -2677,7 +2676,7 @@
 
                 <!-- Quick Links -->
                 <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
-                    <h5 class="footer-title">Quick Links</h5>
+                    <h5 class="footer-title">{{ __('ui.footer.quick_links') }}</h5>
                     <ul class="footer-links">
                         <li><a href="{{ route('home') }}"><i class="fas fa-chevron-right me-2"></i>Home</a></li>
                         <li><a href="{{ route('medicine.index') }}"><i class="fas fa-chevron-right me-2"></i>Medicine</a></li>
@@ -2689,7 +2688,7 @@
 
                 <!-- Features -->
                 <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
-                    <h5 class="footer-title">Key Features</h5>
+                    <h5 class="footer-title">{{ __('ui.footer.key_features') }}</h5>
                     <ul class="footer-links">
                         <li><a href="{{ route('health.tracking') }}"><i class="fas fa-chevron-right me-2"></i>Health Metrics</a></li>
                         <li><a href="{{ route('medicine.reminders') }}"><i class="fas fa-chevron-right me-2"></i>Medicine Reminders</a></li>
@@ -2701,12 +2700,12 @@
 
                 <!-- Contact Info -->
                 <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
-                    <h5 class="footer-title">Contact Us</h5>
+                    <h5 class="footer-title">{{ __('ui.footer.contact_us') }}</h5>
                     <ul class="footer-contact">
-                        <li><i class="fas fa-map-marker-alt"></i><span>123 Healthcare Avenue, Medical District, Dhaka, Bangladesh</span></li>
-                        <li><i class="fas fa-phone"></i><span>+880 1234 567890</span></li>
-                        <li><i class="fas fa-envelope"></i><span>support@mydoctor.com</span></li>
-                        <li><i class="fas fa-clock"></i><span>24/7 Customer Support</span></li>
+                        <li><i class="fas fa-map-marker-alt"></i><span>{{ __('ui.footer.address') }}</span></li>
+                        <li><i class="fas fa-phone"></i><span>{{ __('ui.footer.phone') }}</span></li>
+                        <li><i class="fas fa-envelope"></i><span>{{ __('ui.footer.email') }}</span></li>
+                        <li><i class="fas fa-clock"></i><span>{{ __('ui.footer.support_hours') }}</span></li>
                     </ul>
                 </div>
             </div>
@@ -2718,13 +2717,13 @@
             <div class="row align-items-center">
                 <div class="col-md-6 text-center text-md-start">
                     <p class="copyright mb-0">
-                        &copy; {{ date('Y') }} MyDoctor. All rights reserved. | Making healthcare simple
+                        &copy; {{ date('Y') }} {{ __('ui.meta.app_name') }}. {{ __('ui.footer.rights_reserved') }} | {{ __('ui.footer.tagline') }}
                     </p>
                 </div>
                 <div class="col-md-6 text-center text-md-end">
                     <ul class="footer-bottom-links">
-                        <li><a href="{{ route('privacy.policy') }}">Privacy Policy</a></li>
-                        <li><a href="{{ route('terms.service') }}">Terms of Service</a></li>
+                        <li><a href="{{ route('privacy.policy') }}">{{ __('ui.footer.privacy_policy') }}</a></li>
+                        <li><a href="{{ route('terms.service') }}">{{ __('ui.footer.terms_of_service') }}</a></li>
                     </ul>
                 </div>
             </div>

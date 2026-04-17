@@ -1562,7 +1562,7 @@ body {
                     <option value="all" {{ !request('disease') ? 'selected' : '' }}>{{ __('ui.community.all_posts') }}</option>
                     @foreach($diseases as $disease)
                         <option value="{{ $disease->id }}" {{ request('disease') == $disease->id ? 'selected' : '' }}>
-                            {{ $disease->disease_name }} - {{ $disease->posts_count }} {{ __('ui.community.posts') }}
+                            {{ $disease->display_name }} - {{ $disease->posts_count }} {{ __('ui.community.posts') }}
                         </option>
                     @endforeach
                 </select>
@@ -1593,7 +1593,7 @@ body {
                 <option value="all" {{ !request('disease') ? 'selected' : '' }}>{{ __('ui.community.all_posts') }}</option>
                 @foreach($diseases as $disease)
                     <option value="{{ $disease->id }}" {{ request('disease') == $disease->id ? 'selected' : '' }}>
-                        {{ $disease->disease_name }} ({{ $disease->posts_count }})
+                        {{ $disease->display_name }} ({{ $disease->posts_count }})
                     </option>
                 @endforeach
             </select>
@@ -1640,7 +1640,7 @@ body {
                                 onclick="filterByDisease({{ $disease->id }})">
                             <i class="fas fa-heartbeat me-2"></i>
                             <span class="filter-name">
-                                {{ $disease->disease_name }}
+                                {{ $disease->display_name }}
                             </span>
                             <span class="filter-count">{{ $disease->posts_count }}</span>
                         </button>
@@ -1688,7 +1688,7 @@ body {
                                         <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
                                             <div>
                                                 <div style="font-weight:600; color:#4c1d95;">{{ $pendingPost->is_anonymous ? __('ui.community.anonymous_member') : $pendingPost->user->name }}</div>
-                                                <div style="font-size:12px; color:#6d28d9; margin-top:2px;">{{ optional($pendingPost->disease)->disease_name ?? 'General' }} • {{ $pendingPost->created_at->diffForHumans() }}</div>
+                                                <div style="font-size:12px; color:#6d28d9; margin-top:2px;">{{ optional($pendingPost->disease)->display_name ?? 'General' }} • {{ $pendingPost->created_at->diffForHumans() }}</div>
                                             </div>
                                             <span class="badge text-bg-warning">{{ __('ui.community.pending') }}</span>
                                         </div>
@@ -1762,7 +1762,7 @@ body {
                                                 <option value="">{{ __('ui.community.select_disease') }}</option>
                                                 @foreach($diseases as $disease)
                                                     <option value="{{ $disease->id }}">
-                                                        {{ $disease->disease_name }}
+                                                        {{ $disease->display_name }}
                                                     </option>
                                                 @endforeach
                                             </select>
@@ -1927,7 +1927,7 @@ body {
                         <div>
                             <div class="trending-name">
                                 <a href="{{ route('public.disease.show', $disease) }}" class="text-decoration-none">
-                                    {{ $disease->disease_name }}
+                                    {{ $disease->display_name }}
                                 </a>
                             </div>
                         </div>

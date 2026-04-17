@@ -71,6 +71,21 @@ return [
     'form' => [
     'select_option' => 'Select an option',
 ],
+
+    'footer' => [
+        'about_text' => 'Your complete healthcare companion. Track health metrics, get medicine reminders, consult AI, and manage medical records all in one place.',
+        'quick_links' => 'Quick Links',
+        'key_features' => 'Key Features',
+        'contact_us' => 'Contact Us',
+        'address' => '123 Healthcare Avenue, Medical District, Dhaka, Bangladesh',
+        'phone' => '+880 1234 567890',
+        'email' => 'support@mydoctor.com',
+        'support_hours' => '24/7 Customer Support',
+        'rights_reserved' => 'All rights reserved.',
+        'tagline' => 'Making healthcare simple',
+        'privacy_policy' => 'Privacy Policy',
+        'terms_of_service' => 'Terms of Service',
+    ],
     'profile' => [
             'full_name_placeholder' => 'Enter your full name',
     'phone_placeholder' => 'Enter your phone number',
@@ -1753,6 +1768,15 @@ return [
     'terms_of_service' => 'Terms of Service',
     'help_center' => 'Help Center',
 ],
+
+    'admin_tabs' => [
+        'dashboard' => 'Dashboard',
+        'users' => 'Users',
+        'diseases' => 'Diseases',
+        'symptoms' => 'Symptoms',
+        'health' => 'Health',
+        'community' => 'Community',
+    ],
 
 'terms' => [
     'terms_of_service' => 'Terms of Service',

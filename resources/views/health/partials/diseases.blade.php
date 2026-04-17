@@ -89,7 +89,7 @@
                                                 <div>
                                                     @if($ud->disease)
                                                         <a href="{{ route('public.disease.show', $ud->disease) }}" class="fw-semibold text-decoration-none">
-                                                            {{ $ud->disease->disease_name }}
+                                                            {{ $ud->disease->display_name }}
                                                         </a>
                                                     @else
                                                         <span class="fw-semibold">{{ __('ui.health.unknown') }}</span>
@@ -125,7 +125,7 @@
                                         <td>
                                             <div class="action-btn-group">
                                                 <button type="button" class="btn btn-sm btn-outline-primary"
-                                                    onclick="openEditDisease({{ $ud->id }}, {{ $ud->disease_id }}, '{{ addslashes($ud->disease->disease_name ?? '') }}', '{{ $ud->status }}', '{{ $ud->diagnosed_at ? $ud->diagnosed_at->format('Y-m-d') : '' }}', '{{ addslashes($ud->notes ?? '') }}')">
+                                                    onclick="openEditDisease({{ $ud->id }}, {{ $ud->disease_id }}, '{{ addslashes($ud->disease->display_name ?? '') }}', '{{ $ud->status }}', '{{ $ud->diagnosed_at ? $ud->diagnosed_at->format('Y-m-d') : '' }}', '{{ addslashes($ud->notes ?? '') }}')">
                                                     <i class="fas fa-edit"></i> {{ __('ui.health.edit') }}
                                                 </button>
                                                 <form action="{{ route('health.disease.destroy', $ud) }}" method="POST"

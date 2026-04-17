@@ -37,8 +37,10 @@ class LoginController extends Controller
             'redirect' => 'nullable|string|max:2048',
         ]);
 
-        // Check if user exists
-        $user = User::where('email', $request->email)->first();
+        // Check if user exists (including deactivated users, so we can show the right message)
+        $user = User::withoutGlobalScope('active_users')
+            ->where('email', $request->email)
+            ->first();
         $bypassVerification = $user && (
             $user->email === 'admin@mydoctor.com' || $user->isAdmin()
         );
@@ -71,20 +73,8 @@ class LoginController extends Controller
         ], $request->filled('remember'))) {
             
             $request->session()->regenerate();
-            
-            if ($bypassVerification) {
-                return redirect()->to($this->resolveRedirectPath($request, $this->redirectTo));
-            }
 
-            // Force re-verification on every login for non-admin users
-            $user = Auth::user();
-            $user->email_verified_at = null;
-            $user->save();
-            
-            $user->sendEmailVerificationNotification();
-            
-            return redirect()->route('verification.notice')
-                ->with('status', 'Verification link sent to ' . $user->email . '. Please verify your email before logging in.');
+            return redirect()->to($this->resolveRedirectPath($request, $this->redirectTo));
         }
 
         return back()->withErrors([

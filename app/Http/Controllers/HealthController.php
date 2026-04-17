@@ -12,8 +12,10 @@ use App\Models\UserSymptom;
 use App\Models\Medicine;
 use App\Models\MedicineLog;
 use App\Models\Disease;
+use App\Models\Translation;
 use App\Models\UserDisease;
 use App\Models\Upload;
+use Illuminate\Support\Facades\Schema;
 
 class HealthController extends Controller
 {
@@ -181,9 +183,20 @@ class HealthController extends Controller
             'note'           => 'nullable|string|max:1000',
         ]);
 
+        [$symptomEnglishName, $symptomInlineBangla] = $this->splitBilingualSymptomName((string) $request->symptom_name);
+        $bangla = $symptomInlineBangla ?: $this->resolveSymptomBanglaName($symptomEnglishName);
+
+        $createAttributes = ['name' => $symptomEnglishName];
+        $createAttributes = array_merge($createAttributes, $this->symptomBanglaPayload($bangla));
+
         $symptom = Symptom::firstOrCreate([
-            'name' => trim((string) $request->symptom_name),
-        ]);
+            'name' => $symptomEnglishName,
+        ], $createAttributes);
+
+        $backfillPayload = $this->symptomBanglaPayload($this->resolveSymptomBanglaName((string) $symptom->name));
+        if (!empty($backfillPayload) && $this->symptomBanglaMissingInStorage($symptom)) {
+            $symptom->update($backfillPayload);
+        }
 
         UserSymptom::create([
             'user_id'        => $userId,
@@ -344,9 +357,20 @@ class HealthController extends Controller
             'note'           => 'nullable|string|max:1000',
         ]);
 
+        [$symptomEnglishName, $symptomInlineBangla] = $this->splitBilingualSymptomName((string) $request->symptom_name);
+        $bangla = $symptomInlineBangla ?: $this->resolveSymptomBanglaName($symptomEnglishName);
+
+        $createAttributes = ['name' => $symptomEnglishName];
+        $createAttributes = array_merge($createAttributes, $this->symptomBanglaPayload($bangla));
+
         $catalogSymptom = Symptom::firstOrCreate([
-            'name' => trim((string) $request->symptom_name),
-        ]);
+            'name' => $symptomEnglishName,
+        ], $createAttributes);
+
+        $backfillPayload = $this->symptomBanglaPayload($this->resolveSymptomBanglaName((string) $catalogSymptom->name));
+        if (!empty($backfillPayload) && $this->symptomBanglaMissingInStorage($catalogSymptom)) {
+            $catalogSymptom->update($backfillPayload);
+        }
 
         $symptom->update([
             'symptom_id' => $catalogSymptom->id,
@@ -560,5 +584,75 @@ private function buildMetricConfig($definitions): array
         }
 
         return $values;
+    }
+
+    private function resolveSymptomBanglaName(string $name): ?string
+    {
+        $trimmed = trim($name);
+        if ($trimmed === '') {
+            return null;
+        }
+
+        $map = config('health.symptoms', []);
+        if (isset($map[$trimmed]) && trim((string) $map[$trimmed]) !== '') {
+            return trim((string) $map[$trimmed]);
+        }
+
+        if (preg_match('/[\x{0980}-\x{09FF}]/u', $trimmed) === 1) {
+            return $trimmed;
+        }
+
+        return Translation::banglaFor(Translation::TYPE_SYMPTOM, $trimmed, $trimmed);
+    }
+
+    private function symptomBanglaPayload(?string $bangla): array
+    {
+        $value = trim((string) $bangla);
+        if ($value === '') {
+            return [];
+        }
+
+        $payload = [];
+        if (Schema::hasColumn('symptoms', 'bangla_name')) {
+            $payload['bangla_name'] = $value;
+        }
+        if (Schema::hasColumn('symptoms', 'name_bn')) {
+            $payload['name_bn'] = $value;
+        }
+
+        return $payload;
+    }
+
+    private function symptomBanglaMissingInStorage(Symptom $symptom): bool
+    {
+        $attributes = $symptom->getAttributes();
+
+        $banglaMissing = true;
+        if (Schema::hasColumn('symptoms', 'bangla_name')) {
+            $banglaMissing = trim((string) ($attributes['bangla_name'] ?? '')) === '';
+        }
+
+        $legacyMissing = true;
+        if (Schema::hasColumn('symptoms', 'name_bn')) {
+            $legacyMissing = trim((string) ($attributes['name_bn'] ?? '')) === '';
+        }
+
+        return $banglaMissing || $legacyMissing;
+    }
+
+    private function splitBilingualSymptomName(string $value): array
+    {
+        $raw = trim($value);
+        if ($raw === '') {
+            return ['', null];
+        }
+
+        if (preg_match('/^(.*?)\s*\(([^)]*[\x{0980}-\x{09FF}][^)]*)\)\s*$/u', $raw, $m) === 1) {
+            $english = trim((string) $m[1]);
+            $bangla = trim((string) $m[2]);
+            return [$english !== '' ? $english : $raw, $bangla !== '' ? $bangla : null];
+        }
+
+        return [$raw, null];
     }
 }

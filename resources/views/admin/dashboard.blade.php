@@ -353,7 +353,7 @@
                                     @foreach($pendingPosts as $pendingPost)
                                         <tr style="background: linear-gradient(90deg, rgba(245, 158, 11, 0.08) 0%, rgba(255, 255, 255, 1) 28%);">
                                             <td>{{ $pendingPost->is_anonymous ? __('ui.admin_dashboard.anonymous_member') : ($pendingPost->user->name ?? __('ui.admin_dashboard.unknown')) }}</td>
-                                            <td>{{ $pendingPost->disease->disease_name ?? __('ui.admin_dashboard.general') }}</td>
+                                            <td>{{ $pendingPost->disease->display_name ?? __('ui.admin_dashboard.general') }}</td>
                                             <td>{{ \Illuminate\Support\Str::limit($pendingPost->description, 80) }}</td>
                                             <td>{{ $pendingPost->created_at->diffForHumans() }}</td>
                                             <td>
@@ -436,7 +436,7 @@
                                 @foreach ($latestDiseaseRecords as $record)
                                     <tr>
                                         <td>{{ __('ui.admin_dashboard.disease_type') }}</td>
-                                        <td>{{ $record->disease->disease_name ?? 'N/A' }}</td>
+                                        <td>{{ $record->disease->display_name ?? 'N/A' }}</td>
                                         <td>{{ $record->user->name ?? __('ui.admin_dashboard.unknown') }}</td>
                                     </tr>
                                 @endforeach

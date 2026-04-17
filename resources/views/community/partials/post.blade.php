@@ -46,8 +46,8 @@
                         {{ __('ui.community.open_post') }}
                     </a>
                     @if($post->disease)
-                        <a href="{{ route('public.disease.show', $post->disease) }}" class="post-disease-badge text-decoration-none" title="{{ $post->disease->disease_name }}" style="background:#e7f3ff;color:#1877f2;padding:4px 12px;border-radius:4px;font-weight:500;font-size:12px;display:inline-flex;align-items:center;gap:4px;">
-                            <i class="fas fa-tag me-1"></i>{{ $post->disease->disease_name }}
+                        <a href="{{ route('public.disease.show', $post->disease) }}" class="post-disease-badge text-decoration-none" title="{{ $post->disease->display_name }}" style="background:#e7f3ff;color:#1877f2;padding:4px 12px;border-radius:4px;font-weight:500;font-size:12px;display:inline-flex;align-items:center;gap:4px;">
+                            <i class="fas fa-tag me-1"></i>{{ $post->disease->display_name }}
                         </a>
                     @endif
                 </div>

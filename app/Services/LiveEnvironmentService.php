@@ -396,13 +396,21 @@ class LiveEnvironmentService
         $activeDiseases = UserDisease::query()
             ->where('user_id', $user->id)
             ->whereIn('status', ['active', 'chronic', 'managed'])
-            ->with('disease:id,disease_name')
+            ->with('disease:id,disease_name,bangla_name')
             ->latest('updated_at')
             ->limit(6)
             ->get()
             ->map(function (UserDisease $item) {
+                $englishName = trim((string) ($item->disease?->disease_name ?? ''));
+                $banglaName = trim((string) ($item->disease?->bangla_name ?? ''));
+
+                $name = $item->disease?->display_name;
+                if ($englishName !== '' && $banglaName !== '') {
+                    $name = $banglaName . ' (' . $englishName . ')';
+                }
+
                 return [
-                    'name' => $item->disease?->disease_name,
+                    'name' => $name,
                     'status' => $item->status,
                 ];
             })
@@ -412,13 +420,13 @@ class LiveEnvironmentService
 
         $recentSymptoms = UserSymptom::query()
             ->where('user_id', $user->id)
-            ->with('symptom:id,name')
+            ->with('symptom:id,name,bangla_name')
             ->latest('recorded_at')
             ->limit(8)
             ->get()
             ->map(function (UserSymptom $item) {
                 return [
-                    'name' => $item->symptom?->name ?? $item->symptom_name,
+                    'name' => $item->symptom?->display_name ?? $item->symptom_display_name,
                     'severity' => $item->severity_level,
                     'recorded_at' => optional($item->recorded_at)->toDateString(),
                 ];

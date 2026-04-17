@@ -32,9 +32,32 @@ class LoginTest extends TestCase
             'password' => 'password',
         ]);
 
-        // App sends even verified users to email verification for security
-        $response->assertRedirect(route('verification.notice'));
+        $response->assertRedirect('/');
         $this->assertAuthenticatedAs($user);
+    }
+
+    #[Test]
+    public function deactivated_user_cannot_login_and_sees_deactivated_message(): void
+    {
+        User::withoutEvents(function (): void {
+            User::factory()->create([
+                'email' => 'deactivated@example.com',
+                'password' => bcrypt('password'),
+                'email_verified_at' => now(),
+                'is_active' => false,
+            ]);
+        });
+
+        $response = $this->from(route('login'))->post(route('login'), [
+            'email' => 'deactivated@example.com',
+            'password' => 'password',
+        ]);
+
+        $response->assertRedirect(route('login'));
+        $response->assertSessionHasErrors([
+            'email' => 'Your account has been deactivated. Please contact support.',
+        ]);
+        $this->assertGuest();
     }
 
     #[Test]

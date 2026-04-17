@@ -220,6 +220,7 @@
             <form class="create-grid" method="POST" action="{{ route('admin.diseases.store') }}">
                 @csrf
                 <input class="form-input" type="text" name="disease_name" placeholder="{{ __('ui.admin_diseases.new_disease_name') }}" required>
+                <input class="form-input" type="text" name="disease_name_bn" placeholder="Bangla name (বাংলা)">
                 <textarea class="form-textarea" name="description" placeholder="{{ __('ui.admin_diseases.description_optional') }}"></textarea>
                 <button class="btn-main" type="submit"><i class="fas fa-plus"></i>{{ __('ui.admin_diseases.create') }}</button>
             </form>
@@ -228,7 +229,7 @@
         <div class="cards-grid">
             @forelse ($diseases as $disease)
                 <article class="item-card">
-                    <h2 class="item-title">{{ $disease->disease_name }}</h2>
+                    <h2 class="item-title">{{ $disease->display_name }}</h2>
                     <div class="item-badges">
                         <span class="item-badge">{{ number_format($disease->user_diseases_count) }} {{ __('ui.admin_diseases.users') }}</span>
                         <span class="item-badge">{{ number_format($disease->symptoms_count) }} {{ __('ui.admin_diseases.symptoms') }}</span>
@@ -250,6 +251,9 @@
                             @method('PATCH')
                             <div class="mb-2">
                                 <input class="form-input" type="text" name="disease_name" value="{{ $disease->disease_name }}" required>
+                            </div>
+                            <div class="mb-2">
+                                <input class="form-input" type="text" name="disease_name_bn" value="{{ $disease->bangla_name }}" placeholder="Bangla name (বাংলা)">
                             </div>
                             <div class="mb-2">
                                 <textarea class="form-textarea" name="description">{{ $disease->description }}</textarea>
