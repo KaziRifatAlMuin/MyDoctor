@@ -53,37 +53,6 @@
                         @csrf
                         @method('PUT')
 
-                        <!-- Push Notifications -->
-                        <div class="card mb-4">
-                            <div class="card-header bg-light">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-bell text-success me-2"></i>
-                                    {{ __('ui.notification_preferences.push_notifications') }}
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="form-check form-switch mb-3">
-                                    <input class="form-check-input" type="checkbox" 
-                                           name="push_notifications" id="push_notifications" 
-                                           value="1" {{ $settings->push_notifications ? 'checked' : '' }}>
-                                    <label class="form-check-label fw-bold" for="push_notifications">
-                                        {{ __('ui.notification_preferences.enable_push') }}
-                                    </label>
-                                    <p class="text-muted small mt-1">
-                                        {{ __('ui.notification_preferences.receive_notifications_closed') }}
-                                    </p>
-                                </div>
-
-                                <div id="pushStatus" class="mt-3 small">
-                                    @if($settings->push_notifications)
-                                        <span class="text-success">
-                                            <i class="fas fa-check-circle"></i> {{ __('ui.notification_preferences.push_enabled') }}
-                                        </span>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-
                         <!-- Email Notifications -->
                         <div class="card mb-4">
                             <div class="card-header bg-light">
@@ -157,13 +126,6 @@
 </div>
 
 @push('scripts')
-<script>
-    document.getElementById('push_notifications').addEventListener('change', function() {
-        if (typeof window.toggleNotifications === 'function') {
-            window.toggleNotifications(this.checked);
-        }
-    });
-</script>
 <script>
     // Helper to set cookie (days)
     function setCookie(name, value, days) {

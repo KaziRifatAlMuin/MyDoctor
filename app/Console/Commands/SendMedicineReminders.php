@@ -3,7 +3,6 @@
 namespace App\Console\Commands;
 
 use App\Models\MedicineReminder;
-use App\Notifications\MedicinePushNotification;
 use App\Notifications\MedicineEmailNotification;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -80,7 +79,6 @@ class SendMedicineReminders extends Command
             }
         }
 
-        $pushCount = 0;
         $emailCount = 0;
         $skippedCount = 0;
 
@@ -103,21 +101,6 @@ class SendMedicineReminders extends Command
                 $this->line("   🕒 Current: " . now()->format('H:i:s'));
                 $this->line("   ⏱️  Time until reminder: {$minutesUntil} minutes");
                 $this->line("   📢 Sending reminder 5 minutes before scheduled time");
-
-                // Send push notification
-                if ($user->wantsPushNotifications()) {
-                    try {
-                        $user->notify(new MedicinePushNotification($reminder));
-                        $pushCount++;
-                        $this->info("   ✅ Push notification sent (5 minutes before)");
-                        Log::info("Push sent for reminder {$reminder->id} to user {$user->id} (5 minutes before)");
-                    } catch (\Exception $e) {
-                        $this->error("   ❌ Push failed: " . $e->getMessage());
-                        Log::error("Push failed: " . $e->getMessage());
-                    }
-                } else {
-                    $this->line("   ⏸️  Push disabled by user");
-                }
 
                 // Send email notification
                 if ($user->wantsEmailNotifications()) {
@@ -145,7 +128,6 @@ class SendMedicineReminders extends Command
         $this->table(
             ['Type', 'Count'],
             [
-                ['Push Notifications (5 min before)', $pushCount],
                 ['Emails (5 min before)', $emailCount],
                 ['Skipped', $skippedCount],
             ]
