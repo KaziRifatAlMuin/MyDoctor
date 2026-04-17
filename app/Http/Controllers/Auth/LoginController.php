@@ -61,9 +61,7 @@ class LoginController extends Controller
 
         // Check if user is active
         if ($user && !$user->is_active) {
-            return back()->withErrors([
-                'email' => 'Your account has been deactivated. Please contact support.',
-            ])->onlyInput('email');
+            return redirect()->route('banned');
         }
 
         // Attempt login with lowercase 'email' to match database column

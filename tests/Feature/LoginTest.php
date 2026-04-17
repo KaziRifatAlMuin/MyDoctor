@@ -53,11 +53,11 @@ class LoginTest extends TestCase
             'password' => 'password',
         ]);
 
-        $response->assertRedirect(route('login'));
-        $response->assertSessionHasErrors([
-            'email' => 'Your account has been deactivated. Please contact support.',
-        ]);
+        $response->assertRedirect(route('banned'));
         $this->assertGuest();
+
+        // Banned page should display the ban message
+        $this->get(route('banned'))->assertSee('You Are Banned');
     }
 
     #[Test]
