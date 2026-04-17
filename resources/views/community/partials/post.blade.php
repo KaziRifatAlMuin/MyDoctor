@@ -298,11 +298,21 @@
                         <i class="{{ $userLiked ? 'fas' : 'far' }} fa-heart"></i>
                         <span class="like-count">{{ $post->like_count }}</span>
                     </button>
-
+                    
+                    <!-- Comment Button - Now Clickable to Toggle Comments -->
+                    <button class="post-action-btn" onclick="toggleCommentsSection({{ $post->id }})" id="toggle-comments-btn-{{ $post->id }}" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#1a1a1a;font-size:14px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;">
+                        <i class="far fa-comment"></i>
+                        <span class="comment-count">{{ $post->comment_count }}</span>
+                        <span class="comments-text">{{ __('ui.community.comments') }}</span>
+                    </button>
                 @else
                     <div class="post-action-btn" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f8f6ff;color:#4b5563;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;">
                         <i class="far fa-heart"></i>
                         <span class="like-count">{{ $post->like_count }}</span>
+                    </div>
+                    <div class="post-action-btn" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f8f6ff;color:#4b5563;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;">
+                        <i class="far fa-comment"></i>
+                        <span class="comment-count">{{ $post->comment_count }}</span>
                     </div>
                 @endif
             @else
@@ -310,17 +320,16 @@
                     <i class="far fa-heart"></i>
                     <span class="like-count">{{ $post->like_count }}</span>
                 </a>
+                <a href="{{ route('login') }}" class="post-action-btn" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#1a1a1a;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
+                    <i class="far fa-comment"></i>
+                    <span class="comment-count">{{ $post->comment_count }}</span>
+                </a>
             @endauth
-
-            <div class="post-action-btn" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#1a1a1a;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:default;">
-                <i class="far fa-comment"></i>
-                <span class="comment-count">{{ $post->comment_count > 0 ? __('ui.community.comments') : __('ui.community.no_comments') }}</span>
-            </div>
         @endif
     </div>
 
-    <!-- Comments Section -->
-    <div class="comments-section" id="comments-section-{{ $post->id }}" style="margin-top:16px;padding:0;">
+    <!-- Comments Section - Initially Hidden -->
+    <div class="comments-section" id="comments-section-{{ $post->id }}" style="margin-top:16px;padding:0;display:none;">
         <div class="comments-container" id="comments-container-{{ $post->id }}" style="margin:0;padding:0;">
             @foreach($post->comments as $comment)
                 @include('community.partials.comment', ['comment' => $comment, 'adminReadOnlyCommunity' => $adminReadOnlyCommunity])
@@ -416,6 +425,30 @@ document.addEventListener('click', function(event) {
         });
     }
 });
+
+// Toggle Comments Section Function
+function toggleCommentsSection(postId) {
+    const commentsSection = document.getElementById(`comments-section-${postId}`);
+    const toggleBtn = document.getElementById(`toggle-comments-btn-${postId}`);
+    
+    if (!commentsSection) return;
+    
+    if (commentsSection.style.display === 'none' || commentsSection.style.display === '') {
+        commentsSection.style.display = 'block';
+        if (toggleBtn) {
+            toggleBtn.innerHTML = `<i class="fas fa-chevron-up"></i>
+                                   <span class="comment-count">${toggleBtn.querySelector('.comment-count').textContent}</span>
+                                   <span class="comments-text">{{ __('ui.community.hide_comments') }}</span>`;
+        }
+    } else {
+        commentsSection.style.display = 'none';
+        if (toggleBtn) {
+            toggleBtn.innerHTML = `<i class="far fa-comment"></i>
+                                   <span class="comment-count">${toggleBtn.querySelector('.comment-count').textContent}</span>
+                                   <span class="comments-text">{{ __('ui.community.comments') }}</span>`;
+        }
+    }
+}
 
 function toggleSeeMore(postId, event) {
     event.preventDefault();

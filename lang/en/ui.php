@@ -1855,7 +1855,7 @@ return [
     'notifications_cleared' => 'notifications cleared',
     'failed_to_clear' => 'Failed to clear notifications',
       'new' => 'New',
-
+'view_all_notifications' => 'All Notifications',
           'starred_notifications' => 'Starred Notifications',
     'starred_notifications_description' => 'Your favorite notifications saved for quick access',
     'no_starred_notifications' => 'No starred notifications',

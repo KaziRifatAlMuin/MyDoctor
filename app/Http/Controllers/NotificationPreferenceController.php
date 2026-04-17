@@ -37,7 +37,6 @@ class NotificationPreferenceController extends Controller
 
         $settings = $user->setting()->firstOrCreate([]);
         $settings->email_notifications = $request->has('email_notifications');
-     
         $settings->show_personal_info = $request->has('show_personal_info');
         $settings->show_diseases = $request->has('show_diseases');
         if (!$user->isAdmin()) {

@@ -379,7 +379,7 @@ return [
     'sign_up' => 'সাইন আপ',
     'confirm_password' => 'পাসওয়ার্ড নিশ্চিত করুন',
     'confirm_password_placeholder' => 'আপনার পাসওয়ার্ড আবার লিখুন',
-    'min_chars' => 'সর্বনিম্ন :min অক্ষর',
+    'min_chars' => 'সর্বনিম্ন ৮ অক্ষর',
     'password_label' => 'পাসওয়ার্ড',
     'email_label' => 'ইমেইল ঠিকানা',
     'password_strength' => 'পাসওয়ার্ড শক্তি',
@@ -1932,7 +1932,7 @@ return [
     'notifications_cleared' => 'টি বিজ্ঞপ্তি মুছে ফেলা হয়েছে',
     'failed_to_clear' => 'বিজ্ঞপ্তি মুছতে ব্যর্থ হয়েছে',
        'new' => 'নতুন',
-
+'view_all_notifications' => 'সব বিজ্ঞপ্তি',
            'starred_notifications' => 'তারকাচিহ্নিত বিজ্ঞপ্তি',
     'starred_notifications_description' => 'দ্রুত অ্যাক্সেসের জন্য আপনার প্রিয় বিজ্ঞপ্তিগুলি সংরক্ষিত',
     'no_starred_notifications' => 'কোনো তারকাচিহ্নিত বিজ্ঞপ্তি নেই',

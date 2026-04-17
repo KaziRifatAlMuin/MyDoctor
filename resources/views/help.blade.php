@@ -586,13 +586,6 @@
                                 </div>
                                 <div class="accordion-item searchable-item">
                                     <h2 class="accordion-header"><button class="accordion-button collapsed"
-                                            type="button" data-bs-toggle="collapse" data-bs-target="#a2">{{ __('ui.help.how_to_enable_push_notifications') }}</button></h2>
-                                    <div id="a2" class="accordion-collapse collapse" data-bs-parent="#accAccount">
-                                        <div class="accordion-body">{{ __('ui.help.how_to_enable_push_notifications_answer') }}</div>
-                                    </div>
-                                </div>
-                                <div class="accordion-item searchable-item">
-                                    <h2 class="accordion-header"><button class="accordion-button collapsed"
                                             type="button" data-bs-toggle="collapse" data-bs-target="#a3">{{ __('ui.help.can_change_password') }}</button></h2>
                                     <div id="a3" class="accordion-collapse collapse" data-bs-parent="#accAccount">
                                         <div class="accordion-body">{{ __('ui.help.can_change_password_answer') }}</div>

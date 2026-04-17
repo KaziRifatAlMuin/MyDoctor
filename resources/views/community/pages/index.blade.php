@@ -42,6 +42,47 @@ body {
     width: 100%;
 }
 
+/* Mobile Filter Bar - NEW */
+.mobile-filter-bar {
+    display: none;
+    background: white;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e4e6eb;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.mobile-filter-bar .filter-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.mobile-filter-bar select {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid #e4e6eb;
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+    min-width: 0;
+}
+
+.mobile-filter-bar .action-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.mobile-filter-bar .action-buttons .btn {
+    padding: 8px 12px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
 /* Main Row */
 .community-row {
     display: flex;
@@ -1286,7 +1327,7 @@ body {
     color: #65676b;
 }
 
-/* Responsive */
+/* ==================== UPDATED RESPONSIVE STYLES ==================== */
 @media (max-width: 1200px) {
     .left-sidebar, .right-sidebar {
         width: 300px;
@@ -1312,6 +1353,16 @@ body {
         width: 100%;
     }
     
+    /* Show mobile filter bar */
+    .mobile-filter-bar {
+        display: block;
+    }
+    
+    /* Hide the filter buttons in header completely on mobile */
+    .community-header .desktop-filters {
+        display: none !important;
+    }
+    
     .files-grid {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     }
@@ -1327,7 +1378,53 @@ body {
     }
 }
 
-@media (max-width: 576px) {
+@media (max-width: 768px) {
+    .community-header {
+        padding: 16px 20px;
+    }
+    
+    .community-header h1 {
+        font-size: 22px !important;
+    }
+    
+    .community-header p {
+        font-size: 13px;
+    }
+    
+    .mobile-filter-bar {
+        padding: 10px 12px;
+    }
+    
+    .mobile-filter-bar .filter-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .mobile-filter-bar select {
+        width: 100%;
+        font-size: 13px;
+        padding: 8px 10px;
+    }
+    
+    .mobile-filter-bar .action-buttons {
+        justify-content: center;
+    }
+    
+    .mobile-filter-bar .action-buttons .btn {
+        flex: 1;
+        justify-content: center;
+        font-size: 12px;
+        padding: 6px 10px;
+    }
+    
+    .main-content {
+        padding: 12px;
+    }
+    
+    .content-wrapper {
+        max-width: 100%;
+    }
+    
     .create-post-footer {
         flex-direction: column;
         gap: 12px;
@@ -1361,6 +1458,81 @@ body {
         min-width: 32px;
     }
 }
+
+@media (max-width: 576px) {
+    .community-header {
+        padding: 12px 16px;
+    }
+    
+    .community-header h1 {
+        font-size: 18px !important;
+    }
+    
+    .mobile-filter-bar .action-buttons {
+        flex-wrap: wrap;
+    }
+    
+    .mobile-filter-bar .action-buttons .btn {
+        font-size: 11px;
+        padding: 5px 8px;
+    }
+    
+    .main-content {
+        padding: 8px;
+    }
+    
+    .post-card {
+        padding: 12px;
+    }
+    
+    .post-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .post-actions-menu {
+        align-self: flex-end;
+    }
+    
+    .post-user {
+        width: 100%;
+    }
+    
+    .post-action-buttons {
+        flex-direction: column;
+        gap: 6px;
+    }
+    
+    .post-action-btn {
+        padding: 8px;
+        font-size: 13px;
+    }
+    
+    .comment {
+        gap: 8px;
+    }
+    
+    .comment-avatar {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .comment-content {
+        padding: 8px 10px;
+    }
+    
+    .comment-header {
+        gap: 6px;
+    }
+    
+    .comment-author {
+        font-size: 12px;
+    }
+    
+    .comment-text {
+        font-size: 12px;
+    }
+}
 </style>
 
 @php
@@ -1383,7 +1555,9 @@ body {
                     {{ $isPendingPage ? ($isAdminCommunity ? __('ui.community.posts_awaiting_approval') : __('ui.community.your_posts_waiting_for_approval')) : ($isStarredPage ? __('ui.community.your_saved_posts') : ($isAdminCommunity ? __('ui.community.view_and_manage_community_posts') : __('ui.community.connect_with_others_share_experiences'))) }}
                 </p>
             </div>
-            <div style="display:flex; align-items:center; gap:10px;">
+            
+            <!-- Desktop Filters - Hidden on mobile/tablet -->
+            <div class="desktop-filters" style="display:flex; align-items:center; gap:10px;">
                 <select id="diseaseFilter" onchange="filterByDisease(this.value)" style="padding: 10px 16px; border: 1px solid #e4e6eb; border-radius: 8px; min-width: 220px;">
                     <option value="all" {{ !request('disease') ? 'selected' : '' }}>{{ __('ui.community.all_posts') }}</option>
                     @foreach($diseases as $disease)
@@ -1405,11 +1579,42 @@ body {
                         <i class="fas fa-hourglass-half me-2"></i>{{ $isPendingPage ? __('ui.community.all_posts') : __('ui.community.pending_posts') }}
                     </a>
                 @endauth
-                <a href="{{ auth()->check() ? route('users.index') : route('login') }}" class="btn btn-sm btn-primary rounded-pill ms-2 d-none d-md-inline-flex align-items-center" style="white-space:nowrap;">
+                <a href="{{ auth()->check() ? route('users.index') : route('login') }}" class="btn btn-sm btn-primary rounded-pill ms-2 d-inline-flex align-items-center" style="white-space:nowrap;">
                     <i class="fas fa-users me-2"></i> {{ __('ui.community.browse_members') }}
                 </a>
-                <a href="{{ auth()->check() ? route('users.index') : route('login') }}" class="btn btn-sm btn-primary rounded-pill ms-2 d-md-none align-items-center" style="white-space:nowrap;">
-                    <i class="fas fa-users"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Filter Bar - Only visible on mobile/tablet, contains all filters moved down -->
+    <div class="mobile-filter-bar">
+        <div class="filter-row">
+            <select id="mobileDiseaseFilter" onchange="filterByDisease(this.value)">
+                <option value="all" {{ !request('disease') ? 'selected' : '' }}>{{ __('ui.community.all_posts') }}</option>
+                @foreach($diseases as $disease)
+                    <option value="{{ $disease->id }}" {{ request('disease') == $disease->id ? 'selected' : '' }}>
+                        {{ $disease->disease_name }} ({{ $disease->posts_count }})
+                    </option>
+                @endforeach
+            </select>
+        </div>
+        <div class="filter-row" style="margin-top: 8px;">
+            <div class="action-buttons">
+                <a href="{{ route('community.home') }}" class="btn btn-sm btn-outline-primary rounded-pill">
+                    <i class="fas fa-th-large"></i> {{ __('ui.community.disease_cards') }}
+                </a>
+                @auth
+                    @if(! $isAdminCommunity)
+                        <a href="{{ $isStarredPage ? route('community.posts.index') : route('community.posts.starred') }}" class="btn btn-sm {{ $isStarredPage ? 'btn-outline-primary' : 'btn-warning' }} rounded-pill">
+                            <i class="fas fa-star"></i> {{ $isStarredPage ? __('ui.community.all_posts') : __('ui.community.starred_posts') }}
+                        </a>
+                    @endif
+                    <a href="{{ $isPendingPage ? ($isAdminCommunity ? route('admin.community.posts.index') : route('community.posts.index')) : ($isAdminCommunity ? route('admin.community.posts.pending') : route('community.posts.pending')) }}" class="btn btn-sm {{ $isPendingPage ? 'btn-outline-primary' : 'btn-outline-warning' }} rounded-pill">
+                        <i class="fas fa-hourglass-half"></i> {{ $isPendingPage ? __('ui.community.all_posts') : __('ui.community.pending_posts') }}
+                    </a>
+                @endauth
+                <a href="{{ auth()->check() ? route('users.index') : route('login') }}" class="btn btn-sm btn-primary rounded-pill">
+                    <i class="fas fa-users"></i> {{ __('ui.community.browse_members') }}
                 </a>
             </div>
         </div>
@@ -1748,6 +1953,23 @@ body {
 @push('scripts')
 <script>
 // ==================== COMMUNITY-SPECIFIC FUNCTIONS ONLY ====================
+
+// Sync mobile filter with desktop filter (only needed when both exist)
+document.addEventListener('DOMContentLoaded', function() {
+    const desktopFilter = document.getElementById('diseaseFilter');
+    const mobileFilter = document.getElementById('mobileDiseaseFilter');
+    
+    if (desktopFilter && mobileFilter) {
+        // Sync mobile filter with desktop filter when changed
+        mobileFilter.addEventListener('change', function() {
+            desktopFilter.value = this.value;
+        });
+        
+        desktopFilter.addEventListener('change', function() {
+            mobileFilter.value = this.value;
+        });
+    }
+});
 
 // ==================== GLOBALS ====================
 const csrfToken = '{{ csrf_token() }}';
