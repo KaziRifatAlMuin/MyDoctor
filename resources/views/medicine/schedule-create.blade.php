@@ -39,7 +39,7 @@
                 </div>
                 
                 <div class="card-body p-4 p-lg-5">
-                    <form action="{{ route('medicine.schedules.store') }}" method="POST">
+                    <form action="{{ route('medicine.schedules.store') }}" method="POST" id="scheduleForm">
                         @csrf
                         
                         <input type="hidden" name="medicine_id" value="{{ $medicine->id }}">
@@ -73,7 +73,7 @@
                                     min="1" max="24" required>
                                 <small class="text-muted">{{ __('ui.medicine.times_per_day_help') }}</small>
                                 @error('frequency_per_day')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
@@ -191,7 +191,7 @@
                                class="btn btn-outline-secondary btn-lg flex-grow-1 rounded-pill">
                                 <i class="fas fa-times me-2"></i>{{ __('ui.medicine.cancel') }}
                             </a>
-                            <button type="submit" class="btn btn-primary btn-lg flex-grow-1 rounded-pill">
+                            <button type="submit" class="btn btn-primary btn-lg flex-grow-1 rounded-pill" id="submitBtn">
                                 <i class="fas fa-save me-2"></i>{{ __('ui.medicine.save_schedule') }}
                             </button>
                         </div>
@@ -204,7 +204,6 @@
 
 @push('scripts')
 <script>
-    // All JavaScript remains exactly the same
     document.addEventListener('DOMContentLoaded', function() {
         updateBinaryTime();
         updateSummary();
@@ -228,7 +227,20 @@
         });
         
         document.getElementById('frequency_per_day').addEventListener('input', updateSummary);
+        document.getElementById('frequency_per_day').addEventListener('change', updateSummary);
         document.getElementById('dosage_period_days').addEventListener('change', updateSummary);
+        
+        // Form submit validation
+        document.getElementById('scheduleForm').addEventListener('submit', function(e) {
+            const selectedCount = document.querySelectorAll('.time-checkbox:checked').length;
+            const frequency = parseInt(document.getElementById('frequency_per_day').value);
+            
+            if (selectedCount !== frequency) {
+                e.preventDefault();
+                alert(`Please select exactly ${frequency} time(s). You have selected ${selectedCount} time(s).`);
+                return false;
+            }
+        });
         
         document.querySelectorAll('.time-checkbox:checked').forEach(checkbox => {
             const badge = checkbox.nextElementSibling.querySelector('.badge');
@@ -259,23 +271,29 @@
             .map(cb => cb.value)
             .sort();
         
-        const frequency = document.getElementById('frequency_per_day').value;
+        const frequency = parseInt(document.getElementById('frequency_per_day').value);
         const periodSelect = document.getElementById('dosage_period_days');
         const period = periodSelect.options[periodSelect.selectedIndex].text;
+        const frequencyInput = document.getElementById('frequency_per_day');
         
         const summaryDiv = document.getElementById('scheduleSummary');
         const summaryText = document.getElementById('summaryText');
         const summaryDetails = document.getElementById('summaryDetails');
         
         if (selectedTimes.length > 0) {
-            let summary = `{{ __('ui.medicine.you_will_take') }} <strong>${selectedTimes.length} {{ __('ui.medicine.times_per_day_lower') }}</strong>`;
-            if (frequency && frequency != selectedTimes.length) {
-                summary += ` <span class="text-warning">({{ __('ui.medicine.warning_selected_vs_frequency', ['selected' => '', 'frequency' => '']) }}${selectedTimes.length} {{ __('ui.medicine.times') }}, {{ __('ui.medicine.but_frequency_is') }} ${frequency})</span>`;
+            let summary = `You will take <strong>${selectedTimes.length} time(s)</strong> per day`;
+            
+            // Add warning if counts don't match
+            if (frequency && frequency !== selectedTimes.length) {
+                summary += ` <span class="text-danger fw-bold">⚠️ Warning: You selected ${selectedTimes.length} time(s) but frequency is set to ${frequency} time(s) per day. Please adjust either the frequency or the selected times.</span>`;
+                frequencyInput.classList.add('is-invalid');
+            } else {
+                frequencyInput.classList.remove('is-invalid');
             }
             
             summaryText.innerHTML = summary;
             
-            let details = '<strong>{{ __("ui.medicine.selected_times") }}</strong> ';
+            let details = '<strong>Selected times:</strong> ';
             details += selectedTimes.map(time => {
                 const [hour, minute] = time.split(':');
                 const hourNum = parseInt(hour);
@@ -284,12 +302,13 @@
                 return `${hour12}:${minute} ${ampm}`;
             }).join(', ');
             
-            details += `<br><strong>{{ __("ui.medicine.schedule_repeats") }}</strong> ${period.toLowerCase()}`;
+            details += `<br><strong>Schedule repeats:</strong> ${period.toLowerCase()}`;
             summaryDetails.innerHTML = details;
             
             summaryDiv.style.display = 'block';
         } else {
             summaryDiv.style.display = 'none';
+            document.getElementById('frequency_per_day').classList.remove('is-invalid');
         }
     }
 </script>
@@ -297,7 +316,6 @@
 
 @push('styles')
 <style>
-    /* All existing styles remain exactly the same */
     .bg-primary-soft {
         background: rgba(102, 126, 234, 0.05);
     }
@@ -375,6 +393,10 @@
     
     .alert {
         border-radius: 12px;
+    }
+    
+    .is-invalid {
+        border-color: #dc3545 !important;
     }
 </style>
 @endpush

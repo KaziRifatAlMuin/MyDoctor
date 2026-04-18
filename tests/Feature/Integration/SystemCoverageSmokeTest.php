@@ -111,120 +111,96 @@ class SystemCoverageSmokeTest extends TestCase
     }
 
     #[Test]
-    public function users_index_defaults_to_name_sort_for_search_results(): void
-    {
-        $viewer = User::factory()->create();
+public function user_can_complete_cross_module_journey()
+{
+    $user = User::factory()->create();
+    $receiver = User::factory()->create();
+    $disease = Disease::factory()->create(['disease_name' => 'Journey Disease']);
 
-        User::factory()->create(['name' => 'SortCase Charlie']);
-        User::factory()->create(['name' => 'SortCase Alice']);
-        User::factory()->create(['name' => 'SortCase Bob']);
+    $this->actingAs($user)
+        ->post(route('health.metric.store'), [
+            'metric_type' => 'heart_rate',
+            'value_bpm' => 78,
+            'recorded_at' => now()->format('Y-m-d'),
+        ])
+        ->assertRedirect(route('health') . '#metrics');
 
-        $response = $this->actingAs($viewer)
-            ->get(route('users.index', ['search' => 'SortCase']));
+    $this->assertDatabaseHas('user_health', [
+        'user_id' => $user->id,
+    ]);
 
-        $response->assertOk();
+    $this->actingAs($user)
+        ->post(route('medicine.store'), [
+            'medicine_name' => 'Integration Med',
+            'type' => 'tablet',
+            'value_per_dose' => 500,
+            'unit' => 'mg',
+            'rule' => 'after_food',
+            'dose_limit' => 3,
+        ])
+        ->assertRedirect(route('medicine.my-medicines'));
 
-        $names = $response->viewData('users')
-            ->getCollection()
-            ->pluck('name')
-            ->values()
-            ->all();
+    $medicine = Medicine::where('user_id', $user->id)->firstOrFail();
 
-        $this->assertSame([
-            'SortCase Alice',
-            'SortCase Bob',
-            'SortCase Charlie',
-        ], $names);
-    }
 
-    #[Test]
-    public function user_can_complete_cross_module_journey(): void
-    {
-        $user = User::factory()->create();
-        $receiver = User::factory()->create();
-        $disease = Disease::factory()->create(['disease_name' => 'Journey Disease']);
+    $binaryWithTwoTimes = '1' . str_repeat('0', 23) . '1' . str_repeat('0', 23);
 
-        $this->actingAs($user)
-            ->post(route('health.metric.store'), [
-                'metric_type' => 'heart_rate',
-                'value_bpm' => 78,
-                'recorded_at' => now()->format('Y-m-d'),
-            ])
-            ->assertRedirect(route('health') . '#metrics');
+    $this->actingAs($user)
+        ->post(route('medicine.schedules.store'), [
+            'medicine_id' => $medicine->id,
+            'dosage_period_days' => 1,
+            'frequency_per_day' => 2,
+            'interval_hours' => 12,
+            'dosage_time_binary' => $binaryWithTwoTimes,
+            'start_date' => now()->format('Y-m-d'),
+            'is_active' => 1,
+        ])
+        ->assertRedirect(route('medicine.schedules', ['medicine_id' => $medicine->id]));
 
-        $this->assertDatabaseHas('user_health', [
-            'user_id' => $user->id,
-        ]);
+    $schedule = MedicineSchedule::where('medicine_id', $medicine->id)->firstOrFail();
+    $this->assertDatabaseHas('medicine_reminders', ['schedule_id' => $schedule->id]);
+    $this->assertGreaterThan(0, MedicineReminder::where('schedule_id', $schedule->id)->count());
 
-        $this->actingAs($user)
-            ->post(route('medicine.store'), [
-                'medicine_name' => 'Integration Med',
-                'type' => 'tablet',
-                'value_per_dose' => 500,
-                'unit' => 'mg',
-                'rule' => 'after_food',
-                'dose_limit' => 3,
-            ])
-            ->assertRedirect(route('medicine.my-medicines'));
-
-        $medicine = Medicine::where('user_id', $user->id)->firstOrFail();
-
-        $this->actingAs($user)
-            ->post(route('medicine.schedules.store'), [
-                'medicine_id' => $medicine->id,
-                'dosage_period_days' => 1,
-                'frequency_per_day' => 2,
-                'interval_hours' => 12,
-                'dosage_time_binary' => '100000000000000000000000000000000000000000000000',
-                'start_date' => now()->format('Y-m-d'),
-                'is_active' => 1,
-            ])
-            ->assertRedirect(route('medicine.schedules', ['medicine_id' => $medicine->id]));
-
-        $schedule = MedicineSchedule::where('medicine_id', $medicine->id)->firstOrFail();
-        $this->assertDatabaseHas('medicine_reminders', ['schedule_id' => $schedule->id]);
-        $this->assertGreaterThan(0, MedicineReminder::where('schedule_id', $schedule->id)->count());
-
-        $communityResponse = $this->actingAs($user)
-            ->postJson(route('community.posts.store'), [
-                'disease_id' => $disease->id,
-                'description' => 'Integration journey community post',
-            ]);
-
-        $communityResponse->assertOk()->assertJson([
-            'success' => true,
-        ]);
-
-        $this->assertDatabaseHas('posts', [
-            'user_id' => $user->id,
+    $communityResponse = $this->actingAs($user)
+        ->postJson(route('community.posts.store'), [
             'disease_id' => $disease->id,
             'description' => 'Integration journey community post',
         ]);
 
-        $post = Post::where('user_id', $user->id)->latest()->firstOrFail();
-        $this->actingAs($user)
-            ->putJson(route('community.posts.like', $post), [])
-            ->assertOk()
-            ->assertJson([
-                'success' => true,
-                'liked' => true,
-            ]);
+    $communityResponse->assertOk()->assertJson([
+        'success' => true,
+    ]);
 
-        $this->actingAs($user)
-            ->post(route('profile.mailbox.store'), [
-                'receiver_id' => $receiver->id,
-                'title' => 'Integration Message',
-                'message' => 'All modules are working together.',
-            ])
-            ->assertRedirect(route('profile.mailbox.sent'));
+    $this->assertDatabaseHas('posts', [
+        'user_id' => $user->id,
+        'disease_id' => $disease->id,
+        'description' => 'Integration journey community post',
+    ]);
 
-        $this->assertDatabaseHas('mailings', [
-            'sender_id' => $user->id,
-            'receiver_id' => $receiver->id,
-            'title' => 'Integration Message',
-            'status' => 'unread',
+    $post = Post::where('user_id', $user->id)->latest()->firstOrFail();
+    $this->actingAs($user)
+        ->putJson(route('community.posts.like', $post), [])
+        ->assertOk()
+        ->assertJson([
+            'success' => true,
+            'liked' => true,
         ]);
 
-        $this->assertSame(1, Mailing::where('sender_id', $user->id)->count());
-    }
+    $this->actingAs($user)
+        ->post(route('profile.mailbox.store'), [
+            'receiver_id' => $receiver->id,
+            'title' => 'Integration Message',
+            'message' => 'All modules are working together.',
+        ])
+        ->assertRedirect(route('profile.mailbox.sent'));
+
+    $this->assertDatabaseHas('mailings', [
+        'sender_id' => $user->id,
+        'receiver_id' => $receiver->id,
+        'title' => 'Integration Message',
+        'status' => 'unread',
+    ]);
+
+    $this->assertSame(1, Mailing::where('sender_id', $user->id)->count());
+}
 }

@@ -1427,7 +1427,7 @@ class CommunityController extends Controller
     }
 
     /**
-     * Delete a comment
+     * Delete a comment - UPDATED to allow admins to delete any comment
      */
     public function destroyComment(Request $request, Comment $comment)
     {
@@ -1439,7 +1439,17 @@ class CommunityController extends Controller
                 ], 401);
             }
 
-            $this->authorize('delete', $comment);
+            $user = Auth::user();
+            $isOwner = $user->id === $comment->user_id;
+            $isAdmin = $user->isAdmin();
+
+            // Allow admin to delete any comment, owner can delete their own
+            if (!$isOwner && !$isAdmin) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You can only delete your own comments unless you are an admin'
+                ], 403);
+            }
 
             $post = $comment->post;
             

@@ -1,8 +1,14 @@
 <div class="comment" id="comment-{{ $comment->id }}" data-comment-id="{{ $comment->id }}" style="display:flex;gap:12px;align-items:flex-start;">
     @php
         $adminReadOnlyCommunity = $adminReadOnlyCommunity ?? false;
-        $isAdminReadOnly = Auth::check() && Auth::user()->isAdmin() && $adminReadOnlyCommunity;
-        $isAdminManager = Auth::check() && Auth::user()->isAdmin();
+        // For admin community page, admins should see delete buttons
+        $isAdminOnAdminPage = Auth::check() && Auth::user()->isAdmin() && $adminReadOnlyCommunity;
+        // Show delete button for: comment owner OR admin (anywhere)
+        $canDeleteComment = Auth::check() && (Auth::id() === $comment->user_id || Auth::user()->isAdmin());
+        // Show edit button only for comment owner
+        $canEditComment = Auth::check() && Auth::id() === $comment->user_id;
+        // Hide like button for admins on admin page (optional)
+        $showLikeButton = Auth::check() && !Auth::user()->isAdmin();
     @endphp
     <div class="comment-avatar" onclick="showUserModal({{ $comment->user->id }})" style="cursor: pointer; flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%; overflow: hidden;">
         @if($comment->user->picture)
@@ -18,18 +24,21 @@
             <span class="comment-author" onclick="showUserModal({{ $comment->user->id }})" style="cursor: pointer;font-weight:600;color:#1a1a1a;font-size:14px;text-decoration:underline;hover:color:#1877f2;">{{ $comment->user->name }}</span>
             <span class="comment-time" style="font-size:12px;color:#65676b;">{{ $comment->created_at->diffForHumans() }}</span>
             
-            @auth
-                @if((Auth::id() === $comment->user_id || $isAdminManager) && ! $isAdminReadOnly)
-                    <div class="comment-actions" style="display: flex; gap: 4px; margin-left: auto;">
+            <!-- Comment Actions - Edit and Delete -->
+            @if($canEditComment || $canDeleteComment)
+                <div class="comment-actions" style="display: flex; gap: 4px; margin-left: auto;">
+                    @if($canEditComment)
                         <button class="comment-action-btn" onclick="editComment({{ $comment->id }})" title="{{ __('ui.community.edit') }}" style="background: none; border: none; padding: 4px; color: #65676b; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; outline: none;">
                             <i class="fas fa-edit"></i>
                         </button>
+                    @endif
+                    @if($canDeleteComment)
                         <button class="comment-action-btn text-danger" onclick="confirmDelete({{ $comment->id }}, 'comment')" title="{{ __('ui.community.delete') }}" style="background: none; border: none; padding: 4px; color: #dc3545; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; outline: none;">
                             <i class="fas fa-trash"></i>
                         </button>
-                    </div>
-                @endif
-            @endauth
+                    @endif
+                </div>
+            @endif
         </div>
         
         <!-- Comment text with clickable links -->
@@ -79,21 +88,20 @@
             </div>
         @endif
         
-        @auth
-            @if(! $isAdminReadOnly)
+        <!-- Like Button -->
+        @if($showLikeButton)
             <button class="comment-like-btn {{ $comment->likes()->where('user_id', Auth::id())->exists() ? 'liked' : '' }}" 
                     onclick="toggleCommentLike({{ $comment->id }}, this)"
                     style="background: none; border: none; padding: 2px 0; color: #65676b; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; outline: none;">
                 <i class="{{ $comment->likes()->where('user_id', Auth::id())->exists() ? 'fas' : 'far' }} fa-heart"></i>
                 <span class="like-count">{{ $comment->like_count }}</span>
             </button>
-            @else
-                <span style="display:inline-flex; align-items:center; gap:4px; color:#65676b; font-size:12px;">
-                    <i class="far fa-heart"></i>
-                    <span class="like-count">{{ $comment->like_count }}</span>
-                </span>
-            @endif
-        @endauth
+        @else
+            <span style="display:inline-flex; align-items:center; gap:4px; color:#65676b; font-size:12px;">
+                <i class="far fa-heart"></i>
+                <span class="like-count">{{ $comment->like_count }}</span>
+            </span>
+        @endif
     </div>
 </div>
 

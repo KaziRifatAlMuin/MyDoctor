@@ -18,12 +18,16 @@ class MedicineScheduleIntegrationTest extends TestCase
         $user = User::factory()->create();
         $medicine = Medicine::factory()->create(['user_id' => $user->id]);
 
+        // Binary string with 2 times selected (00:00 and 12:00)
+        // 48 bits: 1 at position 0 (00:00) and 1 at position 24 (12:00)
+        $binaryWithTwoTimes = '1' . str_repeat('0', 23) . '1' . str_repeat('0', 23);
+
         $response = $this->actingAs($user)->post(route('medicine.schedules.store'), [
             'medicine_id' => $medicine->id,
             'dosage_period_days' => 1,
             'frequency_per_day' => 2,
             'interval_hours' => 12,
-            'dosage_time_binary' => '100000000000000000000000000000000000000000000000',
+            'dosage_time_binary' => $binaryWithTwoTimes,
             'start_date' => now()->format('Y-m-d'),
             'is_active' => 1
         ]);
@@ -48,11 +52,13 @@ class MedicineScheduleIntegrationTest extends TestCase
         $user2 = User::factory()->create();
         $medicine = Medicine::factory()->create(['user_id' => $user2->id]);
 
+        $binaryWithOneTime = '1' . str_repeat('0', 47);
+
         $response = $this->actingAs($user1)->post(route('medicine.schedules.store'), [
             'medicine_id' => $medicine->id,
             'dosage_period_days' => 1,
             'frequency_per_day' => 1,
-            'dosage_time_binary' => '100000000000000000000000000000000000000000000000',
+            'dosage_time_binary' => $binaryWithOneTime,
             'start_date' => now()->format('Y-m-d'),
             'is_active' => 1
         ]);

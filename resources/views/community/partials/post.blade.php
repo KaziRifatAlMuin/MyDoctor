@@ -4,23 +4,21 @@
     $isOwner = $isAuthenticated && Auth::id() === $post->user_id;
     $isAdmin = $isAuthenticated && Auth::user()->isAdmin();
     $adminReadOnlyCommunity = $adminReadOnlyCommunity ?? false;
-    $isAdminReadOnly = $isAdmin && $adminReadOnlyCommunity;
+    
+    // ADMINS CAN ALWAYS DELETE POSTS AND COMMENTS - they should see the menu
+    // For 3-dot menu: show for owners, admins, and regular users
+    $showPostMenu = $isAuthenticated && ($isOwner || $isAdmin || true);
+    
+    // For like/comment buttons: show interactive for regular users and admins (everyone logged in)
+    // Only disable if explicitly in read-only mode
+    $canInteract = $isAuthenticated && !$adminReadOnlyCommunity;
+    
     $isAnonymous = (bool) $post->is_anonymous;
     $displayName = $isAnonymous ? __('ui.community.anonymous_member') : $post->user->name;
     $userLiked = $isAuthenticated ? $post->likes()->where('user_id', Auth::id())->exists() : false;
     $userStarred = $isAuthenticated
         ? $post->likes()->where('user_id', Auth::id())->where('is_starred', true)->exists()
         : false;
-@endphp
-
-@php
-    // Determine if the post menu should be shown for this user/context
-    // Do not show menu for admin users in admin-readonly mode.
-    $showPostMenu = ($isAuthenticated && ! $isAdminReadOnly);
-    // Allow owners (when not admin-readonly) to see their menu
-    if ($isOwner && ! $isAdminReadOnly) $showPostMenu = true;
-    // Allow admins to approve when they are not in read-only mode and post is unapproved
-    if ($isAdmin && ! $isAdminReadOnly && ! $post->is_approved) $showPostMenu = true;
 @endphp
 
 <div class="post-card" id="post-{{ $post->id }}" data-post-id="{{ $post->id }}">
@@ -54,17 +52,20 @@
             </div>
         </div>
         
-        <!-- Three Dots Dropdown Menu -->
-        @if($showPostMenu)
+        <!-- Three Dots Dropdown Menu - Show for all logged in users -->
+        @if($isAuthenticated)
         <div class="post-actions-menu" style="position:relative; display:flex; align-items:center; gap:8px;flex-shrink:0;">
             @if($post->is_edited)
                 <span style="font-size:11px; font-weight:600; color:#65676b; background:#f0f2f5; border-radius:12px; padding:4px 8px;">{{ __('ui.community.edited') }}</span>
             @endif
-            @if($isAuthenticated && ! $isAdmin)
+            
+            <!-- Star button - only for regular users, not admins -->
+            @if(!$isAdmin)
                 <button class="post-menu-btn {{ $userStarred ? 'starred' : '' }}" id="star-btn-{{ $post->id }}" onclick="toggleStar({{ $post->id }}, this)" title="{{ $userStarred ? __('ui.community.unstar') : __('ui.community.star') }}" style="width:34px;height:34px;border:none;border-radius:50%;background:#f0f2f5;color:#65676b;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;">
                     <i class="{{ $userStarred ? 'fas text-warning' : 'far' }} fa-star"></i>
                 </button>
             @endif
+            
             <button class="post-menu-btn" onclick="togglePostMenu({{ $post->id }})" title="{{ __('ui.community.more_options') }}" style="width:34px;height:34px;border:none;border-radius:50%;background:#f0f2f5;color:#65676b;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;">
                 <i class="fas fa-ellipsis-v"></i>
             </button>
@@ -77,52 +78,45 @@
                     <span>{{ __('ui.community.view_full_post') }}</span>
                 </a>
 
-                @auth
-                    @if(! $isAdminReadOnly)
-                        <button class="dropdown-item" onclick="toggleStar({{ $post->id }}, document.getElementById('star-btn-{{ $post->id }}'))" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#1a1a1a; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb;">
-                            <i class="{{ $userStarred ? 'fas text-warning' : 'far' }} fa-star" style="width:18px;"></i>
-                            <span>{{ $userStarred ? __('ui.community.unstar') : __('ui.community.star') }}</span>
-                        </button>
-                    @endif
-                @endauth
+                <!-- Star - Only for regular users, not admins -->
+                @if(!$isAdmin)
+                    <button class="dropdown-item" onclick="toggleStar({{ $post->id }}, document.getElementById('star-btn-{{ $post->id }}'))" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#1a1a1a; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb;">
+                        <i class="{{ $userStarred ? 'fas text-warning' : 'far' }} fa-star" style="width:18px;"></i>
+                        <span>{{ $userStarred ? __('ui.community.unstar') : __('ui.community.star') }}</span>
+                    </button>
+                @endif
                 
-                @auth
-                    @if($isOwner && ! $isAdminReadOnly)
-                        <!-- Edit Post (only for owner) -->
-                        <button class="dropdown-item" onclick="editPost({{ $post->id }})" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#1a1a1a; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb;">
-                            <i class="fas fa-edit" style="width:18px; color:#1877f2;"></i>
-                            <span>{{ __('ui.community.edit_post') }}</span>
-                        </button>
-                    @endif
+                <!-- Edit Post - Only for owner (not for admin editing others) -->
+                @if($isOwner)
+                    <button class="dropdown-item" onclick="editPost({{ $post->id }})" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#1a1a1a; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb;">
+                        <i class="fas fa-edit" style="width:18px; color:#1877f2;"></i>
+                        <span>{{ __('ui.community.edit_post') }}</span>
+                    </button>
+                @endif
 
-                    @if($isOwner || $isAdmin)
-                        <!-- Delete Post (owner/admin) -->
-                        <button class="dropdown-item text-danger" onclick="confirmDelete({{ $post->id }},'post')" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#dc3545; cursor:pointer; transition:background 0.2s; text-align:left;">
-                            <i class="fas fa-trash" style="width:18px; color:#dc3545;"></i>
-                            <span>{{ __('ui.community.delete_post') }}</span>
-                        </button>
-                    @endif
+                <!-- Delete Post - For owner OR admin -->
+                @if($isOwner || $isAdmin)
+                    <button class="dropdown-item text-danger" onclick="confirmDelete({{ $post->id }},'post')" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#dc3545; cursor:pointer; transition:background 0.2s; text-align:left;">
+                        <i class="fas fa-trash" style="width:18px; color:#dc3545;"></i>
+                        <span>{{ __('ui.community.delete_post') }}</span>
+                    </button>
+                @endif
 
-                    @if(! $isAdminReadOnly)
-                        <button class="dropdown-item" onclick="reportPost({{ $post->id }})" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#dc3545; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb;">
-                            <i class="fas fa-flag" style="width:18px; color:#dc3545;"></i>
-                            <span>{{ $post->is_reported ? __('ui.community.reported') : __('ui.community.report_post') }}</span>
-                        </button>
-                    @endif
+                <!-- Report - Only for regular users -->
+                @if(!$isAdmin)
+                    <button class="dropdown-item" onclick="reportPost({{ $post->id }})" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#dc3545; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb;">
+                        <i class="fas fa-flag" style="width:18px; color:#dc3545;"></i>
+                        <span>{{ $post->is_reported ? __('ui.community.reported') : __('ui.community.report_post') }}</span>
+                    </button>
+                @endif
 
-                    @if($isAdmin && !$post->is_approved)
-                        <button class="dropdown-item" onclick="approvePost({{ $post->id }})" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#198754; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb;">
-                            <i class="fas fa-check-circle" style="width:18px; color:#198754;"></i>
-                            <span>{{ __('ui.community.approve_post') }}</span>
-                        </button>
-                    @endif
-                @endauth
-                
-                <!-- Close option (useful for mobile) -->
-                <button class="dropdown-item" onclick="togglePostMenu({{ $post->id }})" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#65676b; cursor:pointer; transition:background 0.2s; text-align:left;">
-                    <i class="fas fa-times" style="width:18px; color:#65676b;"></i>
-                    <span>{{ __('ui.community.close_menu') }}</span>
-                </button>
+                <!-- Approve - Only for admin on unapproved posts -->
+                @if($isAdmin && !$post->is_approved)
+                    <button class="dropdown-item" onclick="approvePost({{ $post->id }})" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#198754; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb;">
+                        <i class="fas fa-check-circle" style="width:18px; color:#198754;"></i>
+                        <span>{{ __('ui.community.approve_post') }}</span>
+                    </button>
+                @endif
             </div>
         </div>
         @endif
@@ -266,7 +260,6 @@
 
     <!-- Post Action Buttons -->
     @php
-        // Detect admin pending posts listing by route name or passed flags
         $isPendingAdminView = request()->routeIs('admin.community.posts.pending') || (isset($isAdminCommunity) && isset($isPendingPage) && $isAdminCommunity && $isPendingPage);
     @endphp
 
@@ -293,28 +286,17 @@
             @endauth
         @else
             @auth
-                @if(! $isAdmin)
-                    <button class="post-action-btn like-btn {{ $userLiked ? 'liked' : '' }}" onclick="toggleLike({{ $post->id }},this)" id="like-btn-{{ $post->id }}" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#1a1a1a;font-size:14px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
-                        <i class="{{ $userLiked ? 'fas' : 'far' }} fa-heart"></i>
-                        <span class="like-count">{{ $post->like_count }}</span>
-                    </button>
-                    
-                    <!-- Comment Button - Now Clickable to Toggle Comments -->
-                    <button class="post-action-btn" onclick="toggleCommentsSection({{ $post->id }})" id="toggle-comments-btn-{{ $post->id }}" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#1a1a1a;font-size:14px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;">
-                        <i class="far fa-comment"></i>
-                        <span class="comment-count">{{ $post->comment_count }}</span>
-                        <span class="comments-text">{{ __('ui.community.comments') }}</span>
-                    </button>
-                @else
-                    <div class="post-action-btn" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f8f6ff;color:#4b5563;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;">
-                        <i class="far fa-heart"></i>
-                        <span class="like-count">{{ $post->like_count }}</span>
-                    </div>
-                    <div class="post-action-btn" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f8f6ff;color:#4b5563;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;">
-                        <i class="far fa-comment"></i>
-                        <span class="comment-count">{{ $post->comment_count }}</span>
-                    </div>
-                @endif
+                {{-- Show interactive buttons for ALL logged in users (both regular users AND admins) --}}
+                <button class="post-action-btn like-btn {{ $userLiked ? 'liked' : '' }}" onclick="toggleLike({{ $post->id }},this)" id="like-btn-{{ $post->id }}" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#1a1a1a;font-size:14px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
+                    <i class="{{ $userLiked ? 'fas' : 'far' }} fa-heart"></i>
+                    <span class="like-count">{{ $post->like_count }}</span>
+                </button>
+                
+                <button class="post-action-btn" onclick="toggleCommentsSection({{ $post->id }})" id="toggle-comments-btn-{{ $post->id }}" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#1a1a1a;font-size:14px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;">
+                    <i class="far fa-comment"></i>
+                    <span class="comment-count">{{ $post->comment_count }}</span>
+                    <span class="comments-text">{{ __('ui.community.comments') }}</span>
+                </button>
             @else
                 <a href="{{ route('login') }}" class="post-action-btn" style="flex:1;padding:10px;border:none;border-radius:6px;background:#f0f2f5;color:#1a1a1a;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;">
                     <i class="far fa-heart"></i>
@@ -328,8 +310,8 @@
         @endif
     </div>
 
-    <!-- Comments Section - Initially Hidden -->
-    <div class="comments-section" id="comments-section-{{ $post->id }}" style="margin-top:16px;padding:0;display:none;">
+    <!-- Comments Section -->
+    <div class="comments-section" id="comments-section-{{ $post->id }}" style="margin-top:16px;padding:0;display:block;">
         <div class="comments-container" id="comments-container-{{ $post->id }}" style="margin:0;padding:0;">
             @foreach($post->comments as $comment)
                 @include('community.partials.comment', ['comment' => $comment, 'adminReadOnlyCommunity' => $adminReadOnlyCommunity])
@@ -343,7 +325,7 @@
         @endif
         
         @auth
-            @if(! $isAdminReadOnly && ! $isAdmin)
+            {{-- Comment form for ALL logged in users (both regular users AND admins) --}}
             <form class="comment-form" onsubmit="submitComment(event, {{ $post->id }}); return false;" style="margin:0;padding:0;">
                 @csrf
                 <div class="comment-input-group" style="display:flex;gap:8px;align-items:flex-start;margin:0;padding:0;">
@@ -356,7 +338,7 @@
                     </div>
                     
                     <div style="flex:1;">
-                        <!-- File Preview Container - UNIFIED -->
+                        <!-- File Preview Container -->
                         <div id="comment-file-preview-{{ $post->id }}" class="comment-file-preview" style="display: none; margin-bottom: 8px;">
                             <div style="display: flex; align-items: center; justify-content: space-between; background: #f0f2f5; padding: 8px 12px; border-radius: 8px;">
                                 <div id="comment-file-preview-content-{{ $post->id }}" class="file-preview-content" style="display: flex; align-items: center; gap: 8px; flex: 1;"></div>
@@ -396,7 +378,6 @@
                     </div>
                 </div>
             </form>
-            @endif
         @endauth
     </div>
 </div>
@@ -500,7 +481,6 @@ function openPostModalForComments(postId) {
 </script>
 
 <style>
-/* Post link styles */
 .post-link {
     color: #1877f2;
     text-decoration: none;
@@ -515,7 +495,6 @@ function openPostModalForComments(postId) {
     color: #0e5a9e;
 }
 
-/* Video container styles */
 .video-embed-wrapper {
     width: 100%;
     margin: 0 0 16px 0;
@@ -544,7 +523,6 @@ function openPostModalForComments(postId) {
     transform: scale(1.2);
 }
 
-/* See More button styles */
 .see-more-btn {
     background: none;
     border: none;
@@ -567,7 +545,6 @@ function openPostModalForComments(postId) {
     transition: transform 0.3s;
 }
 
-/* Truncated text */
 .post-text-content.truncated {
     max-height: 200px;
     overflow: hidden;
@@ -585,7 +562,6 @@ function openPostModalForComments(postId) {
     pointer-events: none;
 }
 
-/* Dropdown menu styles */
 .post-dropdown-menu {
     border-radius: 8px;
     overflow: hidden;
@@ -612,7 +588,6 @@ function openPostModalForComments(postId) {
     background: #fee !important;
 }
 
-/* Ensure dropdown stays above other content */
 .post-actions-menu {
     z-index: 100;
 }
@@ -621,7 +596,6 @@ function openPostModalForComments(postId) {
     z-index: 1000;
 }
 
-/* Comment File Preview Styles */
 .comment-file-preview {
     display: none;
     margin-bottom: 8px;

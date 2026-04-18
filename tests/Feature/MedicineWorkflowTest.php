@@ -33,13 +33,16 @@ class MedicineWorkflowTest extends TestCase
         $medicine = Medicine::where('user_id', $user->id)->first();
         $this->assertNotNull($medicine);
 
-        // Step 2: Create a schedule for the medicine
+        // Step 2: Create a schedule for the medicine with matching frequency
+        // Binary string with 2 times selected (00:00 and 12:00)
+        $binaryWithTwoTimes = '1' . str_repeat('0', 23) . '1' . str_repeat('0', 23);
+        
         $scheduleData = [
             'medicine_id' => $medicine->id,
             'dosage_period_days' => 1,
             'frequency_per_day' => 2,
             'interval_hours' => 12,
-            'dosage_time_binary' => '100000000000000000000000000000000000000000000000',
+            'dosage_time_binary' => $binaryWithTwoTimes,
             'start_date' => now()->format('Y-m-d'),
             'is_active' => 1
         ];
