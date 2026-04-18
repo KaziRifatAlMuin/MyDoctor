@@ -59,10 +59,14 @@ class Symptom extends Model
 
             if (self::supportsBanglaNameColumn()) {
                 $symptom->attributes['bangla_name'] = $resolvedBangla;
+            } else {
+                unset($symptom->attributes['bangla_name']);
             }
 
             if (self::supportsLegacyBanglaNameColumn()) {
                 $symptom->attributes['name_bn'] = $resolvedBangla;
+            } else {
+                unset($symptom->attributes['name_bn']);
             }
         });
     }
