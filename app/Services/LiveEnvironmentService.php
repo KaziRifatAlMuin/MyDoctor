@@ -10,6 +10,8 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 class LiveEnvironmentService
 {
@@ -393,20 +395,33 @@ class LiveEnvironmentService
 
     private function buildHealthContext(User $user): array
     {
+        // Check if bangla_name columns exist
+        $hasBanglaColumn = Schema::hasColumn('diseases', 'bangla_name');
+        $hasDiseaseNameBn = Schema::hasColumn('diseases', 'disease_name_bn');
+        
         $activeDiseases = UserDisease::query()
             ->where('user_id', $user->id)
             ->whereIn('status', ['active', 'chronic', 'managed'])
-            ->with('disease:id,disease_name,bangla_name')
+            ->with('disease:id,disease_name' . ($hasBanglaColumn ? ',bangla_name' : ($hasDiseaseNameBn ? ',disease_name_bn' : '')))
             ->latest('updated_at')
             ->limit(6)
             ->get()
-            ->map(function (UserDisease $item) {
+            ->map(function (UserDisease $item) use ($hasBanglaColumn, $hasDiseaseNameBn) {
                 $englishName = trim((string) ($item->disease?->disease_name ?? ''));
-                $banglaName = trim((string) ($item->disease?->bangla_name ?? ''));
+                
+                // Get Bangla name from available column
+                $banglaName = '';
+                if ($hasBanglaColumn) {
+                    $banglaName = trim((string) ($item->disease?->bangla_name ?? ''));
+                } elseif ($hasDiseaseNameBn) {
+                    $banglaName = trim((string) ($item->disease?->disease_name_bn ?? ''));
+                }
 
                 $name = $item->disease?->display_name;
                 if ($englishName !== '' && $banglaName !== '') {
                     $name = $banglaName . ' (' . $englishName . ')';
+                } elseif ($englishName !== '') {
+                    $name = $englishName;
                 }
 
                 return [
@@ -418,15 +433,31 @@ class LiveEnvironmentService
             ->values()
             ->all();
 
+        // Check symptom bangla columns
+        $hasSymptomBangla = Schema::hasColumn('symptoms', 'bangla_name');
+        $hasSymptomNameBn = Schema::hasColumn('symptoms', 'name_bn');
+        
         $recentSymptoms = UserSymptom::query()
             ->where('user_id', $user->id)
-            ->with('symptom:id,name,bangla_name')
+            ->with('symptom:id,name' . ($hasSymptomBangla ? ',bangla_name' : ($hasSymptomNameBn ? ',name_bn' : '')))
             ->latest('recorded_at')
             ->limit(8)
             ->get()
-            ->map(function (UserSymptom $item) {
+            ->map(function (UserSymptom $item) use ($hasSymptomBangla, $hasSymptomNameBn) {
+                $englishName = trim((string) ($item->symptom?->name ?? ''));
+                $displayName = $item->symptom_display_name;
+                
+                // If display name is empty or just English, try to get Bangla from available column
+                if ($displayName === $englishName && $englishName !== '') {
+                    if ($hasSymptomBangla && !empty($item->symptom?->bangla_name)) {
+                        $displayName = $item->symptom->bangla_name . ' (' . $englishName . ')';
+                    } elseif ($hasSymptomNameBn && !empty($item->symptom?->name_bn)) {
+                        $displayName = $item->symptom->name_bn . ' (' . $englishName . ')';
+                    }
+                }
+                
                 return [
-                    'name' => $item->symptom?->display_name ?? $item->symptom_display_name,
+                    'name' => $displayName ?? $englishName,
                     'severity' => $item->severity_level,
                     'recorded_at' => optional($item->recorded_at)->toDateString(),
                 ];
