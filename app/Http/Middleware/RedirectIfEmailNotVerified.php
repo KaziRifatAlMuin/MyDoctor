@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\Route;
 
 class RedirectIfEmailNotVerified
 {
@@ -35,7 +36,12 @@ class RedirectIfEmailNotVerified
 
         $user->sendEmailVerificationNotification();
 
-        return redirect()->route('verification.notice')
+        if (Route::has('verification.notice')) {
+            return redirect()->route('verification.notice')
+                ->with('status', 'Verification link sent to ' . $user->email . '. Please verify your email before continuing.');
+        }
+
+        return redirect()->route('home')
             ->with('status', 'Verification link sent to ' . $user->email . '. Please verify your email before continuing.');
     }
 }

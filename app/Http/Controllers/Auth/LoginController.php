@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use App\Models\User;
+use Illuminate\Support\Facades\Route;
 
 class LoginController extends Controller
 {
@@ -50,7 +51,12 @@ class LoginController extends Controller
                 $user->sendEmailVerificationNotification();
                 Auth::login($user);
 
-                return redirect()->route('verification.notice')
+                if (Route::has('verification.notice')) {
+                    return redirect()->route('verification.notice')
+                        ->with('status', 'Verification link sent to ' . $user->email . '. Please verify your email before logging in.');
+                }
+
+                return redirect()->route('home')
                     ->with('status', 'Verification link sent to ' . $user->email . '. Please verify your email before logging in.');
             }
 
