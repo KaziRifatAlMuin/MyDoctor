@@ -1,27 +1,39 @@
 <div class="comment" id="comment-{{ $comment->id }}" data-comment-id="{{ $comment->id }}" style="display:flex;gap:12px;align-items:flex-start;">
     @php
         $adminReadOnlyCommunity = $adminReadOnlyCommunity ?? false;
-        // For admin community page, admins should see delete buttons
-        $isAdminOnAdminPage = Auth::check() && Auth::user()->isAdmin() && $adminReadOnlyCommunity;
-        // Show delete button for: comment owner OR admin (anywhere)
-        $canDeleteComment = Auth::check() && (Auth::id() === $comment->user_id || Auth::user()->isAdmin());
-        // Show edit button only for comment owner
-        $canEditComment = Auth::check() && Auth::id() === $comment->user_id;
-        // Hide like button for admins on admin page (optional)
+        $isAdminReadOnly = Auth::check() && Auth::user()->isAdmin() && $adminReadOnlyCommunity;
+        $isAdminManager = Auth::check() && Auth::user()->isAdmin();
+        
+        // Check if comment user exists
+        $commentUser = $comment->user;
+        $userName = $commentUser ? $commentUser->name : 'Deleted User';
+        $userId = $commentUser ? $commentUser->id : 0;
+        $userPicture = $commentUser ? $commentUser->picture : null;
+        
+        // Check if current user can delete/edit
+        $canDeleteComment = Auth::check() && (Auth::id() === $userId || Auth::user()->isAdmin());
+        $canEditComment = Auth::check() && Auth::id() === $userId;
         $showLikeButton = Auth::check() && !Auth::user()->isAdmin();
     @endphp
-    <div class="comment-avatar" onclick="showUserModal({{ $comment->user->id }})" style="cursor: pointer; flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%; overflow: hidden;">
-        @if($comment->user->picture)
-            <img src="{{ asset('storage/' . $comment->user->picture) }}" alt="{{ $comment->user->name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+    
+    <div class="comment-avatar" onclick="{{ $userId ? 'showUserModal(' . $userId . ')' : 'return false;' }}" style="cursor: pointer; flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%; overflow: hidden;">
+        @if($userPicture)
+            <img src="{{ asset('storage/' . $userPicture) }}" alt="{{ $userName }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
         @else
             <div class="avatar-placeholder-small" style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 16px;">
-                {{ strtoupper(substr($comment->user->name, 0, 1)) }}
+                {{ $userName ? strtoupper(substr($userName, 0, 1)) : '?' }}
             </div>
         @endif
     </div>
+    
     <div class="comment-content" style="flex:1;min-width:0;">
         <div class="comment-header" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <span class="comment-author" onclick="showUserModal({{ $comment->user->id }})" style="cursor: pointer;font-weight:600;color:#1a1a1a;font-size:14px;text-decoration:underline;hover:color:#1877f2;">{{ $comment->user->name }}</span>
+            <span class="comment-author" onclick="{{ $userId ? 'showUserModal(' . $userId . ')' : 'return false;' }}" style="cursor: pointer;font-weight:600;color:#1a1a1a;font-size:14px;text-decoration:underline;hover:color:#1877f2;">
+                {{ $userName }}
+                @if(!$userId)
+                    <span style="font-size: 11px; color: #dc3545; margin-left: 4px;">(Deleted User)</span>
+                @endif
+            </span>
             <span class="comment-time" style="font-size:12px;color:#65676b;">{{ $comment->created_at->diffForHumans() }}</span>
             
             <!-- Comment Actions - Edit and Delete -->
@@ -89,7 +101,7 @@
         @endif
         
         <!-- Like Button -->
-        @if($showLikeButton)
+        @if($showLikeButton && $userId)
             <button class="comment-like-btn {{ $comment->likes()->where('user_id', Auth::id())->exists() ? 'liked' : '' }}" 
                     onclick="toggleCommentLike({{ $comment->id }}, this)"
                     style="background: none; border: none; padding: 2px 0; color: #65676b; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; outline: none;">
