@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $disease->disease_name . ' - ' . __('ui.disease.disease_profile'))
+@section('title', $disease->display_name . ' - ' . __('ui.disease.disease_profile'))
 
 @section('content')
 <div style="background: linear-gradient(180deg, #eef4ff 0%, #f8fbff 60%, #ffffff 100%); min-height: 100vh; padding: 2rem 0 4rem;">
@@ -10,7 +10,7 @@
                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
                     <div>
                         <p class="mb-2" style="font-size: .85rem; opacity: .9;">{{ __('ui.disease.disease_profile') }}</p>
-                        <h1 class="mb-2" style="font-size: 2rem; font-weight: 800;">{{ $disease->disease_name }}</h1>
+                        <h1 class="mb-2" style="font-size: 2rem; font-weight: 800;">{{ $disease->display_name }}</h1>
                         <p class="mb-0" style="opacity: 0.92;">{{ $disease->description ?: __('ui.disease.public_disease_details') }}</p>
                     </div>
                     <div class="d-flex gap-2">
@@ -32,7 +32,7 @@
                             <div class="d-flex flex-wrap gap-2">
                                 @foreach($disease->symptoms as $symptom)
                                     <a href="{{ route('public.symptoms.show', $symptom) }}" class="badge rounded-pill text-bg-light border text-decoration-none px-3 py-2">
-                                        {{ $symptom->name }}
+                                        {{ $symptom->display_name }}
                                     </a>
                                 @endforeach
                             </div>

@@ -73,13 +73,10 @@
                                                 <div>
                                                     @if($symptom->symptom)
                                                         <a href="{{ route('public.symptoms.show', $symptom->symptom) }}" class="fw-semibold text-decoration-none">
-                                                            {{ $symptom->symptom_name }}
+                                                            {{ $symptom->symptom_display_name }}
                                                         </a>
                                                     @else
-                                                        <span class="fw-semibold">{{ $symptom->symptom_name }}</span>
-                                                    @endif
-                                                    @if (!empty($symptomsBn[$symptom->symptom_name]))
-                                                        <span class="bn-label d-block">({{ $symptomsBn[$symptom->symptom_name] }})</span>
+                                                        <span class="fw-semibold">{{ $symptom->symptom_display_name }}</span>
                                                     @endif
                                                 </div>
                                             </div>
@@ -109,7 +106,7 @@
                                         <td>
                                             <div class="action-btn-group">
                                                 <button type="button" class="btn btn-sm btn-outline-primary"
-                                                    onclick="openEditSymptom({{ $symptom->id }}, '{{ addslashes($symptom->symptom_name) }}', {{ $symptom->severity_level ?? 5 }}, '{{ $symptom->recorded_at->format('Y-m-d\TH:i') }}', '{{ addslashes($symptom->note ?? '') }}')">
+                                                    onclick="openEditSymptom({{ $symptom->id }}, '{{ addslashes($symptom->symptom_display_name ?? $symptom->symptom_name) }}', {{ $symptom->severity_level ?? 5 }}, '{{ $symptom->recorded_at->format('Y-m-d\TH:i') }}', '{{ addslashes($symptom->note ?? '') }}')">
                                                     <i class="fas fa-edit"></i> {{ __('ui.health.edit') }}
                                                 </button>
                                                 <form action="{{ route('health.symptom.destroy', $symptom) }}" method="POST"

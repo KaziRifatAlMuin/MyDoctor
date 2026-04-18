@@ -59,6 +59,11 @@ Route::get('/', function () {
     return view('home', compact('homeStats'));
 })->name('home');
 
+// Banned page for deactivated users
+Route::get('/banned', function () {
+    return view('auth.banned');
+})->name('banned');
+
 // Main navigation pages
 Route::view('/help', 'help')->name('help');
 
@@ -131,7 +136,7 @@ Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 've
     ->middleware('signed')
     ->name('verification.verify');
 
-Route::middleware(['auth', \App\Http\Middleware\RedirectIfEmailNotVerified::class])->group(function () {
+Route::middleware(['auth', \App\Http\Middleware\EnsureUserIsActive::class, \App\Http\Middleware\RedirectIfEmailNotVerified::class])->group(function () {
     Route::get('/email/verify', [EmailVerificationController::class, 'notice'])->name('verification.notice');
     Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])->name('verification.resend');
 });
@@ -140,11 +145,11 @@ Route::middleware(['auth', \App\Http\Middleware\RedirectIfEmailNotVerified::clas
 | Authenticated Routes
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', \App\Http\Middleware\RedirectIfEmailNotVerified::class])->group(function () {
+Route::middleware(['auth', \App\Http\Middleware\EnsureUserIsActive::class, \App\Http\Middleware\RedirectIfEmailNotVerified::class])->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 });
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', \App\Http\Middleware\EnsureUserIsActive::class, 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/home', function () {
         if (auth()->user()?->isAdmin()) {
@@ -270,7 +275,7 @@ Route::prefix('health')->name('health.')->group(function () {
         return redirect()->route('help');
     })->name('tips');
     
-    Route::middleware(['auth', 'verified'])->group(function () {
+    Route::middleware(['auth', \App\Http\Middleware\EnsureUserIsActive::class, 'verified'])->group(function () {
         Route::get('/records', function () {
             return redirect(route('health', [], false) . '#logs');
         })->name('records');
@@ -383,7 +388,7 @@ Route::prefix('medicine')->name('medicine.')->middleware(['auth', 'verified'])->
 });
 
 // User routes (auth required)
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', \App\Http\Middleware\EnsureUserIsActive::class, 'verified'])->group(function () {
     Route::get('/users', [App\Http\Controllers\UserController::class, 'index'])->name('users.index');
 });
 
@@ -391,14 +396,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::get('/user/{user}', [App\Http\Controllers\UserController::class, 'publicShow'])->name('users.show');
 
 // Admin user update route
-Route::middleware(['auth', 'admin', \App\Http\Middleware\RedirectIfEmailNotVerified::class])->patch('/user/{user}', [App\Http\Controllers\UserController::class, 'update'])->name('users.update');
+Route::middleware(['auth', \App\Http\Middleware\EnsureUserIsActive::class, 'admin', \App\Http\Middleware\RedirectIfEmailNotVerified::class])->patch('/user/{user}', [App\Http\Controllers\UserController::class, 'update'])->name('users.update');
 
 /*
 |--------------------------------------------------------------------------
 | Admin Routes
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'admin', \App\Http\Middleware\RedirectIfEmailNotVerified::class])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', \App\Http\Middleware\EnsureUserIsActive::class, 'admin', \App\Http\Middleware\RedirectIfEmailNotVerified::class])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/users', [AdminManagementController::class, 'usersIndex'])->name('users.index');
     Route::post('/users', [AdminManagementController::class, 'usersStore'])->name('users.store');
@@ -447,7 +452,7 @@ Route::middleware(['auth', 'admin', \App\Http\Middleware\RedirectIfEmailNotVerif
 | Admin API Routes
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'admin', \App\Http\Middleware\RedirectIfEmailNotVerified::class])->prefix('api/users')->group(function () {
+Route::middleware(['auth', \App\Http\Middleware\EnsureUserIsActive::class, 'admin', \App\Http\Middleware\RedirectIfEmailNotVerified::class])->prefix('api/users')->group(function () {
     Route::get('{id}', function ($id) {
         $user = \App\Models\User::with('address')->findOrFail($id);
         return response()->json($user->only([

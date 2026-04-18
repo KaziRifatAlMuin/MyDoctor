@@ -651,7 +651,7 @@
                         <div class="hero-disease-tags">
                             @forelse($heroDiseases as $disease)
                                 <a href="{{ route('public.disease.show', $disease) }}" class="hero-disease-tag text-decoration-none">
-                                    {{ $disease->disease_name }}
+                                    {{ $disease->display_name }}
                                 </a>
                             @empty
                                 <span class="hero-disease-tag" style="background: rgba(255,255,255,0.14); color: #f1f5f9; border-color: rgba(255,255,255,0.25);">
@@ -1258,11 +1258,26 @@
 
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    @php
+        $diseaseDropdownData = $allDiseases->map(function ($d) {
+            return [
+                'id' => $d->id,
+                'display_name' => $d->display_name,
+            ];
+        })->values();
+
+        $diseaseEditData = $allDiseases->map(function ($d) {
+            return [
+                'id' => $d->id,
+                'display_name' => $d->display_name,
+            ];
+        })->values();
+    @endphp
     <script>
         // Symptom search dropdown
         document.addEventListener('DOMContentLoaded', function() {
             const symptoms = @json($symptomsList);
-            const diseases = @json($allDiseases);
+            const diseases = @json($diseaseDropdownData, JSON_UNESCAPED_UNICODE);
 
             // ── Symptom Search ──
             const symptomSearch = document.getElementById('symptomSearchInput');
@@ -1323,7 +1338,7 @@
             function renderDiseaseDropdown(query = '') {
                 diseaseDropdown.innerHTML = '';
                 const matches = query
-                    ? diseases.filter(d => d.disease_name.toLowerCase().includes(query))
+                    ? diseases.filter(d => (d.display_name || '').toLowerCase().includes(query))
                     : diseases;
                 
                 if (matches.length) {
@@ -1332,10 +1347,10 @@
                         opt.className = 'dropdown-item';
                         opt.href = '#';
                         opt.style.cssText = 'font-size:0.85rem; padding:0.45rem 1rem; white-space:normal;';
-                        opt.innerHTML = disease.disease_name;
+                        opt.innerHTML = disease.display_name;
                         opt.addEventListener('click', (e) => {
                             e.preventDefault();
-                            diseaseSearch.value = disease.disease_name;
+                            diseaseSearch.value = disease.display_name;
                             diseaseHidden.value = disease.id;
                             diseaseDropdown.style.display = 'none';
                         });
@@ -1558,7 +1573,7 @@
         // Initialize data structures for edit functions (page-specific overrides)
         window.metricFieldDefs = @json(collect($metricConfig)->map(fn($c) => $c['js_fields']));
         window.symptomsList = @json($symptomsList, JSON_UNESCAPED_UNICODE);
-        const diseasesData = @json($allDiseases->map(fn($d) => ['id' => $d->id, 'name' => $d->disease_name]), JSON_UNESCAPED_UNICODE);
+        const diseasesData = @json($diseaseEditData, JSON_UNESCAPED_UNICODE);
 
         // ── Tab Persistence ──
         const editUserForm = document.querySelector('.user-update-form');

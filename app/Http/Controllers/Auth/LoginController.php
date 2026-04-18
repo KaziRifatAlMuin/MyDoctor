@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use App\Models\User;
+use Illuminate\Support\Facades\Route;
 
 class LoginController extends Controller
 {
@@ -37,8 +38,10 @@ class LoginController extends Controller
             'redirect' => 'nullable|string|max:2048',
         ]);
 
-        // Check if user exists
-        $user = User::where('email', $request->email)->first();
+        // Check if user exists (including deactivated users, so we can show the right message)
+        $user = User::withoutGlobalScope('active_users')
+            ->where('email', $request->email)
+            ->first();
         $bypassVerification = $user && (
             $user->email === 'admin@mydoctor.com' || $user->isAdmin()
         );
@@ -48,7 +51,12 @@ class LoginController extends Controller
                 $user->sendEmailVerificationNotification();
                 Auth::login($user);
 
-                return redirect()->route('verification.notice')
+                if (Route::has('verification.notice')) {
+                    return redirect()->route('verification.notice')
+                        ->with('status', 'Verification link sent to ' . $user->email . '. Please verify your email before logging in.');
+                }
+
+                return redirect()->route('home')
                     ->with('status', 'Verification link sent to ' . $user->email . '. Please verify your email before logging in.');
             }
 
@@ -59,9 +67,7 @@ class LoginController extends Controller
 
         // Check if user is active
         if ($user && !$user->is_active) {
-            return back()->withErrors([
-                'email' => 'Your account has been deactivated. Please contact support.',
-            ])->onlyInput('email');
+            return redirect()->route('banned');
         }
 
         // Attempt login with lowercase 'email' to match database column
@@ -71,20 +77,8 @@ class LoginController extends Controller
         ], $request->filled('remember'))) {
             
             $request->session()->regenerate();
-            
-            if ($bypassVerification) {
-                return redirect()->to($this->resolveRedirectPath($request, $this->redirectTo));
-            }
 
-            // Force re-verification on every login for non-admin users
-            $user = Auth::user();
-            $user->email_verified_at = null;
-            $user->save();
-            
-            $user->sendEmailVerificationNotification();
-            
-            return redirect()->route('verification.notice')
-                ->with('status', 'Verification link sent to ' . $user->email . '. Please verify your email before logging in.');
+            return redirect()->to($this->resolveRedirectPath($request, $this->redirectTo));
         }
 
         return back()->withErrors([

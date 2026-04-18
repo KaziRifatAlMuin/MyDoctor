@@ -240,7 +240,9 @@ class SuggestionsController extends Controller
         // ── Symptom-based ──
         $severeSymptoms = $recentSymptoms->where('severity_level', '>=', 7);
         if ($severeSymptoms->isNotEmpty()) {
-            $names = $severeSymptoms->map(fn($row) => $row->symptom_name)->filter()->unique()->take(3)->implode(', ');
+            $names = $severeSymptoms->map(function ($row) {
+                return $row->symptom_display_name ?? $row->symptom_name ?? null;
+            })->filter()->unique()->take(3)->implode(', ');
             $suggestions[] = [
                 'icon' => 'fa-exclamation-triangle',
                 'color' => 'danger',
@@ -262,7 +264,9 @@ class SuggestionsController extends Controller
 
         // ── Condition-based ──
         foreach ($activeConditions as $cond) {
-            $name = $cond->disease->disease_name ?? 'Unknown';
+            $name = $cond->disease->display_name
+                ?? $cond->disease->disease_name
+                ?? 'Unknown';
             $lowerName = strtolower($name);
 
             if (str_contains($lowerName, 'diabetes')) {

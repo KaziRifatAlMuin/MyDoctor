@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Feature\LoginTest" file="C:\Users\USER\OneDrive\My Codes\GitHub\MyDoctor\tests\Feature\LoginTest.php" tests="9" assertions="25" errors="0" failures="1" skipped="0" time="1.300415">
+    <testcase name="login_page_is_accessible_to_guests" file="C:\Users\USER\OneDrive\My Codes\GitHub\MyDoctor\tests\Feature\LoginTest.php" line="15" class="Tests\Feature\LoginTest" classname="Tests.Feature.LoginTest" assertions="1" time="0.548793"/>
+    <testcase name="user_can_login_with_correct_credentials" file="C:\Users\USER\OneDrive\My Codes\GitHub\MyDoctor\tests\Feature\LoginTest.php" line="22" class="Tests\Feature\LoginTest" classname="Tests.Feature.LoginTest" assertions="5" time="0.083293"/>
+    <testcase name="deactivated_user_cannot_login_and_sees_deactivated_message" file="C:\Users\USER\OneDrive\My Codes\GitHub\MyDoctor\tests\Feature\LoginTest.php" line="40" class="Tests\Feature\LoginTest" classname="Tests.Feature.LoginTest" assertions="4" time="0.052406">
+      <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\LoginTest::deactivated_user_cannot_login_and_sees_deactivated_message&#13;
+Failed asserting that '&lt;!DOCTYPE html&gt;\n
+&lt;html&gt;\n
+    &lt;head&gt;\n
+        &lt;meta charset="UTF-8" /&gt;\n
+        &lt;meta http-equiv="refresh" content="0;url='http://localhost'" /&gt;\n
+\n
+        &lt;title&gt;Redirecting to http://localhost&lt;/title&gt;\n
+    &lt;/head&gt;\n
+    &lt;body&gt;\n
+        Redirecting to &lt;a href="http://localhost"&gt;http://localhost&lt;/a&gt;.\n
+    &lt;/body&gt;\n
+&lt;/html&gt;' [ASCII](length: 310) contains "You Are Banned" [ASCII](length: 14).
+&#13;
+C:\Users\USER\OneDrive\My Codes\GitHub\MyDoctor\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+C:\Users\USER\OneDrive\My Codes\GitHub\MyDoctor\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:709
+C:\Users\USER\OneDrive\My Codes\GitHub\MyDoctor\tests\Feature\LoginTest.php:60</failure>
+    </testcase>
+    <testcase name="login_fails_with_wrong_password" file="C:\Users\USER\OneDrive\My Codes\GitHub\MyDoctor\tests\Feature\LoginTest.php" line="64" class="Tests\Feature\LoginTest" classname="Tests.Feature.LoginTest" assertions="3" time="0.237104"/>
+    <testcase name="login_fails_with_nonexistent_email" file="C:\Users\USER\OneDrive\My Codes\GitHub\MyDoctor\tests\Feature\LoginTest.php" line="82" class="Tests\Feature\LoginTest" classname="Tests.Feature.LoginTest" assertions="3" time="0.236151"/>
+    <testcase name="login_requires_email_field" file="C:\Users\USER\OneDrive\My Codes\GitHub\MyDoctor\tests\Feature\LoginTest.php" line="94" class="Tests\Feature\LoginTest" classname="Tests.Feature.LoginTest" assertions="2" time="0.048883"/>
+    <testcase name="login_requires_password_field" file="C:\Users\USER\OneDrive\My Codes\GitHub\MyDoctor\tests\Feature\LoginTest.php" line="105" class="Tests\Feature\LoginTest" classname="Tests.Feature.LoginTest" assertions="2" time="0.034955"/>
+    <testcase name="authenticated_user_is_redirected_away_from_login_page" file="C:\Users\USER\OneDrive\My Codes\GitHub\MyDoctor\tests\Feature\LoginTest.php" line="116" class="Tests\Feature\LoginTest" classname="Tests.Feature.LoginTest" assertions="2" time="0.029427"/>
+    <testcase name="user_can_logout" file="C:\Users\USER\OneDrive\My Codes\GitHub\MyDoctor\tests\Feature\LoginTest.php" line="126" class="Tests\Feature\LoginTest" classname="Tests.Feature.LoginTest" assertions="3" time="0.029402"/>
+  </testsuite>
+</testsuites>

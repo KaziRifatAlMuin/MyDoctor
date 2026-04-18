@@ -345,7 +345,7 @@
                         <div class="d-flex flex-wrap gap-2 mt-2">
                             @forelse($profileDiseases as $disease)
                                 <a href="{{ route('public.disease.show', $disease) }}" class="profile-disease-tag text-decoration-none">
-                                    {{ $disease->disease_name }}
+                                    {{ $disease->display_name }}
                                 </a>
                             @empty
                                 <span class="profile-disease-tag" style="background: #f1f5f9; color: #64748b; border-color: #e2e8f0;">

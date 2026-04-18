@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Disease;
+use App\Models\Translation;
+use Illuminate\Support\Facades\Schema;
 
 class DiseaseSeeder extends Seeder
 {
@@ -12,13 +14,24 @@ class DiseaseSeeder extends Seeder
         $diseases = array_slice(array_keys(config('health.diseases', [])), 0, 50);
         
         foreach ($diseases as $english) {
+            $bangla = Translation::banglaFor(Translation::TYPE_DISEASE, $english, $english);
+
+            $payload = [
+                'description' => $english . ' description',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+
+            if (Schema::hasColumn('diseases', 'bangla_name')) {
+                $payload['bangla_name'] = $bangla;
+            }
+            if (Schema::hasColumn('diseases', 'disease_name_bn')) {
+                $payload['disease_name_bn'] = $bangla;
+            }
+
             Disease::updateOrCreate(
                 ['disease_name' => $english],
-                [
-                    'description' => $english . ' description',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]
+                $payload
             );
         }
 

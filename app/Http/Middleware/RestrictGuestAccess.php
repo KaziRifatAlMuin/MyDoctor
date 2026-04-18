@@ -16,6 +16,7 @@ class RestrictGuestAccess
 
         $allowedRouteNames = [
             'home',
+            'banned',
             'help',
             'login',
             'register',
@@ -31,6 +32,7 @@ class RestrictGuestAccess
             'terms.service',
             'cookie.policy',
             'sitemap',
+            'banned',
             'public.diseases.index',
             'public.symptoms.index',
             'public.disease.show',

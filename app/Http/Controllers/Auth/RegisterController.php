@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 
 class RegisterController extends Controller
 {
@@ -51,7 +52,12 @@ class RegisterController extends Controller
         // Log the user in so they can see the verification notice page
         Auth::login($user);
 
-        return redirect()->route('verification.notice')
+        if (Route::has('verification.notice')) {
+            return redirect()->route('verification.notice')
+                ->with('status', 'Registration successful! A verification link has been sent to ' . $user->email . '. Please verify your email to continue.');
+        }
+
+        return redirect()->route('home')
             ->with('status', 'Registration successful! A verification link has been sent to ' . $user->email . '. Please verify your email to continue.');
     }
 

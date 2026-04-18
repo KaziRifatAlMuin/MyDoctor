@@ -51,9 +51,6 @@
                             <a href="{{ $ctaPrimaryUrl }}" class="btn btn-teal rounded-pill px-4 px-md-5 py-2 py-md-3">
                                 <i class="fas fa-heartbeat me-2"></i>{{ $isAuthenticated ? __('ui.home.open_health') : __('ui.home.login_to_continue') }}
                             </a>
-                            <a href="{{ $ctaSecondaryUrl }}" class="btn btn-outline-teal rounded-pill px-4 px-md-5 py-2 py-md-3">
-                                <i class="fas fa-users me-2"></i>{{ $isAuthenticated ? __('ui.home.open_community') : __('ui.home.login_for_community') }}
-                            </a>
                         </div>
                         <div class="hero-inline-stats">
                             <div class="hero-inline-stat">

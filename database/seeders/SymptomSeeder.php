@@ -3,7 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\Symptom;
+use App\Models\Translation;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 
 class SymptomSeeder extends Seeder
 {
@@ -73,7 +75,20 @@ class SymptomSeeder extends Seeder
             ->values();
 
         foreach ($allSymptoms as $symptomName) {
-            Symptom::firstOrCreate(['name' => $symptomName]);
+            $bangla = Translation::banglaFor(Translation::TYPE_SYMPTOM, $symptomName, $symptomName);
+
+            $payload = [];
+            if (Schema::hasColumn('symptoms', 'bangla_name')) {
+                $payload['bangla_name'] = $bangla;
+            }
+            if (Schema::hasColumn('symptoms', 'name_bn')) {
+                $payload['name_bn'] = $bangla;
+            }
+
+            Symptom::updateOrCreate(
+                ['name' => $symptomName],
+                $payload
+            );
         }
 
         $this->command?->info('Symptoms seeded: ' . $allSymptoms->count());

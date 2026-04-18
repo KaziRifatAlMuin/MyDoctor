@@ -214,6 +214,7 @@
             <form class="create-grid" method="POST" action="{{ route('admin.symptoms.store') }}">
                 @csrf
                 <input class="form-input" type="text" name="name" placeholder="{{ __('ui.admin_symptoms.new_symptom_name') }}" required>
+                <input class="form-input" type="text" name="name_bn" placeholder="Bangla name (বাংলা)">
                 <button class="btn-main" type="submit"><i class="fas fa-plus"></i>{{ __('ui.admin_symptoms.create') }}</button>
             </form>
         </section>
@@ -221,7 +222,7 @@
         <div class="cards-grid">
             @forelse ($symptoms as $symptom)
                 <article class="item-card">
-                    <h2 class="item-title">{{ $symptom->name }}</h2>
+                    <h2 class="item-title">{{ $symptom->display_name }}</h2>
                     <div class="item-badges">
                         <span class="item-badge">{{ number_format($symptom->user_symptoms_count) }} {{ __('ui.admin_symptoms.user_logs') }}</span>
                         <span class="item-badge">{{ number_format($symptom->diseases_count) }} {{ __('ui.admin_symptoms.diseases') }}</span>
@@ -243,6 +244,9 @@
                             @method('PATCH')
                             <div class="mb-2">
                                 <input class="form-input" type="text" name="name" value="{{ $symptom->name }}" required>
+                            </div>
+                            <div class="mb-2">
+                                <input class="form-input" type="text" name="name_bn" value="{{ $symptom->bangla_name }}" placeholder="Bangla name (বাংলা)">
                             </div>
                             <button class="btn-main" type="submit"><i class="fas fa-floppy-disk"></i>{{ __('ui.admin_symptoms.save') }}</button>
                         </form>

@@ -767,6 +767,16 @@
 
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    @php
+        $diseaseDropdownData = $allDiseases->map(function ($d) {
+            return [
+                'id' => $d->id,
+                'name' => $d->disease_name,
+                'bn' => $d->bangla_name,
+                'display_name' => $d->display_name,
+            ];
+        })->values();
+    @endphp
     <script>
         document.addEventListener('DOMContentLoaded', function() {
 
@@ -775,7 +785,7 @@
              * ═══════════════════════════════════════════════════════ */
             window.metricFieldDefs = @json(collect($metricConfig)->map(fn($c) => $c['js_fields']));
             window.symptomsList    = @json($symptomsList, JSON_UNESCAPED_UNICODE);
-            const diseasesData    = @json($allDiseases->map(fn($d) => ['id' => $d->id, 'name' => $d->disease_name]), JSON_UNESCAPED_UNICODE);
+            const diseasesData    = @json($diseaseDropdownData, JSON_UNESCAPED_UNICODE);
 
 
             /* ═══════════════════════════════════════════════════════
@@ -845,7 +855,7 @@
              *  DISEASE searchable dropdown
              * ═══════════════════════════════════════════════════════ */
             const diseaseItems = diseasesData.map(d => ({
-                label: d.name, sub: d.bn || '', value: String(d.id)
+                label: d.display_name || d.name, sub: d.bn || '', value: String(d.id)
             }));
             const diseaseSearch = document.getElementById('diseaseSearchInput');
             const diseaseDDList = document.getElementById('diseaseDropdownList');

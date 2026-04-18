@@ -24,10 +24,6 @@ class CommunityController extends Controller
      */
     public function home()
     {
-        if (Auth::check() && Auth::user()->isAdmin()) {
-            return redirect()->route('admin.community.posts.index');
-        }
-
         $userStarredDiseaseIds = Auth::check()
             ? Auth::user()->starredDiseases()->pluck('disease_id')->all()
             : [];
@@ -547,7 +543,9 @@ class CommunityController extends Controller
                     ],
                     'disease' => $post->disease ? [
                         'id' => $post->disease->id,
-                        'name' => $post->disease->disease_name,
+                        'name' => $post->disease->display_name,
+                        'raw_name' => $post->disease->disease_name,
+                        'bangla_name' => $post->disease->bangla_name,
                     ] : null,
                     'user_liked' => Auth::check() ? $post->likes()->where('user_id', Auth::id())->where('is_starred', false)->exists() : false,
                     'is_owner' => Auth::check() && $post->user_id === Auth::id(),
@@ -1231,11 +1229,11 @@ class CommunityController extends Controller
                     'type' => 'starred_disease_post',
                     'notifiable_type' => Post::class,
                     'notifiable_id' => $post->id,
-                    'message' => "New post in your starred disease: " . ($post->disease?->disease_name ?? 'Unknown Disease'),
+                    'message' => "New post in your starred disease: " . ($post->disease?->display_name ?? 'Unknown Disease'),
                     'data' => [
                         'post_id' => $post->id,
                         'disease_id' => $post->disease_id,
-                        'disease_name' => $post->disease?->disease_name,
+                        'disease_name' => $post->disease?->display_name,
                         'post_preview' => $preview,
                     ],
                 ]);
