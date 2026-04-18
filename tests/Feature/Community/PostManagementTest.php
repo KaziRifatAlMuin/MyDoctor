@@ -191,10 +191,10 @@ class PostManagementTest extends TestCase
         $response = $this->delete("/community/comments/{$comment->id}");
 
         $response->assertStatus(403);
-        $response->assertJson([
-            'success' => false,
-            'message' => 'You can only delete your own comments'
-        ]);
+$response->assertJson([
+    'success' => false,
+    'message' => 'You can only delete your own comments unless you are an admin'
+]);
 
         $this->assertDatabaseHas('comments', [
             'id' => $comment->id

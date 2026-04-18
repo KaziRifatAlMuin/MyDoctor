@@ -51,7 +51,7 @@
             <!-- Action Buttons - Star, Report, Edit, Delete, Approve -->
             @auth
                 <div style="display: flex; gap: 8px;">
-                    <!-- Star Button -->
+                    <!-- Star Button - Hide for admin -->
                     @if(! $isAdminReadOnly && !$isAdmin)
                         <button onclick="toggleStar({{ $post->id }}, this)" 
                                 id="star-btn-{{ $post->id }}" 
@@ -61,8 +61,8 @@
                         </button>
                     @endif
                     
-                    <!-- Report Button -->
-                    @if(! $isAdminReadOnly)
+                    <!-- Report Button - Hide for admin -->
+                    @if(! $isAdminReadOnly && !$isAdmin)
                         <button onclick="reportPost({{ $post->id }})" 
                                 style="width: 34px; height: 34px; border: none; border-radius: 50%; background: #f0f2f5; color: #dc3545; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" 
                                 title="{{ __('ui.community.report_post') }}">
@@ -79,8 +79,8 @@
                         </button>
                     @endif
                     
-                    <!-- Edit Button (Owner only) -->
-                    @if($isOwner && ! $isAdminReadOnly)
+                    <!-- Edit Button (Owner only - not for admin) -->
+                    @if($isOwner && ! $isAdminReadOnly && !$isAdmin)
                         <button onclick="editPost({{ $post->id }})" 
                                 style="width: 34px; height: 34px; border: none; border-radius: 50%; background: #f0f2f5; color: #1877f2; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" 
                                 title="{{ __('ui.community.edit_post') }}">
@@ -213,7 +213,7 @@
         <!-- Post Action Buttons -->
         <div style="display: flex; gap: 8px; margin: 12px 16px 0 16px; padding: 0;">
             @auth
-                @if(! $isAdminReadOnly)
+                @if(! $isAdminReadOnly && !$isAdmin)
                     <button onclick="toggleLike({{ $post->id }}, this)" id="like-btn-{{ $post->id }}" style="flex: 1; padding: 10px; border: none; border-radius: 6px; background: #f0f2f5; color: #1a1a1a; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;" class="{{ $userLiked ? 'liked' : '' }}">
                         <i class="{{ $userLiked ? 'fas' : 'far' }} fa-heart" style="{{ $userLiked ? 'color: #dc3545;' : '' }}"></i>
                         <span class="like-count">{{ $post->like_count }}</span>
@@ -264,7 +264,7 @@
 
     <!-- Sticky Comment Form at Bottom -->
     @auth
-        @if(! $isAdminReadOnly)
+        @if(! $isAdminReadOnly && !$isAdmin)
         <div style="border-top: 1px solid #e4e6eb; padding: 12px 16px; background: white; flex-shrink: 0;">
             <form id="modal-comment-form-{{ $post->id }}" onsubmit="submitModalComment(event, {{ $post->id }}); return false;">
                 @csrf

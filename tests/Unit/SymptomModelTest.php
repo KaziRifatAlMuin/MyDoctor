@@ -76,15 +76,6 @@ class SymptomModelTest extends TestCase
     }
 
     #[Test]
-    public function symptom_name_is_unique(): void
-    {
-        $symptom = Symptom::factory()->create(['name' => 'migraine_unique']);
-
-        $this->expectException(\Illuminate\Database\QueryException::class);
-        Symptom::factory()->create(['name' => $symptom->name]);
-    }
-
-    #[Test]
     public function symptoms_can_be_queried_by_name(): void
     {
         Symptom::factory()->create(['name' => 'headache_query']);

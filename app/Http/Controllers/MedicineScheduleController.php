@@ -65,11 +65,38 @@ class MedicineScheduleController extends Controller
             'dosage_time_binary' => 'nullable|string|size:48',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
-            'is_active' => 'sometimes|boolean'
+            'is_active' => 'sometimes|boolean',
+            'times' => 'nullable|array',
         ]);
 
         // Verify medicine belongs to user
         $medicine = Medicine::where('user_id', Auth::id())->findOrFail($validated['medicine_id']);
+        
+        // Get selected times from request
+        $selectedTimes = $request->input('times', []);
+        $expectedCount = isset($validated['frequency_per_day']) ? (int) $validated['frequency_per_day'] : null;
+        
+        // Validate selected times count matches frequency_per_day
+        if ($expectedCount !== null && !empty($selectedTimes)) {
+            $selectedCount = count($selectedTimes);
+            
+            if ($selectedCount != $expectedCount) {
+                return back()->withErrors([
+                    'frequency_per_day' => "You selected {$selectedCount} time(s) but specified frequency of {$expectedCount} time(s) per day. Please select exactly {$expectedCount} time(s)."
+                ])->withInput();
+            }
+        }
+        
+        // Also validate via binary string if times array is empty but binary is provided
+        if ($expectedCount !== null && empty($selectedTimes) && isset($validated['dosage_time_binary'])) {
+            $binaryCount = substr_count($validated['dosage_time_binary'], '1');
+            
+            if ($binaryCount != $expectedCount) {
+                return back()->withErrors([
+                    'frequency_per_day' => "The binary time selection has {$binaryCount} time(s) but you specified frequency of {$expectedCount} time(s) per day. Please select exactly {$expectedCount} time(s)."
+                ])->withInput();
+            }
+        }
         
         $validated['is_active'] = $request->has('is_active');
         
@@ -122,8 +149,35 @@ class MedicineScheduleController extends Controller
             'dosage_time_binary' => 'nullable|string|size:48',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
-            'is_active' => 'sometimes|boolean'
+            'is_active' => 'sometimes|boolean',
+            'times' => 'nullable|array',
         ]);
+
+        // Get selected times from request
+        $selectedTimes = $request->input('times', []);
+        $expectedCount = isset($validated['frequency_per_day']) ? (int) $validated['frequency_per_day'] : null;
+        
+        // Validate selected times count matches frequency_per_day
+        if ($expectedCount !== null && !empty($selectedTimes)) {
+            $selectedCount = count($selectedTimes);
+            
+            if ($selectedCount != $expectedCount) {
+                return back()->withErrors([
+                    'frequency_per_day' => "You selected {$selectedCount} time(s) but specified frequency of {$expectedCount} time(s) per day. Please select exactly {$expectedCount} time(s)."
+                ])->withInput();
+            }
+        }
+        
+        // Also validate via binary string
+        if ($expectedCount !== null && empty($selectedTimes) && isset($validated['dosage_time_binary'])) {
+            $binaryCount = substr_count($validated['dosage_time_binary'], '1');
+            
+            if ($binaryCount != $expectedCount) {
+                return back()->withErrors([
+                    'frequency_per_day' => "The binary time selection has {$binaryCount} time(s) but you specified frequency of {$expectedCount} time(s) per day. Please select exactly {$expectedCount} time(s)."
+                ])->withInput();
+            }
+        }
 
         $validated['is_active'] = $request->has('is_active');
         

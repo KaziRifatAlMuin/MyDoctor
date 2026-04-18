@@ -435,6 +435,10 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureUserIsActive::class, 'admi
         Route::get('/posts/pending', [CommunityController::class, 'adminPendingPosts'])->name('posts.pending');
         Route::patch('/posts/{post}/approve', [CommunityController::class, 'approvePost'])->name('posts.approve');
         Route::delete('/posts/{post}', [CommunityController::class, 'destroyPost'])->name('posts.destroy');
+
+            Route::delete('/comments/{comment}', [CommunityController::class, 'destroyComment'])->name('comments.destroy');
+    Route::put('/comments/{comment}/likes', [CommunityController::class, 'toggleCommentLike'])->name('comments.like');
+    Route::patch('/comments/{comment}', [CommunityController::class, 'updateComment'])->name('comments.update');
         Route::get('/modal-post/{post}', [CommunityController::class, 'modalPost'])->name('modal.post');
         Route::get('/user/{userId}', [CommunityController::class, 'getUserDetails'])->name('user.details');
     });
