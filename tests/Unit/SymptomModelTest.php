@@ -16,8 +16,35 @@ class SymptomModelTest extends TestCase
     #[Test]
     public function symptom_has_correct_fillable_attributes(): void
     {
-        $expected = ['name'];
+        $expected = ['name', 'name_bn', 'bangla_name'];
         $this->assertEquals($expected, (new Symptom())->getFillable());
+    }
+
+    #[Test]
+    public function symptom_persists_bangla_name_alias_to_supported_columns(): void
+    {
+        $symptom = Symptom::create([
+            'name' => 'cough_alias_test',
+            'bangla_name' => 'কাশি',
+        ]);
+
+        $symptom->refresh();
+
+        $this->assertSame('কাশি', $symptom->name_bn);
+        $this->assertSame('কাশি', $symptom->bangla_name);
+    }
+
+    #[Test]
+    public function symptom_extracts_inline_bangla_from_name_on_save(): void
+    {
+        $symptom = Symptom::create([
+            'name' => 'fever_inline_test (জ্বর)',
+        ]);
+
+        $symptom->refresh();
+
+        $this->assertSame('fever_inline_test', $symptom->name);
+        $this->assertSame('জ্বর', $symptom->name_bn);
     }
 
     #[Test]
