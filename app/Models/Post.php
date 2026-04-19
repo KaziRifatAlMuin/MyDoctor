@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage; // Add this line
+use Illuminate\Support\Facades\Storage;
 
 class Post extends Model
 {
@@ -49,6 +49,20 @@ class Post extends Model
         'formatted_total_size',
         'all_files'
     ];
+
+    protected static function booted(): void
+    {
+        // Global scope: Hide posts from deleted/inactive users (except for admins)
+        static::addGlobalScope('withExistingUser', function ($query) {
+            // Skip for admin routes - admins can see everything
+            if (request()->is('admin*') || request()->routeIs('admin.*')) {
+                return;
+            }
+            $query->whereHas('user', function ($q) {
+                $q->where('is_active', true);
+            });
+        });
+    }
 
     public function user()
     {

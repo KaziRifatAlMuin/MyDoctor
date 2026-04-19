@@ -1,7 +1,10 @@
 @php
     $description = $post->description ?? '';
     $isAuthenticated = Auth::check();
-    $isOwner = $isAuthenticated && Auth::id() === $post->user_id;
+    
+    // SAFE: Check if user exists before accessing properties
+    $postUser = $post->user;
+    $isOwner = $isAuthenticated && $postUser && Auth::id() === $postUser->id;
     $isAdmin = $isAuthenticated && Auth::user()->isAdmin();
     $adminReadOnlyCommunity = $adminReadOnlyCommunity ?? false;
     
@@ -14,26 +17,42 @@
     $canInteract = $isAuthenticated && !$adminReadOnlyCommunity;
     
     $isAnonymous = (bool) $post->is_anonymous;
-    $displayName = $isAnonymous ? __('ui.community.anonymous_member') : $post->user->name;
-    $userLiked = $isAuthenticated ? $post->likes()->where('user_id', Auth::id())->exists() : false;
-    $userStarred = $isAuthenticated
+    
+    // SAFE: Default values for deleted users
+    $userName = $postUser ? $postUser->name : 'Deleted User';
+    $userPicture = $postUser ? $postUser->picture : null;
+    $userId = $postUser ? $postUser->id : 0;
+    $displayName = $isAnonymous ? __('ui.community.anonymous_member') : $userName;
+    
+    $userLiked = $isAuthenticated && $postUser ? $post->likes()->where('user_id', Auth::id())->exists() : false;
+    $userStarred = $isAuthenticated && $postUser
         ? $post->likes()->where('user_id', Auth::id())->where('is_starred', true)->exists()
         : false;
+        
+    // SAFE: Disease display name
+    $diseaseDisplayName = $post->disease ? $post->disease->display_name : '';
 @endphp
 
 <div class="post-card" id="post-{{ $post->id }}" data-post-id="{{ $post->id }}">
     <!-- Post Header -->
     <div class="post-header" style="padding:0 0 12px 0;margin:0;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
-        <div class="post-user" @if(!$isAnonymous) onclick="showUserModal({{ $post->user->id }})" @endif style="display:flex;gap:12px;cursor:{{ $isAnonymous ? 'default' : 'pointer' }};flex:1;min-width:0;">
+        <div class="post-user" @if(!$isAnonymous && $userId) onclick="showUserModal({{ $userId }})" @endif style="display:flex;gap:12px;cursor:{{ $isAnonymous ? 'default' : ($userId ? 'pointer' : 'default') }};flex:1;min-width:0;">
             <div class="user-avatar" style="width:48px;height:48px;border-radius:50%;overflow:hidden;flex-shrink:0;">
-                @if(!$isAnonymous && $post->user->picture)
-                    <img src="{{ asset('storage/' . $post->user->picture) }}" alt="{{ $post->user->name }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                @if(!$isAnonymous && $userPicture)
+                    <img src="{{ asset('storage/' . $userPicture) }}" alt="{{ $userName }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
                 @else
-                    <div class="avatar-placeholder" style="width:100%;height:100%;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;border-radius:50%;">{{ $isAnonymous ? 'A' : strtoupper(substr($post->user->name,0,1)) }}</div>
+                    <div class="avatar-placeholder" style="width:100%;height:100%;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;border-radius:50%;">
+                        {{ $isAnonymous ? 'A' : ($userName ? strtoupper(substr($userName,0,1)) : '?') }}
+                    </div>
                 @endif
             </div>
             <div class="user-info" style="min-width:0;flex:1;">
-                <h6 class="user-name" style="font-size:15px;font-weight:600;margin:0;padding:0;color:#1a1a1a;cursor:pointer;hover:color:#1877f2;text-decoration:underline;">{{ $displayName }}</h6>
+                <h6 class="user-name" style="font-size:15px;font-weight:600;margin:0;padding:0;color:#1a1a1a;cursor:{{ $userId ? 'pointer' : 'default' }};hover:color:#1877f2;text-decoration:underline;">
+                    {{ $displayName }}
+                    @if(!$userId && !$isAnonymous)
+                        <span style="font-size: 11px; color: #dc3545; margin-left: 4px;">(Deleted User)</span>
+                    @endif
+                </h6>
                 <div class="post-meta" style="display:flex;align-items:center;gap:12px;font-size:12px;color:#65676b;margin:0;padding:0;flex-wrap:wrap;">
                     @if($post->approved_at)
                         <span class="post-time"><i class="far fa-clock me-1"></i>{{ $post->approved_at->diffForHumans() }}</span>
@@ -43,9 +62,9 @@
                     <a href="{{ route('community.post.show', $post) }}" class="text-decoration-none" style="font-weight:600; color:#1877f2;">
                         {{ __('ui.community.open_post') }}
                     </a>
-                    @if($post->disease)
-                        <a href="{{ route('public.disease.show', $post->disease) }}" class="post-disease-badge text-decoration-none" title="{{ $post->disease->display_name }}" style="background:#e7f3ff;color:#1877f2;padding:4px 12px;border-radius:4px;font-weight:500;font-size:12px;display:inline-flex;align-items:center;gap:4px;">
-                            <i class="fas fa-tag me-1"></i>{{ $post->disease->display_name }}
+                    @if($post->disease && $diseaseDisplayName)
+                        <a href="{{ route('public.disease.show', $post->disease) }}" class="post-disease-badge text-decoration-none" title="{{ $diseaseDisplayName }}" style="background:#e7f3ff;color:#1877f2;padding:4px 12px;border-radius:4px;font-weight:500;font-size:12px;display:inline-flex;align-items:center;gap:4px;">
+                            <i class="fas fa-tag me-1"></i>{{ $diseaseDisplayName }}
                         </a>
                     @endif
                 </div>

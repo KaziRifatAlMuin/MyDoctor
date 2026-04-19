@@ -16,6 +16,17 @@ class CommentLike extends Model
 
     protected static function booted(): void
     {
+        // Global scope: Hide comment likes from deleted/inactive users (except for admins)
+        static::addGlobalScope('withExistingUser', function ($query) {
+            // Skip for admin routes - admins can see everything
+            if (request()->is('admin*') || request()->routeIs('admin.*')) {
+                return;
+            }
+            $query->whereHas('user', function ($q) {
+                $q->where('is_active', true);
+            });
+        });
+
         static::created(function (CommentLike $commentLike): void {
             $commentLike->loadMissing(['comment.post', 'user']);
 
