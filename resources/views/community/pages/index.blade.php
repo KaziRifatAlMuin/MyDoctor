@@ -1683,31 +1683,31 @@ body {
                             </div>
                         @else
                             <div style="display:grid; gap:10px;">
-                                @foreach($pendingPreviewPosts as $pendingPost)
-                                    <div style="background:#faf5ff; border:1px solid #e9d5ff; border-radius:10px; padding:12px;">
-                                        <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
-                                            <div>
-                                                <div style="font-weight:600; color:#4c1d95;">{{ $pendingPost->is_anonymous ? __('ui.community.anonymous_member') : $pendingPost->user->name }}</div>
-                                                <div style="font-size:12px; color:#6d28d9; margin-top:2px;">{{ optional($pendingPost->disease)->display_name ?? 'General' }} • {{ $pendingPost->created_at->diffForHumans() }}</div>
-                                            </div>
-                                            <span class="badge text-bg-warning">{{ __('ui.community.pending') }}</span>
-                                        </div>
-                                        <div style="margin-top:8px; color:#2b2b2b; font-size:14px; line-height:1.4;">
-                                            {{ \Illuminate\Support\Str::limit($pendingPost->description, 140) }}
-                                        </div>
-                                        <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
-                                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="openPostModal({{ $pendingPost->id }})">
-                                                <i class="fas fa-eye me-1"></i>{{ __('ui.community.preview') }}
-                                            </button>
-                                            <button type="button" class="btn btn-sm btn-success" onclick="approvePost({{ $pendingPost->id }})">
-                                                <i class="fas fa-check me-1"></i>{{ __('ui.community.approve') }}
-                                            </button>
-                                            <button type="button" class="btn btn-sm btn-danger" onclick="confirmDelete({{ $pendingPost->id }}, 'post')">
-                                                <i class="fas fa-trash me-1"></i>{{ __('ui.community.reject_delete') }}
-                                            </button>
-                                        </div>
-                                    </div>
-                                @endforeach
+@foreach($pendingPreviewPosts as $pendingPost)
+    <div style="background:#faf5ff; border:1px solid #e9d5ff; border-radius:10px; padding:12px;">
+        <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
+            <div>
+                <div style="font-weight:600; color:#4c1d95;">{{ $pendingPost->is_anonymous ? __('ui.community.anonymous_member') : ($pendingPost->user ? $pendingPost->user->name : 'Deleted User') }}</div>
+                <div style="font-size:12px; color:#6d28d9; margin-top:2px;">{{ optional($pendingPost->disease)->display_name ?? 'General' }} • {{ $pendingPost->created_at->diffForHumans() }}</div>
+            </div>
+            <span class="badge text-bg-warning">{{ __('ui.community.pending') }}</span>
+        </div>
+        <div style="margin-top:8px; color:#2b2b2b; font-size:14px; line-height:1.4;">
+            {{ \Illuminate\Support\Str::limit($pendingPost->description, 140) }}
+        </div>
+        <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="openPostModal({{ $pendingPost->id }})">
+                <i class="fas fa-eye me-1"></i>{{ __('ui.community.preview') }}
+            </button>
+            <button type="button" class="btn btn-sm btn-success" onclick="approvePost({{ $pendingPost->id }})">
+                <i class="fas fa-check me-1"></i>{{ __('ui.community.approve') }}
+            </button>
+            <button type="button" class="btn btn-sm btn-danger" onclick="confirmDelete({{ $pendingPost->id }}, 'post')">
+                <i class="fas fa-trash me-1"></i>{{ __('ui.community.reject_delete') }}
+            </button>
+        </div>
+    </div>
+@endforeach
                             </div>
                         @endif
                     </div>

@@ -27,6 +27,29 @@ class Notification extends Model
         'read_at' => 'datetime',
     ];
 
+    protected static function booted(): void
+    {
+        // Global scope: Hide notifications from deleted/inactive users (except for admins)
+        static::addGlobalScope('withExistingUser', function ($query) {
+            if (request()->is('admin*') || request()->routeIs('admin.*')) {
+                return;
+            }
+            $query->whereHas('user', function ($q) {
+                $q->where('is_active', true);
+            });
+        });
+
+        // Global scope: Hide notifications from deleted/inactive from_users (except for admins)
+        static::addGlobalScope('withExistingFromUser', function ($query) {
+            if (request()->is('admin*') || request()->routeIs('admin.*')) {
+                return;
+            }
+            $query->whereHas('fromUser', function ($q) {
+                $q->where('is_active', true);
+            });
+        });
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
