@@ -10,26 +10,22 @@ class ActivityLog extends Model
 {
     use HasFactory;
 
+    public const UPDATED_AT = null;
+
     protected $fillable = [
         'user_id',
         'category',
         'action',
         'description',
-        'method',
-        'route_name',
-        'url',
-        'ip_address',
-        'user_agent',
         'subject_type',
         'subject_id',
-        'event',
-        'changes',
-        'meta',
+        'context',
+        'created_at',
     ];
 
     protected $casts = [
-        'changes' => 'array',
-        'meta' => 'array',
+        'context' => 'array',
+        'created_at' => 'datetime',
     ];
 
     public function user(): BelongsTo

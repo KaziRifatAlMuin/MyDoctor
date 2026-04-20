@@ -15,9 +15,10 @@ class LogAuthenticationActivity
                 'user_id' => $event->user?->id,
                 'category' => 'auth',
                 'action' => 'login',
-                'description' => 'User logged in',
-                'event' => 'login',
-                'meta' => [
+                'description' => 'Signed in to the account.',
+                'subject_type' => $event->user ? $event->user::class : null,
+                'subject_id' => $event->user?->id,
+                'context' => [
                     'guard' => $event->guard,
                     'remember' => $event->remember,
                 ],
@@ -31,9 +32,10 @@ class LogAuthenticationActivity
                 'user_id' => $event->user?->id,
                 'category' => 'auth',
                 'action' => 'logout',
-                'description' => 'User logged out',
-                'event' => 'logout',
-                'meta' => [
+                'description' => 'Signed out from the account.',
+                'subject_type' => $event->user ? $event->user::class : null,
+                'subject_id' => $event->user?->id,
+                'context' => [
                     'guard' => $event->guard,
                 ],
             ]);

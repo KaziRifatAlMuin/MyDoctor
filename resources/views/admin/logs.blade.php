@@ -4,236 +4,307 @@
 
 @push('styles')
 <style>
-    .logs-surface {
-        min-height: 100vh;
-        padding: 2rem 0 3rem;
-        background:
-            radial-gradient(circle at 6% 10%, rgba(30, 64, 175, 0.18), transparent 34%),
-            radial-gradient(circle at 95% 4%, rgba(14, 165, 233, 0.18), transparent 30%),
-            linear-gradient(160deg, #eff6ff 0%, #f8fbff 46%, #edf4ff 100%);
+    .activity-page {
+        padding: 1.25rem 0 2rem;
     }
 
-    .logs-hero {
-        border-radius: 24px;
+    .activity-hero {
+        background: linear-gradient(145deg, #ffffff 0%, #f9fbff 100%);
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        border-radius: 18px;
+        box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+        padding: 1.2rem 1.25rem;
         margin-bottom: 1rem;
-        padding: 1.65rem;
-        color: #fff;
-        background: linear-gradient(135deg, #0f3ea7 0%, #1d4ed8 45%, #0ea5e9 100%);
-        box-shadow: 0 20px 48px rgba(15, 62, 167, 0.24);
     }
 
-    .logs-hero h1 {
+    .activity-hero h1 {
         margin: 0;
-        font-size: 1.7rem;
         font-weight: 800;
+        font-size: 1.4rem;
+        color: #0f172a;
     }
 
-    .logs-hero p {
-        margin: 0.45rem 0 0;
-        opacity: 0.92;
+    .activity-hero p {
+        margin: 0.35rem 0 0;
+        color: #475569;
     }
 
-    .logs-shell {
-        background: #fff;
-        border-radius: 20px;
-        border: 1px solid rgba(30, 64, 175, 0.1);
-        box-shadow: 0 12px 34px rgba(15, 33, 87, 0.08);
-        overflow: hidden;
-    }
-
-    .logs-head {
-        padding: 1rem;
-        border-bottom: 1px solid rgba(30, 64, 175, 0.11);
-        background: linear-gradient(180deg, #fff 0%, #f7faff 100%);
-    }
-
-    .logs-filter {
+    .activity-filter {
         display: grid;
-        grid-template-columns: 1fr auto auto auto;
-        gap: 0.6rem;
+        grid-template-columns: 1fr 230px;
+        gap: 0.65rem;
     }
 
-    .logs-filter input,
-    .logs-filter select {
+    .activity-filter input,
+    .activity-filter select {
         min-height: 44px;
         border-radius: 12px;
-        border: 1px solid rgba(30, 64, 175, 0.2);
-        padding: 0.5rem 0.75rem;
+        border: 1px solid rgba(100, 116, 139, 0.35);
         background: #fff;
+        padding: 0.5rem 0.75rem;
     }
 
-    .btn-main,
-    .btn-soft {
-        min-height: 44px;
-        border: 0;
-        border-radius: 12px;
-        font-weight: 700;
-        padding: 0.5rem 0.95rem;
-        text-decoration: none;
-        display: inline-flex;
+    .timeline {
+        position: relative;
+        margin-top: 1rem;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 34px;
+        width: 2px;
+        background: linear-gradient(to bottom, #bfdbfe 0%, #dbeafe 60%, transparent 100%);
+    }
+
+    .timeline-item {
+        position: relative;
+        display: grid;
+        grid-template-columns: 68px 1fr;
+        gap: 0.65rem;
+        margin-bottom: 0.95rem;
+    }
+
+    .actor-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        overflow: hidden;
+        display: flex;
         align-items: center;
         justify-content: center;
-    }
-
-    .btn-main {
+        font-weight: 800;
         color: #fff;
-        background: linear-gradient(135deg, #1d4ed8, #0ea5e9);
+        font-size: 0.9rem;
+        background: linear-gradient(145deg, #2563eb 0%, #0ea5e9 100%);
+        border: 3px solid #fff;
+        box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.2);
+        z-index: 1;
+        margin-left: 10px;
     }
 
-    .btn-soft {
-        color: #17356c;
-        background: #e9f2ff;
-    }
-
-    .logs-table-wrap {
-        padding: 0.85rem;
-    }
-
-    .logs-table {
+    .actor-avatar img {
         width: 100%;
-        border-collapse: collapse;
+        height: 100%;
+        object-fit: cover;
     }
 
-    .logs-table th {
-        background: #f4f7ff;
-        color: #5e739c;
-        padding: 0.75rem;
-        font-size: 0.74rem;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-        border-bottom: 1px solid rgba(30, 64, 175, 0.11);
+    .activity-card {
+        border-radius: 16px;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        background: #fff;
+        box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+        padding: 0.95rem 1rem;
+    }
+
+    .activity-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.6rem;
+        margin-bottom: 0.35rem;
+    }
+
+    .activity-actor,
+    .activity-link {
+        color: #1d4ed8;
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+    .activity-actor:hover,
+    .activity-link:hover {
+        color: #1e3a8a;
+        text-decoration: underline;
+    }
+
+    .activity-time {
+        color: #64748b;
+        font-size: 0.82rem;
         white-space: nowrap;
     }
 
-    .logs-table td {
-        padding: 0.78rem;
-        border-bottom: 1px solid rgba(30, 64, 175, 0.08);
-        vertical-align: top;
-        font-size: 0.9rem;
+    .activity-sentence {
+        color: #0f172a;
+        line-height: 1.5;
+        font-size: 0.94rem;
     }
 
-    .logs-table tr:hover td {
-        background: #f9fbff;
+    .activity-meta {
+        margin-top: 0.55rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
     }
 
-    .pill {
+    .meta-pill {
         display: inline-flex;
         align-items: center;
         border-radius: 999px;
-        padding: 0.3rem 0.68rem;
+        padding: 0.28rem 0.62rem;
         font-size: 0.75rem;
         font-weight: 700;
+        text-decoration: none;
+        border: 1px solid transparent;
     }
 
-    .pill-category {
-        background: rgba(14, 165, 233, 0.15);
-        color: #0c4a6e;
-    }
-
-    .pill-action {
-        background: rgba(29, 78, 216, 0.13);
+    .meta-pill.category {
+        background: #dbeafe;
         color: #1e3a8a;
+        border-color: #bfdbfe;
     }
 
-    .muted {
-        color: #7183a7;
-        font-size: 0.82rem;
+    .meta-pill.action {
+        background: #dcfce7;
+        color: #166534;
+        border-color: #bbf7d0;
+    }
+
+    .meta-pill.fields {
+        background: #f1f5f9;
+        color: #334155;
+        border-color: #e2e8f0;
     }
 
     .pagination-wrap {
-        padding: 0.4rem 1rem 1.15rem;
+        margin-top: 1rem;
+        padding: 0.35rem 0;
     }
 
-    @media (max-width: 991px) {
-        .logs-filter {
+    .empty-feed {
+        border: 1px dashed rgba(100, 116, 139, 0.4);
+        border-radius: 14px;
+        color: #64748b;
+        padding: 2rem 1rem;
+        text-align: center;
+        background: #fff;
+    }
+
+    @media (max-width: 992px) {
+        .activity-filter {
             grid-template-columns: 1fr;
+        }
+
+        .timeline::before {
+            left: 30px;
+        }
+
+        .timeline-item {
+            grid-template-columns: 60px 1fr;
         }
     }
 </style>
 @endpush
 
 @section('content')
-<div class="logs-surface">
-    <div class="container" style="max-width: 1300px;">
-        <section class="logs-hero">
-            <h1><i class="fas fa-chart-line me-2"></i>{{ __('ui.admin_activity_logs.title') }}</h1>
-            <p>{{ __('ui.admin_activity_logs.subtitle') }}</p>
-        </section>
+<div class="activity-page container-fluid px-3 px-xl-5">
+    <section class="activity-hero">
+        <h1><i class="fas fa-stream me-2"></i>{{ __('ui.admin_activity_logs.title') }}</h1>
+        <p>{{ __('ui.admin_activity_logs.subtitle') }}</p>
 
-        <section class="logs-shell">
-            <div class="logs-head">
-                <form class="logs-filter" method="GET" action="{{ route('admin.logs.index') }}">
-                    <input type="text" name="q" value="{{ $search }}" placeholder="{{ __('ui.admin_activity_logs.search_placeholder') }}">
+        <form id="activityFilterForm" class="activity-filter mt-3" method="GET" action="{{ route('admin.logs.index') }}">
+            <input id="activitySearchInput" type="text" name="q" value="{{ $search }}" placeholder="{{ __('ui.admin_activity_logs.search_placeholder') }}" autocomplete="off">
 
-                    <select name="category">
-                        <option value="all">{{ __('ui.admin_activity_logs.all_categories') }}</option>
-                        @foreach ($categories as $item)
-                            <option value="{{ $item }}" @selected($category === $item)>{{ ucfirst($item) }}</option>
-                        @endforeach
-                    </select>
+            <select id="activityTypeSelect" name="type">
+                @foreach ($activityTypes as $value => $label)
+                    <option value="{{ $value }}" @selected($type === $value)>{{ $label }}</option>
+                @endforeach
+            </select>
+        </form>
+    </section>
 
-                    <select name="sort">
-                        <option value="recent" @selected($sort === 'recent')>{{ __('ui.admin_activity_logs.sort_recent') }}</option>
-                        <option value="category" @selected($sort === 'category')>{{ __('ui.admin_activity_logs.sort_category') }}</option>
-                        <option value="oldest" @selected($sort === 'oldest')>{{ __('ui.admin_activity_logs.sort_oldest') }}</option>
-                    </select>
+    <section class="timeline">
+        @forelse ($logs as $log)
+            @php
+                $actor = $log->user;
+                $actorName = $actor?->name ?? __('ui.admin_activity_logs.system');
+                $actorUrl = $actor ? route('admin.users.show', $actor) : null;
+                $subjectLabel = $log->subject_label ?? 'system';
+                $subjectUrl = $log->subject_url ?? null;
+                $changedFields = (array) data_get($log->context, 'changed_fields', []);
+                $initial = strtoupper(substr((string) $actorName, 0, 1));
+            @endphp
 
-                    <button class="btn-main" type="submit"><i class="fas fa-filter me-1"></i>{{ __('ui.admin_activity_logs.apply') }}</button>
-                </form>
-            </div>
-
-            <div class="logs-table-wrap table-responsive">
-                <table class="logs-table">
-                    <thead>
-                        <tr>
-                            <th>{{ __('ui.admin_activity_logs.when') }}</th>
-                            <th>{{ __('ui.admin_activity_logs.user') }}</th>
-                            <th>{{ __('ui.admin_activity_logs.category') }}</th>
-                            <th>{{ __('ui.admin_activity_logs.action') }}</th>
-                            <th>{{ __('ui.admin_activity_logs.reference') }}</th>
-                            <th>{{ __('ui.admin_activity_logs.details') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($logs as $log)
-                            <tr>
-                                <td>
-                                    <div>{{ optional($log->updated_at)->format('M d, Y h:i A') }}</div>
-                                    <div class="muted">{{ $log->method ?? '-' }} | {{ $log->ip_address ?? '-' }}</div>
-                                </td>
-                                <td>
-                                    <div>{{ $log->user?->name ?? __('ui.admin_activity_logs.system') }}</div>
-                                    <div class="muted">{{ $log->user?->email ?? '-' }}</div>
-                                </td>
-                                <td><span class="pill pill-category">{{ ucfirst($log->category) }}</span></td>
-                                <td><span class="pill pill-action">{{ $log->action }}</span></td>
-                                <td>
-                                    <div>{{ class_basename((string) ($log->subject_type ?? '-')) }}</div>
-                                    <div class="muted">ID: {{ $log->subject_id ?? '-' }}</div>
-                                </td>
-                                <td>
-                                    <div>{{ $log->description ?? '-' }}</div>
-                                    <div class="muted">{{ $log->route_name ?? '-' }}</div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="text-center py-4 text-muted">{{ __('ui.admin_activity_logs.empty') }}</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="pagination-wrap d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
-                <div class="muted">
-                    {{ __('ui.admin_activity_logs.showing') }} {{ $logs->firstItem() ?? 0 }} {{ __('ui.admin_activity_logs.to') }} {{ $logs->lastItem() ?? 0 }} {{ __('ui.admin_activity_logs.of') }} {{ $logs->total() }}
+            <article class="timeline-item">
+                <div class="actor-avatar" title="{{ $actorName }}">
+                    @if($actor?->picture)
+                        <img src="{{ asset('storage/' . $actor->picture) }}" alt="{{ $actorName }}">
+                    @else
+                        {{ $initial !== '' ? $initial : 'S' }}
+                    @endif
                 </div>
-                <div>
-                    {{ $logs->onEachSide(1)->links() }}
+
+                <div class="activity-card">
+                    <div class="activity-top">
+                        <div>
+                            @if($actorUrl)
+                                <a href="{{ $actorUrl }}" class="activity-actor">{{ $actorName }}</a>
+                            @else
+                                <span>{{ $actorName }}</span>
+                            @endif
+                        </div>
+                        <div class="activity-time">
+                            {{ optional($log->created_at)->format('M d, Y h:i A') }}
+                        </div>
+                    </div>
+
+                    <div class="activity-sentence">
+                        {{ $log->description ?: 'Performed an activity.' }}
+                        @if($subjectUrl)
+                            on <a href="{{ $subjectUrl }}" class="activity-link">{{ $subjectLabel }}</a>
+                        @elseif($subjectLabel !== 'system')
+                            on <strong>{{ $subjectLabel }}</strong>
+                        @endif
+                    </div>
+
+                    <div class="activity-meta">
+                        <a class="meta-pill category" href="{{ route('admin.logs.index', ['type' => $log->category]) }}">{{ ucfirst($log->category) }}</a>
+                        <a class="meta-pill action" href="{{ route('admin.logs.index', ['q' => $log->action, 'type' => $type]) }}">{{ str_replace('_', ' ', $log->action) }}</a>
+                        @if(!empty($changedFields))
+                            <span class="meta-pill fields">{{ implode(', ', array_map(fn($field) => str_replace('_', ' ', (string) $field), $changedFields)) }}</span>
+                        @endif
+                    </div>
                 </div>
-            </div>
-        </section>
+            </article>
+        @empty
+            <div class="empty-feed">{{ __('ui.admin_activity_logs.empty') }}</div>
+        @endforelse
+    </section>
+
+    <div class="pagination-wrap d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
+        <div class="text-muted small">
+            {{ __('ui.admin_activity_logs.showing') }} {{ $logs->firstItem() ?? 0 }} {{ __('ui.admin_activity_logs.to') }} {{ $logs->lastItem() ?? 0 }} {{ __('ui.admin_activity_logs.of') }} {{ $logs->total() }}
+        </div>
+        <div>
+            {{ $logs->onEachSide(1)->links() }}
+        </div>
     </div>
 </div>
+
+<script>
+    (function () {
+        const form = document.getElementById('activityFilterForm');
+        const searchInput = document.getElementById('activitySearchInput');
+        const typeSelect = document.getElementById('activityTypeSelect');
+
+        if (!form || !searchInput || !typeSelect) {
+            return;
+        }
+
+        let debounceTimer;
+
+        searchInput.addEventListener('input', function () {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(function () {
+                form.submit();
+            }, 450);
+        });
+
+        typeSelect.addEventListener('change', function () {
+            form.submit();
+        });
+    })();
+</script>
 @endsection

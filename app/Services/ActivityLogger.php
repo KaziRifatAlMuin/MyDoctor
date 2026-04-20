@@ -38,16 +38,10 @@ class ActivityLogger
                 'category' => (string) ($payload['category'] ?? 'system'),
                 'action' => (string) ($payload['action'] ?? 'unknown_action'),
                 'description' => $payload['description'] ?? null,
-                'method' => $payload['method'] ?? null,
-                'route_name' => $payload['route_name'] ?? null,
-                'url' => $payload['url'] ?? null,
-                'ip_address' => $payload['ip_address'] ?? null,
-                'user_agent' => $payload['user_agent'] ?? null,
                 'subject_type' => $payload['subject_type'] ?? null,
                 'subject_id' => $payload['subject_id'] ?? null,
-                'event' => $payload['event'] ?? null,
-                'changes' => isset($payload['changes']) ? self::sanitizeData($payload['changes']) : null,
-                'meta' => isset($payload['meta']) ? self::sanitizeData($payload['meta']) : null,
+                'context' => isset($payload['context']) ? self::sanitizeData($payload['context']) : null,
+                'created_at' => now(),
             ]);
 
             self::pruneIfNeeded();

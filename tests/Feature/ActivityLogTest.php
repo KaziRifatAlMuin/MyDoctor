@@ -29,7 +29,6 @@ class ActivityLogTest extends TestCase
             'user_id' => $user->id,
             'category' => 'auth',
             'action' => 'login',
-            'event' => 'login',
         ]);
     }
 
@@ -47,8 +46,8 @@ class ActivityLogTest extends TestCase
                 'category' => 'test',
                 'action' => 'seeded',
                 'description' => 'seeded log',
+                'context' => json_encode(['seeded' => true]),
                 'created_at' => now(),
-                'updated_at' => now(),
             ]);
         }
 
@@ -57,7 +56,7 @@ class ActivityLogTest extends TestCase
         $response->assertViewHas('logs');
 
         $logs = $response->viewData('logs');
-        $this->assertSame(50, $logs->perPage());
+        $this->assertSame(100, $logs->perPage());
         $this->assertGreaterThanOrEqual(55, $logs->total());
     }
 }

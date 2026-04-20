@@ -40,17 +40,14 @@ class LogUserActivity
         ActivityLogger::log([
             'user_id' => $request->user()?->id,
             'category' => ActivityLogger::resolveRequestCategory($request),
-            'action' => 'request',
-            'description' => sprintf('%s %s', $request->method(), '/' . ltrim($request->path(), '/')),
-            'method' => $request->method(),
-            'route_name' => $routeName !== '' ? $routeName : null,
-            'url' => $request->fullUrl(),
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
+            'action' => 'request_' . strtolower($request->method()),
+            'description' => $this->requestDescription($request, $routeName),
             'subject_type' => $subjectType,
             'subject_id' => is_numeric($subjectId) ? (int) $subjectId : null,
-            'event' => 'request',
-            'meta' => [
+            'context' => [
+                'method' => $request->method(),
+                'route_name' => $routeName !== '' ? $routeName : null,
+                'path' => '/' . ltrim($request->path(), '/'),
                 'status' => $response->getStatusCode(),
                 'route_params' => $routeParams,
             ],
@@ -66,6 +63,10 @@ class LogUserActivity
         }
 
         if (in_array($request->method(), ['HEAD', 'OPTIONS'], true)) {
+            return false;
+        }
+
+        if ($request->isMethod('GET')) {
             return false;
         }
 
@@ -87,5 +88,16 @@ class LogUserActivity
         }
 
         return true;
+    }
+
+    private function requestDescription(Request $request, string $routeName): string
+    {
+        $method = strtoupper($request->method());
+
+        if ($routeName !== '') {
+            return sprintf('%s request on %s.', $method, str_replace('.', ' > ', $routeName));
+        }
+
+        return sprintf('%s request on %s.', $method, '/' . ltrim($request->path(), '/'));
     }
 }
