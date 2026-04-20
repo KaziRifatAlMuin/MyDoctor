@@ -2232,6 +2232,12 @@
                                 {{ __('ui.admin_tabs.community') }}
                             </a>
                         </li>
+                        <li class="banner-nav-item">
+                            <a href="{{ route('admin.logs.index') }}"
+                                class="banner-nav-link {{ request()->routeIs('admin.logs.*') ? 'active' : '' }}">
+                                {{ __('ui.admin_tabs.logs') }}
+                            </a>
+                        </li>
                     @else
                         <li class="banner-nav-item">
                             <a href="{{ route('home') }}"

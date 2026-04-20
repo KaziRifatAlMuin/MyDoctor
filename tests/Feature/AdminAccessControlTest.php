@@ -23,6 +23,7 @@ class AdminAccessControlTest extends TestCase
             route('admin.health.index'),
             route('admin.community.posts.index'),
             route('admin.community.posts.pending'),
+            route('admin.logs.index'),
             route('admin.users.show', $targetUser),
             route('admin.medical.index'),
             route('admin.analytics'),
@@ -53,6 +54,7 @@ class AdminAccessControlTest extends TestCase
             route('admin.health.index'),
             route('admin.community.posts.index'),
             route('admin.community.posts.pending'),
+            route('admin.logs.index'),
             route('admin.users.show', $targetUser),
             route('admin.medical.index'),
             route('admin.analytics'),
@@ -73,6 +75,7 @@ class AdminAccessControlTest extends TestCase
         $routes = [
             route('admin.dashboard'),
             route('admin.users.index'),
+            route('admin.logs.index'),
             route('admin.users.show', $targetUser),
         ];
 

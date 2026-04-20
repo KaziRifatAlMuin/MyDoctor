@@ -444,6 +444,7 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureUserIsActive::class, 'admi
     });
 
     Route::get('/user/{user}', [App\Http\Controllers\UserController::class, 'show'])->name('users.show');
+    Route::get('/logs', [App\Http\Controllers\AdminActivityLogController::class, 'index'])->name('logs.index');
     
     // Future admin routes
     Route::get('/medical', [App\Http\Controllers\AdminDashboardController::class, 'medical'])->name('medical.index');

@@ -1777,6 +1777,7 @@ return [
         'symptoms' => 'Symptoms',
         'health' => 'Health',
         'community' => 'Community',
+        'logs' => 'Activity Logs',
     ],
 
 'terms' => [
@@ -2361,6 +2362,28 @@ return [
     'to' => 'to',
     'of' => 'of',
     'users' => 'users',
+],
+
+'admin_activity_logs' => [
+    'title' => 'Activity Logs',
+    'subtitle' => 'Track authentication, user actions, and model changes across the platform.',
+    'search_placeholder' => 'Search by user, action, route, or model...',
+    'all_categories' => 'All Categories',
+    'sort_recent' => 'Sort: Most Recent',
+    'sort_category' => 'Sort: Category',
+    'sort_oldest' => 'Sort: Oldest',
+    'apply' => 'Apply',
+    'when' => 'When',
+    'user' => 'User',
+    'category' => 'Category',
+    'action' => 'Action',
+    'reference' => 'Reference',
+    'details' => 'Details',
+    'system' => 'System',
+    'empty' => 'No activity logs found for the selected filters.',
+    'showing' => 'Showing',
+    'to' => 'to',
+    'of' => 'of',
 ],
 
 
