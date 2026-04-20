@@ -41,6 +41,7 @@ return [
     
     'menu' => [
         'profile' => 'প্রোফাইল',
+        'activity_logs' => 'অ্যাক্টিভিটি লগ',
         'settings' => 'সেটিংস',
         'admin_dashboard' => 'অ্যাডমিন ড্যাশবোর্ড',
         'logout' => 'লগআউট',
@@ -2463,6 +2464,11 @@ return [
     'showing' => 'দেখানো হচ্ছে',
     'to' => 'থেকে',
     'of' => 'মোট',
+],
+
+'profile_activity_logs' => [
+    'title' => 'আমার অ্যাক্টিভিটি লগ',
+    'subtitle' => 'আপনার নিজের কাজগুলোর টাইমলাইন এখানে দেখুন।',
 ],
 
 'notification_preferences' => [

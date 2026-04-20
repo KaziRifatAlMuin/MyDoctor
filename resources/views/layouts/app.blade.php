@@ -2397,6 +2397,10 @@
                                     <i class="fas fa-user me-2"></i>{{ __('ui.menu.profile') }}
                                 </a>
 
+                                <a href="{{ route('profile.logs') }}" class="dropdown-item-custom">
+                                    <i class="fas fa-stream me-2"></i>{{ __('ui.menu.activity_logs') }}
+                                </a>
+
                                 @if (! auth()->user()->isAdmin())
                                     <a href="{{ route('notifications.index') }}" class="dropdown-item-custom" id="notification-link">
                                         <i class="fas fa-bell me-2"></i>{{ __('ui.nav.notifications') }}

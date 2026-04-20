@@ -19,6 +19,7 @@ use App\Http\Controllers\CommunityController;
 use App\Http\Controllers\AiChatController;
 use App\Http\Controllers\PublicHealthController;
 use App\Http\Controllers\AdminManagementController;
+use App\Http\Controllers\ProfileActivityLogController;
 use App\Http\Controllers\GeoController;
 use App\Models\Disease;
 use App\Models\MedicineReminder;
@@ -160,6 +161,7 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureUserIsActive::class, 'veri
     
     // Profile
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+    Route::get('/profile/logs', [ProfileActivityLogController::class, 'index'])->name('profile.logs');
     Route::patch('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
     Route::patch('/profile/picture', [ProfileController::class, 'updatePicture'])->name('profile.picture');
     Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');

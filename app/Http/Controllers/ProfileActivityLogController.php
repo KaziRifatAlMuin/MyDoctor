@@ -11,17 +11,18 @@ use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\View\View;
 
-class AdminActivityLogController extends Controller
+class ProfileActivityLogController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['auth', 'admin']);
+        $this->middleware(['auth', \App\Http\Middleware\EnsureUserIsActive::class, 'verified']);
     }
 
     public function index(Request $request): View
     {
         $type = trim((string) $request->query('type', 'all'));
         $search = trim((string) $request->query('q', ''));
+        $userId = (int) $request->user()->id;
 
         $allowedTypes = array_keys($this->activityTypes());
         if (!in_array($type, $allowedTypes, true)) {
@@ -30,6 +31,7 @@ class AdminActivityLogController extends Controller
 
         $logsQuery = ActivityLog::query()
             ->with('user')
+            ->where('user_id', $userId)
             ->when($type !== 'all', function ($query) use ($type) {
                 $this->applyTypeFilter($query, $type);
             })
@@ -40,19 +42,15 @@ class AdminActivityLogController extends Controller
                         ->orWhere('description', 'like', "%{$search}%")
                         ->orWhere('subject_type', 'like', "%{$search}%")
                         ->orWhere('subject_id', 'like', "%{$search}%")
-                        ->orWhere('context', 'like', "%{$search}%")
-                        ->orWhereHas('user', function ($userQuery) use ($search) {
-                            $userQuery->where('name', 'like', "%{$search}%")
-                                ->orWhere('email', 'like', "%{$search}%");
-                        });
+                        ->orWhere('context', 'like', "%{$search}%");
                 });
             })
             ->orderByDesc('created_at');
 
         $logs = $logsQuery->paginate(100)->withQueryString();
-        $this->enrichLogs($logs, true);
+        $this->enrichLogs($logs);
 
-        return view('admin.logs', [
+        return view('profile.logs', [
             'logs' => $logs,
             'type' => $type,
             'search' => $search,
@@ -69,7 +67,6 @@ class AdminActivityLogController extends Controller
             'post' => __('ui.admin_activity_logs.type_post'),
             'comment' => __('ui.admin_activity_logs.type_comment'),
             'interaction' => __('ui.admin_activity_logs.type_interaction'),
-            'admin' => __('ui.admin_activity_logs.type_admin'),
             'health' => __('ui.admin_activity_logs.type_health'),
             'medicine' => __('ui.admin_activity_logs.type_medicine'),
             'mailbox' => __('ui.admin_activity_logs.type_mailbox'),
@@ -117,7 +114,7 @@ class AdminActivityLogController extends Controller
         $query->where('category', $type);
     }
 
-    private function enrichLogs(LengthAwarePaginator $logs, bool $adminContext): void
+    private function enrichLogs(LengthAwarePaginator $logs): void
     {
         $collection = $logs->getCollection();
 
@@ -151,19 +148,17 @@ class AdminActivityLogController extends Controller
             $nameMaps[$type] = $map;
         }
 
-        $collection->transform(function (ActivityLog $log) use ($adminContext, $nameMaps) {
-            $log->subject_url = $this->subjectUrl($log, $adminContext);
+        $collection->transform(function (ActivityLog $log) use ($nameMaps) {
+            $log->subject_url = $this->subjectUrl($log);
             $log->subject_label = $this->subjectLabel($log, $nameMaps);
             return $log;
         });
     }
 
-    private function subjectUrl(ActivityLog $log, bool $adminContext): ?string
+    private function subjectUrl(ActivityLog $log): ?string
     {
         return match ($log->subject_type) {
-            User::class => $log->subject_id
-                ? ($adminContext ? route('admin.users.show', $log->subject_id) : route('users.show', $log->subject_id))
-                : null,
+            User::class => $log->subject_id ? route('users.show', $log->subject_id) : null,
             Post::class => $log->subject_id ? route('community.posts.show', $log->subject_id) : null,
             Comment::class => $log->subject_id ? route('community.posts.index', ['focus_comment' => $log->subject_id]) : null,
             Disease::class => $log->subject_id ? route('public.disease.show', $log->subject_id) : null,

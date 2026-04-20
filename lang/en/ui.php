@@ -23,6 +23,7 @@ return [
     ],
     'menu' => [
         'profile' => 'Profile',
+        'activity_logs' => 'Activity Logs',
         'settings' => 'Settings',
         'admin_dashboard' => 'Admin Dashboard',
         'logout' => 'Logout',
@@ -2392,6 +2393,11 @@ return [
     'showing' => 'Showing',
     'to' => 'to',
     'of' => 'of',
+],
+
+'profile_activity_logs' => [
+    'title' => 'My Activity Logs',
+    'subtitle' => 'Review your own account and feature activities in one timeline.',
 ],
 
 
