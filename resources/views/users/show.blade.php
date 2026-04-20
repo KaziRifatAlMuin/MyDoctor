@@ -889,7 +889,7 @@
                         <span class="close-x" aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <form action="{{ route('users.update', $user->id) }}" method="POST" class="user-update-form">
+                <form action="{{ route('admin.users.update', $user->id) }}" method="POST" class="user-update-form">
                     @csrf
                     @method('PATCH')
                     <input type="hidden" name="redirect_tab" id="redirectTab" value="overview">

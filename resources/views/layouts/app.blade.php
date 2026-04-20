@@ -3453,7 +3453,7 @@ window.clearModalCommentFile = function(postId) {
             const userModal = new bootstrap.Modal(userModalEl);
             userModal.show();
             
-            fetch(`${window.getCommunityBasePath()}/user/${userId}`)
+            fetch(`${window.getCommunityBasePath()}/users/${userId}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {

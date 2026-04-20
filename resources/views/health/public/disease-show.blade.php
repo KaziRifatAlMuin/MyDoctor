@@ -50,7 +50,7 @@
                         @else
                             @foreach($disease->posts->take(5) as $post)
                                 <div class="border rounded-3 p-2 mb-2">
-                                    <a href="{{ route('community.post.show', $post) }}" class="text-decoration-none fw-semibold" style="color:#0b57d0; font-size:.9rem;">
+                                    <a href="{{ route('community.posts.show', $post) }}" class="text-decoration-none fw-semibold" style="color:#0b57d0; font-size:.9rem;">
                                         {{ \Illuminate\Support\Str::limit($post->description, 80) }}
                                     </a>
                                 </div>

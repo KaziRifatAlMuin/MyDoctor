@@ -2193,7 +2193,7 @@ function filterByDisease(diseaseId) {
         window.location.href = baseRoute;
     } else {
         if (!@json($isPendingPage || $isStarredPage || $isAdminCommunity)) {
-            window.location.href = '/community/disease/' + diseaseId + '/posts';
+            window.location.href = '/community/diseases/' + diseaseId + '/posts';
             return;
         }
         window.location.href = baseRoute + '?disease=' + diseaseId;

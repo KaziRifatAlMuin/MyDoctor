@@ -337,7 +337,7 @@ class HealthController extends Controller
         ]);
 
         $referer = $request->header('referer');
-        if ($referer && str_contains($referer, '/user/')) {
+        if ($referer && str_contains($referer, '/users/')) {
             $userId = $request->input('user_id') ? (int)$request->input('user_id') : $healthMetric->user_id;
             return redirect(route('admin.users.show', $userId) . '#metrics')->with('success', 'Health metric updated successfully.');
         }
@@ -382,7 +382,7 @@ class HealthController extends Controller
         $this->syncSymptomDiseaseLinks($symptom->user_id, $catalogSymptom);
 
         $referer = $request->header('referer');
-        if ($referer && str_contains($referer, '/user/')) {
+        if ($referer && str_contains($referer, '/users/')) {
             $userId = $request->input('user_id') ? (int)$request->input('user_id') : $symptom->user_id;
             return redirect(route('admin.users.show', $userId) . '#symptomsPane')->with('success', 'Symptom updated successfully.');
         }
@@ -404,7 +404,7 @@ class HealthController extends Controller
         $userDisease->update($request->only('status', 'diagnosed_at', 'notes'));
 
         $referer = $request->header('referer');
-        if ($referer && str_contains($referer, '/user/')) {
+        if ($referer && str_contains($referer, '/users/')) {
             $userId = $request->input('user_id') ? (int)$request->input('user_id') : $userDisease->user_id;
             return redirect(route('admin.users.show', $userId) . '#diseasesPane')->with('success', 'Disease record updated successfully.');
         }
@@ -440,7 +440,7 @@ class HealthController extends Controller
         $upload->update($data);
 
         $referer = $request->header('referer');
-        if ($referer && str_contains($referer, '/user/')) {
+        if ($referer && str_contains($referer, '/users/')) {
             $userId = $request->input('user_id') ? (int)$request->input('user_id') : $upload->user_id;
             $fragment = $upload->type === 'prescription' ? '#prescriptions' : '#reportsPane';
             return redirect(route('admin.users.show', $userId) . $fragment)->with('success', ucfirst($upload->type) . ' updated successfully.');
