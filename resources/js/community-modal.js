@@ -547,7 +547,7 @@ window.showUserModal = function(userId) {
     const userModal = new bootstrap.Modal(document.getElementById('userModal'));
     userModal.show();
     
-    fetch(`/community/user/${userId}`)
+    fetch(`/community/users/${userId}`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {

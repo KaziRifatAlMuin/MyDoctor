@@ -41,6 +41,7 @@ return [
     
     'menu' => [
         'profile' => 'প্রোফাইল',
+        'activity_logs' => 'অ্যাক্টিভিটি লগ',
         'settings' => 'সেটিংস',
         'admin_dashboard' => 'অ্যাডমিন ড্যাশবোর্ড',
         'logout' => 'লগআউট',
@@ -59,6 +60,7 @@ return [
         'symptoms' => 'লক্ষণ',
         'health' => 'স্বাস্থ্য',
         'community' => 'কমিউনিটি',
+        'logs' => 'অ্যাক্টিভিটি লগ',
     ],
     
     'community' => [
@@ -2432,6 +2434,41 @@ return [
     'to' => 'থেকে',
     'of' => 'এর',
     'users' => 'ব্যবহারকারী',
+],
+
+'admin_activity_logs' => [
+    'title' => 'অ্যাক্টিভিটি লগ',
+    'subtitle' => 'পুরো প্ল্যাটফর্মে লগইন, ব্যবহারকারীর কাজ এবং মডেল পরিবর্তন ট্র্যাক করুন।',
+    'search_placeholder' => 'সব অ্যাক্টিভিটি লগে যেকোনো কীওয়ার্ড খুঁজুন...',
+    'all_types' => 'সব অ্যাক্টিভিটি টাইপ',
+    'type_login' => 'লগইন',
+    'type_logout' => 'লগআউট',
+    'type_post' => 'পোস্ট',
+    'type_comment' => 'মন্তব্য',
+    'type_interaction' => 'ইন্টার‌্যাকশন (লাইক/স্টার/রিঅ্যাক্ট)',
+    'type_admin' => 'অ্যাডমিন',
+    'type_health' => 'স্বাস্থ্য',
+    'type_medicine' => 'ওষুধ',
+    'type_mailbox' => 'মেইলবক্স',
+    'type_notification' => 'নোটিফিকেশন',
+    'type_account' => 'অ্যাকাউন্ট',
+    'type_database' => 'ডাটাবেজ পরিবর্তন',
+    'when' => 'সময়',
+    'user' => 'ব্যবহারকারী',
+    'category' => 'ক্যাটেগরি',
+    'action' => 'অ্যাকশন',
+    'reference' => 'রেফারেন্স',
+    'details' => 'বিস্তারিত',
+    'system' => 'সিস্টেম',
+    'empty' => 'নির্বাচিত ফিল্টারে কোনো লগ পাওয়া যায়নি।',
+    'showing' => 'দেখানো হচ্ছে',
+    'to' => 'থেকে',
+    'of' => 'মোট',
+],
+
+'profile_activity_logs' => [
+    'title' => 'আমার অ্যাক্টিভিটি লগ',
+    'subtitle' => 'আপনার নিজের কাজগুলোর টাইমলাইন এখানে দেখুন।',
 ],
 
 'notification_preferences' => [

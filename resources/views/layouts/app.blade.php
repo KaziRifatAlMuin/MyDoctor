@@ -2232,6 +2232,12 @@
                                 {{ __('ui.admin_tabs.community') }}
                             </a>
                         </li>
+                        <li class="banner-nav-item">
+                            <a href="{{ route('admin.logs.index') }}"
+                                class="banner-nav-link {{ request()->routeIs('admin.logs.*') ? 'active' : '' }}">
+                                {{ __('ui.admin_tabs.logs') }}
+                            </a>
+                        </li>
                     @else
                         <li class="banner-nav-item">
                             <a href="{{ route('home') }}"
@@ -2389,6 +2395,10 @@
 
                                 <a href="{{ route('profile') }}" class="dropdown-item-custom">
                                     <i class="fas fa-user me-2"></i>{{ __('ui.menu.profile') }}
+                                </a>
+
+                                <a href="{{ route('profile.logs') }}" class="dropdown-item-custom">
+                                    <i class="fas fa-stream me-2"></i>{{ __('ui.menu.activity_logs') }}
                                 </a>
 
                                 @if (! auth()->user()->isAdmin())
@@ -3443,7 +3453,7 @@ window.clearModalCommentFile = function(postId) {
             const userModal = new bootstrap.Modal(userModalEl);
             userModal.show();
             
-            fetch(`${window.getCommunityBasePath()}/user/${userId}`)
+            fetch(`${window.getCommunityBasePath()}/users/${userId}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {

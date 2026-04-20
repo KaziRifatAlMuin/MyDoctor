@@ -23,6 +23,7 @@ return [
     ],
     'menu' => [
         'profile' => 'Profile',
+        'activity_logs' => 'Activity Logs',
         'settings' => 'Settings',
         'admin_dashboard' => 'Admin Dashboard',
         'logout' => 'Logout',
@@ -1777,6 +1778,7 @@ return [
         'symptoms' => 'Symptoms',
         'health' => 'Health',
         'community' => 'Community',
+        'logs' => 'Activity Logs',
     ],
 
 'terms' => [
@@ -2361,6 +2363,41 @@ return [
     'to' => 'to',
     'of' => 'of',
     'users' => 'users',
+],
+
+'admin_activity_logs' => [
+    'title' => 'Activity Logs',
+    'subtitle' => 'Track authentication, user actions, and model changes across the platform.',
+    'search_placeholder' => 'Search any keyword across all activity logs...',
+    'all_types' => 'All Activity Types',
+    'type_login' => 'Login',
+    'type_logout' => 'Logout',
+    'type_post' => 'Post',
+    'type_comment' => 'Comment',
+    'type_interaction' => 'Interaction (like/star/react)',
+    'type_admin' => 'Admin',
+    'type_health' => 'Health',
+    'type_medicine' => 'Medicine',
+    'type_mailbox' => 'Mailbox',
+    'type_notification' => 'Notification',
+    'type_account' => 'Account',
+    'type_database' => 'Database Changes',
+    'when' => 'When',
+    'user' => 'User',
+    'category' => 'Category',
+    'action' => 'Action',
+    'reference' => 'Reference',
+    'details' => 'Details',
+    'system' => 'System',
+    'empty' => 'No activity logs found for the selected filters.',
+    'showing' => 'Showing',
+    'to' => 'to',
+    'of' => 'of',
+],
+
+'profile_activity_logs' => [
+    'title' => 'My Activity Logs',
+    'subtitle' => 'Review your own account and feature activities in one timeline.',
 ],
 
 

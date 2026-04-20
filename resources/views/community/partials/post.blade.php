@@ -59,7 +59,7 @@
                     @else
                         <span class="post-time"><i class="far fa-clock me-1"></i>{{ $post->created_at->diffForHumans() }}</span>
                     @endif
-                    <a href="{{ route('community.post.show', $post) }}" class="text-decoration-none" style="font-weight:600; color:#1877f2;">
+                    <a href="{{ route('community.posts.show', $post) }}" class="text-decoration-none" style="font-weight:600; color:#1877f2;">
                         {{ __('ui.community.open_post') }}
                     </a>
                     @if($post->disease && $diseaseDisplayName)
@@ -92,7 +92,7 @@
             <!-- Dropdown Menu -->
             <div class="post-dropdown-menu" id="post-menu-{{ $post->id }}" style="display:none; position:absolute; top:40px; right:0; background:white; border-radius:8px; box-shadow:0 2px 12px rgba(0,0,0,0.15); min-width:180px; z-index:1000; overflow:hidden;">
                 <!-- View Full Post Page -->
-                <a class="dropdown-item" href="{{ route('community.post.show', $post) }}" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#1a1a1a; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb; text-decoration:none;">
+                <a class="dropdown-item" href="{{ route('community.posts.show', $post) }}" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#1a1a1a; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb; text-decoration:none;">
                     <i class="fas fa-expand" style="width:18px; color:#1877f2;"></i>
                     <span>{{ __('ui.community.view_full_post') }}</span>
                 </a>

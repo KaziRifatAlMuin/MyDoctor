@@ -19,6 +19,7 @@ use App\Http\Controllers\CommunityController;
 use App\Http\Controllers\AiChatController;
 use App\Http\Controllers\PublicHealthController;
 use App\Http\Controllers\AdminManagementController;
+use App\Http\Controllers\ProfileActivityLogController;
 use App\Http\Controllers\GeoController;
 use App\Models\Disease;
 use App\Models\MedicineReminder;
@@ -100,10 +101,7 @@ Route::get('/language/{locale}', function (string $locale) {
 
 Route::get('/diseases', [PublicHealthController::class, 'indexDiseases'])->name('public.diseases.index');
 Route::get('/symptoms', [PublicHealthController::class, 'indexSymptoms'])->name('public.symptoms.index');
-Route::get('/disease/{disease}', [PublicHealthController::class, 'showDisease'])->name('public.disease.show');
-Route::get('/diseases/{disease}', function (Disease $disease) {
-    return redirect()->route('public.disease.show', $disease);
-});
+Route::get('/diseases/{disease}', [PublicHealthController::class, 'showDisease'])->name('public.disease.show');
 Route::get('/symptoms/{symptom}', [PublicHealthController::class, 'showSymptom'])->name('public.symptoms.show');
 
 /*
@@ -160,14 +158,15 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureUserIsActive::class, 'veri
     
     // Profile
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+    Route::get('/profile/logs', [ProfileActivityLogController::class, 'index'])->name('profile.logs');
     Route::patch('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
     Route::patch('/profile/picture', [ProfileController::class, 'updatePicture'])->name('profile.picture');
     Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     
     // Settings (notification preferences)
-    Route::get('/profile/setting', [NotificationPreferenceController::class, 'index'])->name('profile.setting');
-    Route::put('/profile/setting', [NotificationPreferenceController::class, 'update'])->name('profile.setting.update');
+    Route::get('/profile/settings', [NotificationPreferenceController::class, 'index'])->name('profile.setting');
+    Route::put('/profile/settings', [NotificationPreferenceController::class, 'update'])->name('profile.setting.update');
     Route::get('/profile/notifications', function () {
         return redirect()->route('profile.setting');
     })->name('profile.notifications');
@@ -303,9 +302,8 @@ Route::prefix('community')->name('community.')->middleware(\App\Http\Middleware\
     // Page routes (return HTML)
     Route::get('/', [CommunityController::class, 'home'])->name('home');
     Route::get('/posts', [CommunityController::class, 'postsIndex'])->name('posts.index');
-    Route::get('/post/{post}', [CommunityController::class, 'showPost'])->whereNumber('post')->name('post.show');
     Route::get('/posts/{post}', [CommunityController::class, 'showPost'])->whereNumber('post')->name('posts.show');
-    Route::get('/disease/{disease}/posts', [CommunityController::class, 'diseasePosts'])->name('disease.posts');
+    Route::get('/diseases/{disease}/posts', [CommunityController::class, 'diseasePosts'])->name('disease.posts');
 
     Route::get('/landing', [CommunityController::class, 'landing'])->name('landing');
     Route::get('/forum', function () {
@@ -344,7 +342,7 @@ Route::prefix('community')->name('community.')->middleware(\App\Http\Middleware\
     });
     
     // User details for modals
-    Route::get('/user/{userId}', [CommunityController::class, 'getUserDetails'])->name('user.details');
+    Route::get('/users/{userId}', [CommunityController::class, 'getUserDetails'])->name('user.details');
 });
 
 /*
@@ -393,10 +391,7 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureUserIsActive::class, 'veri
 });
 
 // Public user profile
-Route::get('/user/{user}', [App\Http\Controllers\UserController::class, 'publicShow'])->name('users.show');
-
-// Admin user update route
-Route::middleware(['auth', \App\Http\Middleware\EnsureUserIsActive::class, 'admin', \App\Http\Middleware\RedirectIfEmailNotVerified::class])->patch('/user/{user}', [App\Http\Controllers\UserController::class, 'update'])->name('users.update');
+Route::get('/users/{user}', [App\Http\Controllers\UserController::class, 'publicShow'])->name('users.show');
 
 /*
 |--------------------------------------------------------------------------
@@ -440,10 +435,11 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureUserIsActive::class, 'admi
     Route::put('/comments/{comment}/likes', [CommunityController::class, 'toggleCommentLike'])->name('comments.like');
     Route::patch('/comments/{comment}', [CommunityController::class, 'updateComment'])->name('comments.update');
         Route::get('/modal-post/{post}', [CommunityController::class, 'modalPost'])->name('modal.post');
-        Route::get('/user/{userId}', [CommunityController::class, 'getUserDetails'])->name('user.details');
+        Route::get('/users/{userId}', [CommunityController::class, 'getUserDetails'])->name('user.details');
     });
 
-    Route::get('/user/{user}', [App\Http\Controllers\UserController::class, 'show'])->name('users.show');
+    Route::get('/users/{user}', [App\Http\Controllers\UserController::class, 'show'])->name('users.show');
+    Route::get('/logs', [App\Http\Controllers\AdminActivityLogController::class, 'index'])->name('logs.index');
     
     // Future admin routes
     Route::get('/medical', [App\Http\Controllers\AdminDashboardController::class, 'medical'])->name('medical.index');

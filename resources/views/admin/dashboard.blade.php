@@ -357,7 +357,7 @@
                                             <td>{{ \Illuminate\Support\Str::limit($pendingPost->description, 80) }}</td>
                                             <td>{{ $pendingPost->created_at->diffForHumans() }}</td>
                                             <td>
-                                                <a href="{{ route('community.post.show', $pendingPost) }}" class="btn btn-sm btn-outline-primary">
+                                                <a href="{{ route('community.posts.show', $pendingPost) }}" class="btn btn-sm btn-outline-primary">
                                                     {{ __('ui.admin_dashboard.review') }}
                                                 </a>
                                             </td>
