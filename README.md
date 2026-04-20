@@ -162,6 +162,63 @@ php artisan schedule:work
 php artisan storage:link
 ```
 
+## cPanel Production Notes
+
+If the app works locally but activity logs do not appear on cPanel, the issue is usually environment/config cache, session storage, or missing writable directories.
+
+Use these production-safe settings in `.env`:
+
+```dotenv
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://your-domain.com
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=your_cpanel_db
+DB_USERNAME=your_cpanel_db_user
+DB_PASSWORD=your_cpanel_db_password
+
+SESSION_DRIVER=file
+CACHE_STORE=file
+QUEUE_CONNECTION=database
+
+LOG_CHANNEL=daily
+LOG_LEVEL=error
+SESSION_SECURE_COOKIE=true
+SESSION_SAME_SITE=lax
+```
+
+After deploying, run:
+
+```bash
+php artisan optimize:clear
+php artisan migrate --force
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+Also make sure these directories exist and are writable by the web server user:
+
+- `storage/`
+- `bootstrap/cache/`
+
+If you intentionally use `SESSION_DRIVER=database`, create and migrate the session table:
+
+```bash
+php artisan session:table
+php artisan migrate --force
+```
+
+Quick check for activity logs:
+
+```bash
+php artisan tinker
+>>> \App\Models\ActivityLog::query()->latest()->limit(5)->get();
+```
+
 ## Testing Shortcuts
 
 Run the admin authorization smoke checks (admin allowed, member denied, guest redirected):

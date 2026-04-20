@@ -17,4 +17,11 @@ class Kernel extends ConsoleKernel
         $this->load(__DIR__.'/Commands');
         require base_path('routes/console.php');
     }
+
+    /**
+     * Register the custom commands for the application.
+     */
+    protected $commands = [
+        \App\Console\Commands\CheckCpanelReadiness::class,
+    ];
 }

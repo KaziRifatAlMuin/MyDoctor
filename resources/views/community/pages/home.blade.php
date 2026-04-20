@@ -33,7 +33,7 @@
                             <div class="card-body p-3 p-md-4 d-flex flex-column">
                                 <div class="d-flex justify-content-between align-items-start gap-2">
                                     <h2 class="h6 mb-0" style="font-weight: 800; color: #0f2f6b; font-size: clamp(0.875rem, 2vw, 1rem);">
-                                        <a href="{{ route('public.disease.show', $disease) }}" class="text-decoration-none"
+                                        <a href="{{ route('community.disease.posts', $disease) }}" class="text-decoration-none"
                                             style="color: #0f2f6b;">
                                             {{ $disease->display_name }}
                                         </a>

@@ -5,12 +5,12 @@ namespace App\Services;
 use App\Models\ActivityLog;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Schema;
 use Throwable;
 
 class ActivityLogger
 {
     private const MAX_ROWS = 10000;
+    private const RETRY_AFTER_FAILURE_SECONDS = 300;
 
     private const SECRET_KEYS = [
         'password',
@@ -21,8 +21,8 @@ class ActivityLogger
     ];
 
     private static bool $isWriting = false;
-
-    private static ?bool $tableExists = null;
+    private static ?bool $canWrite = null;
+    private static ?int $retryAt = null;
 
     public static function log(array $payload): void
     {
@@ -44,9 +44,14 @@ class ActivityLogger
                 'created_at' => now(),
             ]);
 
+            self::$canWrite = true;
+            self::$retryAt = null;
+
             self::pruneIfNeeded();
         } catch (Throwable $e) {
             // Keep activity logging non-blocking for user requests.
+            self::$canWrite = false;
+            self::$retryAt = time() + self::RETRY_AFTER_FAILURE_SECONDS;
         } finally {
             self::$isWriting = false;
         }
@@ -149,35 +154,37 @@ class ActivityLogger
             return true;
         }
 
-        if (self::$tableExists !== null) {
-            return self::$tableExists;
+        if (self::$canWrite === true) {
+            return true;
         }
 
-        try {
-            self::$tableExists = Schema::hasTable('activity_logs');
-        } catch (Throwable $e) {
-            self::$tableExists = false;
+        if (self::$canWrite === false && self::$retryAt !== null && time() < self::$retryAt) {
+            return false;
         }
 
-        return self::$tableExists;
+        return true;
     }
 
     private static function pruneIfNeeded(): void
     {
-        $count = ActivityLog::query()->count();
-        if ($count <= self::MAX_ROWS) {
-            return;
-        }
+        try {
+            $count = ActivityLog::query()->count();
+            if ($count <= self::MAX_ROWS) {
+                return;
+            }
 
-        $toDelete = $count - self::MAX_ROWS;
-        $ids = ActivityLog::query()
-            ->orderBy('created_at')
-            ->orderBy('id')
-            ->limit($toDelete)
-            ->pluck('id');
+            $toDelete = $count - self::MAX_ROWS;
+            $ids = ActivityLog::query()
+                ->orderBy('created_at')
+                ->orderBy('id')
+                ->limit($toDelete)
+                ->pluck('id');
 
-        if ($ids->isNotEmpty()) {
-            ActivityLog::query()->whereIn('id', $ids)->delete();
+            if ($ids->isNotEmpty()) {
+                ActivityLog::query()->whereIn('id', $ids)->delete();
+            }
+        } catch (Throwable $e) {
+            // Never fail the request because pruning failed.
         }
     }
 }
