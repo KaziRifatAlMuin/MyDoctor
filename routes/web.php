@@ -89,6 +89,41 @@ Route::prefix('geo/v2.0')->group(function () {
     Route::get('/unions/{upazilaId}', [GeoController::class, 'unionsByUpazila'])->whereNumber('upazilaId');
 });
 
+// Test helper routes (only enabled in local/testing environments)
+if (app()->environment('local') || app()->environment('testing')) {
+    Route::get('/_playwright/create-test-user', function (Request $request) {
+        $email = (string) $request->query('email', 'playwright@test');
+        $password = (string) $request->query('password', 'Password123!');
+
+        $user = App\Models\User::withoutGlobalScopes()->firstOrCreate([
+            'email' => $email,
+        ], [
+            'name' => 'Playwright Test',
+            'password' => Illuminate\Support\Facades\Hash::make($password),
+            'gender' => 'male',
+        ]);
+
+        // Ensure verified and active
+        $user->email_verified_at = now();
+        $user->is_active = true;
+        $user->save();
+
+        // Ensure address exists to satisfy profile requirements
+        $user->address()->updateOrCreate([], [
+            'division_id' => 6,
+            'division' => 'Dhaka',
+            'district_id' => 26,
+            'district' => 'Dhaka',
+            'upazila_id' => 10,
+            'upazila' => 'Mirpur',
+        ]);
+
+        Illuminate\Support\Facades\Auth::login($user);
+
+        return redirect('/');
+    });
+}
+
 Route::get('/language/{locale}', function (string $locale) {
     if (!in_array($locale, ['en', 'bn'], true)) {
         abort(404);
