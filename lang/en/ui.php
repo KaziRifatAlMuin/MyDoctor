@@ -499,7 +499,6 @@ return [
         'Pending' => 'Pending',
         'Taken' => 'Taken',
         'Missed' => 'Missed',
-        'Snoozed' => 'Snoozed',
         'Home' => 'Home',
         'Dashboard' => 'Dashboard',
         'Medicine' => 'Medicine',
@@ -1673,7 +1672,7 @@ return [
     'how_to_add_medicine' => 'How do I add a medicine?',
     'how_to_add_medicine_answer' => 'Go to Medicine → Add Medicine. Enter the medicine name, dosage, form (tablet/syrup/etc.), and any additional notes. Then create a schedule to set when you should take it.',
     'how_medicine_reminders_work' => 'How do medicine reminders work?',
-    'how_medicine_reminders_work_answer' => 'After adding medicine schedules, reminders automatically appear at the set times. You can mark each dose as "Taken" or "Missed". You can also snooze reminders. Enable push notifications in your profile to get browser alerts.',
+    'how_medicine_reminders_work_answer' => 'After adding medicine schedules, reminders automatically appear at the set times. You can mark each dose as "Taken" or "Not Taken". Enable push notifications in your profile to get browser alerts.',
     'what_is_adherence_rate' => 'What is adherence rate?',
     'what_is_adherence_rate_answer' => 'Adherence rate shows what percentage of your scheduled medicines you\'ve taken over the last 30 days. A rate above 80% is ideal. Low adherence will trigger helpful suggestions to improve your routine.',
     'can_export_medicine_logs' => 'Can I export my medicine logs?',
@@ -2427,6 +2426,35 @@ return [
     'save_preferences' => 'Save Preferences',
 ],
 
+
+
+// Add to ui.php (English)
+'admin_reported_posts' => [
+    'title' => 'Reported Posts',
+    'subtitle' => 'Review and moderate posts that have been reported by users',
+    'back_to_posts' => 'Back to Posts',
+    'reported' => 'Reported',
+    'post_id' => 'Post',
+    'deleted_user' => 'Deleted User',
+    'general' => 'General',
+    'approve_and_clear' => 'Approve & Clear Report',
+    'dismiss_report' => 'Dismiss Report',
+    'delete_post' => 'Delete Post',
+    'no_reported_posts' => 'No Reported Posts',
+    'no_reported_posts_message' => 'All posts are clean! No reports to review at this time.',
+    'confirm_delete' => 'Confirm Delete',
+    'delete_confirmation_message' => 'Are you sure you want to permanently delete this post? This action cannot be undone.',
+    'cancel' => 'Cancel',
+    'delete' => 'Delete',
+    'approve_clear_confirm' => 'Approve this post and clear the report flag?',
+    'dismiss_report_confirm' => 'Dismiss the report on this post without making changes?',
+    'post_approved_and_cleared' => 'Post approved and report cleared!',
+    'error_approving' => 'Error approving post',
+    'report_dismissed' => 'Report dismissed',
+    'error_dismissing' => 'Error dismissing report',
+    'post_deleted' => 'Post deleted successfully',
+    'error_deleting' => 'Error deleting post',
+],
 
 'profile_settings' => [
     'title' => 'Profile Settings',

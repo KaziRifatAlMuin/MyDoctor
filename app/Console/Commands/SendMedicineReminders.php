@@ -3,9 +3,12 @@
 namespace App\Console\Commands;
 
 use App\Models\MedicineReminder;
-use App\Notifications\MedicineEmailNotification;
+use App\Models\Notification;
+use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use App\Mail\MedicineReminderMail;
+use Illuminate\Support\Facades\Mail;
 
 class SendMedicineReminders extends Command
 {
@@ -28,40 +31,12 @@ class SendMedicineReminders extends Command
         $this->line('   To:   ' . $endTime->format('Y-m-d H:i:s') . ' (6 mins ahead)');
         $this->line('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-        // Get ALL pending reminders for debugging
-        $allPending = MedicineReminder::with(['schedule.medicine.user'])
-            ->where('status', 'pending')
-            ->orderBy('reminder_at')
-            ->get();
-            
-        $this->line('📊 Total pending reminders in database: ' . $allPending->count());
-        
-        if ($allPending->count() > 0) {
-            $this->line('📋 All pending reminders:');
-            foreach ($allPending as $reminder) {
-                $minutesUntil = $now->diffInMinutes($reminder->reminder_at, false);
-                $status = $minutesUntil < 0 ? '🔴 PAST' : 
-                         ($minutesUntil <= 6 && $minutesUntil >= 4 ? '🟢 NOW (5min)' : 
-                         ($minutesUntil < 4 ? '🟡 VERY SOON' : '🟡 FUTURE'));
-                $this->line(sprintf(
-                    '   %s ID: %d | %s | %s | %s (%d min from now)',
-                    $status,
-                    $reminder->id,
-                    $reminder->reminder_at->format('H:i:s'),
-                    $reminder->schedule->medicine->medicine_name,
-                    $reminder->status,
-                    $minutesUntil
-                ));
-            }
-        }
-
         // Get reminders scheduled 4-6 minutes from now (to send 5 minutes before)
         $reminders = MedicineReminder::with(['schedule.medicine.user'])
             ->where('status', 'pending')
             ->whereBetween('reminder_at', [$startTime, $endTime])
             ->get();
 
-        $this->line('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         $this->line('🎯 Reminders in 4-6-min-ahead window (5 minutes before): ' . $reminders->count());
         
         if ($reminders->count() > 0) {
@@ -79,6 +54,20 @@ class SendMedicineReminders extends Command
             }
         }
 
+        // Get or create system user for notifications
+        $systemUser = User::firstOrCreate(
+            ['email' => 'system@mydoctor.com'],
+            [
+                'name' => 'System',
+                'password' => bcrypt(uniqid()),
+                'gender' => 'other',
+                'role' => 'member',
+                'is_active' => true,
+                'email_verified_at' => now(),
+            ]
+        );
+
+        $notificationCount = 0;
         $emailCount = 0;
         $skippedCount = 0;
 
@@ -92,26 +81,65 @@ class SendMedicineReminders extends Command
                     continue;
                 }
 
+                $medicine = $reminder->schedule->medicine;
                 $minutesUntil = $now->diffInMinutes($reminder->reminder_at, false);
                 
                 $this->line('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-                $this->line("💊 Processing: {$reminder->schedule->medicine->medicine_name}");
+                $this->line("💊 Processing: {$medicine->medicine_name}");
                 $this->line("   👤 User: {$user->name} ({$user->email})");
                 $this->line("   ⏰ Scheduled: {$reminder->reminder_at->format('H:i:s')}");
                 $this->line("   🕒 Current: " . now()->format('H:i:s'));
                 $this->line("   ⏱️  Time until reminder: {$minutesUntil} minutes");
                 $this->line("   📢 Sending reminder 5 minutes before scheduled time");
 
-                // Send email notification
+                // Create database notification with TAKEN and NOT TAKEN buttons
+                try {
+                    $postPreview = "Time to take your medicine: {$medicine->medicine_name}";
+                    
+                    // Store both action URLs in notification data
+                    Notification::create([
+                        'user_id' => $user->id,
+                        'from_user_id' => $systemUser->id,
+                        'type' => 'medicine_reminder',
+                        'notifiable_type' => MedicineReminder::class,
+                        'notifiable_id' => $reminder->id,
+                        'message' => $postPreview,
+                        'data' => [
+                            'type' => 'medicine_reminder',
+                            'reminder_id' => $reminder->id,
+                            'medicine_id' => $medicine->id,
+                            'medicine_name' => $medicine->medicine_name,
+                            'dosage' => $medicine->value_per_dose ? "{$medicine->value_per_dose} {$medicine->unit}" : null,
+                            'scheduled_time' => $reminder->reminder_at->format('h:i A'),
+                            'message' => $postPreview,
+                            'action_url' => route('medicine.reminders'),
+                            // TAKEN button URL
+                            'taken_url' => route('medicine.reminders.taken-from-notification', $reminder->id),
+                            'from_user_id' => $systemUser->id,
+                            'from_user_name' => $systemUser->name,
+                        ],
+                    ]);
+                    
+                    $notificationCount++;
+                    $this->info("   ✅ Database notification sent with Taken/Missed buttons");
+                    Log::info("Medicine reminder database notification sent for reminder {$reminder->id} to user {$user->id}");
+                    
+                } catch (\Exception $e) {
+                    $this->error("   ❌ Database notification failed: " . $e->getMessage());
+                    Log::error("Medicine reminder database notification failed: " . $e->getMessage());
+                    $skippedCount++;
+                }
+
+                // Send email notification manually (bypassing Laravel's notification system)
                 if ($user->wantsEmailNotifications()) {
                     try {
-                        $user->notify(new MedicineEmailNotification($reminder));
+                        Mail::to($user->email)->send(new \App\Mail\MedicineReminderMail($reminder));
                         $emailCount++;
-                        $this->info("   ✅ Email queued (5 minutes before)");
-                        Log::info("Email queued for reminder {$reminder->id} to user {$user->id} (5 minutes before)");
+                        $this->info("   ✅ Email notification sent");
+                        Log::info("Medicine reminder email sent for reminder {$reminder->id} to user {$user->id}");
                     } catch (\Exception $e) {
-                        $this->error("   ❌ Email failed: " . $e->getMessage());
-                        Log::error("Email failed: " . $e->getMessage());
+                        $this->error("   ❌ Email notification failed: " . $e->getMessage());
+                        Log::error("Medicine reminder email failed: " . $e->getMessage());
                     }
                 } else {
                     $this->line("   ⏸️  Email disabled by user");
@@ -128,8 +156,9 @@ class SendMedicineReminders extends Command
         $this->table(
             ['Type', 'Count'],
             [
-                ['Emails (5 min before)', $emailCount],
-                ['Skipped', $skippedCount],
+                ['Database Notifications', $notificationCount],
+                ['Email Notifications', $emailCount],
+                ['Skipped/Failed', $skippedCount],
             ]
         );
 
