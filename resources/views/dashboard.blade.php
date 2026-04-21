@@ -817,17 +817,17 @@
                 </div>
 
                 {{-- Right: Health Score --}}
-                @php
-                    $scoreColor = $healthScore >= 75 ? '#38a169' : ($healthScore >= 50 ? '#dd6b20' : '#e53e3e');
-                @endphp
-                <div class="health-score-wrap" title="{{ __('ui.dashboard.health_score_title') }}">
-                    <div class="health-score-circle" style="--score: {{ $healthScore }}; --score-color: {{ $scoreColor }};">
-                        <div class="health-score-inner">
-                            <div class="health-score-value">{{ $healthScore }}</div>
-                            <div class="health-score-label">{{ __('ui.dashboard.health_score') }}</div>
-                        </div>
-                    </div>
-                </div>
+              {{-- Right: Health Stats Summary --}}
+<div class="d-flex gap-2">
+    <div class="text-center px-3 py-2" style="background: rgba(255,255,255,0.12); border-radius: 16px;">
+        <div class="fs-4 fw-bold">{{ $healthMetrics->count() }}</div>
+        <div class="small opacity-75">Metrics</div>
+    </div>
+    <div class="text-center px-3 py-2" style="background: rgba(255,255,255,0.12); border-radius: 16px;">
+        <div class="fs-4 fw-bold">{{ $symptoms->count() }}</div>
+        <div class="small opacity-75">Symptoms</div>
+    </div>
+</div>
             </div>
 
             <div class="hero-stats position-relative" style="z-index:2;">

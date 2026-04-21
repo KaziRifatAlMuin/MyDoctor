@@ -108,15 +108,6 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        // ── Health score calculation ──
-        $healthScore = $this->calculateHealthScore(
-            $adherenceRate,
-            $symptoms->where('recorded_at', '>=', now()->subDays(7)),
-            $activeConditions,
-            $recentMetricsCount,
-            $latestMetrics
-        );
-
         // ── Metric trends (last 7 readings per type) ──
         $metricTrends = [];
         foreach ($metricsByType->take(4) as $type => $metrics) {
@@ -150,33 +141,9 @@ class DashboardController extends Controller
             'adherenceByDay',
             'todayReminders',
             'recentUploads',
-            'healthScore',
             'metricTrends',
             'liveEnvironment'
         ));
-    }
-
-    /**
-     * Calculate a composite health score (0–100).
-     */
-    private function calculateHealthScore($adherenceRate, $recentSymptoms, $activeConditions, $recentMetricsCount, $latestMetrics): int
-    {
-        $score = 50; // baseline
-
-        // Adherence contributes up to +25
-        $score += (int) ($adherenceRate * 0.25);
-
-        // Fewer recent symptoms is better (+15 max)
-        $symptomCount = $recentSymptoms->count();
-        $score += max(0, 15 - ($symptomCount * 3));
-
-        // Active tracking bonus (+10)
-        $score += min(10, $recentMetricsCount * 2);
-
-        // Penalty for many active conditions (-5 each, max -15)
-        $score -= min(15, $activeConditions->count() * 5);
-
-        return max(0, min(100, $score));
     }
 
     private function ensureMetricDefinitions()
