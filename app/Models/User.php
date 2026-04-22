@@ -27,6 +27,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'is_active',
         'password',
         'notification_settings',
+        'starred_disease_ids',
+        'starred_disease_history',
     ];
 
     protected $hidden = [
@@ -39,6 +41,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'notification_settings' => 'array',
+        'starred_disease_ids' => 'array',
+        'starred_disease_history' => 'array',
         'is_active' => 'boolean',
     ];
 
@@ -222,13 +226,112 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function starredDiseases()
     {
-        return $this->belongsToMany(Disease::class, 'user_starred_diseases')
-            ->withTimestamps();
+        $ids = $this->getStarredDiseaseIds();
+
+        if ($ids === []) {
+            return collect();
+        }
+
+        return Disease::query()
+            ->whereIn('id', $ids)
+            ->get()
+            ->sortBy(function (Disease $disease) use ($ids) {
+                $index = array_search((int) $disease->id, $ids, true);
+
+                return $index === false ? PHP_INT_MAX : $index;
+            })
+            ->values();
     }
 
-    public function userStarredDiseases()
+    public function getStarredDiseaseIds(): array
     {
-        return $this->hasMany(UserStarredDisease::class);
+        $ids = $this->starred_disease_ids ?? [];
+
+        if (!is_array($ids)) {
+            $decoded = json_decode((string) $ids, true);
+            $ids = is_array($decoded) ? $decoded : [];
+        }
+
+        $normalized = array_map('intval', $ids);
+        $normalized = array_values(array_unique(array_filter($normalized, static fn (int $id): bool => $id > 0)));
+
+        return $normalized;
+    }
+
+    public function getStarredDiseaseHistory(): array
+    {
+        $history = $this->starred_disease_history ?? [];
+
+        if (!is_array($history)) {
+            $decoded = json_decode((string) $history, true);
+            $history = is_array($decoded) ? $decoded : [];
+        }
+
+        return array_values(array_filter(array_map(static function ($row): ?array {
+            if (!is_array($row)) {
+                return null;
+            }
+
+            $diseaseId = isset($row['disease_id']) ? (int) $row['disease_id'] : 0;
+            if ($diseaseId <= 0) {
+                return null;
+            }
+
+            return [
+                'disease_id' => $diseaseId,
+                'starred_at' => isset($row['starred_at']) ? (string) $row['starred_at'] : now()->toIso8601String(),
+                'unstarred_at' => isset($row['unstarred_at']) && $row['unstarred_at'] !== null
+                    ? (string) $row['unstarred_at']
+                    : null,
+            ];
+        }, $history)));
+    }
+
+    public function isDiseaseStarred(int $diseaseId): bool
+    {
+        return in_array($diseaseId, $this->getStarredDiseaseIds(), true);
+    }
+
+    public function toggleDiseaseStarred(int $diseaseId): bool
+    {
+        $currentIds = $this->getStarredDiseaseIds();
+        $history = $this->getStarredDiseaseHistory();
+        $now = now()->toIso8601String();
+
+        if (in_array($diseaseId, $currentIds, true)) {
+            $currentIds = array_values(array_filter($currentIds, static fn (int $id): bool => $id !== $diseaseId));
+
+            for ($i = count($history) - 1; $i >= 0; $i--) {
+                if ((int) ($history[$i]['disease_id'] ?? 0) === $diseaseId
+                    && empty($history[$i]['unstarred_at'])) {
+                    $history[$i]['unstarred_at'] = $now;
+                    break;
+                }
+            }
+
+            $this->forceFill([
+                'starred_disease_ids' => $currentIds,
+                'starred_disease_history' => $history,
+            ])->save();
+
+            return false;
+        }
+
+        $currentIds[] = $diseaseId;
+        $currentIds = array_values(array_unique($currentIds));
+
+        $history[] = [
+            'disease_id' => $diseaseId,
+            'starred_at' => $now,
+            'unstarred_at' => null,
+        ];
+
+        $this->forceFill([
+            'starred_disease_ids' => $currentIds,
+            'starred_disease_history' => $history,
+        ])->save();
+
+        return true;
     }
 
     // Community relationships

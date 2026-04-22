@@ -27,6 +27,8 @@ return new class extends Migration
             $table->enum('role', ['member', 'admin'])->default('member');
             $table->boolean('is_active')->default(true);
             $table->json('notification_settings')->nullable();
+            $table->json('starred_disease_ids')->nullable();
+            $table->json('starred_disease_history')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

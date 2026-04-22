@@ -13,10 +13,20 @@
                             <h1 class="mb-1 mb-md-2" style="font-size: clamp(1.25rem, 5vw, 2rem); font-weight: 800;">{{ __('ui.community.community_diseases_hub') }}</h1>
                             <p class="mb-0" style="opacity: .92; font-size: clamp(0.875rem, 3vw, 1rem);">{{ __('ui.community.choose_disease_card') }}</p>
                         </div>
-                        <a href="{{ route('community.posts.index') }}" class="btn btn-light"
-                            style="border-radius: 12px; color: #0b57d0; font-weight: 800; white-space: nowrap; font-size: clamp(0.75rem, 2vw, 0.95rem);">
-                            {{ __('ui.community.browse_all_posts') }}
-                        </a>
+                        <div class="d-flex flex-wrap gap-2 justify-content-end">
+                            @auth
+                                @if(!auth()->user()->isAdmin())
+                                    <a href="{{ route('community.diseases.starred.history') }}" class="btn btn-outline-light"
+                                        style="border-radius: 12px; font-weight: 800; white-space: nowrap; font-size: clamp(0.75rem, 2vw, 0.95rem);">
+                                        {{ __('ui.community.starred_diseases_history') }}
+                                    </a>
+                                @endif
+                            @endauth
+                            <a href="{{ route('community.posts.index') }}" class="btn btn-light"
+                                style="border-radius: 12px; color: #0b57d0; font-weight: 800; white-space: nowrap; font-size: clamp(0.75rem, 2vw, 0.95rem);">
+                                {{ __('ui.community.browse_all_posts') }}
+                            </a>
+                        </div>
                     </div>
                     <div class="d-flex gap-2 gap-md-4 mt-2 mt-md-3 flex-wrap" style="font-weight: 700; font-size: clamp(0.75rem, 2.5vw, 0.95rem); opacity: .95;">
                         <span><i class="fas fa-list-ul me-1"></i>{{ number_format($totalPosts) }} {{ __('ui.community.posts') }}</span>

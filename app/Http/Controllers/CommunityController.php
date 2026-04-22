@@ -9,8 +9,8 @@ use App\Models\User;
 use App\Models\PostLike;
 use App\Models\CommentLike;
 use App\Models\Notification;
+use App\Services\ActivityLogger;
 use Illuminate\Support\Facades\View;
-use App\Models\UserStarredDisease;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -26,7 +26,7 @@ class CommunityController extends Controller
     public function home()
     {
         $userStarredDiseaseIds = Auth::check()
-            ? Auth::user()->starredDiseases()->pluck('disease_id')->all()
+            ? Auth::user()->getStarredDiseaseIds()
             : [];
 
         $diseases = Disease::withCount([
@@ -277,7 +277,7 @@ class CommunityController extends Controller
                 && Auth::check()
                 && Auth::user()->isAdmin();
             $userStarredDiseaseIds = Auth::check()
-                ? Auth::user()->starredDiseases()->pluck('disease_id')->all()
+                ? Auth::user()->getStarredDiseaseIds()
                 : [];
             
             // Build the posts query with eager loading
@@ -741,7 +741,7 @@ class CommunityController extends Controller
                 ->where('is_approved', true);
 
             if (Auth::check() && !Auth::user()->isAdmin()) {
-                $userStarredDiseaseIds = Auth::user()->starredDiseases()->pluck('disease_id')->all();
+                $userStarredDiseaseIds = Auth::user()->getStarredDiseaseIds();
                 if (!empty($userStarredDiseaseIds)) {
                     $ids = implode(',', array_map('intval', $userStarredDiseaseIds));
                     $query->orderByRaw("CASE WHEN disease_id IN ({$ids}) THEN 0 ELSE 1 END");
@@ -1694,10 +1694,13 @@ class CommunityController extends Controller
 
             $post->loadMissing(['disease', 'user']);
 
-            $targetUserIds = UserStarredDisease::query()
-                ->where('disease_id', $post->disease_id)
-                ->where('user_id', '!=', $post->user_id)
-                ->pluck('user_id')
+            $targetUserIds = User::query()
+                ->where('id', '!=', $post->user_id)
+                ->get(['id', 'starred_disease_ids'])
+                ->filter(function (User $user) use ($post): bool {
+                    return in_array((int) $post->disease_id, $user->getStarredDiseaseIds(), true);
+                })
+                ->pluck('id')
                 ->unique()
                 ->values();
 
@@ -1751,30 +1754,120 @@ class CommunityController extends Controller
             ], 403);
         }
 
-        $existing = UserStarredDisease::query()
-            ->where('user_id', Auth::id())
-            ->where('disease_id', $disease->id)
-            ->first();
+        $user = Auth::user();
+        $starred = $user->toggleDiseaseStarred((int) $disease->id);
 
-        if ($existing) {
-            $existing->delete();
-
-            return response()->json([
-                'success' => true,
-                'starred' => false,
-                'message' => 'Disease removed from starred.',
-            ]);
-        }
-
-        UserStarredDisease::create([
-            'user_id' => Auth::id(),
-            'disease_id' => $disease->id,
+        ActivityLogger::log([
+            'user_id' => $user->id,
+            'category' => 'community',
+            'action' => $starred ? 'disease_starred' : 'disease_unstarred',
+            'description' => $starred
+                ? 'Starred a disease from community cards.'
+                : 'Removed a disease from starred list.',
+            'subject_type' => Disease::class,
+            'subject_id' => (int) $disease->id,
+            'context' => [
+                'disease_id' => (int) $disease->id,
+                'disease_name' => $disease->display_name,
+                'starred' => $starred,
+            ],
         ]);
 
         return response()->json([
             'success' => true,
-            'starred' => true,
-            'message' => 'Disease starred successfully.',
+            'starred' => $starred,
+            'message' => $starred
+                ? __('ui.community.disease_starred_successfully')
+                : __('ui.community.disease_removed_from_starred'),
+        ]);
+    }
+
+    /**
+     * Display star/unstar history of diseases for current user.
+     */
+    public function starredDiseaseHistory(Request $request)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+
+        if (Auth::user()->isAdmin()) {
+            return redirect()->route('community.home');
+        }
+
+        $status = (string) $request->query('status', 'all');
+        if (!in_array($status, ['all', 'current', 'previous'], true)) {
+            $status = 'all';
+        }
+
+        $diseaseFilter = (string) $request->query('disease', 'all');
+        $selectedDiseaseId = $diseaseFilter !== 'all' ? (int) $diseaseFilter : null;
+
+        $user = Auth::user();
+        $currentIds = $user->getStarredDiseaseIds();
+        $history = collect($user->getStarredDiseaseHistory());
+
+        $historyDiseaseIds = $history
+            ->pluck('disease_id')
+            ->map(static fn ($id) => (int) $id)
+            ->filter(static fn (int $id): bool => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
+
+        $diseases = Disease::query()
+            ->whereIn('id', $historyDiseaseIds)
+            ->orderBy('disease_name')
+            ->get();
+        $diseaseMap = $diseases->keyBy('id');
+
+        $rows = $history
+            ->map(function (array $row) use ($currentIds, $diseaseMap) {
+                $diseaseId = (int) ($row['disease_id'] ?? 0);
+                if ($diseaseId <= 0 || !$diseaseMap->has($diseaseId)) {
+                    return null;
+                }
+
+                $unstarredAt = isset($row['unstarred_at']) && $row['unstarred_at'] !== null
+                    ? (string) $row['unstarred_at']
+                    : null;
+
+                return [
+                    'disease' => $diseaseMap->get($diseaseId),
+                    'disease_id' => $diseaseId,
+                    'starred_at' => (string) ($row['starred_at'] ?? now()->toIso8601String()),
+                    'unstarred_at' => $unstarredAt,
+                    'is_current' => $unstarredAt === null && in_array($diseaseId, $currentIds, true),
+                ];
+            })
+            ->filter();
+
+        if ($selectedDiseaseId !== null) {
+            $rows = $rows->where('disease_id', $selectedDiseaseId);
+        }
+
+        if ($status === 'current') {
+            $rows = $rows->where('is_current', true);
+        } elseif ($status === 'previous') {
+            $rows = $rows->where('is_current', false);
+        }
+
+        $rows = $rows
+            ->sort(function (array $a, array $b): int {
+                if ($a['is_current'] !== $b['is_current']) {
+                    return $a['is_current'] ? -1 : 1;
+                }
+
+                return strcmp((string) $b['starred_at'], (string) $a['starred_at']);
+            })
+            ->values();
+
+        return view('community.pages.starred-diseases', [
+            'rows' => $rows,
+            'diseases' => $diseases,
+            'status' => $status,
+            'selectedDiseaseId' => $selectedDiseaseId,
+            'currentStarredDiseaseIds' => $currentIds,
         ]);
     }
 

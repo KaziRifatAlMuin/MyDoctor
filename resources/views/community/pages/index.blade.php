@@ -1575,6 +1575,9 @@ body {
                         <a href="{{ $isStarredPage ? route('community.posts.index') : route('community.posts.starred') }}" class="btn btn-sm {{ $isStarredPage ? 'btn-outline-primary' : 'btn-warning' }} rounded-pill ms-1 d-inline-flex align-items-center" style="white-space:nowrap;">
                             <i class="fas fa-star me-2"></i>{{ $isStarredPage ? __('ui.community.all_posts') : __('ui.community.starred_posts') }}
                         </a>
+                        <a href="{{ route('community.diseases.starred.history') }}" class="btn btn-sm btn-outline-secondary rounded-pill ms-1 d-inline-flex align-items-center" style="white-space:nowrap;">
+                            <i class="fas fa-history me-2"></i>{{ __('ui.community.starred_diseases_history') }}
+                        </a>
                     @endif
                     <a href="{{ $isPendingPage ? ($isAdminCommunity ? route('admin.community.posts.index') : route('community.posts.index')) : ($isAdminCommunity ? route('admin.community.posts.pending') : route('community.posts.pending')) }}" class="btn btn-sm {{ $isPendingPage ? 'btn-outline-primary' : 'btn-outline-warning' }} rounded-pill ms-1 d-inline-flex align-items-center" style="white-space:nowrap;">
                         <i class="fas fa-hourglass-half me-2"></i>{{ $isPendingPage ? __('ui.community.all_posts') : __('ui.community.pending_posts') }}
@@ -1616,6 +1619,9 @@ body {
                     @if(! $isAdminCommunity)
                         <a href="{{ $isStarredPage ? route('community.posts.index') : route('community.posts.starred') }}" class="btn btn-sm {{ $isStarredPage ? 'btn-outline-primary' : 'btn-warning' }} rounded-pill">
                             <i class="fas fa-star"></i> {{ $isStarredPage ? __('ui.community.all_posts') : __('ui.community.starred_posts') }}
+                        </a>
+                        <a href="{{ route('community.diseases.starred.history') }}" class="btn btn-sm btn-outline-secondary rounded-pill">
+                            <i class="fas fa-history"></i> {{ __('ui.community.starred_diseases_history') }}
                         </a>
                     @endif
                     <a href="{{ $isPendingPage ? ($isAdminCommunity ? route('admin.community.posts.index') : route('community.posts.index')) : ($isAdminCommunity ? route('admin.community.posts.pending') : route('community.posts.pending')) }}" class="btn btn-sm {{ $isPendingPage ? 'btn-outline-primary' : 'btn-outline-warning' }} rounded-pill">

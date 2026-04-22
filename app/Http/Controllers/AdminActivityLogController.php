@@ -105,7 +105,6 @@ class AdminActivityLogController extends Controller
                 $inner->whereIn('subject_type', [
                     'App\\Models\\PostLike',
                     'App\\Models\\CommentLike',
-                    'App\\Models\\UserStarredDisease',
                 ])->orWhere('action', 'like', '%like%')
                   ->orWhere('action', 'like', '%star%')
                   ->orWhere('context', 'like', '%like%')
