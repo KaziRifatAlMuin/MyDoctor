@@ -1710,7 +1710,7 @@ body {
         <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
             <div>
                 <div style="font-weight:600; color:#4c1d95;">{{ $pendingPost->is_anonymous ? __('ui.community.anonymous_member') : ($pendingPost->user ? $pendingPost->user->name : 'Deleted User') }}</div>
-                <div style="font-size:12px; color:#6d28d9; margin-top:2px;">{{ optional($pendingPost->disease)->display_name ?? 'General' }} • {{ $pendingPost->created_at->diffForHumans() }}</div>
+                <div style="font-size:12px; color:#6d28d9; margin-top:2px;">{{ $pendingPost->disease_models->pluck('display_name')->implode(', ') ?: 'General' }} • {{ $pendingPost->created_at->diffForHumans() }}</div>
             </div>
             <span class="badge text-bg-warning">{{ __('ui.community.pending') }}</span>
         </div>
@@ -1780,14 +1780,14 @@ body {
                                         </div>
                                         <div style="flex: 1;">
                                             <div class="modal-user-name">{{ Auth::user()->name }}</div>
-                                            <select id="createPostDiseaseId" class="modal-disease-select">
-                                                <option value="">{{ __('ui.community.select_disease') }}</option>
+                                            <select id="createPostDiseaseIds" class="modal-disease-select" multiple size="4" aria-label="{{ __('ui.community.select_disease') }}">
                                                 @foreach($diseases as $disease)
                                                     <option value="{{ $disease->id }}">
                                                         {{ $disease->display_name }}
                                                     </option>
                                                 @endforeach
                                             </select>
+                                            <div style="font-size:12px; color:#65676b; margin-top:6px;">{{ __('ui.community.select_disease') }} (multiple)</div>
                                         </div>
                                     </div>
 
@@ -2128,7 +2128,7 @@ function clearCreatePostFile() {
 
 function submitCreatePost() {
     const content = document.getElementById('createPostContent').value.trim();
-    const diseaseId = document.getElementById('createPostDiseaseId').value;
+    const diseaseIds = Array.from(document.getElementById('createPostDiseaseIds').selectedOptions).map(option => option.value);
     const isAnonymous = document.getElementById('createPostAnonymous')?.checked ? '1' : '0';
 
     if (!content && createPostFiles.length === 0) {
@@ -2136,13 +2136,13 @@ function submitCreatePost() {
         return;
     }
 
-    if (!diseaseId) {
+    if (diseaseIds.length === 0) {
         showToast('{{ __("ui.community.please_select_disease") }}', 'warning');
         return;
     }
 
     const formData = new FormData();
-    formData.append('disease_id', diseaseId);
+    diseaseIds.forEach((id) => formData.append('disease_ids[]', id));
     formData.append('description', content);
     formData.append('is_anonymous', isAnonymous);
 
@@ -2171,7 +2171,7 @@ function submitCreatePost() {
             textarea.style.height = 'auto';
             updateCreatePostCharCounter();
             clearCreatePostFile();
-            document.getElementById('createPostDiseaseId').value = '';
+            document.getElementById('createPostDiseaseIds').selectedIndex = -1;
             const anonymousCheckbox = document.getElementById('createPostAnonymous');
             if (anonymousCheckbox) anonymousCheckbox.checked = false;
             createPostModal.hide();
@@ -2201,7 +2201,7 @@ function submitCreatePost() {
 document.getElementById('createPostModal')?.addEventListener('hidden.bs.modal', function() {
     document.getElementById('createPostContent').value = '';
     clearCreatePostFile();
-    document.getElementById('createPostDiseaseId').value = '';
+    document.getElementById('createPostDiseaseIds').selectedIndex = -1;
     const anonymousCheckbox = document.getElementById('createPostAnonymous');
     if (anonymousCheckbox) anonymousCheckbox.checked = false;
 });

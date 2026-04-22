@@ -32,8 +32,7 @@ class PostListingTest extends TestCase
         ]);
         
         Post::factory()->count(3)->create([
-            'user_id' => $this->user->id,
-            'disease_id' => $disease->id
+            'user_id' => $this->user->id
         ]);
 
         $response = $this->get('/community/posts');
@@ -52,14 +51,16 @@ class PostListingTest extends TestCase
             'disease_name' => 'Hypertension Filter Test 2'
         ]);
         
-        Post::factory()->count(3)->create([
-            'disease_id' => $disease1->id, 
-            'user_id' => $this->user->id
-        ]);
-        Post::factory()->count(2)->create([
-            'disease_id' => $disease2->id, 
-            'user_id' => $this->user->id
-        ]);
+        $posts1 = Post::factory()->count(3)->create(['user_id' => $this->user->id]);
+        $posts1->each(function ($post) use ($disease1) {
+            $post->diseases()->detach();
+            $post->diseases()->attach([$disease1->id]);
+        });
+        $posts2 = Post::factory()->count(2)->create(['user_id' => $this->user->id]);
+        $posts2->each(function ($post) use ($disease2) {
+            $post->diseases()->detach();
+            $post->diseases()->attach([$disease2->id]);
+        });
 
         $response = $this->get('/community/posts?disease=' . $disease1->id);
         $response->assertStatus(200);
@@ -75,8 +76,7 @@ class PostListingTest extends TestCase
         ]);
         
         Post::factory()->count(15)->create([
-            'user_id' => $this->user->id,
-            'disease_id' => $disease->id
+            'user_id' => $this->user->id
         ]);
 
         $response = $this->get('/community/posts');
@@ -93,9 +93,10 @@ class PostListingTest extends TestCase
         ]);
         
         $post = Post::factory()->create([
-            'user_id' => $this->user->id,
-            'disease_id' => $disease->id
+            'user_id' => $this->user->id
         ]);
+        $post->diseases()->detach();
+        $post->diseases()->attach([$disease->id]);
         
         Comment::factory()->count(5)->create([
             'post_id' => $post->id, 
@@ -133,13 +134,17 @@ class PostListingTest extends TestCase
         ]);
         
         Post::factory()->count(5)->create([
-            'disease_id' => $disease1->id, 
             'user_id' => $this->user->id
-        ]);
+        ])->each(function ($post) use ($disease1) {
+            $post->diseases()->detach();
+            $post->diseases()->attach([$disease1->id]);
+        });
         Post::factory()->count(3)->create([
-            'disease_id' => $disease2->id, 
             'user_id' => $this->user->id
-        ]);
+        ])->each(function ($post) use ($disease2) {
+            $post->diseases()->detach();
+            $post->diseases()->attach([$disease2->id]);
+        });
 
         $response = $this->get('/community/posts');
         $response->assertStatus(200);
