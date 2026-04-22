@@ -499,7 +499,6 @@ return [
         'Pending' => 'Pending',
         'Taken' => 'Taken',
         'Missed' => 'Missed',
-        'Snoozed' => 'Snoozed',
         'Home' => 'Home',
         'Dashboard' => 'Dashboard',
         'Medicine' => 'Medicine',
@@ -1334,16 +1333,20 @@ return [
     'admin_community_moderation' => 'Admin Community Moderation',
     'starred_posts_title' => 'Starred Posts',
     'pending_posts_title' => 'Pending Posts',
+    'reported_posts_title' => 'Reported Posts',
     'admin_community_moderation_title' => 'Admin Community Moderation',
     'community_forum_title' => 'Community Forum',
     'connect_with_others_share_experiences' => 'Connect with others, share experiences, and get support',
     'your_saved_posts' => 'Your saved posts in one focused feed',
     'your_posts_waiting_for_approval' => 'Your posts waiting for admin approval',
+    'your_reported_posts_description' => 'Posts reported by other community members',
     'posts_awaiting_approval' => 'Posts awaiting approval. Approve to publish, or delete to reject.',
     'view_and_manage_community_posts' => 'View and manage community posts with approval workflow.',
     'post_approval_queue' => 'Post Approval Queue',
     'view_all_pending' => 'View All Pending',
     'no_pending_posts' => 'No pending posts at the moment. All caught up!',
+    'no_reported_posts' => 'No reported posts',
+    'no_reported_posts_description' => 'Your posts haven\'t been reported by other members',
     'pending' => 'Pending',
     'posts_awaiting_approval' => 'Posts awaiting approval',
     'your_posts_waiting_for_approval' => 'Your posts waiting for admin approval',
@@ -1363,6 +1366,7 @@ return [
     // Left Sidebar - Filters
     'quick_filters' => 'Quick Filters',
     'all_pending_posts' => 'All Pending Posts',
+    'all_reported_posts' => 'All Reported Posts',
     'all_starred_posts' => 'All Starred Posts',
     'all_posts' => 'All Posts',
     'guidelines' => 'Guidelines',
@@ -1673,7 +1677,7 @@ return [
     'how_to_add_medicine' => 'How do I add a medicine?',
     'how_to_add_medicine_answer' => 'Go to Medicine → Add Medicine. Enter the medicine name, dosage, form (tablet/syrup/etc.), and any additional notes. Then create a schedule to set when you should take it.',
     'how_medicine_reminders_work' => 'How do medicine reminders work?',
-    'how_medicine_reminders_work_answer' => 'After adding medicine schedules, reminders automatically appear at the set times. You can mark each dose as "Taken" or "Missed". You can also snooze reminders. Enable push notifications in your profile to get browser alerts.',
+    'how_medicine_reminders_work_answer' => 'After adding medicine schedules, reminders automatically appear at the set times. You can mark each dose as "Taken" or "Not Taken". Enable push notifications in your profile to get browser alerts.',
     'what_is_adherence_rate' => 'What is adherence rate?',
     'what_is_adherence_rate_answer' => 'Adherence rate shows what percentage of your scheduled medicines you\'ve taken over the last 30 days. A rate above 80% is ideal. Low adherence will trigger helpful suggestions to improve your routine.',
     'can_export_medicine_logs' => 'Can I export my medicine logs?',
@@ -2152,6 +2156,38 @@ return [
     'no_latest_records' => 'No latest records available.',
 ],
 
+// Admin Navigation Cards
+'admin_nav' => [
+    'user_management' => 'User Management',
+    'user_management_desc' => 'Review accounts, role distribution, and member access.',
+    'community_moderation' => 'Community Moderation',
+    'community_moderation_desc' => 'Review reported posts and moderate community content.',
+    'disease_catalog' => 'Disease Catalog',
+    'disease_catalog_desc' => 'Manage diseases with public-facing detail links.',
+    'symptoms_catalog' => 'Symptoms Catalog',
+    'symptoms_catalog_desc' => 'Maintain symptom entries with linked public pages.',
+    'health_metrics_catalog' => 'Health Metrics Catalog',
+    'health_metrics_catalog_desc' => 'Define custom metric names and fields for user tracking.',
+    'public_diseases' => 'Public Diseases',
+    'public_diseases_desc' => 'Open the public diseases directory as visitors see it.',
+    'public_symptoms' => 'Public Symptoms',
+    'public_symptoms_desc' => 'Open the public symptoms directory and verify navigation.',
+],
+
+// Admin Activities
+'admin_activities' => [
+    'new_user_registered' => 'New user registered: :name',
+    'new_post_by' => 'New post by :name',
+    'medicine_reminder_set' => 'Medicine reminder set by :name',
+    'unknown' => 'Unknown',
+],
+
+// Admin Messages
+'admin_messages' => [
+    'cannot_remove_own_admin' => 'You cannot remove your own admin access.',
+    'user_updated_successfully' => ':name was updated successfully.',
+],
+
 
 
 
@@ -2168,6 +2204,8 @@ return [
 'admin_nav' => [
     'user_management' => 'User Management',
     'user_management_desc' => 'Review accounts, role distribution, and member access.',
+    'community_moderation' => 'Community Moderation',
+    'community_moderation_desc' => 'Review reported posts and moderate community content.',
     'disease_catalog' => 'Disease Catalog',
     'disease_catalog_desc' => 'Manage diseases with public-facing detail links.',
     'symptoms_catalog' => 'Symptoms Catalog',
@@ -2427,6 +2465,35 @@ return [
     'save_preferences' => 'Save Preferences',
 ],
 
+
+
+// Add to ui.php (English)
+'admin_reported_posts' => [
+    'title' => 'Reported Posts',
+    'subtitle' => 'Review and moderate posts that have been reported by users',
+    'back_to_posts' => 'Back to Posts',
+    'reported' => 'Reported',
+    'post_id' => 'Post',
+    'deleted_user' => 'Deleted User',
+    'general' => 'General',
+    'approve_and_clear' => 'Approve & Clear Report',
+    'dismiss_report' => 'Dismiss Report',
+    'delete_post' => 'Delete Post',
+    'no_reported_posts' => 'No Reported Posts',
+    'no_reported_posts_message' => 'All posts are clean! No reports to review at this time.',
+    'confirm_delete' => 'Confirm Delete',
+    'delete_confirmation_message' => 'Are you sure you want to permanently delete this post? This action cannot be undone.',
+    'cancel' => 'Cancel',
+    'delete' => 'Delete',
+    'approve_clear_confirm' => 'Approve this post and clear the report flag?',
+    'dismiss_report_confirm' => 'Dismiss the report on this post without making changes?',
+    'post_approved_and_cleared' => 'Post approved and report cleared!',
+    'error_approving' => 'Error approving post',
+    'report_dismissed' => 'Report dismissed',
+    'error_dismissing' => 'Error dismissing report',
+    'post_deleted' => 'Post deleted successfully',
+    'error_deleting' => 'Error deleting post',
+],
 
 'profile_settings' => [
     'title' => 'Profile Settings',

@@ -291,6 +291,21 @@ class AdminDashboardController extends Controller
         }
     }
 
+/**
+ * Display reported posts for moderation
+ */
+public function reportedPosts(Request $request)
+{
+    $posts = Post::with(['user', 'disease'])
+        ->where('is_reported', true)
+        ->orderByDesc('updated_at')
+        ->paginate(20);
+
+    return view('admin.reported-posts', [
+        'posts' => $posts,
+    ]);
+}
+
     public function users(Request $request)
     {
         // Redirect to main admin dashboard 

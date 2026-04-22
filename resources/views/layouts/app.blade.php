@@ -20,7 +20,7 @@
         $normalizedPageTitle = preg_replace('/\s*-\s*MyDoctor\s*$/i', '', $normalizedPageTitle) ?? $normalizedPageTitle;
         $normalizedPageTitle = trim($normalizedPageTitle);
 
-        // Site-wide SEO defaults. Use config('app.url') or fall back to the hosting domain provided.
+        // Site-wide SEO defaults
         $siteName = config('app.name', 'MyDoctor');
         $siteBase = rtrim(config('app.url', env('APP_URL', 'https://mydoctor.rifatalmuin.com')), '/');
 
@@ -29,7 +29,6 @@
         $seoDescription = trim((string) View::yieldContent('meta_description', $siteName . ' is a smart healthcare companion for tracking health metrics, medicine schedules, reminders, and community support.'));
         $seoKeywords = trim((string) View::yieldContent('meta_keywords', 'MyDoctor, healthcare app, medicine reminder, health tracking, symptom tracking, disease management, Bangladesh health'));
 
-        // Ensure meta image and canonical URL are absolute and use the configured site base as fallback.
         $rawSeoImage = trim((string) View::yieldContent('meta_image', asset('images/logos/applogo_white.jpg')));
         $seoImage = \Illuminate\Support\Str::startsWith($rawSeoImage, ['http://', 'https://']) ? $rawSeoImage : $siteBase . '/' . ltrim($rawSeoImage, '/');
         $seoUrl = $siteBase . request()->getRequestUri();
@@ -97,63 +96,63 @@
         html[lang^='bn'] .bn-label {
             display: inline !important;
         }
-/* Add to your existing styles in app.blade.php */
 
-/* Ensure all avatars are perfect circles */
-.user-avatar,
-.user-avatar img,
-.user-avatar div,
-.comment-avatar,
-.comment-avatar img,
-.comment-avatar div,
-.trigger-avatar,
-.trigger-avatar img,
-.trigger-avatar div,
-.modal-avatar,
-.modal-avatar img,
-.modal-avatar div,
-.user-circle,
-.user-circle img,
-.user-circle span {
-    border-radius: 50% !important;
-}
+        /* Ensure all avatars are perfect circles */
+        .user-avatar,
+        .user-avatar img,
+        .user-avatar div,
+        .comment-avatar,
+        .comment-avatar img,
+        .comment-avatar div,
+        .trigger-avatar,
+        .trigger-avatar img,
+        .trigger-avatar div,
+        .modal-avatar,
+        .modal-avatar img,
+        .modal-avatar div,
+        .user-circle,
+        .user-circle img,
+        .user-circle span {
+            border-radius: 50% !important;
+        }
 
-/* Ensure comment avatars are properly sized */
-.comment-avatar {
-    width: 44px !important;
-    height: 44px !important;
-    min-width: 44px !important;
-    min-height: 44px !important;
-    border-radius: 50% !important;
-    overflow: hidden !important;
-    flex-shrink: 0 !important;
-}
+        /* Ensure comment avatars are properly sized */
+        .comment-avatar {
+            width: 44px !important;
+            height: 44px !important;
+            min-width: 44px !important;
+            min-height: 44px !important;
+            border-radius: 50% !important;
+            overflow: hidden !important;
+            flex-shrink: 0 !important;
+        }
 
-.comment-avatar img,
-.comment-avatar .avatar-placeholder-small {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover !important;
-    border-radius: 50% !important;
-}
+        .comment-avatar img,
+        .comment-avatar .avatar-placeholder-small {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            border-radius: 50% !important;
+        }
 
-/* User avatar in post cards */
-.user-avatar {
-    width: 48px !important;
-    height: 48px !important;
-    min-width: 48px !important;
-    min-height: 48px !important;
-    border-radius: 50% !important;
-    overflow: hidden !important;
-}
+        /* User avatar in post cards */
+        .user-avatar {
+            width: 48px !important;
+            height: 48px !important;
+            min-width: 48px !important;
+            min-height: 48px !important;
+            border-radius: 50% !important;
+            overflow: hidden !important;
+        }
 
-.user-avatar img,
-.user-avatar .avatar-placeholder {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover !important;
-    border-radius: 50% !important;
-}
+        .user-avatar img,
+        .user-avatar .avatar-placeholder {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            border-radius: 50% !important;
+        }
+
         /* Banner Styles */
         .banner {
             position: relative;
@@ -384,7 +383,6 @@
         }
 
         /* ========== UPDATED NOTIFICATION BELL STYLES ========== */
-        /* Notification Bell - Yellow normally, Green badge */
         .notification-bell,
         .mailbox-bell {
             position: relative;
@@ -557,7 +555,7 @@
             position: absolute;
             top: 60px;
             right: 0;
-            width: 350px;
+            width: 450px;
             background: white;
             border-radius: 12px;
             box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
@@ -600,7 +598,7 @@
         }
 
         .notification-list {
-            max-height: 400px;
+            max-height: 500px;
             overflow-y: auto;
         }
 
@@ -652,12 +650,24 @@
 
         .notification-content {
             flex: 1;
+            min-width: 0;
         }
 
         .notification-message {
             font-size: 0.9rem;
             margin-bottom: 4px;
             color: #1a1a1a;
+        }
+
+        .notification-preview {
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: #65676b;
+            margin-top: 4px;
+            padding: 6px 8px;
+            background: #f0f2f5;
+            border-radius: 8px;
+            line-height: 1.4;
         }
 
         .notification-time {
@@ -1361,8 +1371,8 @@
             }
 
             .notification-dropdown {
-                width: 300px;
-                right: 0;
+                width: 340px;
+                right: -20px;
             }
         }
 
@@ -1522,7 +1532,6 @@
         }
 
         /* ==================== COMMUNITY MODAL STYLES ==================== */
-        /* Post Modal Container */
         .modal-post-container {
             background: white;
             color: #1a1a1a;
@@ -1988,7 +1997,6 @@
         }
 
         /* ==================== EDIT/DELETE MODAL STYLES ==================== */
-        /* Edit Modal */
         #editModal .modal-content,
         #deleteModal .modal-content {
             border: none;
@@ -2165,6 +2173,26 @@
         .activity-item a {
             color: inherit;
             display: block;
+        }
+        
+        /* Medicine Reminder Modal Styles */
+        .modal-reminder-container {
+            background: white;
+            color: #1a1a1a;
+            font-family: inherit;
+        }
+
+        .modal-reminder-container * {
+            box-sizing: border-box;
+        }
+
+        .modal-reminder-container button {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-reminder-container button:hover {
+            transform: translateY(-1px);
         }
     </style>
 
@@ -2507,8 +2535,6 @@
                     AI-powered health information - consult a doctor for medical advice
                 </div>
 
-                <!-- Chatbot settings moved to profile page (cookie-controlled) -->
-
                 <div class="chatbot-messages" id="chatMessages">
                     <div style="text-align: center; color: #718096; padding: 20px;">
                         <i class="fas fa-user-md fa-3x mb-3" style="color: #667eea;"></i>
@@ -2583,6 +2609,22 @@
         </div>
     </div>
 
+    <!-- Medicine Reminder Modal -->
+    <div class="modal fade" id="medicineReminderModal" tabindex="-1" aria-labelledby="medicineReminderModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 16px; overflow: hidden;">
+                <div class="modal-body p-0" id="medicineReminderModalBody">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-3 text-muted">Loading reminder details...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- User Profile Modal -->
     <div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -2603,7 +2645,6 @@
                         </div>
                     </div>
                 </div>
-            
             </div>
         </div>
     </div>
@@ -2758,22 +2799,16 @@
 
         // Helper function to find post content
         window.findPostContent = function(postId) {
-            // Try by specific ID first
             let element = document.getElementById(`post-content-${postId}`);
             if (element) return element;
             
-            // Try in modal
             element = document.querySelector(`.modal-post-container #post-content-${postId}`);
             if (element) return element;
             
-            // Try by data attribute
             const modalContainer = document.querySelector(`.modal-post-container[data-post-id="${postId}"]`);
             if (modalContainer) {
-                // Look for paragraphs with white-space pre-wrap
                 element = modalContainer.querySelector('p[style*="white-space: pre-wrap"]');
                 if (element) return element;
-                
-                // Look for any element with post-text class
                 element = modalContainer.querySelector('.post-text, .post-text-content');
                 if (element) return element;
             }
@@ -2786,72 +2821,80 @@
             return window.location.pathname.startsWith('/admin/community') ? '/admin/community' : '/community';
         };
 
-
-
-window.openPostModal = function(postId, scrollToComments = false) {
-    const modalBody = document.getElementById('postModalBody');
-    if (!modalBody) {
-        console.error('Post modal body not found');
-        return;
-    }
-    
-    modalBody.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-3 text-muted">Loading post...</p></div>';
-    
-    // Show modal
-    const postModalEl = document.getElementById('postModal');
-    if (!postModalEl) {
-        console.error('Post modal element not found');
-        return;
-    }
-    
-    const postModal = new bootstrap.Modal(postModalEl);
-    postModal.show();
-    
-    // Store that we need to scroll to comments
-    window.scrollToCommentsInModal = scrollToComments || (window.scrollToCommentsPostId === postId);
-    if (window.scrollToCommentsInModal) {
-        delete window.scrollToCommentsPostId;
-    }
-    
-    // Fetch the post HTML
-    fetch(`${window.getCommunityBasePath()}/modal-post/${postId}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Post is deleted or cannot be loaded');
-            }
-            return response.text();
-        })
-        .then(html => {
-            modalBody.innerHTML = html;
-            
-            // Make sure comments section is visible
-            const commentsSection = document.getElementById(`comments-section-${postId}`);
-            if (commentsSection) {
-                commentsSection.style.display = 'block';
+        window.openPostModal = function(postId, scrollToComments = false) {
+            const modalBody = document.getElementById('postModalBody');
+            if (!modalBody) {
+                console.error('Post modal body not found');
+                return;
             }
             
-            // Scroll to comments if requested
+            modalBody.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-3 text-muted">Loading post...</p></div>';
+            
+            const postModalEl = document.getElementById('postModal');
+            if (!postModalEl) {
+                console.error('Post modal element not found');
+                return;
+            }
+            
+            const postModal = new bootstrap.Modal(postModalEl);
+            postModal.show();
+            
+            window.scrollToCommentsInModal = scrollToComments || (window.scrollToCommentsPostId === postId);
             if (window.scrollToCommentsInModal) {
-                setTimeout(() => {
-                    const commentsContainer = document.getElementById(`comments-container-${postId}`);
-                    if (commentsContainer) {
-                        commentsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                    window.scrollToCommentsInModal = false;
-                }, 500);
+                delete window.scrollToCommentsPostId;
             }
             
-            // Initialize modal interactions
-            setupModalInteractions(postId);
-        })
-        .catch(error => {
-            console.error('Error loading post:', error);
-            modalBody.innerHTML = '<div class="alert alert-danger m-3">Post is deleted or cannot load</div>';
-        });
-};
+            fetch(`${window.getCommunityBasePath()}/modal-post/${postId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Post is deleted or cannot be loaded');
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    modalBody.innerHTML = html;
+                    
+                    const commentsSection = document.getElementById(`comments-section-${postId}`);
+                    if (commentsSection) {
+                        commentsSection.style.display = 'block';
+                    }
+                    
+                    if (window.scrollToCommentsInModal) {
+                        setTimeout(() => {
+                            const commentsContainer = document.getElementById(`comments-container-${postId}`);
+                            if (commentsContainer) {
+                                commentsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }
+                            window.scrollToCommentsInModal = false;
+                        }, 500);
+                    }
+                    
+                    setupModalInteractions(postId);
+                })
+                .catch(error => {
+                    console.error('Error loading post:', error);
+                    
+                    // Show deleted post message with notification data if available
+                    let deletedHtml = `
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; padding: 40px 20px; text-align: center;">
+                            <div style="font-size: 64px; color: #dc3545; margin-bottom: 20px;">
+                                <i class="fas fa-trash"></i>
+                            </div>
+                            <h3 style="color: #333; margin-bottom: 10px;">Post Deleted by Admin</h3>
+                            <p style="color: #666; font-size: 16px; margin-bottom: 20px;">
+                                This post has been removed from the community.
+                            </p>
+                            <button class="btn btn-secondary" onclick="document.getElementById('postModal').closest('.modal').querySelector('[data-bs-dismiss=modal]')?.click() || document.getElementById('postModal').parentElement.querySelector('[data-bs-dismiss=modal]')?.click() || (function() { const m = bootstrap.Modal.getInstance(document.getElementById('postModal')); if (m) m.hide(); })()">
+                                Back to Community
+                            </button>
+                        </div>
+                    `;
+                    
+                    modalBody.innerHTML = deletedHtml;
+                });
+        };
 
         window.setupModalInteractions = function(postId) {
-            // Auto-resize textareas in modal
             document.querySelectorAll('#postModalBody textarea').forEach(textarea => {
                 textarea.addEventListener('input', function() {
                     this.style.height = 'auto';
@@ -2860,182 +2903,226 @@ window.openPostModal = function(postId, scrollToComments = false) {
             });
         };
 
-        // ==================== UNIFIED FILE HANDLING ====================
-        // This works for both community page and global modal
-
-
-
-
-
-// ==================== MODAL-SPECIFIC FUNCTIONS (for modal-post) ====================
-
-// Initialize modal-specific storage
-if (!window.modalCommentFiles) {
-    window.modalCommentFiles = {};
-}
-
-window.submitModalComment = async function(event, postId) {
-    event.preventDefault();
-    
-    const textarea = document.getElementById(`modal-comment-input-${postId}`);
-    if (!textarea) {
-        console.error('Modal textarea not found for postId:', postId);
-        return;
-    }
-    
-    const commentText = textarea.value.trim();
-    const file = window.modalCommentFiles ? window.modalCommentFiles[postId] : null;
-    
-    if (!commentText && !file) { 
-        if (typeof window.showToast === "function") {
-            window.showToast('Please write something or attach a file', 'warning');
-        }
-        return; 
-    }
-
-    const formData = new FormData();
-    formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
-    formData.append('comment_details', commentText);
-    if (file) formData.append('file', file);
-
-    const submitBtn = document.getElementById(`modal-comment-submit-${postId}`);
-    if (!submitBtn) return;
-    
-    const originalHtml = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-small"></span>';
-
-    try {
-        const res = await fetch(`${window.getCommunityBasePath()}/posts/${postId}/comments`, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'Accept': 'application/json'
-            },
-            body: formData
-        });
+        // ==================== MEDICINE REMINDER MODAL FUNCTIONS ====================
         
-        const data = await res.json();
-        
-        if (data.success) {
-            const container = document.getElementById(`comments-container-${postId}`);
-            if (container) {
-                if (container.innerHTML.includes("No comments")) container.innerHTML = "";
-                container.insertAdjacentHTML('afterbegin', data.html);
+        window.openMedicineReminderModal = function(reminderId) {
+            const modalBody = document.getElementById('medicineReminderModalBody');
+            if (!modalBody) {
+                console.error('Medicine reminder modal body not found');
+                return;
             }
             
-            textarea.value = ''; 
-            textarea.style.height = 'auto';
-            window.clearModalCommentFile(postId);
+            modalBody.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-3 text-muted">Loading reminder details...</p></div>';
             
-            const commentCounts = document.querySelectorAll(`.comment-count[data-post="${postId}"]`);
-            commentCounts.forEach(el => { if (el) el.textContent = data.comment_count; });
-            
-            if (typeof window.showToast === "function") {
-                window.showToast('Comment added!', 'success');
+            const reminderModalEl = document.getElementById('medicineReminderModal');
+            if (!reminderModalEl) {
+                console.error('Medicine reminder modal element not found');
+                return;
             }
-        }
-    } catch (err) { 
-        console.error(err); 
-        if (typeof window.showToast === "function") {
-            window.showToast('Error adding comment', 'error');
-        }
-    } finally { 
-        submitBtn.disabled = false; 
-        submitBtn.innerHTML = originalHtml; 
-    }
-};
-
-window.handleModalCommentFileSelect = function(postId, input) {
-    console.log('Modal file selected for postId:', postId);
-    
-    const file = input.files[0];
-    if (!file) {
-        console.log('No file selected');
-        return;
-    }
-
-    const maxSize = 5 * 1024 * 1024;
-    if (file.size > maxSize) {
-        if (typeof window.showToast === "function") {
-            window.showToast('File size cannot exceed 5MB', 'warning');
-        }
-        input.value = "";
-        return;
-    }
-
-    // Store in modal-specific storage
-    if (!window.modalCommentFiles) window.modalCommentFiles = {};
-    window.modalCommentFiles[postId] = file;
-
-    // Get modal-specific preview elements
-    const previewArea = document.getElementById(`modal-comment-file-preview-${postId}`);
-    const previewContent = document.getElementById(`modal-comment-file-preview-content-${postId}`);
-    
-    console.log('Modal preview area found:', previewArea ? 'Yes' : 'No');
-    console.log('Modal preview content found:', previewContent ? 'Yes' : 'No');
-    
-    if (!previewArea || !previewContent) {
-        console.error('Modal preview elements not found for postId:', postId);
-        return;
-    }
-    
-    // Clear previous content
-    previewContent.innerHTML = '';
-
-    if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            previewContent.innerHTML = `
-                <img src="${e.target.result}" style="max-height:40px; border-radius:4px; margin-right:8px;">
-                <span style="font-size:12px;">${file.name.length > 20 ? file.name.substring(0,17)+'...' : file.name}</span>
-                <span style="font-size:11px; color:#65676b; margin-left:4px;">(${(file.size/1024).toFixed(1)} KB)</span>
-            `;
-            previewArea.style.display = 'block';
-            console.log('Modal preview displayed');
+            
+            const reminderModal = new bootstrap.Modal(reminderModalEl);
+            reminderModal.show();
+            
+            fetch(`/medicine/reminders/${reminderId}/modal`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Reminder not found');
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    modalBody.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error loading reminder:', error);
+                    modalBody.innerHTML = '<div class="alert alert-danger m-3">Reminder not found or cannot be loaded</div>';
+                });
         };
-        reader.readAsDataURL(file);
-    } else {
-        let icon = 'fa-file-alt';
-        if (file.type.includes('pdf')) icon = 'fa-file-pdf';
-        else if (file.type.includes('video')) icon = 'fa-file-video';
-        else if (file.type.includes('word')) icon = 'fa-file-word';
-        else if (file.type.includes('excel')) icon = 'fa-file-excel';
-        
-        previewContent.innerHTML = `
-            <i class="fas ${icon}" style="font-size:20px; color:#1877f2; margin-right:8px;"></i>
-            <span style="font-size:12px;">${file.name.length > 20 ? file.name.substring(0,17)+'...' : file.name}</span>
-            <span style="font-size:11px; color:#65676b; margin-left:4px;">(${(file.size/1024).toFixed(1)} KB)</span>
-        `;
-        previewArea.style.display = 'block';
-        console.log('Modal preview displayed');
-    }
-};
 
-window.clearModalCommentFile = function(postId) {
-    console.log('Clearing modal file for postId:', postId);
-    
-    if (window.modalCommentFiles) {
-        window.modalCommentFiles[postId] = null;
-        delete window.modalCommentFiles[postId];
-    }
-    const input = document.getElementById(`modal-comment-file-${postId}`);
-    if (input) input.value = '';
-    
-    const previewArea = document.getElementById(`modal-comment-file-preview-${postId}`);
-    if (previewArea) {
-        previewArea.style.display = 'none';
-        console.log('Modal preview hidden');
-    }
-    
-};
+        window.markReminderTakenFromModal = function(reminderId) {
+            if (!confirm('Are you sure you want to mark this medicine as taken?')) {
+                return;
+            }
+            
+            fetch(`/medicine/reminders/${reminderId}/taken-from-notification`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Medicine marked as taken!', 'success');
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('medicineReminderModal'));
+                    if (modal) modal.hide();
+                    setTimeout(() => {
+                        if (typeof loadNotifications === 'function') {
+                            loadNotifications();
+                        }
+                    }, 500);
+                } else {
+                    showToast(data.message || 'Failed to mark as taken', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Error marking as taken', 'error');
+            });
+        };
 
+        // ==================== UNIFIED FILE HANDLING ====================
+        if (!window.modalCommentFiles) {
+            window.modalCommentFiles = {};
+        }
+
+        // ==================== MODAL-SPECIFIC FUNCTIONS ====================
+        window.submitModalComment = async function(event, postId) {
+            event.preventDefault();
+            
+            const textarea = document.getElementById(`modal-comment-input-${postId}`);
+            if (!textarea) {
+                console.error('Modal textarea not found for postId:', postId);
+                return;
+            }
+            
+            const commentText = textarea.value.trim();
+            const file = window.modalCommentFiles ? window.modalCommentFiles[postId] : null;
+            
+            if (!commentText && !file) { 
+                if (typeof window.showToast === "function") {
+                    window.showToast('Please write something or attach a file', 'warning');
+                }
+                return; 
+            }
+
+            const formData = new FormData();
+            formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+            formData.append('comment_details', commentText);
+            if (file) formData.append('file', file);
+
+            const submitBtn = document.getElementById(`modal-comment-submit-${postId}`);
+            if (!submitBtn) return;
+            
+            const originalHtml = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-small"></span>';
+
+            try {
+                const res = await fetch(`${window.getCommunityBasePath()}/posts/${postId}/comments`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    const container = document.getElementById(`comments-container-${postId}`);
+                    if (container) {
+                        if (container.innerHTML.includes("No comments")) container.innerHTML = "";
+                        container.insertAdjacentHTML('afterbegin', data.html);
+                    }
+                    
+                    textarea.value = ''; 
+                    textarea.style.height = 'auto';
+                    window.clearModalCommentFile(postId);
+                    
+                    const commentCounts = document.querySelectorAll(`.comment-count[data-post="${postId}"]`);
+                    commentCounts.forEach(el => { if (el) el.textContent = data.comment_count; });
+                    
+                    if (typeof window.showToast === "function") {
+                        window.showToast('Comment added!', 'success');
+                    }
+                }
+            } catch (err) { 
+                console.error(err); 
+                if (typeof window.showToast === "function") {
+                    window.showToast('Error adding comment', 'error');
+                }
+            } finally { 
+                submitBtn.disabled = false; 
+                submitBtn.innerHTML = originalHtml; 
+            }
+        };
+
+        window.handleModalCommentFileSelect = function(postId, input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const maxSize = 5 * 1024 * 1024;
+            if (file.size > maxSize) {
+                if (typeof window.showToast === "function") {
+                    window.showToast('File size cannot exceed 5MB', 'warning');
+                }
+                input.value = "";
+                return;
+            }
+
+            if (!window.modalCommentFiles) window.modalCommentFiles = {};
+            window.modalCommentFiles[postId] = file;
+
+            const previewArea = document.getElementById(`modal-comment-file-preview-${postId}`);
+            const previewContent = document.getElementById(`modal-comment-file-preview-content-${postId}`);
+            
+            if (!previewArea || !previewContent) {
+                console.error('Modal preview elements not found for postId:', postId);
+                return;
+            }
+            
+            previewContent.innerHTML = '';
+
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewContent.innerHTML = `
+                        <img src="${e.target.result}" style="max-height:40px; border-radius:4px; margin-right:8px;">
+                        <span style="font-size:12px;">${file.name.length > 20 ? file.name.substring(0,17)+'...' : file.name}</span>
+                        <span style="font-size:11px; color:#65676b; margin-left:4px;">(${(file.size/1024).toFixed(1)} KB)</span>
+                    `;
+                    previewArea.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                let icon = 'fa-file-alt';
+                if (file.type.includes('pdf')) icon = 'fa-file-pdf';
+                else if (file.type.includes('video')) icon = 'fa-file-video';
+                else if (file.type.includes('word')) icon = 'fa-file-word';
+                else if (file.type.includes('excel')) icon = 'fa-file-excel';
+                
+                previewContent.innerHTML = `
+                    <i class="fas ${icon}" style="font-size:20px; color:#1877f2; margin-right:8px;"></i>
+                    <span style="font-size:12px;">${file.name.length > 20 ? file.name.substring(0,17)+'...' : file.name}</span>
+                    <span style="font-size:11px; color:#65676b; margin-left:4px;">(${(file.size/1024).toFixed(1)} KB)</span>
+                `;
+                previewArea.style.display = 'block';
+            }
+        };
+
+        window.clearModalCommentFile = function(postId) {
+            if (window.modalCommentFiles) {
+                window.modalCommentFiles[postId] = null;
+                delete window.modalCommentFiles[postId];
+            }
+            const input = document.getElementById(`modal-comment-file-${postId}`);
+            if (input) input.value = '';
+            
+            const previewArea = document.getElementById(`modal-comment-file-preview-${postId}`);
+            if (previewArea) {
+                previewArea.style.display = 'none';
+            }
+        };
 
         window.handleCommentFileSelect = function(postId, input) {
             const file = input.files[0];
             if (!file) return;
 
-            const maxSize = 5 * 1024 * 1024; // 5MB
+            const maxSize = 5 * 1024 * 1024;
 
             if (file.size > maxSize) {
                 if (typeof window.showToast === 'function') {
@@ -3045,11 +3132,9 @@ window.clearModalCommentFile = function(postId) {
                 return;
             }
 
-            // Store file in global storage
             if (!window.modalCommentFiles) window.modalCommentFiles = {};
             window.modalCommentFiles[postId] = file;
 
-            // Find the preview container - works in both contexts
             const form = input.closest('form');
             if (!form) {
                 console.error('Form not found');
@@ -3064,10 +3149,8 @@ window.clearModalCommentFile = function(postId) {
                 return;
             }
 
-            // Clear previous content
             previewContent.innerHTML = '';
 
-            // Create preview based on file type
             if (file.type.startsWith('image/')) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
@@ -3076,8 +3159,6 @@ window.clearModalCommentFile = function(postId) {
                         <span style="font-size:12px;">${file.name.length > 20 ? file.name.substring(0,17)+'...' : file.name}</span>
                         <span style="font-size:11px; color:#65676b; margin-left:4px;">(${window.formatFileSize ? window.formatFileSize(file.size) : (file.size/1024).toFixed(1) + ' KB'})</span>
                     `;
-                    
-                    // Show the preview
                     previewArea.style.display = 'block';
                 };
                 reader.readAsDataURL(file);
@@ -3093,8 +3174,6 @@ window.clearModalCommentFile = function(postId) {
                     <span style="font-size:12px;">${file.name.length > 20 ? file.name.substring(0,17)+'...' : file.name}</span>
                     <span style="font-size:11px; color:#65676b; margin-left:4px;">(${window.formatFileSize ? window.formatFileSize(file.size) : (file.size/1024).toFixed(1) + ' KB'})</span>
                 `;
-                
-                // Show the preview
                 previewArea.style.display = 'block';
             }
         };
@@ -3107,7 +3186,6 @@ window.clearModalCommentFile = function(postId) {
 
             const fileInput = document.getElementById(`comment-file-${postId}`);
             if (fileInput) {
-                // Hide preview
                 const form = fileInput.closest('form');
                 if (form) {
                     const previewArea = form.querySelector('.comment-file-preview');
@@ -3171,7 +3249,6 @@ window.clearModalCommentFile = function(postId) {
                 const data = await response.json();
 
                 if (data.success) {
-                    // Find the comments container
                     const container = document.getElementById(`comments-container-${postId}`);
                     if (container) {
                         if (container.innerHTML.includes("No comments")) {
@@ -3180,18 +3257,15 @@ window.clearModalCommentFile = function(postId) {
                         container.insertAdjacentHTML("afterbegin", data.html);
                     }
 
-                    // Clear input
                     if (textarea) {
                         textarea.value = "";
                         textarea.style.height = "auto";
                     }
                     
-                    // Clear file
                     if (typeof window.clearCommentFile === 'function') {
                         window.clearCommentFile(postId);
                     }
 
-                    // Update comment count
                     const commentCounts = document.querySelectorAll(`#post-${postId} .comment-count, .modal-post-container .comment-count`);
                     commentCounts.forEach(el => {
                         if (el) el.textContent = data.comment_count;
@@ -3348,30 +3422,16 @@ window.clearModalCommentFile = function(postId) {
             }
         };
 
-        // ==================== EDIT FUNCTIONS (FIXED) ====================
+        // ==================== EDIT FUNCTIONS ====================
         window.editPost = function(postId) {
             window.currentEditId = postId;
             window.currentEditType = 'post';
             
-            // Use helper function to find post content
             const contentElement = window.findPostContent(postId);
             
             let content = '';
             if (contentElement) {
                 content = contentElement.textContent.trim();
-            }
-            
-            // If still no content, it might be a media-only post
-            if (!content) {
-                // Check if post exists
-                const postExists = document.getElementById(`post-${postId}`) || 
-                                   document.querySelector(`.modal-post-container[data-post-id="${postId}"]`);
-                if (!postExists) {
-                    if (typeof window.showToast === 'function') {
-                        window.showToast('Error: Post not found', 'error');
-                    }
-                    return;
-                }
             }
             
             const editContent = document.getElementById('editContent');
@@ -3472,7 +3532,6 @@ window.clearModalCommentFile = function(postId) {
             const modalBody = document.getElementById('userModalBody');
             if (!modalBody) return;
             
-            // Format recent activity
             let recentActivityHtml = '';
             if (user.recent_posts && user.recent_posts.length > 0) {
                 recentActivityHtml += '<div class="mt-3 px-3"><h6 class="text-start px-3 mb-2">Recent Posts</h6>';
@@ -3545,109 +3604,93 @@ window.clearModalCommentFile = function(postId) {
             return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
         };
 
-    window.openImageModal = function(src) {
-    const modalImage = document.getElementById('modalImage');
-    if (modalImage) {
-        modalImage.src = src;
-        
-        // Get the image modal instance
-        const imageModalEl = document.getElementById('imageModal');
-        const imageModal = new bootstrap.Modal(imageModalEl);
-        
-        // Hide the post modal first (optional - you can comment this out if you want both visible)
-        const postModalEl = document.getElementById('postModal');
-        const postModal = bootstrap.Modal.getInstance(postModalEl);
-        
-        // Show image modal
-        imageModal.show();
-        
-        // Ensure image modal is on top
-        setTimeout(() => {
-            imageModalEl.style.zIndex = '1060';
-            // Ensure backdrop is also on top
-            const backdrops = document.querySelectorAll('.modal-backdrop');
-            if (backdrops.length > 0) {
-                backdrops[backdrops.length - 1].style.zIndex = '1059';
+        window.openImageModal = function(src) {
+            const modalImage = document.getElementById('modalImage');
+            if (modalImage) {
+                modalImage.src = src;
+                const imageModalEl = document.getElementById('imageModal');
+                const imageModal = new bootstrap.Modal(imageModalEl);
+                imageModal.show();
+                setTimeout(() => {
+                    imageModalEl.style.zIndex = '1060';
+                    const backdrops = document.querySelectorAll('.modal-backdrop');
+                    if (backdrops.length > 0) {
+                        backdrops[backdrops.length - 1].style.zIndex = '1059';
+                    }
+                }, 100);
             }
-        }, 100);
-    }
-};
+        };
 
-window.openVideoModal = function(type, source, isReel = false) {
-    const modalContent = document.getElementById('videoModalContent');
-    if (!modalContent) return;
-    
-    if (type === 'youtube') {
-        if (isReel) {
-            modalContent.innerHTML = `
-                <div style="display: flex; justify-content: center; align-items: center; min-height: 80vh;">
-                    <div style="width: 400px; max-width: 100%;">
-                        <div style="position: relative; width: 100%; padding-bottom: 177.78%;">
+        window.openVideoModal = function(type, source, isReel = false) {
+            const modalContent = document.getElementById('videoModalContent');
+            if (!modalContent) return;
+            
+            if (type === 'youtube') {
+                if (isReel) {
+                    modalContent.innerHTML = `
+                        <div style="display: flex; justify-content: center; align-items: center; min-height: 80vh;">
+                            <div style="width: 400px; max-width: 100%;">
+                                <div style="position: relative; width: 100%; padding-bottom: 177.78%;">
+                                    <iframe 
+                                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; border-radius: 12px;"
+                                        src="https://www.youtube.com/embed/${source}?autoplay=1&rel=0"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowfullscreen>
+                                    </iframe>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    modalContent.innerHTML = `
+                        <div style="position: relative; width: 100%; padding-bottom: 56.25%;">
                             <iframe 
-                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; border-radius: 12px;"
+                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; border-radius: 8px;"
                                 src="https://www.youtube.com/embed/${source}?autoplay=1&rel=0"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 allowfullscreen>
                             </iframe>
                         </div>
-                    </div>
-                </div>
-            `;
-        } else {
-            modalContent.innerHTML = `
-                <div style="position: relative; width: 100%; padding-bottom: 56.25%;">
-                    <iframe 
-                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; border-radius: 8px;"
-                        src="https://www.youtube.com/embed/${source}?autoplay=1&rel=0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowfullscreen>
-                    </iframe>
-                </div>
-            `;
-        }
-    } else if (type === 'file') {
-        if (isReel) {
-            modalContent.innerHTML = `
-                <div style="display: flex; justify-content: center; align-items: center; min-height: 80vh;">
-                    <div style="width: 400px; max-width: 100%;">
-                        <div style="position: relative; width: 100%; padding-bottom: 177.78%; background: #000; border-radius: 12px; overflow: hidden;">
+                    `;
+                }
+            } else if (type === 'file') {
+                if (isReel) {
+                    modalContent.innerHTML = `
+                        <div style="display: flex; justify-content: center; align-items: center; min-height: 80vh;">
+                            <div style="width: 400px; max-width: 100%;">
+                                <div style="position: relative; width: 100%; padding-bottom: 177.78%; background: #000; border-radius: 12px; overflow: hidden;">
+                                    <video controls autoplay style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+                                        <source src="${source}" type="video/mp4">
+                                        Your browser does not support the video tag.
+                                    </video>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    modalContent.innerHTML = `
+                        <div style="position: relative; width: 100%; padding-bottom: 56.25%; background: #000; border-radius: 8px; overflow: hidden;">
                             <video controls autoplay style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
                                 <source src="${source}" type="video/mp4">
                                 Your browser does not support the video tag.
                             </video>
                         </div>
-                    </div>
-                </div>
-            `;
-        } else {
-            modalContent.innerHTML = `
-                <div style="position: relative; width: 100%; padding-bottom: 56.25%; background: #000; border-radius: 8px; overflow: hidden;">
-                    <video controls autoplay style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
-                        <source src="${source}" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
-                </div>
-            `;
-        }
-    }
-    
-    // Get the video modal instance
-    const videoModalEl = document.getElementById('videoModal');
-    const videoModal = new bootstrap.Modal(videoModalEl);
-    
-    // Show video modal
-    videoModal.show();
-    
-    // Ensure video modal is on top
-    setTimeout(() => {
-        videoModalEl.style.zIndex = '1060';
-        // Ensure backdrop is also on top
-        const backdrops = document.querySelectorAll('.modal-backdrop');
-        if (backdrops.length > 0) {
-            backdrops[backdrops.length - 1].style.zIndex = '1059';
-        }
-    }, 100);
-};
+                    `;
+                }
+            }
+            
+            const videoModalEl = document.getElementById('videoModal');
+            const videoModal = new bootstrap.Modal(videoModalEl);
+            videoModal.show();
+            
+            setTimeout(() => {
+                videoModalEl.style.zIndex = '1060';
+                const backdrops = document.querySelectorAll('.modal-backdrop');
+                if (backdrops.length > 0) {
+                    backdrops[backdrops.length - 1].style.zIndex = '1059';
+                }
+            }, 100);
+        };
 
         window.showToast = function(message, type = 'success') {
             const container = document.getElementById('toastContainer');
@@ -3675,10 +3718,6 @@ window.openVideoModal = function(type, source, isReel = false) {
                 this.remove();
             });
         };
-
-        console.log('Unified community modal script loaded');
-        console.log('openPostModal available:', typeof window.openPostModal === 'function');
-        console.log('submitComment available:', typeof window.submitComment === 'function');
     </script>
 
     <!-- ==================== MODAL EVENT HANDLERS ==================== -->
@@ -3710,7 +3749,6 @@ window.openVideoModal = function(type, source, isReel = false) {
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            // Remove from main feed
                             const selector = window.deleteType === 'post' ? `#post-${window.deleteId}` : `#comment-${window.deleteId}`;
                             const element = document.querySelector(selector);
                             
@@ -3722,7 +3760,6 @@ window.openVideoModal = function(type, source, isReel = false) {
                                     element.remove();
                                     
                                     if (window.deleteType === 'comment') {
-                                        // Update comment count
                                         document.querySelectorAll(`#post-${window.deleteId} .comment-count, .modal-post-container .comment-count`).forEach(el => {
                                             el.textContent = Math.max(0, parseInt(el.textContent) - 1);
                                         });
@@ -3730,13 +3767,11 @@ window.openVideoModal = function(type, source, isReel = false) {
                                 }, 300);
                             }
                             
-                            // Also remove from modal if open
                             const modalElement = document.querySelector(`.modal-post-container ${selector}`);
                             if (modalElement) {
                                 modalElement.remove();
                             }
                             
-                            // Hide delete modal
                             const deleteModalEl = document.getElementById('deleteModal');
                             const deleteModal = bootstrap.Modal.getInstance(deleteModalEl);
                             if (deleteModal) {
@@ -3805,21 +3840,16 @@ window.openVideoModal = function(type, source, isReel = false) {
                     .then(data => {
                         if (data.success) {
                             if (window.currentEditType === 'post') {
-                                // Try to update post content in multiple locations
-                                
-                                // Update in main feed
                                 const postElement = document.getElementById(`post-content-${window.currentEditId}`);
                                 if (postElement) {
                                     postElement.textContent = content;
                                 }
                                 
-                                // Update in modal if open
                                 const modalPostElement = document.querySelector(`.modal-post-container #post-content-${window.currentEditId}`);
                                 if (modalPostElement) {
                                     modalPostElement.textContent = content;
                                 }
                                 
-                                // Also try to update any paragraph with post text in modal
                                 const modalContainer = document.querySelector(`.modal-post-container[data-post-id="${window.currentEditId}"]`);
                                 if (modalContainer) {
                                     const textElement = modalContainer.querySelector('p[style*="white-space: pre-wrap"]');
@@ -3828,9 +3858,6 @@ window.openVideoModal = function(type, source, isReel = false) {
                                     }
                                 }
                             } else {
-                                // Update comment content in multiple locations
-                                
-                                // Update in main feed
                                 const commentElement = document.getElementById(`comment-content-${window.currentEditId}`);
                                 if (commentElement) {
                                     commentElement.textContent = content;
@@ -3838,14 +3865,12 @@ window.openVideoModal = function(type, source, isReel = false) {
                                     setTimeout(() => commentElement.style.opacity = '1', 300);
                                 }
                                 
-                                // Update in modal if open
                                 const modalCommentElement = document.querySelector(`.modal-post-container #comment-content-${window.currentEditId}`);
                                 if (modalCommentElement) {
                                     modalCommentElement.textContent = content;
                                 }
                             }
                             
-                            // Hide edit modal
                             const editModalEl = document.getElementById('editModal');
                             const editModal = bootstrap.Modal.getInstance(editModalEl);
                             if (editModal) {
@@ -3883,7 +3908,6 @@ window.openVideoModal = function(type, source, isReel = false) {
             const dropdown = document.getElementById('userDropdown');
             dropdown.classList.toggle('show');
 
-            // Close notification dropdown if open (guarded)
             const notifDropdown = document.getElementById('notificationDropdown');
             if (notifDropdown && notifDropdown.classList.contains('show')) {
                 notifDropdown.classList.remove('show');
@@ -3897,19 +3921,17 @@ window.openVideoModal = function(type, source, isReel = false) {
             if (!dropdown) return;
             dropdown.classList.toggle('show');
 
-            // Close user dropdown if open
             const userDropdown = document.getElementById('userDropdown');
             if (userDropdown && userDropdown.classList.contains('show')) {
                 userDropdown.classList.remove('show');
             }
 
-            // Load notifications if dropdown is opened
             if (dropdown.classList.contains('show')) {
                 loadNotifications();
             }
         }
 
-        // Chatbot toggle: if chatbot modal not present (guest), redirect to login
+        // Chatbot toggle
         function toggleChatbot() {
             const modal = document.getElementById('chatbotModal');
             if (!modal) {
@@ -3931,8 +3953,8 @@ window.openVideoModal = function(type, source, isReel = false) {
             });
         }
 
-// ========== NOTIFICATION FUNCTIONS ==========
-        // Load notifications
+        // ========== NOTIFICATION FUNCTIONS ==========
+        
         function loadNotifications() {
             const list = document.getElementById('notificationList');
             if (!list) return;
@@ -3944,19 +3966,50 @@ window.openVideoModal = function(type, source, isReel = false) {
                 </div>
             `;
             
-            fetch('/notifications?limit=5', {
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(res => {
-                if (!res.ok) throw new Error('Failed to load');
-                return res.json();
-            })
-            .then(data => {
-                updateNotificationDropdown(data.notifications || []);
-                updateNotificationCount(data.unread_count || 0);
+            // Fetch both community notifications and medicine reminders
+            Promise.all([
+                fetch('/notifications?limit=10', {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                }).then(res => res.json()).catch(() => ({ notifications: [], unread_count: 0 })),
+                
+                fetch('/medicine/reminders/notifications?limit=10', {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                }).then(res => res.json()).catch(() => ({ notifications: [], unread_count: 0 }))
+            ])
+            .then(([communityData, medicineData]) => {
+                const communityNotifications = (communityData.notifications || []).map(n => ({
+                    ...n,
+                    type: 'community',
+                    from_user: n.from_user,
+                    data: n.data,
+                    read_at: n.read_at,
+                    created_at: n.created_at,
+                    message: n.message,
+                    id: n.id,
+                    notification_id: n.id
+                }));
+                
+                const medicineNotifications = (medicineData.notifications || []).map(n => ({
+                    ...n,
+                    type: 'medicine',
+                    reminder_id: n.reminder_id,
+                    medicine_name: n.medicine_name,
+                    scheduled_time: n.scheduled_time,
+                    message: n.message,
+                    read_at: n.read_at,
+                    created_at: n.created_at,
+                    notification_id: n.id,
+                    action_url: n.action_url,
+                    taken_url: n.taken_url
+                }));
+                
+                const allNotifications = [...communityNotifications, ...medicineNotifications]
+                    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                
+                const totalUnread = (communityData.unread_count || 0) + (medicineData.unread_count || 0);
+                
+                updateNotificationDropdown(allNotifications);
+                updateNotificationCount(totalUnread);
             })
             .catch(err => {
                 console.error('Failed to load notifications:', err);
@@ -3968,10 +4021,8 @@ window.openVideoModal = function(type, source, isReel = false) {
                     </div>
                 `;
             });
-
         }
 
-        // Update notification dropdown
         function updateNotificationDropdown(notifications) {
             const list = document.getElementById('notificationList');
             
@@ -3994,37 +4045,166 @@ window.openVideoModal = function(type, source, isReel = false) {
                     minute: '2-digit'
                 });
                 
-                const avatar = notif.from_user?.picture 
-                    ? `<img src="{{ asset('storage/') }}/${notif.from_user.picture}" alt="${notif.from_user.name || 'User'}">`
-                    : `<div class="notification-avatar-placeholder">${(notif.from_user?.name || 'U').charAt(0).toUpperCase()}</div>`;
-                
-                const postId = notif.data?.post_id || '';
-                
-                html += `
-                    <a href="javascript:void(0)" class="notification-item ${notif.read_at ? '' : 'unread'}" 
-                       onclick="handleNotificationClick(event, ${notif.id}, '${postId}')">
-                        <div class="notification-avatar">
-                            ${avatar}
+                if (notif.type === 'medicine' || notif.type === 'medicine_reminder') {
+                    const reminderId = notif.reminder_id;
+                    const medicineName = notif.medicine_name;
+                    const scheduledTime = notif.scheduled_time;
+                    
+                    html += `
+                        <div class="notification-item ${notif.read_at ? '' : 'unread'}" 
+                             onclick="handleMedicineReminderClick(${reminderId || 'null'}, event, ${notif.notification_id})">
+                            <div class="notification-avatar">
+                                <div class="notification-avatar-placeholder" style="background: linear-gradient(135deg, #28a745, #20c997);">
+                                    <i class="fas fa-pills"></i>
+                                </div>
+                            </div>
+                            <div class="notification-content">
+                                <div class="notification-message">
+                                    <strong>💊 Medicine Reminder</strong><br>
+                                    Time to take: <strong>${escapeHtml(medicineName || 'Medicine')}</strong>
+                                    ${scheduledTime ? ` at ${escapeHtml(scheduledTime)}` : ''}
+                                </div>
+                                <div class="notification-time">${time}</div>
+                                <div class="mt-2">
+                                    <button class="btn btn-sm btn-success rounded-pill" onclick="event.stopPropagation(); markReminderTakenFromNotification(${reminderId || 'null'}, ${notif.notification_id})">
+                                        <i class="fas fa-check me-1"></i> Taken
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="notification-content">
-                            <div class="notification-message">${escapeHtml(notif.message)}</div>
-                            <div class="notification-time">${time}</div>
+                    `;
+                } else {
+                    const avatar = notif.from_user?.picture 
+                        ? `<img src="{{ asset('storage/') }}/${notif.from_user.picture}" alt="${notif.from_user.name || 'User'}">`
+                        : `<div class="notification-avatar-placeholder">${(notif.from_user?.name || 'U').charAt(0).toUpperCase()}</div>`;
+                    
+                    const postId = notif.data?.post_id || notif.post_id;
+                    
+                    let iconHtml = '';
+                    if (notif.type === 'post_approved') {
+                        iconHtml = '<div class="notification-avatar-placeholder" style="background: linear-gradient(135deg, #28a745, #20c997);"><i class="fas fa-check-circle"></i></div>';
+                    } else if (notif.type === 'post_rejected') {
+                        iconHtml = '<div class="notification-avatar-placeholder" style="background: linear-gradient(135deg, #dc3545, #c82333);"><i class="fas fa-times-circle"></i></div>';
+                    } else if (notif.type === 'post_deleted') {
+                        iconHtml = '<div class="notification-avatar-placeholder" style="background: linear-gradient(135deg, #dc3545, #c82333);"><i class="fas fa-trash"></i></div>';
+                    } else if (notif.type === 'post_reported') {
+                        iconHtml = '<div class="notification-avatar-placeholder" style="background: linear-gradient(135deg, #ffc107, #ff9800);"><i class="fas fa-flag"></i></div>';
+                    } else {
+                        iconHtml = avatar;
+                    }
+                    
+                    // Only add click handler if there's a valid postId
+                    const clickHandler = postId ? `onclick="handleNotificationClick(event, ${notif.id}, '${postId}')"` : '';
+                    
+                    html += `
+                        <div class="notification-item ${notif.read_at ? '' : 'unread'}" 
+                             ${clickHandler}>
+                            <div class="notification-avatar">
+                                ${iconHtml}
+                            </div>
+                            <div class="notification-content">
+                                <div class="notification-message">${escapeHtml(notif.message)}</div><br>
+                                ${notif.post_preview ? `<div class="notification-preview mt-1"><strong class="d-block">${escapeHtml(notif.post_preview)}</strong></div>` : ''}
+                                <div class="notification-time">${time}</div>
+                            </div>
                         </div>
-                    </a>
-                `;
+                    `;
+                }
             });
             
             list.innerHTML = html;
         }
 
-        // Handle notification click
+        function handleMedicineReminderClick(reminderId, event, notificationId) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
+            // If reminderId is null or invalid, show an error
+            if (!reminderId || reminderId === 'null') {
+                console.error('Invalid reminder ID:', reminderId);
+                showToast('Unable to load medicine reminder', 'error');
+                return;
+            }
+            
+            if (notificationId) {
+                fetch(`/medicine/reminders/notification/${notificationId}/read`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                    }
+                }).catch(err => console.error('Error marking as read:', err));
+            }
+            
+            openMedicineReminderModal(reminderId);
+        }
+
+        function markReminderTakenFromNotification(reminderId, notificationId) {
+            if (!reminderId || reminderId === 'null') {
+                console.error('Invalid reminder ID:', reminderId);
+                showToast('Unable to mark as taken', 'error');
+                return;
+            }
+            
+            if (!confirm('Mark this medicine as taken?')) return;
+            
+            fetch(`/medicine/reminders/${reminderId}/taken-from-notification`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Medicine marked as taken!', 'success');
+                    
+                    if (notificationId) {
+                        fetch(`/medicine/reminders/notification/${notificationId}/read`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Accept': 'application/json',
+                            }
+                        }).catch(err => console.error('Error:', err));
+                    }
+                    
+                    setTimeout(() => loadNotifications(), 500);
+                } else {
+                    showToast(data.message || 'Failed to mark as taken', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Error marking as taken', 'error');
+            });
+        }
+
         function handleNotificationClick(event, notificationId, postId) {
             event.preventDefault();
             
-            // Close dropdown
             const dropdown = document.getElementById('notificationDropdown');
             if (dropdown) {
                 dropdown.classList.remove('show');
+            }
+
+            // If no postId, just mark as read and return
+            if (!postId || postId === 'null' || postId === 'undefined') {
+                if (notificationId) {
+                    fetch(`/notifications/${notificationId}/read`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    }).catch(err => console.error('Error marking as read:', err));
+                }
+                return;
             }
 
             if (!notificationId) {
@@ -4068,7 +4248,6 @@ window.openVideoModal = function(type, source, isReel = false) {
             });
         }
 
-        // Mark all notifications as read
         function markAllNotificationsRead() {
             fetch('/notifications/mark-all-read', {
                 method: 'POST',
@@ -4081,18 +4260,16 @@ window.openVideoModal = function(type, source, isReel = false) {
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    // Update UI
                     document.querySelectorAll('.notification-item').forEach(item => {
                         item.classList.remove('unread');
                     });
                     updateNotificationCount(0);
-                    loadNotifications(); // Reload to show all as read
+                    loadNotifications();
                 }
             })
             .catch(err => console.error('Error marking all as read:', err));
         }
 
-        // Update notification count and bell animation
         function updateNotificationCount(count) {
             const badge = document.getElementById('notificationCount');
             const bell = document.getElementById('notificationBell');
@@ -4114,7 +4291,6 @@ window.openVideoModal = function(type, source, isReel = false) {
                 badge.textContent = count > 99 ? '99+' : count;
                 badge.style.display = 'inline-block';
                 
-                // Shake bell if new notification arrived
                 if (bell && count > previousCount) {
                     bell.classList.add('shake');
                     setTimeout(() => bell.classList.remove('shake'), 500);
@@ -4151,7 +4327,6 @@ window.openVideoModal = function(type, source, isReel = false) {
             }
         }
 
-        // Escape HTML to prevent XSS
         function escapeHtml(unsafe) {
             if (!unsafe) return '';
             return String(unsafe)
@@ -4162,7 +4337,6 @@ window.openVideoModal = function(type, source, isReel = false) {
                 .replace(/'/g, "&#039;");
         }
 
-        // Render a lightweight markdown-like subset: headings, lists, bold
         function renderChatbotMarkup(text) {
             const escaped = escapeHtml(text);
             const lines = escaped.split(/\r?\n/);
@@ -4217,7 +4391,6 @@ window.openVideoModal = function(type, source, isReel = false) {
         function emphasizeLine(input) {
             let line = input.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 
-            // Make the full leading label before the first colon bold.
             line = line.replace(/^\s*([^:<>]{2,120})\s*:\s*(.*)$/i, (m, label, rest) => {
                 return `<strong>${label.trim()}:</strong> ${rest}`;
             });
@@ -4243,16 +4416,13 @@ window.openVideoModal = function(type, source, isReel = false) {
             return line;
         }
 
-        // Start periodic updates
         let notificationInterval;
 
         function startNotificationUpdates() {
-            // Clear existing interval
             if (notificationInterval) {
                 clearInterval(notificationInterval);
             }
             
-            // Update every 30 seconds
             notificationInterval = setInterval(() => {
                 const dropdown = document.getElementById('notificationDropdown');
                 if (!dropdown.classList.contains('show')) {
@@ -4278,7 +4448,6 @@ window.openVideoModal = function(type, source, isReel = false) {
         }
         @endif
 
-        // Close dropdowns when clicking outside
         window.onclick = function(event) {
             if (!event.target.matches('.user-circle') && !event.target.matches('.user-circle *') &&
                 !event.target.matches('.notification-bell') && !event.target.matches('.notification-bell *')) {
@@ -4299,13 +4468,11 @@ window.openVideoModal = function(type, source, isReel = false) {
             }
         };
 
-        // Chatbot variables
         let isTyping = false;
         let conversationHistory = [];
         let chatbotPromptTimeout;
         const allowChatbotBubble = @json((bool) ($showChatbotBubble ?? true));
 
-        // Cookie helpers
         function setCookie(name, value, days) {
             let expires = "";
             if (days) {
@@ -4321,13 +4488,11 @@ window.openVideoModal = function(type, source, isReel = false) {
             return v ? v.pop() : null;
         }
 
-        // Show or hide chatbot icon based on cookie
         function updateChatbotVisibility(enabled) {
             const chatbotIcon = document.getElementById('chatbotIcon');
             if (!chatbotIcon) return;
             if (enabled) {
                 chatbotIcon.style.display = '';
-                // trigger prompt cycle when enabled
                 startChatbotPromptCycle();
             } else {
                 chatbotIcon.style.display = 'none';
@@ -4345,9 +4510,8 @@ window.openVideoModal = function(type, source, isReel = false) {
             }
 
             const saved = getCookie('chatbot_bubble_enabled');
-            const enabled = saved === null ? '1' : saved; // default enabled
+            const enabled = saved === null ? '1' : saved;
 
-            // Ensure the floating icon visibility matches cookie
             updateChatbotVisibility(enabled === '1');
         }
 
@@ -4364,7 +4528,6 @@ window.openVideoModal = function(type, source, isReel = false) {
                 clearTimeout(chatbotPromptTimeout);
             }
 
-            // If icon is hidden via cookie, do nothing
             const saved = getCookie('chatbot_bubble_enabled');
             const enabled = saved === null ? '1' : saved;
             if (enabled !== '1') {
@@ -4384,24 +4547,20 @@ window.openVideoModal = function(type, source, isReel = false) {
                 }, 10000);
             };
 
-            // Trigger immediately once on page load/refresh.
             showPrompt();
         }
 
-        // Send message to chatbot
         async function sendMessage() {
             const input = document.getElementById('chatInput');
             const message = input.value.trim();
 
             if (!message || isTyping) return;
 
-            // Add user message
             addMessage(message, 'user');
             conversationHistory.push({ role: 'user', content: message });
             conversationHistory = conversationHistory.slice(-12);
             input.value = '';
 
-            // Show typing indicator
             showTypingIndicator();
 
             try {
@@ -4453,7 +4612,6 @@ window.openVideoModal = function(type, source, isReel = false) {
             }
         }
 
-        // Add message to chat
         function addMessage(text, sender) {
             const messages = document.getElementById('chatMessages');
             const messageDiv = document.createElement('div');
@@ -4470,7 +4628,6 @@ window.openVideoModal = function(type, source, isReel = false) {
                 messageDiv.style.textAlign = 'left';
                 messageDiv.style.margin = '10px 0';
 
-                // Format bot response using markdown-like renderer (lists, bold, headings)
                 let formattedText = renderChatbotMarkup(text);
 
                 messageDiv.innerHTML = `
@@ -4487,7 +4644,6 @@ window.openVideoModal = function(type, source, isReel = false) {
             messages.scrollTop = messages.scrollHeight;
         }
 
-        // Show typing indicator
         function showTypingIndicator() {
             isTyping = true;
             const messages = document.getElementById('chatMessages');
@@ -4507,7 +4663,6 @@ window.openVideoModal = function(type, source, isReel = false) {
             messages.scrollTop = messages.scrollHeight;
         }
 
-        // Remove typing indicator
         function removeTypingIndicator() {
             isTyping = false;
             const typingIndicator = document.getElementById('typingIndicator');
@@ -4516,31 +4671,29 @@ window.openVideoModal = function(type, source, isReel = false) {
             }
         }
 
-        // Enter key for chat
         document.getElementById('chatInput')?.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 sendMessage();
             }
         });
 
-        // Auto-resize textarea (optional)
         document.getElementById('chatInput')?.addEventListener('input', function() {
             this.style.height = 'auto';
             this.style.height = (this.scrollHeight) + 'px';
         });
 
-        // Make functions global
         window.toggleEmailQuick = toggleEmailQuick;
         @if (! $isAdminNav)
             window.toggleNotificationDropdown = toggleNotificationDropdown;
             window.markAllNotificationsRead = markAllNotificationsRead;
             window.handleNotificationClick = handleNotificationClick;
+            window.handleMedicineReminderClick = handleMedicineReminderClick;
+            window.markReminderTakenFromNotification = markReminderTakenFromNotification;
         @endif
         window.toggleChatbot = toggleChatbot;
         window.sendMessage = sendMessage;
         window.addMessage = addMessage;
 
-        // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             const appLocale = document.documentElement.lang?.startsWith('bn') ? 'bn' : 'en';
             const autoTranslations = @json(app()->getLocale() === 'bn' ? __('ui.auto') : []);
@@ -4620,7 +4773,6 @@ window.openVideoModal = function(type, source, isReel = false) {
                             return NodeFilter.FILTER_REJECT;
                         }
 
-                        // Avoid touching obvious identity content.
                         if (parentEl && (parentEl.classList.contains('nav-user-name') || parentEl.closest('.dropdown-header'))) {
                             return NodeFilter.FILTER_REJECT;
                         }
@@ -4679,13 +4831,10 @@ window.openVideoModal = function(type, source, isReel = false) {
             applyExactTextTranslations();
 
             initializeChatbotPromptSetting();
-
             startChatbotPromptCycle();
 
             if ('{{ Auth::check() }}' === '1') {
-                // Load mailbox count (notifications hidden for admin)
                 @if (! $isAdminNav)
-                    // Load initial navbar counts
                     Promise.all([
                         fetch('/notifications/unread-count', {
                             headers: {
@@ -4715,18 +4864,13 @@ window.openVideoModal = function(type, source, isReel = false) {
                 @endif
             }
         });
-        
     </script>
 
     <!-- Global Edit Functions - Available on all pages -->
     <script>
-        // Initialize data structures (will be overridden by page-specific data)
         window.metricFieldDefs = window.metricFieldDefs || {};
         window.symptomsList = window.symptomsList || {};
 
-        // ──────────────────────────────────────────────────────────────
-        // EDIT MODAL FUNCTIONS — global scope for health/partials
-        // ──────────────────────────────────────────────────────────────
         window.openEditMetric = function(id, type, values, recordedAt) {
             try {
                 const metricLabel = document.getElementById('metricModalLabel');
@@ -4743,7 +4887,6 @@ window.openVideoModal = function(type, source, isReel = false) {
                 const metricTypeSelect = document.getElementById('metricTypeSelect');
                 if (metricTypeSelect) metricTypeSelect.value = type;
 
-                // build value map for pre-fill
                 const cfg = (window.metricFieldDefs || {})[type];
                 const valMap = {};
                 if (cfg) {
@@ -4753,7 +4896,6 @@ window.openVideoModal = function(type, source, isReel = false) {
                     });
                 }
 
-                // Build fields with current values
                 const fieldsContainer = document.getElementById('metricFieldsContainer');
                 if (fieldsContainer) {
                     fieldsContainer.innerHTML = '';
@@ -4779,7 +4921,6 @@ window.openVideoModal = function(type, source, isReel = false) {
                 const recordedAtInput = document.getElementById('metricRecordedAt');
                 if (recordedAtInput) recordedAtInput.value = recordedAt;
                 
-                // Open modal with retry logic
                 const modal = document.getElementById('addMetricModal');
                 if (modal) {
                     try {
@@ -4824,7 +4965,6 @@ window.openVideoModal = function(type, source, isReel = false) {
                 const noteInput = document.getElementById('symptomNote');
                 if (noteInput) noteInput.value = note || '';
                 
-                // Open modal with retry logic
                 const modal = document.getElementById('addSymptomModal');
                 if (modal) {
                     try {
@@ -4871,7 +5011,6 @@ window.openVideoModal = function(type, source, isReel = false) {
                 const notesInput = document.getElementById('diseaseNotes');
                 if (notesInput) notesInput.value = notes || '';
                 
-                // Open modal with retry logic
                 const modal = document.getElementById('addDiseaseModal');
                 if (modal) {
                     try {
@@ -4921,7 +5060,6 @@ window.openVideoModal = function(type, source, isReel = false) {
                 const summaryInput = document.getElementById('uploadSummary');
                 if (summaryInput) summaryInput.value = summary || '';
                 
-                // Open modal with retry logic
                 const modal = document.getElementById('addUploadModal');
                 if (modal) {
                     try {
@@ -4939,7 +5077,6 @@ window.openVideoModal = function(type, source, isReel = false) {
             }
         };
 
-        // Reset modals to "Add" mode when closed
         document.addEventListener('DOMContentLoaded', function() {
             ['addMetricModal','addSymptomModal','addDiseaseModal','addUploadModal'].forEach(modalId => {
                 const el = document.getElementById(modalId);

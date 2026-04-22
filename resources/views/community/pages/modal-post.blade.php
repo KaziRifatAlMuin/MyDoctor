@@ -10,6 +10,11 @@
     $isAdminReadOnly = $isAdmin && $adminReadOnlyCommunity;
     $isAnonymous = (bool) $post->is_anonymous;
     
+    // Check if post is rejected/deleted by admin
+    $isRejected = $post->rejected_at !== null;
+    $rejectedBy = $post->rejectedBy;
+    $rejectionReason = $post->rejection_reason;
+    
     // SAFE: Default values for deleted users
     $userName = $postUser ? $postUser->name : 'Deleted User';
     $userPicture = $postUser ? $postUser->picture : null;
@@ -24,6 +29,23 @@
     // SAFE: Disease display name
     $diseaseDisplayName = $post->disease ? $post->disease->display_name : '';
 @endphp
+
+@if($isRejected)
+    <!-- Rejected Post Banner -->
+    <div style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; padding: 16px; text-align: center; border-radius: 8px; margin: 16px;">
+        <i class="fas fa-times-circle fa-2x mb-2"></i>
+        <h5 style="margin: 0 0 8px 0; font-weight: 600;">Post Deleted by Admin</h5>
+        <p style="margin: 0; font-size: 14px; opacity: 0.9;">
+            This post was removed from the community.
+            @if($rejectionReason)
+                <br><strong>Reason:</strong> {{ $rejectionReason }}
+            @endif
+            @if($rejectedBy)
+                <br><small>Rejected by {{ $rejectedBy->name }} on {{ $post->rejected_at->format('M j, Y \a\t g:i A') }}</small>
+            @endif
+        </p>
+    </div>
+@endif
 
 <div class="modal-post-container" data-post-id="{{ $post->id }}" style="padding: 0; display: flex; position: relative; flex-direction: column; height: 100%; max-height: calc(90vh - 60px);">
     
@@ -69,6 +91,7 @@
             
             <!-- Action Buttons - Star, Report, Edit, Delete, Approve -->
             @auth
+                @if(!$isRejected)
                 <div style="display: flex; gap: 8px;">
                     <!-- Star Button - Hide for admin -->
                     @if(! $isAdminReadOnly && !$isAdmin)
@@ -116,6 +139,7 @@
                         </button>
                     @endif
                 </div>
+                @endif
             @endauth
         </div>
 

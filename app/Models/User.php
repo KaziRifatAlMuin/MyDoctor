@@ -99,23 +99,22 @@ class User extends Authenticatable implements MustVerifyEmail
         $this->notify(new \App\Notifications\ResetPasswordNotification($token));
     }
 
-  
-
-
-
-
-
-
-
     /**
      * Check if user wants email notifications
+     * FIXED: Added null safety check for setting relationship
      */
     public function wantsEmailNotifications(): bool
     {
-        return (bool) $this->setting->email_notifications;
+        $setting = $this->setting;
+        
+        // If setting relationship exists and has email_notifications property
+        if ($setting && isset($setting->email_notifications)) {
+            return (bool) $setting->email_notifications;
+        }
+        
+        // Default to true if setting doesn't exist yet
+        return true;
     }
-
-
 
     /**
      * Get specific notification setting
@@ -146,8 +145,6 @@ class User extends Authenticatable implements MustVerifyEmail
 
         return (bool) $setting->email_notifications;
     }
-
-
 
     public function setting()
     {
@@ -268,7 +265,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->attributes['name'] ?? null;
     }
 
-    // Add this with your other relationships
+    // Notification relationships
     public function notifications()
     {
         return $this->hasMany(\App\Models\Notification::class, 'user_id');

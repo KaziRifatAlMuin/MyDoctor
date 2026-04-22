@@ -25,6 +25,7 @@ class NotificationController extends Controller
             $limit = $request->get('limit', 5);
             $recent = $user->notifications()
                 ->with('fromUser')
+                ->where('type', '!=', 'medicine_reminder') // Exclude medicine reminders from community notifications
                 ->latest()
                 ->limit($limit)
                 ->get()
@@ -48,7 +49,7 @@ class NotificationController extends Controller
                 
             return response()->json([
                 'notifications' => $recent,
-                'unread_count' => $user->unreadNotifications()->count(),
+                'unread_count' => $user->unreadNotifications()->where('type', '!=', 'medicine_reminder')->count(),
             ]);
         }
 

@@ -47,6 +47,7 @@
                 @foreach($notifications as $notification)
                     <div class="notification-item {{ is_null($notification->read_at) ? 'unread' : '' }}" 
                          id="notification-{{ $notification->id }}"
+                         data-post-preview="{{ e($notification->data['post_preview'] ?? '') }}"
                          onclick="openPostFromNotification({{ $notification->data['post_id'] ?? 'null' }}, {{ $notification->id }})">
                         
                         <!-- Checkbox -->
@@ -94,11 +95,7 @@
                                 <i class="far fa-clock me-1"></i>
                                 {{ $notification->created_at->diffForHumans() }}
                             </div>
-                            @if(isset($notification->data['post_preview']))
-                                <div class="notification-preview">
-                                    {{ Str::limit($notification->data['post_preview'], 120) }}
-                                </div>
-                            @endif
+                            {{-- preview will be shown inside the post modal on click, not inline --}}
                         </div>
                     </div>
                 @endforeach
@@ -751,14 +748,21 @@ function openPostFromNotification(postId, notificationId = null) {
     })
     .catch(error => {
         console.error('Error:', error);
-        modalBody.innerHTML = `
-            <div class="text-center py-5">
-                <i class="fas fa-exclamation-circle text-danger" style="font-size: 48px;"></i>
-                <h5 class="mt-3">{{ __('ui.notifications.failed_to_load_post') }}</h5>
-                <p class="text-muted">{{ __('ui.notifications.try_again_later') }}</p>
-                <button class="btn btn-primary mt-2" onclick="location.reload()">{{ __('ui.notifications.refresh_page') }}</button>
-            </div>
-        `;
+        // Fallback: if notification contains a preview, show it inside the modal
+        const notifEl = document.getElementById(`notification-${notificationId}`);
+        const preview = notifEl?.dataset?.postPreview;
+        if (preview) {
+            modalBody.innerHTML = `<div class="reported-content"><strong class="reported-preview d-block mt-2">${escapeHtml(preview)}</strong></div>`;
+        } else {
+            modalBody.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="fas fa-exclamation-circle text-danger" style="font-size: 48px;"></i>
+                    <h5 class="mt-3">{{ __('ui.notifications.failed_to_load_post') }}</h5>
+                    <p class="text-muted">{{ __('ui.notifications.try_again_later') }}</p>
+                    <button class="btn btn-primary mt-2" onclick="location.reload()">{{ __('ui.notifications.refresh_page') }}</button>
+                </div>
+            `;
+        }
     });
 }
 

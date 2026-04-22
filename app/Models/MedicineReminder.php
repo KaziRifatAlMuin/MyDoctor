@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Notifications\MedicineReminderNotification;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 
 class MedicineReminder extends Model
 {
@@ -104,6 +106,30 @@ class MedicineReminder extends Model
     }
 
     /**
+     * Send notification for this reminder
+     */
+    public function sendNotification(): void
+    {
+        try {
+            $user = $this->schedule->medicine->user;
+            if ($user) {
+                $user->notify(new MedicineReminderNotification($this));
+                Log::info("Medicine reminder notification sent for reminder ID: {$this->id} to user ID: {$user->id}");
+            }
+        } catch (\Exception $e) {
+            Log::error("Failed to send medicine reminder notification: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send notification for this reminder (alias for sendNotification)
+     */
+    public function notifyUser(): void
+    {
+        $this->sendNotification();
+    }
+
+    /**
      * Get status label.
      */
     public function getStatusLabelAttribute()
@@ -149,8 +175,90 @@ class MedicineReminder extends Model
             'reminder_id' => $this->id,
             'medicine_id' => $this->schedule->medicine->id,
             'medicine_name' => $this->schedule->medicine->medicine_name,
+            'dosage' => $this->schedule->medicine->value_per_dose,
+            'unit' => $this->schedule->medicine->unit,
             'time' => $this->reminder_at->format('h:i A'),
             'url' => route('medicine.reminders'),
+            'taken_url' => route('medicine.reminders.taken-from-notification', $this->id),
         ];
+    }
+
+    /**
+     * Check if reminder is due (within last 5 minutes)
+     */
+    public function isDue(): bool
+    {
+        $now = now();
+        $reminderTime = $this->reminder_at;
+        
+        // Check if reminder time is between now and 5 minutes ago
+        return $this->status === 'pending' 
+            && $reminderTime->lte($now) 
+            && $reminderTime->gte($now->copy()->subMinutes(5));
+    }
+
+    /**
+     * Check if reminder is upcoming (within next 5 minutes)
+     */
+    public function isUpcoming(): bool
+    {
+        $now = now();
+        $reminderTime = $this->reminder_at;
+        
+        return $this->status === 'pending' 
+            && $reminderTime->gt($now) 
+            && $reminderTime->lte($now->copy()->addMinutes(5));
+    }
+
+    /**
+     * Scope for pending reminders
+     */
+    public function scopePending($query)
+    {
+        return $query->where('status', 'pending');
+    }
+
+    /**
+     * Scope for taken reminders
+     */
+    public function scopeTaken($query)
+    {
+        return $query->where('status', 'taken');
+    }
+
+    /**
+     * Scope for missed reminders
+     */
+    public function scopeMissed($query)
+    {
+        return $query->where('status', 'missed');
+    }
+
+    /**
+     * Scope for today's reminders
+     */
+    public function scopeToday($query)
+    {
+        return $query->whereDate('reminder_at', today());
+    }
+
+    /**
+     * Scope for upcoming reminders (future)
+     */
+    public function scopeUpcoming($query)
+    {
+        return $query->where('reminder_at', '>', now())
+            ->where('status', 'pending');
+    }
+
+    /**
+     * Scope for reminders due within next X minutes
+     */
+    public function scopeDueWithin($query, $minutes = 5)
+    {
+        return $query->whereBetween('reminder_at', [
+            now(),
+            now()->addMinutes($minutes)
+        ])->where('status', 'pending');
     }
 }
