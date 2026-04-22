@@ -1538,6 +1538,7 @@ body {
 @php
     $isStarredPage = $isStarredPage ?? false;
     $isPendingPage = $isPendingPage ?? false;
+    $isReportedPage = $isReportedPage ?? false;
     $isAdminCommunity = $isAdminCommunity ?? false;
     $pendingPreviewPosts = $pendingPreviewPosts ?? collect();
 @endphp
@@ -1548,11 +1549,11 @@ body {
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
             <div>
                 <h1 style="font-size: 28px; font-weight: 700; margin-bottom: 5px;">
-                    <i class="fas {{ $isPendingPage ? 'fa-hourglass-half' : ($isStarredPage ? 'fa-star' : 'fa-users') }} me-3" style="color: {{ $isPendingPage ? '#ff9800' : ($isStarredPage ? '#f7b500' : '#1877f2') }};"></i>
-                    {{ $isPendingPage ? __('ui.community.pending_posts_title') : ($isStarredPage ? __('ui.community.starred_posts_title') : ($isAdminCommunity ? __('ui.community.admin_community_moderation_title') : __('ui.community.community_forum_title'))) }}
+                    <i class="fas {{ $isPendingPage ? 'fa-hourglass-half' : ($isReportedPage ? 'fa-flag' : ($isStarredPage ? 'fa-star' : 'fa-users')) }} me-3" style="color: {{ $isPendingPage ? '#ff9800' : ($isReportedPage ? '#dc3545' : ($isStarredPage ? '#f7b500' : '#1877f2')) }};"></i>
+                    {{ $isPendingPage ? __('ui.community.pending_posts_title') : ($isReportedPage ? __('ui.community.reported_posts_title', ['default' => 'Reported Posts']) : ($isStarredPage ? __('ui.community.starred_posts_title') : ($isAdminCommunity ? __('ui.community.admin_community_moderation_title') : __('ui.community.community_forum_title')))) }}
                 </h1>
                 <p style="color: #65676b; margin: 0;">
-                    {{ $isPendingPage ? ($isAdminCommunity ? __('ui.community.posts_awaiting_approval') : __('ui.community.your_posts_waiting_for_approval')) : ($isStarredPage ? __('ui.community.your_saved_posts') : ($isAdminCommunity ? __('ui.community.view_and_manage_community_posts') : __('ui.community.connect_with_others_share_experiences'))) }}
+                    {{ $isPendingPage ? ($isAdminCommunity ? __('ui.community.posts_awaiting_approval') : __('ui.community.your_posts_waiting_for_approval')) : ($isReportedPage ? __('ui.community.your_reported_posts_description', ['default' => 'Posts reported by other community members']) : ($isStarredPage ? __('ui.community.your_saved_posts') : ($isAdminCommunity ? __('ui.community.view_and_manage_community_posts') : __('ui.community.connect_with_others_share_experiences')))) }}
                 </p>
             </div>
             
@@ -1578,6 +1579,14 @@ body {
                     <a href="{{ $isPendingPage ? ($isAdminCommunity ? route('admin.community.posts.index') : route('community.posts.index')) : ($isAdminCommunity ? route('admin.community.posts.pending') : route('community.posts.pending')) }}" class="btn btn-sm {{ $isPendingPage ? 'btn-outline-primary' : 'btn-outline-warning' }} rounded-pill ms-1 d-inline-flex align-items-center" style="white-space:nowrap;">
                         <i class="fas fa-hourglass-half me-2"></i>{{ $isPendingPage ? __('ui.community.all_posts') : __('ui.community.pending_posts') }}
                     </a>
+                    
+                    <!-- REPORTED POSTS BUTTON - NOW VISIBLE FOR BOTH REGULAR USERS AND ADMINS -->
+                    <a href="{{ $isReportedPage ? ($isAdminCommunity ? route('admin.community.posts.index') : route('community.posts.index')) : ($isAdminCommunity ? route('admin.community.posts.reported') : route('community.posts.reported')) }}" 
+                       class="btn btn-sm {{ $isReportedPage ? 'btn-outline-primary' : 'btn-outline-danger' }} rounded-pill ms-1 d-inline-flex align-items-center" 
+                       style="white-space:nowrap;">
+                        <i class="fas fa-flag me-2"></i>{{ $isReportedPage ? __('ui.community.all_posts') : __('ui.community.reported_posts_title', ['default' => 'Reported Posts']) }}
+                    </a>
+                    
                 @endauth
                 <a href="{{ auth()->check() ? route('users.index') : route('login') }}" class="btn btn-sm btn-primary rounded-pill ms-2 d-inline-flex align-items-center" style="white-space:nowrap;">
                     <i class="fas fa-users me-2"></i> {{ __('ui.community.browse_members') }}
@@ -1612,6 +1621,13 @@ body {
                     <a href="{{ $isPendingPage ? ($isAdminCommunity ? route('admin.community.posts.index') : route('community.posts.index')) : ($isAdminCommunity ? route('admin.community.posts.pending') : route('community.posts.pending')) }}" class="btn btn-sm {{ $isPendingPage ? 'btn-outline-primary' : 'btn-outline-warning' }} rounded-pill">
                         <i class="fas fa-hourglass-half"></i> {{ $isPendingPage ? __('ui.community.all_posts') : __('ui.community.pending_posts') }}
                     </a>
+                    
+                    <!-- REPORTED POSTS BUTTON IN MOBILE VIEW - NOW VISIBLE FOR BOTH REGULAR USERS AND ADMINS -->
+                    <a href="{{ $isReportedPage ? ($isAdminCommunity ? route('admin.community.posts.index') : route('community.posts.index')) : ($isAdminCommunity ? route('admin.community.posts.reported') : route('community.posts.reported')) }}" 
+                       class="btn btn-sm {{ $isReportedPage ? 'btn-outline-primary' : 'btn-outline-danger' }} rounded-pill">
+                        <i class="fas fa-flag"></i> {{ $isReportedPage ? __('ui.community.all_posts') : __('ui.community.reported_posts_title', ['default' => 'Reported Posts']) }}
+                    </a>
+                    
                 @endauth
                 <a href="{{ auth()->check() ? route('users.index') : route('login') }}" class="btn btn-sm btn-primary rounded-pill">
                     <i class="fas fa-users"></i> {{ __('ui.community.browse_members') }}
@@ -1631,8 +1647,8 @@ body {
                 </h5>
                 <div class="quick-filter-buttons">
                     <button class="quick-filter-btn {{ !request('disease') ? 'active' : '' }}" onclick="filterByDisease('all')">
-                        <i class="fas {{ $isPendingPage ? 'fa-hourglass-half' : ($isStarredPage ? 'fa-star' : 'fa-globe') }} me-2"></i>
-                        <span class="filter-name">{{ $isPendingPage ? __('ui.community.all_pending_posts') : ($isStarredPage ? __('ui.community.all_starred_posts') : __('ui.community.all_posts')) }}</span>
+                        <i class="fas {{ $isPendingPage ? 'fa-hourglass-half' : ($isReportedPage ? 'fa-flag' : ($isStarredPage ? 'fa-star' : 'fa-globe')) }} me-2"></i>
+                        <span class="filter-name">{{ $isPendingPage ? __('ui.community.all_pending_posts') : ($isReportedPage ? __('ui.community.all_reported_posts', ['default' => 'All Reported Posts']) : ($isStarredPage ? __('ui.community.all_starred_posts') : __('ui.community.all_posts'))) }}</span>
                         <span class="filter-count">{{ $totalPosts }}</span>
                     </button>
                     @foreach($diseases as $disease)
@@ -1848,8 +1864,8 @@ body {
                     @empty
                         <div style="text-align: center; padding: 60px 20px; background: white; border-radius: 12px;">
                             <i class="fas fa-comments fa-4x mb-3" style="color: #adb5bd;"></i>
-                            <h5>{{ $isPendingPage ? __('ui.community.no_pending_posts') : ($isStarredPage ? __('ui.community.no_starred_posts_yet') : __('ui.community.no_discussions_yet')) }}</h5>
-                            <p style="color: #65676b;">{{ $isPendingPage ? __('ui.community.new_posts_will_appear') : ($isStarredPage ? __('ui.community.star_posts_to_collect') : __('ui.community.start_conversation')) }}</p>
+                            <h5>{{ $isPendingPage ? __('ui.community.no_pending_posts') : ($isReportedPage ? __('ui.community.no_reported_posts', ['default' => 'No Reported Posts']) : ($isStarredPage ? __('ui.community.no_starred_posts_yet') : __('ui.community.no_discussions_yet'))) }}</h5>
+                            <p style="color: #65676b;">{{ $isPendingPage ? __('ui.community.new_posts_will_appear') : ($isReportedPage ? __('ui.community.no_reported_posts_description', ['default' => 'Your posts haven\'t been reported by other members']) : ($isStarredPage ? __('ui.community.star_posts_to_collect') : __('ui.community.start_conversation'))) }}</p>
                         </div>
                     @endforelse
                 </div>
@@ -2188,11 +2204,11 @@ document.getElementById('createPostModal')?.addEventListener('hidden.bs.modal', 
 function filterByDisease(diseaseId) {
     const baseRoute = @json($isAdminCommunity
         ? ($isPendingPage ? route('admin.community.posts.pending') : route('admin.community.posts.index'))
-        : ($isPendingPage ? route('community.posts.pending') : ($isStarredPage ? route('community.posts.starred') : route('community.posts.index'))));
+        : ($isPendingPage ? route('community.posts.pending') : ($isReportedPage ? route('community.posts.reported') : ($isStarredPage ? route('community.posts.starred') : route('community.posts.index')))));
     if (diseaseId === 'all') {
         window.location.href = baseRoute;
     } else {
-        if (!@json($isPendingPage || $isStarredPage || $isAdminCommunity)) {
+        if (!@json($isPendingPage || $isReportedPage || $isStarredPage || $isAdminCommunity)) {
             window.location.href = '/community/diseases/' + diseaseId + '/posts';
             return;
         }

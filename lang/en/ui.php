@@ -1333,16 +1333,20 @@ return [
     'admin_community_moderation' => 'Admin Community Moderation',
     'starred_posts_title' => 'Starred Posts',
     'pending_posts_title' => 'Pending Posts',
+    'reported_posts_title' => 'Reported Posts',
     'admin_community_moderation_title' => 'Admin Community Moderation',
     'community_forum_title' => 'Community Forum',
     'connect_with_others_share_experiences' => 'Connect with others, share experiences, and get support',
     'your_saved_posts' => 'Your saved posts in one focused feed',
     'your_posts_waiting_for_approval' => 'Your posts waiting for admin approval',
+    'your_reported_posts_description' => 'Posts reported by other community members',
     'posts_awaiting_approval' => 'Posts awaiting approval. Approve to publish, or delete to reject.',
     'view_and_manage_community_posts' => 'View and manage community posts with approval workflow.',
     'post_approval_queue' => 'Post Approval Queue',
     'view_all_pending' => 'View All Pending',
     'no_pending_posts' => 'No pending posts at the moment. All caught up!',
+    'no_reported_posts' => 'No reported posts',
+    'no_reported_posts_description' => 'Your posts haven\'t been reported by other members',
     'pending' => 'Pending',
     'posts_awaiting_approval' => 'Posts awaiting approval',
     'your_posts_waiting_for_approval' => 'Your posts waiting for admin approval',
@@ -1362,6 +1366,7 @@ return [
     // Left Sidebar - Filters
     'quick_filters' => 'Quick Filters',
     'all_pending_posts' => 'All Pending Posts',
+    'all_reported_posts' => 'All Reported Posts',
     'all_starred_posts' => 'All Starred Posts',
     'all_posts' => 'All Posts',
     'guidelines' => 'Guidelines',
@@ -2151,6 +2156,38 @@ return [
     'no_latest_records' => 'No latest records available.',
 ],
 
+// Admin Navigation Cards
+'admin_nav' => [
+    'user_management' => 'User Management',
+    'user_management_desc' => 'Review accounts, role distribution, and member access.',
+    'community_moderation' => 'Community Moderation',
+    'community_moderation_desc' => 'Review reported posts and moderate community content.',
+    'disease_catalog' => 'Disease Catalog',
+    'disease_catalog_desc' => 'Manage diseases with public-facing detail links.',
+    'symptoms_catalog' => 'Symptoms Catalog',
+    'symptoms_catalog_desc' => 'Maintain symptom entries with linked public pages.',
+    'health_metrics_catalog' => 'Health Metrics Catalog',
+    'health_metrics_catalog_desc' => 'Define custom metric names and fields for user tracking.',
+    'public_diseases' => 'Public Diseases',
+    'public_diseases_desc' => 'Open the public diseases directory as visitors see it.',
+    'public_symptoms' => 'Public Symptoms',
+    'public_symptoms_desc' => 'Open the public symptoms directory and verify navigation.',
+],
+
+// Admin Activities
+'admin_activities' => [
+    'new_user_registered' => 'New user registered: :name',
+    'new_post_by' => 'New post by :name',
+    'medicine_reminder_set' => 'Medicine reminder set by :name',
+    'unknown' => 'Unknown',
+],
+
+// Admin Messages
+'admin_messages' => [
+    'cannot_remove_own_admin' => 'You cannot remove your own admin access.',
+    'user_updated_successfully' => ':name was updated successfully.',
+],
+
 
 
 
@@ -2167,6 +2204,8 @@ return [
 'admin_nav' => [
     'user_management' => 'User Management',
     'user_management_desc' => 'Review accounts, role distribution, and member access.',
+    'community_moderation' => 'Community Moderation',
+    'community_moderation_desc' => 'Review reported posts and moderate community content.',
     'disease_catalog' => 'Disease Catalog',
     'disease_catalog_desc' => 'Manage diseases with public-facing detail links.',
     'symptoms_catalog' => 'Symptoms Catalog',

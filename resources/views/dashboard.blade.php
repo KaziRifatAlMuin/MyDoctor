@@ -100,60 +100,6 @@
         margin-top: 0.25rem;
     }
 
-    /* ── Health Score Circle (in Hero) ── */
-    .health-score-wrap {
-        position: relative;
-        width: 110px;
-        height: 110px;
-        flex-shrink: 0;
-    }
-
-    .health-score-circle {
-        width: 110px;
-        height: 110px;
-        border-radius: 50%;
-        background: conic-gradient(
-            var(--score-color) calc(var(--score) * 3.6deg),
-            rgba(255,255,255,0.15) 0deg
-        );
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 0 30px rgba(255,255,255,0.15);
-        animation: scoreReveal 1.5s ease-out;
-    }
-
-    @keyframes scoreReveal {
-        from { opacity: 0; transform: scale(0.7) rotate(-90deg); }
-        to { opacity: 1; transform: scale(1) rotate(0deg); }
-    }
-
-    .health-score-inner {
-        width: 86px;
-        height: 86px;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.12);
-        backdrop-filter: blur(10px);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .health-score-value {
-        font-size: 2rem;
-        font-weight: 900;
-        line-height: 1;
-    }
-
-    .health-score-label {
-        font-size: 0.6rem;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        opacity: 0.85;
-        margin-top: 2px;
-    }
-
     /* ── Hero Stats ── */
     .hero-stats {
         display: flex;
@@ -755,10 +701,6 @@
         .hero-stat-value { font-size: 1.2rem; }
         .feature-nav-card { padding: 1.25rem 1rem; }
         .feature-nav-icon { width: 52px; height: 52px; font-size: 1.2rem; }
-        .health-score-wrap { width: 90px; height: 90px; }
-        .health-score-circle { width: 90px; height: 90px; }
-        .health-score-inner { width: 70px; height: 70px; }
-        .health-score-value { font-size: 1.5rem; }
         .hero-flex-wrap { flex-direction: column; }
         .live-env-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
@@ -788,7 +730,7 @@
     <div class="container" style="max-width: 1180px;">
 
         {{-- ══════════════════════════════════════════════════════
-             WELCOME HERO + HEALTH SCORE
+             WELCOME HERO
         ══════════════════════════════════════════════════════ --}}
         <div class="welcome-hero fade-in-up">
             <div class="d-flex align-items-center justify-content-between position-relative hero-flex-wrap" style="z-index:2;flex-wrap:wrap;gap:1.5rem;">
@@ -815,19 +757,6 @@
                         </div>
                     </div>
                 </div>
-
-                {{-- Right: Health Score --}}
-              {{-- Right: Health Stats Summary --}}
-<div class="d-flex gap-2">
-    <div class="text-center px-3 py-2" style="background: rgba(255,255,255,0.12); border-radius: 16px;">
-        <div class="fs-4 fw-bold">{{ $healthMetrics->count() }}</div>
-        <div class="small opacity-75">Metrics</div>
-    </div>
-    <div class="text-center px-3 py-2" style="background: rgba(255,255,255,0.12); border-radius: 16px;">
-        <div class="fs-4 fw-bold">{{ $symptoms->count() }}</div>
-        <div class="small opacity-75">Symptoms</div>
-    </div>
-</div>
             </div>
 
             <div class="hero-stats position-relative" style="z-index:2;">

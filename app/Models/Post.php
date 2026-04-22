@@ -26,6 +26,9 @@ class Post extends Model
         'files',
         'like_count',
         'comment_count',
+        'rejected_at',
+        'rejected_by',
+        'rejection_reason',
     ];
 
     protected $casts = [
@@ -34,6 +37,7 @@ class Post extends Model
         'is_edited' => 'boolean',
         'is_reported' => 'boolean',
         'approved_at' => 'datetime',
+        'rejected_at' => 'datetime',
         'like_count' => 'integer',
         'comment_count' => 'integer',
         'file_size' => 'integer',
@@ -72,6 +76,11 @@ class Post extends Model
     public function disease()
     {
         return $this->belongsTo(Disease::class);
+    }
+
+    public function rejectedBy()
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
     }
 
     public function comments()

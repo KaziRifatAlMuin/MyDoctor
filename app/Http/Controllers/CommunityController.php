@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\PostLike;
 use App\Models\CommentLike;
 use App\Models\Notification;
+use Illuminate\Support\Facades\View;
 use App\Models\UserStarredDisease;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -75,6 +76,182 @@ class CommunityController extends Controller
     }
 
     /**
+     * Admin reported posts feed - shows ALL reported posts.
+     */
+    public function adminReportedPosts(Request $request)
+    {
+        // Return an admin-specific reported posts view so admins see
+        // the moderation UI (approve/clear/delete) similar to pending posts.
+        try {
+            $diseaseId = $request->get('disease');
+
+            $query = Post::with(['user', 'disease', 'comments' => function ($q) {
+                $q->with('user')->latest()->limit(3);
+            }])->withCount(['likes as likes_count']);
+
+            $query->where('is_reported', true);
+
+            if ($diseaseId && $diseaseId !== 'all') {
+                $query->where('disease_id', $diseaseId);
+            }
+
+            $posts = $query->latest()->paginate(10)->withQueryString();
+
+            $diseases = Disease::withCount([
+                'posts as posts_count' => function ($q) {
+                    $q->where('is_reported', true);
+                }
+            ])->orderBy('disease_name')->get();
+
+            $totalPosts = (clone $query)->count();
+            $totalUsers = User::count();
+            $totalComments = Comment::whereHas('post', function ($postQuery) {
+                $postQuery->where('is_reported', true);
+            })->count();
+            $activeToday = User::whereDate('updated_at', today())->count() ?: 0;
+
+            $trendingDiseases = Disease::withCount([
+                'posts as posts_count' => function ($q) {
+                    $q->where('is_reported', true);
+                }
+            ])->get()
+              ->filter(function ($disease) {
+                  return (int) $disease->posts_count > 0;
+              })
+              ->sortByDesc('posts_count')
+              ->take(5)
+              ->values();
+
+            return view('admin.reported-posts', compact(
+                'posts',
+                'diseases',
+                'diseaseId',
+                'totalPosts',
+                'totalUsers',
+                'totalComments',
+                'activeToday',
+                'trendingDiseases'
+            ));
+        } catch (\Exception $e) {
+            Log::error('Admin Reported Posts Error: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return view('admin.reported-posts', [
+                'posts' => new LengthAwarePaginator([], 0, 10),
+                'diseases' => collect([]),
+                'diseaseId' => null,
+                'totalPosts' => 0,
+                'totalUsers' => 0,
+                'totalComments' => 0,
+                'activeToday' => 0,
+                'trendingDiseases' => collect([]),
+                'error' => 'Error loading reported posts: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * User's own reported posts feed - shows posts reported by others that belong to the user.
+     */
+    public function userReportedPosts(Request $request)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+
+        try {
+            $diseaseId = $request->get('disease');
+            $userId = Auth::id();
+            $isAdmin = Auth::user()->isAdmin();
+
+            $query = Post::with(['user', 'disease', 'comments' => function ($q) {
+                $q->with('user')->latest()->limit(3);
+            }])->withCount(['likes as likes_count'])
+                ->where('is_reported', true);
+
+            if (!$isAdmin) {
+                $query->where('user_id', $userId);
+            }
+
+            if ($diseaseId && $diseaseId !== 'all') {
+                $query->where('disease_id', $diseaseId);
+            }
+
+            $posts = $query->latest()->paginate(10)->withQueryString();
+
+            $diseases = Disease::withCount([
+                'posts as posts_count' => function ($q) use ($userId, $isAdmin) {
+                    if (!$isAdmin) {
+                        $q->where('user_id', $userId);
+                    }
+                    $q->where('is_reported', true);
+                }
+            ])->orderBy('disease_name')->get();
+
+            $totalPosts = (clone $query)->count();
+            $totalUsers = User::count();
+            $totalComments = Comment::whereHas('post', function ($postQuery) use ($userId, $isAdmin) {
+                if (!$isAdmin) {
+                    $postQuery->where('user_id', $userId);
+                }
+                $postQuery->where('is_reported', true);
+            })->count();
+            $activeToday = User::whereDate('updated_at', today())->count() ?: 0;
+
+            $trendingDiseases = Disease::withCount([
+                'posts as posts_count' => function ($q) use ($userId, $isAdmin) {
+                    if (!$isAdmin) {
+                        $q->where('user_id', $userId);
+                    }
+                    $q->where('is_reported', true);
+                }
+            ])->get()
+              ->filter(function ($disease) {
+                  return (int) $disease->posts_count > 0;
+              })
+              ->sortByDesc('posts_count')
+              ->take(5)
+              ->values();
+
+            return view('community.pages.index', [
+                'posts' => $posts,
+                'diseases' => $diseases,
+                'diseaseId' => $diseaseId,
+                'totalPosts' => $totalPosts,
+                'totalUsers' => $totalUsers,
+                'totalComments' => $totalComments,
+                'activeToday' => $activeToday,
+                'trendingDiseases' => $trendingDiseases,
+                'isReportedPage' => true,
+                'isAdminCommunity' => false,
+                'showReported' => true,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Community Reported Posts Error: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return view('community.pages.index', [
+                'posts' => new LengthAwarePaginator([], 0, 10),
+                'diseases' => collect([]),
+                'diseaseId' => null,
+                'totalPosts' => 0,
+                'totalUsers' => 0,
+                'totalComments' => 0,
+                'activeToday' => 0,
+                'trendingDiseases' => collect([]),
+                'isReportedPage' => true,
+                'isAdminCommunity' => false,
+                'showReported' => true,
+                'error' => 'Error loading reported posts: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
      * Disease-specific posts feed route.
      */
     public function diseasePosts(Request $request, Disease $disease)
@@ -95,6 +272,7 @@ class CommunityController extends Controller
     {
         try {
             $diseaseId = $request->get('disease');
+            $showReported = (bool) $request->boolean('reported', false);
             $isAdminCommunity = (bool) $request->boolean('admin_community', false)
                 && Auth::check()
                 && Auth::user()->isAdmin();
@@ -105,10 +283,22 @@ class CommunityController extends Controller
             // Build the posts query with eager loading
             $query = Post::with(['user', 'disease', 'comments' => function($q) {
                 $q->with('user')->latest()->limit(3);
-                        }])->withCount(['likes as likes_count' => function ($q) {
-                            $q->where('is_starred', false);
-                        }])
-                            ->where('is_approved', true);
+            }])->withCount(['likes as likes_count' => function ($q) {
+                $q->where('is_starred', false);
+            }]);
+            
+            // Apply filters based on page type
+            if ($showReported) {
+                // Show reported posts
+                $query->where('is_reported', true);
+                if (!$isAdminCommunity) {
+                    // Regular users see only their own reported posts
+                    $query->where('user_id', Auth::id());
+                }
+            } else {
+                // Normal approved posts
+                $query->where('is_approved', true);
+            }
 
             // Apply disease filter if selected
             if ($diseaseId && $diseaseId !== 'all') {
@@ -116,22 +306,31 @@ class CommunityController extends Controller
             }
 
             // Prioritize posts matching the current user's diseases, then newest by approval time.
-            if (!empty($userStarredDiseaseIds)) {
+            if (!empty($userStarredDiseaseIds) && !$showReported) {
                 $ids = implode(',', array_map('intval', $userStarredDiseaseIds));
                 $query->orderByRaw("CASE WHEN disease_id IN ({$ids}) THEN 0 ELSE 1 END");
             }
 
             // Order by approval time (most recently approved first), then fallback to creation time.
-            $posts = $query->orderByDesc('approved_at')->orderByDesc('created_at')->paginate(10);
+            $query->orderByDesc('approved_at')->orderByDesc('created_at');
+            
+            $posts = $query->paginate(10);
             
             // Get all diseases with post counts for the filter sidebar
-                        $diseases = Disease::withCount([
-                                                                'posts as posts_count' => function ($q) {
-                                                                        $q->where('is_approved', true);
-                                                                }
-                                                            ])
-                              ->orderBy('disease_name')
-                              ->get();
+            $diseases = Disease::withCount([
+                'posts as posts_count' => function ($q) use ($showReported, $isAdminCommunity) {
+                    if ($showReported) {
+                        $q->where('is_reported', true);
+                        if (!$isAdminCommunity && Auth::check()) {
+                            $q->where('user_id', Auth::id());
+                        }
+                    } else {
+                        $q->where('is_approved', true);
+                    }
+                }
+            ])
+            ->orderBy('disease_name')
+            ->get();
             
             // If diseases table is empty, log a warning
             if ($diseases->isEmpty()) {
@@ -139,28 +338,50 @@ class CommunityController extends Controller
             }
             
             // Additional stats for right sidebar
-            $totalPosts = Post::where('is_approved', true)->count();
+            if ($showReported) {
+                $totalPosts = Post::where('is_reported', true)
+                    ->when(!$isAdminCommunity && Auth::check(), function($q) {
+                        $q->where('user_id', Auth::id());
+                    })
+                    ->count();
+                $totalComments = Comment::whereHas('post', function($q) use ($showReported, $isAdminCommunity) {
+                    $q->where('is_reported', true);
+                    if (!$isAdminCommunity && Auth::check()) {
+                        $q->where('user_id', Auth::id());
+                    }
+                })->count();
+            } else {
+                $totalPosts = Post::where('is_approved', true)->count();
+                $totalComments = Comment::count();
+            }
+            
             $totalUsers = User::count();
-            $totalComments = Comment::count();
             
             // Get active users today 
             $activeToday = User::whereDate('updated_at', today())->count() ?: 0;
             
             // Get trending diseases (with at least one post)
             $trendingDiseases = Disease::withCount([
-                                        'posts as posts_count' => function ($q) {
-                                            $q->where('is_approved', true);
-                                        }
-                                    ])->get()
-                                       ->filter(function ($disease) {
-                                           return (int) $disease->posts_count > 0;
-                                       })
-                                       ->sortByDesc('posts_count')
-                                       ->take(5)
-                                       ->values();
+                'posts as posts_count' => function ($q) use ($showReported, $isAdminCommunity) {
+                    if ($showReported) {
+                        $q->where('is_reported', true);
+                        if (!$isAdminCommunity && Auth::check()) {
+                            $q->where('user_id', Auth::id());
+                        }
+                    } else {
+                        $q->where('is_approved', true);
+                    }
+                }
+            ])->get()
+               ->filter(function ($disease) {
+                   return (int) $disease->posts_count > 0;
+               })
+               ->sortByDesc('posts_count')
+               ->take(5)
+               ->values();
 
             $pendingPreviewPosts = collect();
-            if ($isAdminCommunity) {
+            if ($isAdminCommunity && !$showReported) {
                 $pendingPreviewPosts = Post::with(['user', 'disease'])
                     ->where('is_approved', false)
                     ->latest()
@@ -172,7 +393,8 @@ class CommunityController extends Controller
             Log::info('Community index loaded', [
                 'posts_count' => $posts->total(),
                 'diseases_count' => $diseases->count(),
-                'diseaseId' => $diseaseId
+                'diseaseId' => $diseaseId,
+                'showReported' => $showReported
             ]);
             
             return view('community.pages.index', compact(
@@ -185,7 +407,8 @@ class CommunityController extends Controller
                 'activeToday', 
                 'trendingDiseases',
                 'isAdminCommunity',
-                'pendingPreviewPosts'
+                'pendingPreviewPosts',
+                'showReported'
             ));
         } catch (\Exception $e) {
             Log::error('Community Index Error: ' . $e->getMessage(), [
@@ -206,6 +429,7 @@ class CommunityController extends Controller
                 'trendingDiseases' => collect([]),
                 'isAdminCommunity' => (bool) $request->boolean('admin_community', false),
                 'pendingPreviewPosts' => collect([]),
+                'showReported' => false,
                 'error' => 'Error loading community: ' . $e->getMessage()
             ]);
         }
@@ -227,11 +451,11 @@ class CommunityController extends Controller
             $query = Post::with(['user', 'disease', 'comments' => function($q) {
                 $q->with('user')->latest()->limit(3);
             }])->withCount(['likes as likes_count'])
-                            ->where('is_approved', true)
-              ->whereHas('likes', function ($q) use ($userId) {
-                  $q->where('user_id', $userId)
-                    ->where('is_starred', true);
-              });
+                ->where('is_approved', true)
+                ->whereHas('likes', function ($q) use ($userId) {
+                    $q->where('user_id', $userId)
+                        ->where('is_starred', true);
+                });
 
             if ($diseaseId && $diseaseId !== 'all') {
                 $query->where('disease_id', $diseaseId);
@@ -242,10 +466,10 @@ class CommunityController extends Controller
             $diseases = Disease::withCount([
                 'posts as posts_count' => function ($q) use ($userId) {
                     $q->where('is_approved', true)
-                      ->whereHas('likes', function ($likeQuery) use ($userId) {
-                        $likeQuery->where('user_id', $userId)
-                                  ->where('is_starred', true);
-                    });
+                        ->whereHas('likes', function ($likeQuery) use ($userId) {
+                            $likeQuery->where('user_id', $userId)
+                                      ->where('is_starred', true);
+                        });
                 }
             ])->orderBy('disease_name')->get();
 
@@ -261,10 +485,10 @@ class CommunityController extends Controller
             $trendingDiseases = Disease::withCount([
                 'posts as posts_count' => function ($q) use ($userId) {
                     $q->where('is_approved', true)
-                      ->whereHas('likes', function ($likeQuery) use ($userId) {
-                        $likeQuery->where('user_id', $userId)
-                                  ->where('is_starred', true);
-                    });
+                        ->whereHas('likes', function ($likeQuery) use ($userId) {
+                            $likeQuery->where('user_id', $userId)
+                                      ->where('is_starred', true);
+                        });
                 }
             ])->get()
               ->filter(function ($disease) {
@@ -284,6 +508,7 @@ class CommunityController extends Controller
                 'activeToday' => $activeToday,
                 'trendingDiseases' => $trendingDiseases,
                 'isStarredPage' => true,
+                'showReported' => false,
             ]);
         } catch (\Exception $e) {
             Log::error('Community Starred Posts Error: ' . $e->getMessage(), [
@@ -301,6 +526,7 @@ class CommunityController extends Controller
                 'activeToday' => 0,
                 'trendingDiseases' => collect([]),
                 'isStarredPage' => true,
+                'showReported' => false,
                 'error' => 'Error loading starred posts: ' . $e->getMessage(),
             ]);
         }
@@ -328,7 +554,7 @@ class CommunityController extends Controller
             $query = Post::with(['user', 'disease', 'comments' => function ($q) {
                 $q->with('user')->latest()->limit(3);
             }])->withCount(['likes as likes_count'])
-              ->where('is_approved', false);
+                ->where('is_approved', false);
 
             if (!$isAdmin) {
                 $query->where('user_id', $userId);
@@ -385,6 +611,7 @@ class CommunityController extends Controller
                 'trendingDiseases' => $trendingDiseases,
                 'isPendingPage' => true,
                 'isAdminCommunity' => $isAdminCommunity,
+                'showReported' => false,
             ]);
         } catch (\Exception $e) {
             Log::error('Community Pending Posts Error: ' . $e->getMessage(), [
@@ -403,6 +630,7 @@ class CommunityController extends Controller
                 'trendingDiseases' => collect([]),
                 'isPendingPage' => true,
                 'isAdminCommunity' => (bool) $request->boolean('admin_community', false),
+                'showReported' => false,
                 'error' => 'Error loading pending posts: ' . $e->getMessage(),
             ]);
         }
@@ -437,8 +665,11 @@ class CommunityController extends Controller
         try {
             $isAdminCommunity = false;
 
-            if (!$post->is_approved && !$this->canAccessUnapprovedPost($post)) {
-                abort(403, 'This post is pending approval.');
+            // Check if user can access this post (unapproved or rejected)
+            $canAccess = $post->is_approved || $this->canAccessUnapprovedPost($post) || $post->rejected_at !== null;
+
+            if (!$canAccess) {
+                abort(403, 'This post is not accessible.');
             }
 
             $post->load(['user', 'disease', 'comments' => function($q) {
@@ -466,8 +697,11 @@ class CommunityController extends Controller
                     && Auth::check()
                     && Auth::user()->isAdmin());
 
-            if (!$post->is_approved && !$this->canAccessUnapprovedPost($post)) {
-                return response()->json(['error' => 'This post is pending approval.'], 403);
+            // Check if user can access this post (unapproved or rejected)
+            $canAccess = $post->is_approved || $this->canAccessUnapprovedPost($post) || $post->rejected_at !== null;
+
+            if (!$canAccess) {
+                return response()->json(['error' => 'This post is not accessible.'], 403);
             }
 
             // Load the post with all comments and necessary relationships
@@ -896,7 +1130,7 @@ class CommunityController extends Controller
     }
 
     /**
-     * Delete a post and its files
+     * Delete a post and its files - Clean up notifications
      */
     public function destroyPost(Request $request, Post $post)
     {
@@ -920,6 +1154,39 @@ class CommunityController extends Controller
 
             $this->authorize('delete', $post);
 
+            // Send deletion notification to post author if deleted by admin
+            if (Auth::user()->isAdmin() && $post->user_id !== Auth::id()) {
+                $postPreview = strlen($post->description) > 100 
+                    ? substr($post->description, 0, 100) . '...' 
+                    : $post->description;
+
+                $messageText = "Your post (#{$post->id}) was deleted by \n " . Auth::user()->name . ". " ;
+                $messageText .= "\n\n";
+                   if ($postPreview) {
+        $messageText .= "Preview:\n\n [ " . $postPreview . " ]";  
+    }
+
+                Notification::create([
+                    'user_id' => $post->user_id,
+                    'from_user_id' => Auth::id(),
+                    'type' => 'post_deleted',
+                    'notifiable_type' => Post::class,
+                    'notifiable_id' => $post->id,
+                    'message' => $messageText,
+                    'data' => [
+                        'type' => 'post_deleted',
+                        'post_id' => $post->id,
+                        'post_preview' => $postPreview,
+                        'message' => $messageText,
+                        'action_url' => route('users.show', $post->user_id),
+                        'deleted_by' => Auth::user()->name,
+                        'deleted_at' => now()->toISOString(),
+                        'from_user_id' => Auth::id(),
+                        'from_user_name' => Auth::user()->name,
+                    ],
+                ]);
+            }
+
             // Delete all files
             if ($post->files && is_array($post->files)) {
                 foreach ($post->files as $file) {
@@ -937,6 +1204,12 @@ class CommunityController extends Controller
                 }
             }
 
+            // Delete all related notifications before deleting the post (but preserve post_deleted notification)
+            Notification::where('notifiable_type', Post::class)
+                ->where('notifiable_id', $post->id)
+                ->where('type', '!=', 'post_deleted')
+                ->delete();
+
             $post->delete();
 
             return response()->json([
@@ -953,7 +1226,7 @@ class CommunityController extends Controller
     }
 
     /**
-     * Toggle like on a post - FIXED to prevent negative counts and send notifications
+     * Toggle like on a post
      */
     public function togglePostLike(Request $request, Post $post)
     {
@@ -1011,7 +1284,7 @@ class CommunityController extends Controller
                 'success' => true,
                 'liked' => $liked,
                 'starred' => $starred,
-                'count' => max(0, $post->like_count), // Ensure non-negative
+                'count' => max(0, $post->like_count),
             ]);
         } catch (\Exception $e) {
             Log::error('Toggle Post Like Error: ' . $e->getMessage());
@@ -1087,7 +1360,7 @@ class CommunityController extends Controller
     }
 
     /**
-     * Report a post for moderation.
+     * Report a post for moderation - FIXED with manual notification creation
      */
     public function reportPost(Request $request, Post $post)
     {
@@ -1099,6 +1372,15 @@ class CommunityController extends Controller
                 ], 401);
             }
 
+            if (Auth::user()->isAdmin()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Admin accounts cannot report posts.'
+                ], 403);
+            }
+
+            $reason = $request->input('reason', 'Inappropriate content');
+
             if ($post->is_reported) {
                 return response()->json([
                     'success' => true,
@@ -1108,6 +1390,37 @@ class CommunityController extends Controller
             }
 
             $post->update(['is_reported' => true]);
+
+            // Notify the post author that their post was reported - MANUAL CREATION
+            if ($post->user_id !== Auth::id()) {
+                $postPreview = strlen($post->description) > 100 
+                    ? substr($post->description, 0, 100) . '...' 
+                    : $post->description;
+
+                Notification::create([
+                    'user_id' => $post->user_id,
+                    'from_user_id' => Auth::id(),
+                    'type' => 'post_reported',
+                    'notifiable_type' => Post::class,
+                    'notifiable_id' => $post->id,
+                    'message' => "Your post has been reported and is under review by moderators.",
+                    'data' => [
+                        'type' => 'post_reported',
+                        'post_id' => $post->id,
+                        'post_preview' => $postPreview,
+                        'reported_by' => Auth::user()->name,
+                        'report_reason' => $reason,
+                        'message' => "Your post has been reported and is under review by moderators.",
+                        'action_url' => route('community.posts.show', $post),
+                        'reported_at' => now()->toISOString(),
+                        'from_user_id' => Auth::id(),
+                        'from_user_name' => Auth::user()->name,
+                    ],
+                ]);
+            }
+
+            // Also notify admins about the report
+            $this->notifyAdminsAboutReport($post, Auth::user(), $reason);
 
             return response()->json([
                 'success' => true,
@@ -1124,7 +1437,43 @@ class CommunityController extends Controller
     }
 
     /**
-     * Approve a pending post (admin only).
+     * Notify admins when a post is reported - FIXED with manual notification creation
+     */
+    private function notifyAdminsAboutReport(Post $post, $reporter, $reason)
+    {
+        try {
+            $admins = User::where('role', 'admin')->get();
+            $postPreview = strlen($post->description) > 100 
+                ? substr($post->description, 0, 100) . '...' 
+                : $post->description;
+
+            foreach ($admins as $admin) {
+                Notification::create([
+                    'user_id' => $admin->id,
+                    'from_user_id' => $reporter->id,
+                    'type' => 'post_reported_admin',
+                    'notifiable_type' => Post::class,
+                    'notifiable_id' => $post->id,
+                    'message' => "Post reported by {$reporter->name}",
+                    'data' => [
+                        'post_id' => $post->id,
+                        'post_preview' => $postPreview,
+                        'reporter_name' => $reporter->name,
+                        'reporter_id' => $reporter->id,
+                        'report_reason' => $reason,
+                        'action_url' => route('admin.community.posts.reported'),
+                        'from_user_id' => $reporter->id,
+                        'from_user_name' => $reporter->name,
+                    ],
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::error('Failed to notify admins about report: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Approve a pending post (admin only) - FIXED with manual notification creation
      */
     public function approvePost(Request $request, Post $post)
     {
@@ -1146,9 +1495,38 @@ class CommunityController extends Controller
             $post->update([
                 'is_approved' => true,
                 'approved_at' => now(),
+                'is_reported' => false, // Clear reported status when approved
             ]);
 
-            // Reload to ensure relations are fresh before notifying
+            // Send notification to post author - MANUAL CREATION
+            if ($post->user_id !== Auth::id()) {
+                $postPreview = strlen($post->description) > 100 
+                    ? substr($post->description, 0, 100) . '...' 
+                    : $post->description;
+
+                Notification::create([
+                    'user_id' => $post->user_id,
+                    'from_user_id' => Auth::id(),
+                    'type' => 'post_approved',
+                    'notifiable_type' => Post::class,
+                    'notifiable_id' => $post->id,
+                    'message' => "Your post has been approved and is now visible to the community!",
+                    'data' => [
+                        'type' => 'post_approved',
+                        'post_id' => $post->id,
+                        'post_preview' => $postPreview,
+                        'disease_name' => $post->disease?->display_name,
+                        'message' => "Your post has been approved and is now visible to the community!",
+                        'action_url' => route('community.posts.show', $post),
+                        'approved_by' => Auth::user()->name,
+                        'approved_at' => now()->toISOString(),
+                        'from_user_id' => Auth::id(),
+                        'from_user_name' => Auth::user()->name,
+                    ],
+                ]);
+            }
+
+            // Reload to ensure relations are fresh before notifying followers
             $post->refresh();
             $this->notifyStarredDiseaseFollowers($post);
 
@@ -1167,7 +1545,107 @@ class CommunityController extends Controller
     }
 
     /**
-     * Allow owners and admins to access unapproved posts.
+     * Reject a pending post (admin only) - FIXED with manual notification creation
+     */
+    public function rejectPost(Request $request, Post $post)
+    {
+        try {
+            if (!Auth::check()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please login'
+                ], 401);
+            }
+
+            if (!Auth::user()->isAdmin()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only admins can reject posts'
+                ], 403);
+            }
+
+            $reason = $request->input('reason', 'Does not meet community guidelines.');
+
+            // Mark post as rejected instead of deleting
+            $post->update([
+                'rejected_at' => now(),
+                'rejected_by' => Auth::id(),
+                'rejection_reason' => $reason,
+                'is_reported' => false, // Clear reported status
+            ]);
+
+            // Send rejection notification to post author - MANUAL CREATION
+            if ($post->user_id !== Auth::id()) {
+                $postPreview = strlen($post->description) > 100 
+                    ? substr($post->description, 0, 100) . '...' 
+                    : $post->description;
+
+                Notification::create([
+                    'user_id' => $post->user_id,
+                    'from_user_id' => Auth::id(),
+                    'type' => 'post_rejected',
+                    'notifiable_type' => Post::class,
+                    'notifiable_id' => $post->id,
+                    'message' => "Your post was rejected by admin." . ($reason ? " Reason: {$reason}" : ""),
+                    'data' => [
+                        'type' => 'post_rejected',
+                        'post_id' => $post->id,
+                        'post_preview' => $postPreview,
+                        'reason' => $reason,
+                        'message' => "Your post was rejected by admin." . ($reason ? " Reason: {$reason}" : ""),
+                        'action_url' => route('community.posts.show', $post),
+                        'rejected_by' => Auth::user()->name,
+                        'rejected_at' => now()->toISOString(),
+                        'from_user_id' => Auth::id(),
+                        'from_user_name' => Auth::user()->name,
+                    ],
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'rejected' => true,
+                'message' => 'Post rejected successfully.'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Reject Post Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error rejecting post: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Clear report from a post (admin only)
+     */
+    public function clearReport(Request $request, Post $post)
+    {
+        try {
+            if (!Auth::check() || !Auth::user()->isAdmin()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only admins can clear reports'
+                ], 403);
+            }
+
+            $post->update(['is_reported' => false]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Report cleared successfully.'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Clear Report Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error clearing report: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Allow owners and admins to access unapproved or rejected posts.
      */
     protected function canAccessUnapprovedPost(Post $post): bool
     {
@@ -1175,7 +1653,13 @@ class CommunityController extends Controller
             return false;
         }
 
-        return Auth::id() === $post->user_id || Auth::user()->isAdmin();
+        // Allow access if user is the owner or admin
+        $isOwnerOrAdmin = Auth::id() === $post->user_id || Auth::user()->isAdmin();
+
+        // Allow access to rejected posts for owners and admins
+        $isRejected = $post->rejected_at !== null;
+
+        return $isOwnerOrAdmin || (!$post->is_approved && $isOwnerOrAdmin) || ($isRejected && $isOwnerOrAdmin);
     }
 
     /**
@@ -1198,6 +1682,9 @@ class CommunityController extends Controller
         }
     }
 
+    /**
+     * Notify users who starred this disease about new post
+     */
     protected function notifyStarredDiseaseFollowers(Post $post): void
     {
         try {
@@ -1235,6 +1722,8 @@ class CommunityController extends Controller
                         'disease_id' => $post->disease_id,
                         'disease_name' => $post->disease?->display_name,
                         'post_preview' => $preview,
+                        'from_user_id' => $post->user_id,
+                        'from_user_name' => $post->user?->name,
                     ],
                 ]);
             }
@@ -1243,6 +1732,9 @@ class CommunityController extends Controller
         }
     }
 
+    /**
+     * Toggle star on a disease for the current user
+     */
     public function toggleDiseaseStar(Request $request, Disease $disease)
     {
         if (!Auth::check()) {
@@ -1287,7 +1779,7 @@ class CommunityController extends Controller
     }
 
     /**
-     * Store a new comment with optional file and send notification
+     * Store a new comment with optional file and send notification - FIXED with manual creation
      */
     public function storeComment(Request $request, Post $post)
     {
@@ -1346,6 +1838,31 @@ class CommunityController extends Controller
             $comment = Comment::create($data);
             $post->increment('comment_count');
             $comment->load('user');
+
+            // Send notification to post author - MANUAL CREATION
+            if ($post->user_id !== Auth::id()) {
+                $commentPreview = strlen($comment->comment_details) > 100 
+                    ? substr($comment->comment_details, 0, 100) . '...' 
+                    : $comment->comment_details;
+
+                Notification::create([
+                    'user_id' => $post->user_id,
+                    'from_user_id' => Auth::id(),
+                    'type' => 'comment',
+                    'notifiable_type' => Comment::class,
+                    'notifiable_id' => $comment->id,
+                    'message' => Auth::user()->name . " commented on your post",
+                    'data' => [
+                        'post_id' => $post->id,
+                        'comment_id' => $comment->id,
+                        'comment_preview' => $commentPreview,
+                        'actor_name' => Auth::user()->name,
+                        'actor_avatar' => Auth::user()->picture ? asset('storage/' . Auth::user()->picture) : null,
+                        'from_user_id' => Auth::id(),
+                        'from_user_name' => Auth::user()->name,
+                    ],
+                ]);
+            }
 
             $html = view('community.partials.comment', ['comment' => $comment])->render();
 
@@ -1427,7 +1944,7 @@ class CommunityController extends Controller
     }
 
     /**
-     * Delete a comment - UPDATED to allow admins to delete any comment
+     * Delete a comment - Clean up notifications
      */
     public function destroyComment(Request $request, Comment $comment)
     {
@@ -1460,6 +1977,11 @@ class CommunityController extends Controller
                     Log::warning('Comment file deletion error: ' . $e->getMessage());
                 }
             }
+            
+            // Delete related notifications before deleting the comment
+            Notification::where('notifiable_type', Comment::class)
+                ->where('notifiable_id', $comment->id)
+                ->delete();
             
             $comment->delete();
             
@@ -1533,7 +2055,7 @@ class CommunityController extends Controller
             return response()->json([
                 'success' => true,
                 'liked' => $liked,
-                'count' => max(0, $comment->like_count), // Ensure non-negative
+                'count' => max(0, $comment->like_count),
             ]);
         } catch (\Exception $e) {
             Log::error('Toggle Comment Like Error: ' . $e->getMessage());

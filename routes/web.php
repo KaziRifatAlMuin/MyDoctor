@@ -173,6 +173,7 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureUserIsActive::class, \App\
     Route::get('/email/verify', [EmailVerificationController::class, 'notice'])->name('verification.notice');
     Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])->name('verification.resend');
 });
+
 /*
 |--------------------------------------------------------------------------
 | Authenticated Routes
@@ -210,8 +211,6 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureUserIsActive::class, 'veri
     })->name('profile.notifications.update');
     Route::post('/profile/notifications/toggle-email', [NotificationPreferenceController::class, 'toggleEmail'])->name('profile.notifications.toggle-email');
     
-
-
     // Mailbox (internal mailings)
     Route::get('/profile/mailbox', [App\Http\Controllers\MailingController::class, 'inbox'])->name('profile.mailbox');
     Route::get('/profile/mailbox/sent', [App\Http\Controllers\MailingController::class, 'sent'])->name('profile.mailbox.sent');
@@ -273,18 +272,32 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureUserIsActive::class, 'veri
     | Notification Routes
     |--------------------------------------------------------------------------
     */
-
-
     Route::prefix('notifications')->name('notifications.')->group(function () {
-    Route::get('/', [App\Http\Controllers\NotificationController::class, 'index'])->name('index');
-    Route::get('/starred', [App\Http\Controllers\NotificationController::class, 'starred'])->name('starred');
-    Route::get('/unread-count', [App\Http\Controllers\NotificationController::class, 'unreadCount'])->name('unread-count');
-    Route::post('/{id}/read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('read');
-    Route::post('/mark-all-read', [App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
-    Route::post('/{id}/star', [App\Http\Controllers\NotificationController::class, 'toggleStar'])->name('star');
-    Route::delete('/{id}/delete', [App\Http\Controllers\NotificationController::class, 'delete'])->name('delete');
-    Route::delete('/clear-all', [App\Http\Controllers\NotificationController::class, 'clearAll'])->name('clear-all');
-});
+        Route::get('/', [App\Http\Controllers\NotificationController::class, 'index'])->name('index');
+        Route::get('/starred', [App\Http\Controllers\NotificationController::class, 'starred'])->name('starred');
+        Route::get('/unread-count', [App\Http\Controllers\NotificationController::class, 'unreadCount'])->name('unread-count');
+        Route::post('/{id}/read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('read');
+        Route::post('/mark-all-read', [App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
+        Route::post('/{id}/star', [App\Http\Controllers\NotificationController::class, 'toggleStar'])->name('star');
+        Route::delete('/{id}/delete', [App\Http\Controllers\NotificationController::class, 'delete'])->name('delete');
+        Route::delete('/clear-all', [App\Http\Controllers\NotificationController::class, 'clearAll'])->name('clear-all');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Medicine Reminder Notification Routes
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('medicine/reminders')->name('medicine.reminders.')->group(function () {
+        Route::get('/notifications', [MedicineReminderController::class, 'notifications'])->name('notifications');
+        Route::get('/unread-count', [MedicineReminderController::class, 'unreadCount'])->name('unread-count');
+        Route::post('/notification/{id}/read', [MedicineReminderController::class, 'markNotificationRead'])->name('notification.read');
+        Route::post('/notification/mark-all-read', [MedicineReminderController::class, 'markAllRead'])->name('notification.mark-all-read');
+        Route::delete('/notification/{id}/delete', [MedicineReminderController::class, 'deleteNotification'])->name('notification.delete');
+        // Add these routes inside the medicine reminders group (around line ~375)
+Route::post('/{id}/taken-from-notification', [MedicineReminderController::class, 'markTakenFromNotification'])->name('taken-from-notification');
+Route::post('/{id}/missed-from-notification', [MedicineReminderController::class, 'markMissedFromNotification'])->name('missed-from-notification');
+    });
 
     // Suggestions
     Route::get('/suggestions', [SuggestionsController::class, 'index'])->name('suggestions');
@@ -294,7 +307,6 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureUserIsActive::class, 'veri
     Route::post('/chatbot/about-me', [AiChatController::class, 'aboutMe'])->name('chatbot.about_me');
     Route::post('/chatbot/smart-suggestions', [AiChatController::class, 'smartSuggestions'])->name('chatbot.smart_suggestions');
 });
-
 
 /*
 |--------------------------------------------------------------------------
@@ -346,6 +358,7 @@ Route::prefix('community')->name('community.')->middleware(\App\Http\Middleware\
     })->name('index');
     Route::get('/posts/starred', [CommunityController::class, 'starredPosts'])->name('posts.starred');
     Route::get('/posts/pending', [CommunityController::class, 'pendingPosts'])->name('posts.pending');
+    Route::get('/posts/reported', [CommunityController::class, 'userReportedPosts'])->name('posts.reported');
     // Legacy alias kept for compatibility
     Route::get('/forum/posts/{post}', function (\App\Models\Post $post) {
         return redirect()->route('community.posts.show', $post);
@@ -368,7 +381,9 @@ Route::prefix('community')->name('community.')->middleware(\App\Http\Middleware\
         Route::put('/posts/{post}/star', [CommunityController::class, 'togglePostStar'])->name('posts.star');
         Route::put('/diseases/{disease}/star', [CommunityController::class, 'toggleDiseaseStar'])->name('diseases.star');
         Route::post('/posts/{post}/report', [CommunityController::class, 'reportPost'])->name('posts.report');
+        
         Route::patch('/posts/{post}/approve', [CommunityController::class, 'approvePost'])->name('posts.approve');
+        Route::patch('/posts/{post}/reject', [CommunityController::class, 'rejectPost'])->name('posts.reject'); // NEW: Post reject route
 
         Route::post('/posts/{post}/comments', [CommunityController::class, 'storeComment'])->name('comments.store');
         Route::patch('/comments/{comment}', [CommunityController::class, 'updateComment'])->name('comments.update');
@@ -401,12 +416,10 @@ Route::prefix('medicine')->name('medicine.')->middleware(['auth', 'verified'])->
     Route::put('/schedules/{id}', [MedicineScheduleController::class, 'update'])->name('schedules.update');
     Route::delete('/schedules/{id}', [MedicineScheduleController::class, 'destroy'])->name('schedules.destroy');
     Route::post('/schedules/{id}/generate-reminders', [MedicineScheduleController::class, 'generateReminders'])->name('schedules.generate-reminders');
-    
+    Route::get('/reminders/{id}/modal', [MedicineReminderController::class, 'modal'])->name('reminders.modal');
     Route::get('/reminders', [MedicineReminderController::class, 'index'])->name('reminders');
     Route::post('/reminders/{id}/taken', [MedicineReminderController::class, 'markTaken'])->name('reminders.taken');
     Route::post('/reminders/{id}/missed', [MedicineReminderController::class, 'markMissed'])->name('reminders.missed');
-    Route::post('/reminders/{id}/taken-from-notification', [MedicineReminderController::class, 'markTakenFromNotification'])->name('reminders.taken-from-notification');
-    Route::post('/reminders/{id}/snooze', [MedicineReminderController::class, 'snooze'])->name('reminders.snooze');
     Route::post('/reminders/mark-multiple-taken', [MedicineReminderController::class, 'markMultipleTaken'])->name('reminders.mark-multiple-taken');
     
     Route::get('/logs', [MedicineLogController::class, 'index'])->name('logs');
@@ -463,12 +476,14 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureUserIsActive::class, 'admi
     Route::prefix('community')->name('community.')->group(function () {
         Route::get('/posts', [CommunityController::class, 'adminPostsIndex'])->name('posts.index');
         Route::get('/posts/pending', [CommunityController::class, 'adminPendingPosts'])->name('posts.pending');
+        Route::get('/posts/reported', [CommunityController::class, 'adminReportedPosts'])->name('posts.reported');
         Route::patch('/posts/{post}/approve', [CommunityController::class, 'approvePost'])->name('posts.approve');
+        Route::patch('/posts/{post}/reject', [CommunityController::class, 'rejectPost'])->name('posts.reject'); // NEW: Admin reject post route
         Route::delete('/posts/{post}', [CommunityController::class, 'destroyPost'])->name('posts.destroy');
-
-            Route::delete('/comments/{comment}', [CommunityController::class, 'destroyComment'])->name('comments.destroy');
-    Route::put('/comments/{comment}/likes', [CommunityController::class, 'toggleCommentLike'])->name('comments.like');
-    Route::patch('/comments/{comment}', [CommunityController::class, 'updateComment'])->name('comments.update');
+Route::patch('/community/posts/{post}/clear-report', [CommunityController::class, 'clearReport'])->name('community.posts.clear-report');
+        Route::delete('/comments/{comment}', [CommunityController::class, 'destroyComment'])->name('comments.destroy');
+        Route::put('/comments/{comment}/likes', [CommunityController::class, 'toggleCommentLike'])->name('comments.like');
+        Route::patch('/comments/{comment}', [CommunityController::class, 'updateComment'])->name('comments.update');
         Route::get('/modal-post/{post}', [CommunityController::class, 'modalPost'])->name('modal.post');
         Route::get('/users/{userId}', [CommunityController::class, 'getUserDetails'])->name('user.details');
     });
@@ -477,6 +492,7 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureUserIsActive::class, 'admi
     Route::get('/logs', [App\Http\Controllers\AdminActivityLogController::class, 'index'])->name('logs.index');
     
     // Future admin routes
+    Route::get('/community/reported', [App\Http\Controllers\AdminDashboardController::class, 'reportedPosts'])->name('community.reported');
     Route::get('/medical', [App\Http\Controllers\AdminDashboardController::class, 'medical'])->name('medical.index');
     Route::get('/analytics', [App\Http\Controllers\AdminDashboardController::class, 'analytics'])->name('analytics');
     Route::get('/settings', [App\Http\Controllers\AdminDashboardController::class, 'settings'])->name('settings');

@@ -131,10 +131,7 @@
 
                 <!-- Approve - Only for admin on unapproved posts -->
                 @if($isAdmin && !$post->is_approved)
-                    <button class="dropdown-item" onclick="approvePost({{ $post->id }})" style="display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; border:none; background:none; color:#198754; cursor:pointer; transition:background 0.2s; text-align:left; border-bottom:1px solid #e4e6eb;">
-                        <i class="fas fa-check-circle" style="width:18px; color:#198754;"></i>
-                        <span>{{ __('ui.community.approve_post') }}</span>
-                    </button>
+                  
                 @endif
             </div>
         </div>

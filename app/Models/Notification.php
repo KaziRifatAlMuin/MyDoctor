@@ -178,6 +178,7 @@ class Notification extends Model
             'reply' => 'Reply',
             'post_approved' => 'Post Approved',
             'post_rejected' => 'Post Rejected',
+            'post_deleted' => 'Post Deleted',
             'post_reported' => 'Post Reported',
             'starred_disease_post' => 'Starred Disease Update',
             'medicine_reminder' => 'Medicine Reminder',
@@ -198,6 +199,7 @@ class Notification extends Model
             'reply' => 'fa-reply',
             'post_approved' => 'fa-check-circle',
             'post_rejected' => 'fa-times-circle',
+            'post_deleted' => 'fa-trash',
             'post_reported' => 'fa-flag',
             'starred_disease_post' => 'fa-star',
             'medicine_reminder' => 'fa-pills',
@@ -218,6 +220,7 @@ class Notification extends Model
             'reply' => 'info',
             'post_approved' => 'success',
             'post_rejected' => 'danger',
+            'post_deleted' => 'danger',
             'post_reported' => 'warning',
             'starred_disease_post' => 'warning',
             'medicine_reminder' => 'success',
@@ -243,6 +246,7 @@ class Notification extends Model
         switch ($this->type) {
             case 'post_approved':
             case 'post_rejected':
+            case 'post_deleted':
             case 'post_reported':
             case 'starred_disease_post':
                 if (isset($data['post_id'])) {
