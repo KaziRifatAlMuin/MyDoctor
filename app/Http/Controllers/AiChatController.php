@@ -506,6 +506,85 @@ class AiChatController extends Controller
 
         foreach ($connections as $conn) {
             try {
+                $snapshotRows = DB::connection($conn)
+                    ->table('v_user_health_snapshot')
+                    ->where('user_id', $userId)
+                    ->orderByDesc('recorded_at')
+                    ->limit(120)
+                    ->get();
+
+                if ($snapshotRows->isNotEmpty()) {
+                    $diseases = [];
+                    $symptoms = [];
+                    $metrics = [];
+                    $medicines = [];
+
+                    foreach ($snapshotRows as $row) {
+                        $item = (array) $row;
+                        $type = (string) ($item['row_type'] ?? '');
+
+                        if ($type === 'disease') {
+                            $diseases[] = [
+                                'disease' => $item['label'] ?? null,
+                                'status' => $item['status'] ?? null,
+                                'diagnosed_at' => $item['detail_1'] ?? null,
+                                'notes' => $item['detail_2'] ?? null,
+                            ];
+                            continue;
+                        }
+
+                        if ($type === 'symptom') {
+                            $symptoms[] = [
+                                'symptom' => $item['label'] ?? null,
+                                'severity_level' => $item['severity_level'] ?? null,
+                                'note' => $item['detail_1'] ?? null,
+                                'recorded_at' => $item['recorded_at'] ?? null,
+                            ];
+                            continue;
+                        }
+
+                        if ($type === 'metric') {
+                            $value = $item['detail_1'] ?? null;
+                            if (is_string($value)) {
+                                $decoded = json_decode($value, true);
+                                $value = $decoded ?? $value;
+                            }
+
+                            $metrics[] = [
+                                'metric_type' => $item['label'] ?? null,
+                                'value' => $value,
+                                'recorded_at' => $item['recorded_at'] ?? null,
+                            ];
+                            continue;
+                        }
+
+                        if ($type === 'medicine') {
+                            $medicines[] = [
+                                'medicine_name' => $item['label'] ?? null,
+                                'type' => $item['detail_1'] ?? null,
+                                'rule' => $item['detail_2'] ?? null,
+                                'unit' => $item['detail_3'] ?? null,
+                            ];
+                        }
+                    }
+
+                    return [
+                        'user_id' => $userId,
+                        'diseases' => array_slice($diseases, 0, 20),
+                        'symptoms' => array_slice($symptoms, 0, 20),
+                        'health_metrics' => array_slice($metrics, 0, 20),
+                        'medicines' => array_slice($medicines, 0, 10),
+                    ];
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Personal health snapshot view query failed', [
+                    'connection' => $conn,
+                    'user_id' => $userId,
+                    'message' => $e->getMessage(),
+                ]);
+            }
+
+            try {
                 // diseases — correct column is `disease_name`
                 $diseases = DB::connection($conn)
                     ->table('user_diseases as ud')
