@@ -1317,7 +1317,7 @@ return [
     'close_menu' => 'Close Menu',
     
     // Main Page Titles
-    'community_diseases_hub' => 'Community Diseases Hub',
+    'community_diseases_hub' => 'Community Diseases Based Cards',
     'choose_disease_card' => 'Choose a disease card to view its dedicated feed.',
     'browse_all_posts' => 'Browse All Posts',
     'posts' => 'posts',

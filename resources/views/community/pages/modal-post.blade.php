@@ -276,7 +276,7 @@
                     <span class="like-count">{{ $post->like_count }}</span>
                 </a>
             @endauth
-            <button onclick="toggleCommentsModal({{ $post->id }})" style="flex: 1; padding: 10px; border: none; border-radius: 6px; background: #f0f2f5; color: #1a1a1a; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <button onclick="toggleCommentsModal({{ $post->id }}); return false;" style="flex: 1; padding: 10px; border: none; border-radius: 6px; background: #f0f2f5; color: #1a1a1a; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;" id="toggle-comments-modal-btn-{{ $post->id }}">
                 <i class="far fa-comment"></i>
                 <span class="comment-count" data-post="{{ $post->id }}">{{ $post->comment_count }}</span>
             </button>
