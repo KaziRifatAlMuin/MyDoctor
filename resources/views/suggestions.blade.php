@@ -46,14 +46,20 @@
         }
 
         .suggestion-icon {
-            width: 50px;
-            height: 50px;
+            width: 64px;
+            height: 64px;
             border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
+            font-size: 1.4rem;
             flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .suggestion-icon i {
+            font-size: 1.25rem;
+            line-height: 1;
         }
 
         .suggestion-icon.bg-danger {

@@ -163,7 +163,7 @@ public function user_can_complete_cross_module_journey()
 
     $communityResponse = $this->actingAs($user)
         ->postJson(route('community.posts.store'), [
-            'disease_id' => $disease->id,
+            'disease_ids' => [$disease->id],
             'description' => 'Integration journey community post',
         ]);
 
@@ -173,7 +173,6 @@ public function user_can_complete_cross_module_journey()
 
     $this->assertDatabaseHas('posts', [
         'user_id' => $user->id,
-        'disease_id' => $disease->id,
         'description' => 'Integration journey community post',
     ]);
 

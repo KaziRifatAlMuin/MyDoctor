@@ -113,7 +113,7 @@ class ActivityLogger
         $className = is_string($model) ? class_basename($model) : class_basename($model::class);
 
         return match (true) {
-            in_array($className, ['Post', 'Comment', 'PostLike', 'CommentLike', 'UserStarredDisease'], true) => 'community',
+            in_array($className, ['Post', 'Comment', 'PostLike', 'CommentLike'], true) => 'community',
             in_array($className, ['Mailing'], true) => 'mailbox',
             in_array($className, ['Notification', 'MedicineReminder'], true) => 'notification',
             in_array($className, ['Medicine', 'MedicineSchedule', 'MedicineLog'], true) => 'medicine',

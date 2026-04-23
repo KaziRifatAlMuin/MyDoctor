@@ -30,10 +30,27 @@ class PostTest extends TestCase
     public function a_post_belongs_to_a_disease()
     {
         $disease = Disease::factory()->create();
-        $post = Post::factory()->create(['disease_id' => $disease->id]);
+        $post = Post::factory()->create();
+        $post->diseases()->detach();
+        $post->diseases()->attach([$disease->id]);
 
-        $this->assertInstanceOf(Disease::class, $post->disease);
-        $this->assertEquals($disease->id, $post->disease->id);
+        $this->assertInstanceOf(Disease::class, $post->primary_disease);
+        $this->assertEquals($disease->id, $post->primary_disease->id);
+    }
+
+#[Test]
+    public function it_normalizes_disease_ids_and_resolves_disease_models()
+    {
+        $diseaseA = Disease::factory()->create();
+        $diseaseB = Disease::factory()->create();
+
+        $post = Post::factory()->create();
+        $post->diseases()->detach();
+        $post->diseases()->attach([$diseaseA->id, $diseaseB->id]);
+
+        $this->assertSame([$diseaseA->id, $diseaseB->id], $post->diseases->pluck('id')->sort()->values()->toArray());
+        $this->assertCount(2, $post->diseases);
+        $this->assertSame($diseaseA->id, $post->primary_disease?->id);
     }
 
 #[Test]

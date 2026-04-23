@@ -194,4 +194,56 @@ class PostInteractionTest extends TestCase
             return $posts->getCollection()->contains('id', $this->post->id);
         });
     }
+
+#[Test]
+    public function user_can_star_and_unstar_disease_with_history_timestamps(): void
+    {
+        $this->actingAs($this->user);
+        $disease = Disease::factory()->create();
+
+        $starResponse = $this->put("/community/diseases/{$disease->id}/star");
+        $starResponse->assertStatus(200)->assertJson([
+            'success' => true,
+            'starred' => true,
+        ]);
+
+        $userAfterStar = $this->user->fresh();
+        $this->assertContains($disease->id, $userAfterStar->getStarredDiseaseIds());
+
+        $historyAfterStar = collect($userAfterStar->getStarredDiseaseHistory())
+            ->first(fn (array $entry): bool => (int) $entry['disease_id'] === (int) $disease->id && $entry['unstarred_at'] === null);
+
+        $this->assertNotNull($historyAfterStar);
+        $this->assertNotEmpty($historyAfterStar['starred_at']);
+
+        $unstarResponse = $this->put("/community/diseases/{$disease->id}/star");
+        $unstarResponse->assertStatus(200)->assertJson([
+            'success' => true,
+            'starred' => false,
+        ]);
+
+        $userAfterUnstar = $this->user->fresh();
+        $this->assertNotContains($disease->id, $userAfterUnstar->getStarredDiseaseIds());
+
+        $historyAfterUnstar = collect($userAfterUnstar->getStarredDiseaseHistory())
+            ->last(fn (array $entry): bool => (int) $entry['disease_id'] === (int) $disease->id);
+
+        $this->assertNotNull($historyAfterUnstar);
+        $this->assertNotEmpty($historyAfterUnstar['unstarred_at']);
+    }
+
+#[Test]
+    public function starred_disease_history_page_is_accessible_for_members(): void
+    {
+        $this->actingAs($this->user);
+        $disease = Disease::factory()->create();
+
+        $this->put("/community/diseases/{$disease->id}/star");
+
+        $response = $this->get('/community/diseases/starred/history');
+
+        $response->assertStatus(200);
+        $response->assertSee('Starred Disease History');
+        $response->assertSee($disease->display_name);
+    }
 }

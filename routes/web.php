@@ -356,6 +356,7 @@ Route::prefix('community')->name('community.')->middleware(\App\Http\Middleware\
     Route::get('/forum', function () {
         return redirect()->route('community.posts.index');
     })->name('index');
+    Route::get('/diseases/starred/history', [CommunityController::class, 'starredDiseaseHistory'])->name('diseases.starred.history');
     Route::get('/posts/starred', [CommunityController::class, 'starredPosts'])->name('posts.starred');
     Route::get('/posts/pending', [CommunityController::class, 'pendingPosts'])->name('posts.pending');
     Route::get('/posts/reported', [CommunityController::class, 'userReportedPosts'])->name('posts.reported');

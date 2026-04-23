@@ -22,17 +22,17 @@ class PostModerationWorkflowTest extends TestCase
 
         $pendingPost = Post::factory()->create([
             'user_id' => $owner->id,
-            'disease_id' => $disease->id,
             'description' => 'PENDING_UNIQUE_POST_TEXT',
             'is_approved' => false,
         ]);
+        $pendingPost->diseases()->sync([$disease->id]);
 
         $approvedPost = Post::factory()->create([
             'user_id' => $owner->id,
-            'disease_id' => $disease->id,
             'description' => 'APPROVED_UNIQUE_POST_TEXT',
             'is_approved' => true,
         ]);
+        $approvedPost->diseases()->sync([$disease->id]);
 
         $response = $this->actingAs($viewer)->get('/community/posts');
 
@@ -52,16 +52,16 @@ class PostModerationWorkflowTest extends TestCase
 
         $ownPending = Post::factory()->create([
             'user_id' => $owner->id,
-            'disease_id' => $disease->id,
             'description' => 'MY_PENDING_POST_TEXT',
             'is_approved' => false,
         ]);
+        $ownPending->diseases()->sync([$disease->id]);
 
-        Post::factory()->create([
-            'disease_id' => $disease->id,
+        $otherPending = Post::factory()->create([
             'description' => 'SOMEONE_ELSE_PENDING_POST_TEXT',
             'is_approved' => false,
         ]);
+        $otherPending->diseases()->sync([$disease->id]);
 
         $response = $this->actingAs($owner)->get('/community/posts/pending');
 

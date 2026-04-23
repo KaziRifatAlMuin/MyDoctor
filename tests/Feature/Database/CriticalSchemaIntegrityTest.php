@@ -39,6 +39,11 @@ class CriticalSchemaIntegrityTest extends TestCase
             'disease_name', 'description',
         ]));
 
+        $this->assertTrue(Schema::hasTable('users'));
+        $this->assertTrue(Schema::hasColumns('users', [
+            'notification_settings', 'starred_disease_ids', 'starred_disease_history',
+        ]));
+
         $this->assertTrue(Schema::hasTable('symptoms'));
         $this->assertTrue(Schema::hasColumns('symptoms', [
             'name',

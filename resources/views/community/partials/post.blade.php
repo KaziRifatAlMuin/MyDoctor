@@ -29,8 +29,9 @@
         ? $post->likes()->where('user_id', Auth::id())->where('is_starred', true)->exists()
         : false;
         
-    // SAFE: Disease display name
-    $diseaseDisplayName = $post->disease ? $post->disease->display_name : '';
+    // SAFE: Disease display names
+    $postDiseases = $post->disease_models;
+    $diseaseDisplayName = $postDiseases->pluck('display_name')->implode(', ');
 @endphp
 
 <div class="post-card" id="post-{{ $post->id }}" data-post-id="{{ $post->id }}">
@@ -62,10 +63,12 @@
                     <a href="{{ route('community.posts.show', $post) }}" class="text-decoration-none" style="font-weight:600; color:#1877f2;">
                         {{ __('ui.community.open_post') }}
                     </a>
-                    @if($post->disease && $diseaseDisplayName)
-                        <a href="{{ route('community.disease.posts', $post->disease) }}" class="post-disease-badge text-decoration-none" title="{{ $diseaseDisplayName }}" style="background:#e7f3ff;color:#1877f2;padding:4px 12px;border-radius:4px;font-weight:500;font-size:12px;display:inline-flex;align-items:center;gap:4px;">
-                            <i class="fas fa-tag me-1"></i>{{ $diseaseDisplayName }}
-                        </a>
+                    @if($postDiseases->isNotEmpty())
+                        @foreach($postDiseases as $disease)
+                            <a href="{{ route('community.disease.posts', $disease) }}" class="post-disease-badge text-decoration-none" title="{{ $disease->display_name }}" style="background:#e7f3ff;color:#1877f2;padding:4px 12px;border-radius:4px;font-weight:500;font-size:12px;display:inline-flex;align-items:center;gap:4px;">
+                                <i class="fas fa-tag me-1"></i>{{ $disease->display_name }}
+                            </a>
+                        @endforeach
                     @endif
                 </div>
             </div>

@@ -9,14 +9,15 @@ use App\Models\User;
 use App\Models\PostLike;
 use App\Models\CommentLike;
 use App\Models\Notification;
+use App\Services\ActivityLogger;
 use Illuminate\Support\Facades\View;
-use App\Models\UserStarredDisease;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 class CommunityController extends Controller
 {
@@ -26,26 +27,13 @@ class CommunityController extends Controller
     public function home()
     {
         $userStarredDiseaseIds = Auth::check()
-            ? Auth::user()->starredDiseases()->pluck('disease_id')->all()
+            ? Auth::user()->getStarredDiseaseIds()
             : [];
 
-        $diseases = Disease::withCount([
-            'posts as posts_count' => function ($q) {
-                $q->where('is_approved', true);
-            }
-        ])
-            ->withMax([
-                'posts as latest_post_at' => function ($q) {
-                    $q->where('is_approved', true);
-                }
-            ], 'approved_at')
-            ->when(!empty($userStarredDiseaseIds), function ($q) use ($userStarredDiseaseIds) {
-                $ids = implode(',', array_map('intval', $userStarredDiseaseIds));
-                $q->orderByRaw("CASE WHEN id IN ({$ids}) THEN 0 ELSE 1 END");
-            })
-            ->orderByDesc('latest_post_at')
-            ->orderBy('disease_name')
-            ->get();
+        $diseases = $this->buildDiseaseCollectionWithCounts(
+            fn ($q) => $q->where('is_approved', true),
+            $userStarredDiseaseIds
+        );
 
         $totalPosts = Post::where('is_approved', true)->count();
         $totalDiseases = $diseases->count();
@@ -85,23 +73,19 @@ class CommunityController extends Controller
         try {
             $diseaseId = $request->get('disease');
 
-            $query = Post::with(['user', 'disease', 'comments' => function ($q) {
+            $query = Post::with(['user', 'diseases', 'comments' => function ($q) {
                 $q->with('user')->latest()->limit(3);
             }])->withCount(['likes as likes_count']);
 
             $query->where('is_reported', true);
 
-            if ($diseaseId && $diseaseId !== 'all') {
-                $query->where('disease_id', $diseaseId);
-            }
+            $this->applyDiseaseFilter($query, $diseaseId);
 
             $posts = $query->latest()->paginate(10)->withQueryString();
 
-            $diseases = Disease::withCount([
-                'posts as posts_count' => function ($q) {
-                    $q->where('is_reported', true);
-                }
-            ])->orderBy('disease_name')->get();
+            $diseases = $this->buildDiseaseCollectionWithCounts(
+                fn ($q) => $q->where('is_reported', true)
+            );
 
             $totalPosts = (clone $query)->count();
             $totalUsers = User::count();
@@ -110,11 +94,7 @@ class CommunityController extends Controller
             })->count();
             $activeToday = User::whereDate('updated_at', today())->count() ?: 0;
 
-            $trendingDiseases = Disease::withCount([
-                'posts as posts_count' => function ($q) {
-                    $q->where('is_reported', true);
-                }
-            ])->get()
+            $trendingDiseases = $diseases
               ->filter(function ($disease) {
                   return (int) $disease->posts_count > 0;
               })
@@ -166,7 +146,7 @@ class CommunityController extends Controller
             $userId = Auth::id();
             $isAdmin = Auth::user()->isAdmin();
 
-            $query = Post::with(['user', 'disease', 'comments' => function ($q) {
+            $query = Post::with(['user', 'diseases', 'comments' => function ($q) {
                 $q->with('user')->latest()->limit(3);
             }])->withCount(['likes as likes_count'])
                 ->where('is_reported', true);
@@ -175,20 +155,18 @@ class CommunityController extends Controller
                 $query->where('user_id', $userId);
             }
 
-            if ($diseaseId && $diseaseId !== 'all') {
-                $query->where('disease_id', $diseaseId);
-            }
+            $this->applyDiseaseFilter($query, $diseaseId);
 
             $posts = $query->latest()->paginate(10)->withQueryString();
 
-            $diseases = Disease::withCount([
-                'posts as posts_count' => function ($q) use ($userId, $isAdmin) {
+            $diseases = $this->buildDiseaseCollectionWithCounts(
+                function ($q) use ($userId, $isAdmin) {
                     if (!$isAdmin) {
                         $q->where('user_id', $userId);
                     }
                     $q->where('is_reported', true);
                 }
-            ])->orderBy('disease_name')->get();
+            );
 
             $totalPosts = (clone $query)->count();
             $totalUsers = User::count();
@@ -200,14 +178,7 @@ class CommunityController extends Controller
             })->count();
             $activeToday = User::whereDate('updated_at', today())->count() ?: 0;
 
-            $trendingDiseases = Disease::withCount([
-                'posts as posts_count' => function ($q) use ($userId, $isAdmin) {
-                    if (!$isAdmin) {
-                        $q->where('user_id', $userId);
-                    }
-                    $q->where('is_reported', true);
-                }
-            ])->get()
+            $trendingDiseases = $diseases
               ->filter(function ($disease) {
                   return (int) $disease->posts_count > 0;
               })
@@ -277,11 +248,11 @@ class CommunityController extends Controller
                 && Auth::check()
                 && Auth::user()->isAdmin();
             $userStarredDiseaseIds = Auth::check()
-                ? Auth::user()->starredDiseases()->pluck('disease_id')->all()
+                ? Auth::user()->getStarredDiseaseIds()
                 : [];
             
             // Build the posts query with eager loading
-            $query = Post::with(['user', 'disease', 'comments' => function($q) {
+            $query = Post::with(['user', 'diseases', 'comments' => function($q) {
                 $q->with('user')->latest()->limit(3);
             }])->withCount(['likes as likes_count' => function ($q) {
                 $q->where('is_starred', false);
@@ -301,14 +272,12 @@ class CommunityController extends Controller
             }
 
             // Apply disease filter if selected
-            if ($diseaseId && $diseaseId !== 'all') {
-                $query->where('disease_id', $diseaseId);
-            }
+            $this->applyDiseaseFilter($query, $diseaseId);
 
             // Prioritize posts matching the current user's diseases, then newest by approval time.
             if (!empty($userStarredDiseaseIds) && !$showReported) {
                 $ids = implode(',', array_map('intval', $userStarredDiseaseIds));
-                $query->orderByRaw("CASE WHEN disease_id IN ({$ids}) THEN 0 ELSE 1 END");
+                $this->applyStarredDiseaseOrder($query, $userStarredDiseaseIds);
             }
 
             // Order by approval time (most recently approved first), then fallback to creation time.
@@ -317,8 +286,8 @@ class CommunityController extends Controller
             $posts = $query->paginate(10);
             
             // Get all diseases with post counts for the filter sidebar
-            $diseases = Disease::withCount([
-                'posts as posts_count' => function ($q) use ($showReported, $isAdminCommunity) {
+            $diseases = $this->buildDiseaseCollectionWithCounts(
+                function ($q) use ($showReported, $isAdminCommunity) {
                     if ($showReported) {
                         $q->where('is_reported', true);
                         if (!$isAdminCommunity && Auth::check()) {
@@ -327,10 +296,9 @@ class CommunityController extends Controller
                     } else {
                         $q->where('is_approved', true);
                     }
-                }
-            ])
-            ->orderBy('disease_name')
-            ->get();
+                },
+                $showReported ? [] : $userStarredDiseaseIds
+            );
             
             // If diseases table is empty, log a warning
             if ($diseases->isEmpty()) {
@@ -361,18 +329,7 @@ class CommunityController extends Controller
             $activeToday = User::whereDate('updated_at', today())->count() ?: 0;
             
             // Get trending diseases (with at least one post)
-            $trendingDiseases = Disease::withCount([
-                'posts as posts_count' => function ($q) use ($showReported, $isAdminCommunity) {
-                    if ($showReported) {
-                        $q->where('is_reported', true);
-                        if (!$isAdminCommunity && Auth::check()) {
-                            $q->where('user_id', Auth::id());
-                        }
-                    } else {
-                        $q->where('is_approved', true);
-                    }
-                }
-            ])->get()
+            $trendingDiseases = $diseases
                ->filter(function ($disease) {
                    return (int) $disease->posts_count > 0;
                })
@@ -382,7 +339,7 @@ class CommunityController extends Controller
 
             $pendingPreviewPosts = collect();
             if ($isAdminCommunity && !$showReported) {
-                $pendingPreviewPosts = Post::with(['user', 'disease'])
+                $pendingPreviewPosts = Post::with(['user', 'diseases'])
                     ->where('is_approved', false)
                     ->latest()
                     ->take(3)
@@ -397,6 +354,13 @@ class CommunityController extends Controller
                 'showReported' => $showReported
             ]);
             
+            if ($diseaseId) {
+                try {
+                    Log::info('Community index post ids for filter', ['disease_id' => $diseaseId, 'post_ids' => $posts->getCollection()->pluck('id')->values()->all()]);
+                } catch (\Throwable $e) {
+                    Log::warning('Failed to log post ids: ' . $e->getMessage());
+                }
+            }
             return view('community.pages.index', compact(
                 'posts', 
                 'diseases', 
@@ -448,7 +412,7 @@ class CommunityController extends Controller
             $diseaseId = $request->get('disease');
             $userId = Auth::id();
 
-            $query = Post::with(['user', 'disease', 'comments' => function($q) {
+            $query = Post::with(['user', 'diseases', 'comments' => function($q) {
                 $q->with('user')->latest()->limit(3);
             }])->withCount(['likes as likes_count'])
                 ->where('is_approved', true)
@@ -457,21 +421,19 @@ class CommunityController extends Controller
                         ->where('is_starred', true);
                 });
 
-            if ($diseaseId && $diseaseId !== 'all') {
-                $query->where('disease_id', $diseaseId);
-            }
+            $this->applyDiseaseFilter($query, $diseaseId);
 
             $posts = $query->orderByDesc('approved_at')->orderByDesc('created_at')->paginate(10)->withQueryString();
 
-            $diseases = Disease::withCount([
-                'posts as posts_count' => function ($q) use ($userId) {
+            $diseases = $this->buildDiseaseCollectionWithCounts(
+                function ($q) use ($userId) {
                     $q->where('is_approved', true)
                         ->whereHas('likes', function ($likeQuery) use ($userId) {
                             $likeQuery->where('user_id', $userId)
                                       ->where('is_starred', true);
                         });
                 }
-            ])->orderBy('disease_name')->get();
+            );
 
             $totalPosts = (clone $query)->count();
             $totalUsers = User::count();
@@ -482,15 +444,7 @@ class CommunityController extends Controller
             })->count();
             $activeToday = User::whereDate('updated_at', today())->count() ?: 0;
 
-            $trendingDiseases = Disease::withCount([
-                'posts as posts_count' => function ($q) use ($userId) {
-                    $q->where('is_approved', true)
-                        ->whereHas('likes', function ($likeQuery) use ($userId) {
-                            $likeQuery->where('user_id', $userId)
-                                      ->where('is_starred', true);
-                        });
-                }
-            ])->get()
+            $trendingDiseases = $diseases
               ->filter(function ($disease) {
                   return (int) $disease->posts_count > 0;
               })
@@ -551,7 +505,7 @@ class CommunityController extends Controller
             $isAdmin = Auth::user()->isAdmin();
             $isAdminCommunity = (bool) $request->boolean('admin_community', false) && $isAdmin;
 
-            $query = Post::with(['user', 'disease', 'comments' => function ($q) {
+            $query = Post::with(['user', 'diseases', 'comments' => function ($q) {
                 $q->with('user')->latest()->limit(3);
             }])->withCount(['likes as likes_count'])
                 ->where('is_approved', false);
@@ -560,20 +514,18 @@ class CommunityController extends Controller
                 $query->where('user_id', $userId);
             }
 
-            if ($diseaseId && $diseaseId !== 'all') {
-                $query->where('disease_id', $diseaseId);
-            }
+            $this->applyDiseaseFilter($query, $diseaseId);
 
             $posts = $query->latest()->paginate(10)->withQueryString();
 
-            $diseases = Disease::withCount([
-                'posts as posts_count' => function ($q) use ($userId, $isAdmin) {
+            $diseases = $this->buildDiseaseCollectionWithCounts(
+                function ($q) use ($userId, $isAdmin) {
                     if (!$isAdmin) {
                         $q->where('user_id', $userId);
                     }
                     $q->where('is_approved', false);
                 }
-            ])->orderBy('disease_name')->get();
+            );
 
             $totalPosts = (clone $query)->count();
             $totalUsers = User::count();
@@ -585,14 +537,7 @@ class CommunityController extends Controller
             })->count();
             $activeToday = User::whereDate('updated_at', today())->count() ?: 0;
 
-            $trendingDiseases = Disease::withCount([
-                'posts as posts_count' => function ($q) use ($userId, $isAdmin) {
-                    if (!$isAdmin) {
-                        $q->where('user_id', $userId);
-                    }
-                    $q->where('is_approved', false);
-                }
-            ])->get()
+            $trendingDiseases = $diseases
               ->filter(function ($disease) {
                   return (int) $disease->posts_count > 0;
               })
@@ -734,23 +679,20 @@ class CommunityController extends Controller
         try {
             $diseaseId = $request->get('disease');
             
-            $query = Post::with(['user', 'disease'])
+            $query = Post::with(['user', 'diseases'])
                 ->withCount(['likes as likes_count' => function ($q) {
                     $q->where('is_starred', false);
                 }])
                 ->where('is_approved', true);
 
             if (Auth::check() && !Auth::user()->isAdmin()) {
-                $userStarredDiseaseIds = Auth::user()->starredDiseases()->pluck('disease_id')->all();
+                $userStarredDiseaseIds = Auth::user()->getStarredDiseaseIds();
                 if (!empty($userStarredDiseaseIds)) {
-                    $ids = implode(',', array_map('intval', $userStarredDiseaseIds));
-                    $query->orderByRaw("CASE WHEN disease_id IN ({$ids}) THEN 0 ELSE 1 END");
+                    $this->applyStarredDiseaseOrder($query, $userStarredDiseaseIds);
                 }
             }
 
-            if ($diseaseId && $diseaseId !== 'all') {
-                $query->where('disease_id', $diseaseId);
-            }
+            $this->applyDiseaseFilter($query, $diseaseId);
 
             $posts = $query->latest()->get();
             
@@ -781,6 +723,13 @@ class CommunityController extends Controller
                         'raw_name' => $post->disease->disease_name,
                         'bangla_name' => $post->disease->bangla_name,
                     ] : null,
+                    'diseases' => $post->disease_models
+                        ->map(fn (Disease $disease) => [
+                            'id' => $disease->id,
+                            'name' => $disease->display_name,
+                            'raw_name' => $disease->disease_name,
+                            'bangla_name' => $disease->bangla_name,
+                        ])->values(),
                     'user_liked' => Auth::check() ? $post->likes()->where('user_id', Auth::id())->where('is_starred', false)->exists() : false,
                     'is_owner' => Auth::check() && $post->user_id === Auth::id(),
                 ];
@@ -977,11 +926,25 @@ class CommunityController extends Controller
             }
 
             $request->validate([
-                'disease_id' => 'required|exists:diseases,id',
+                'disease_ids' => 'required|array|min:1',
+                'disease_ids.*' => 'integer|exists:diseases,id',
                 'description' => 'nullable|string|max:5000',
                 'is_anonymous' => 'nullable|boolean',
                 'files.*' => 'nullable|file|max:10240|mimes:jpg,jpeg,png,gif,mp4,mp3,pdf,doc,docx,xls,xlsx,ppt,pptx,txt',
             ]);
+
+            $diseaseIds = collect($request->input('disease_ids'))
+                ->map(fn ($id) => (int) $id)
+                ->filter(fn (int $id) => $id > 0)
+                ->unique()
+                ->values();
+
+            if ($diseaseIds->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please select at least one disease tag'
+                ], 422);
+            }
 
             // Check if at least one file or description exists
             if (!$request->description && !$request->hasFile('files')) {
@@ -993,7 +956,6 @@ class CommunityController extends Controller
 
             $data = [
                 'user_id' => Auth::id(),
-                'disease_id' => $request->disease_id,
                 'description' => $request->description ?? '',
                 'is_anonymous' => $request->boolean('is_anonymous'),
                 'is_approved' => false,
@@ -1053,7 +1015,8 @@ class CommunityController extends Controller
             }
 
             $post = Post::create($data);
-            $post->load(['user', 'disease']);
+            $post->diseases()->attach($diseaseIds);
+            $post->load(['user', 'diseases']);
 
             return response()->json([
                 'success' => true,
@@ -1688,16 +1651,24 @@ class CommunityController extends Controller
     protected function notifyStarredDiseaseFollowers(Post $post): void
     {
         try {
-            if (!$post->disease_id) {
+            $postDiseaseIds = $post->diseases->pluck('id')->toArray();
+            if ($postDiseaseIds === []) {
                 return;
             }
 
-            $post->loadMissing(['disease', 'user']);
+            $post->loadMissing(['diseases', 'user']);
 
-            $targetUserIds = UserStarredDisease::query()
-                ->where('disease_id', $post->disease_id)
-                ->where('user_id', '!=', $post->user_id)
-                ->pluck('user_id')
+            $postDiseases = $post->diseases->sortBy('disease_name');
+
+            $targetUserIds = User::query()
+                ->where('id', '!=', $post->user_id)
+                ->get(['id', 'starred_disease_ids'])
+                ->filter(function (User $user) use ($postDiseaseIds): bool {
+                    return collect($user->getStarredDiseaseIds())
+                        ->intersect($postDiseaseIds)
+                        ->isNotEmpty();
+                })
+                ->pluck('id')
                 ->unique()
                 ->values();
 
@@ -1709,6 +1680,12 @@ class CommunityController extends Controller
                 ? substr((string) $post->description, 0, 60) . '...'
                 : (string) $post->description;
 
+            $primaryDisease = $postDiseases->first();
+            $diseaseLabel = $postDiseases->pluck('display_name')->take(2)->implode(', ');
+            if ($postDiseases->count() > 2) {
+                $diseaseLabel .= ' +' . ($postDiseases->count() - 2);
+            }
+
             foreach ($targetUserIds as $targetUserId) {
                 Notification::create([
                     'user_id' => $targetUserId,
@@ -1716,11 +1693,13 @@ class CommunityController extends Controller
                     'type' => 'starred_disease_post',
                     'notifiable_type' => Post::class,
                     'notifiable_id' => $post->id,
-                    'message' => "New post in your starred disease: " . ($post->disease?->display_name ?? 'Unknown Disease'),
+                    'message' => "New post in your starred disease: " . ($diseaseLabel !== '' ? $diseaseLabel : 'Unknown Disease'),
                     'data' => [
                         'post_id' => $post->id,
-                        'disease_id' => $post->disease_id,
-                        'disease_name' => $post->disease?->display_name,
+                        'disease_id' => $primaryDisease?->id,
+                        'disease_ids' => $postDiseaseIds,
+                        'disease_name' => $primaryDisease?->display_name,
+                        'disease_names' => $postDiseases->pluck('display_name')->values()->all(),
                         'post_preview' => $preview,
                         'from_user_id' => $post->user_id,
                         'from_user_name' => $post->user?->name,
@@ -1751,30 +1730,120 @@ class CommunityController extends Controller
             ], 403);
         }
 
-        $existing = UserStarredDisease::query()
-            ->where('user_id', Auth::id())
-            ->where('disease_id', $disease->id)
-            ->first();
+        $user = Auth::user();
+        $starred = $user->toggleDiseaseStarred((int) $disease->id);
 
-        if ($existing) {
-            $existing->delete();
-
-            return response()->json([
-                'success' => true,
-                'starred' => false,
-                'message' => 'Disease removed from starred.',
-            ]);
-        }
-
-        UserStarredDisease::create([
-            'user_id' => Auth::id(),
-            'disease_id' => $disease->id,
+        ActivityLogger::log([
+            'user_id' => $user->id,
+            'category' => 'community',
+            'action' => $starred ? 'disease_starred' : 'disease_unstarred',
+            'description' => $starred
+                ? 'Starred a disease from community cards.'
+                : 'Removed a disease from starred list.',
+            'subject_type' => Disease::class,
+            'subject_id' => (int) $disease->id,
+            'context' => [
+                'disease_id' => (int) $disease->id,
+                'disease_name' => $disease->display_name,
+                'starred' => $starred,
+            ],
         ]);
 
         return response()->json([
             'success' => true,
-            'starred' => true,
-            'message' => 'Disease starred successfully.',
+            'starred' => $starred,
+            'message' => $starred
+                ? __('ui.community.disease_starred_successfully')
+                : __('ui.community.disease_removed_from_starred'),
+        ]);
+    }
+
+    /**
+     * Display star/unstar history of diseases for current user.
+     */
+    public function starredDiseaseHistory(Request $request)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+
+        if (Auth::user()->isAdmin()) {
+            return redirect()->route('community.home');
+        }
+
+        $status = (string) $request->query('status', 'all');
+        if (!in_array($status, ['all', 'current', 'previous'], true)) {
+            $status = 'all';
+        }
+
+        $diseaseFilter = (string) $request->query('disease', 'all');
+        $selectedDiseaseId = $diseaseFilter !== 'all' ? (int) $diseaseFilter : null;
+
+        $user = Auth::user();
+        $currentIds = $user->getStarredDiseaseIds();
+        $history = collect($user->getStarredDiseaseHistory());
+
+        $historyDiseaseIds = $history
+            ->pluck('disease_id')
+            ->map(static fn ($id) => (int) $id)
+            ->filter(static fn (int $id): bool => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
+
+        $diseases = Disease::query()
+            ->whereIn('id', $historyDiseaseIds)
+            ->orderBy('disease_name')
+            ->get();
+        $diseaseMap = $diseases->keyBy('id');
+
+        $rows = $history
+            ->map(function (array $row) use ($currentIds, $diseaseMap) {
+                $diseaseId = (int) ($row['disease_id'] ?? 0);
+                if ($diseaseId <= 0 || !$diseaseMap->has($diseaseId)) {
+                    return null;
+                }
+
+                $unstarredAt = isset($row['unstarred_at']) && $row['unstarred_at'] !== null
+                    ? (string) $row['unstarred_at']
+                    : null;
+
+                return [
+                    'disease' => $diseaseMap->get($diseaseId),
+                    'disease_id' => $diseaseId,
+                    'starred_at' => (string) ($row['starred_at'] ?? now()->toIso8601String()),
+                    'unstarred_at' => $unstarredAt,
+                    'is_current' => $unstarredAt === null && in_array($diseaseId, $currentIds, true),
+                ];
+            })
+            ->filter();
+
+        if ($selectedDiseaseId !== null) {
+            $rows = $rows->where('disease_id', $selectedDiseaseId);
+        }
+
+        if ($status === 'current') {
+            $rows = $rows->where('is_current', true);
+        } elseif ($status === 'previous') {
+            $rows = $rows->where('is_current', false);
+        }
+
+        $rows = $rows
+            ->sort(function (array $a, array $b): int {
+                if ($a['is_current'] !== $b['is_current']) {
+                    return $a['is_current'] ? -1 : 1;
+                }
+
+                return strcmp((string) $b['starred_at'], (string) $a['starred_at']);
+            })
+            ->values();
+
+        return view('community.pages.starred-diseases', [
+            'rows' => $rows,
+            'diseases' => $diseases,
+            'status' => $status,
+            'selectedDiseaseId' => $selectedDiseaseId,
+            'currentStarredDiseaseIds' => $currentIds,
         ]);
     }
 
@@ -2092,5 +2161,98 @@ class CommunityController extends Controller
             return round($bytes / 1024, 1) . ' KB';
         }
         return $bytes . ' B';
+    }
+
+    private function applyDiseaseFilter($query, $diseaseId): void
+    {
+        if (!$diseaseId || $diseaseId === 'all') {
+            return;
+        }
+
+        $id = (int) $diseaseId;
+        if ($id <= 0) {
+            return;
+        }
+
+        // Log matching count for debugging test failures
+        try {
+            $matching = (clone $query)->whereHas('diseases', function ($q) use ($id) {
+                $q->where('id', $id);
+            })->count();
+            Log::info('applyDiseaseFilter', ['disease_id' => $id, 'matching_posts' => $matching]);
+        } catch (\Throwable $e) {
+            Log::warning('applyDiseaseFilter count failed: ' . $e->getMessage());
+        }
+
+        $query->whereHas('diseases', function ($q) use ($id) {
+            $q->where('id', $id);
+        });
+    }
+
+    private function applyStarredDiseaseOrder($query, array $diseaseIds): void
+    {
+        $ids = collect($diseaseIds)
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn (int $id) => $id > 0)
+            ->unique()
+            ->values();
+
+        if ($ids->isEmpty()) {
+            return;
+        }
+
+        $query->orderByRaw(
+            'EXISTS (SELECT 1 FROM post_diseases WHERE post_diseases.post_id = posts.id AND post_diseases.disease_id IN (' . $ids->implode(',') . ')) DESC'
+        );
+    }
+
+    private function buildDiseaseCollectionWithCounts(callable $postConstraint, array $priorityDiseaseIds = []): Collection
+    {
+        $diseases = Disease::withCount(['posts' => $postConstraint])->get();
+
+        // Get latest post timestamp per disease
+        $latestPostsQuery = Post::query()
+            ->select('post_diseases.disease_id', DB::raw('MAX(COALESCE(posts.approved_at, posts.created_at)) as latest_at'))
+            ->join('post_diseases', 'posts.id', '=', 'post_diseases.post_id')
+            ->groupBy('post_diseases.disease_id');
+
+        $postConstraint($latestPostsQuery);
+
+        $latestPosts = $latestPostsQuery->pluck('latest_at', 'disease_id');
+
+        $priorityOrder = collect($priorityDiseaseIds)
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn (int $id) => $id > 0)
+            ->values()
+            ->flip();
+
+        return $diseases
+            ->map(function (Disease $disease) use ($latestPosts) {
+                $disease->setAttribute('latest_post_at', $latestPosts->get($disease->id));
+                return $disease;
+            })
+            ->sort(function (Disease $a, Disease $b) use ($priorityOrder): int {
+                $aPriority = $priorityOrder->has($a->id) ? 0 : 1;
+                $bPriority = $priorityOrder->has($b->id) ? 0 : 1;
+
+                if ($aPriority !== $bPriority) {
+                    return $aPriority <=> $bPriority;
+                }
+
+                $aCount = (int) $a->posts_count;
+                $bCount = (int) $b->posts_count;
+                if ($aCount !== $bCount) {
+                    return $bCount <=> $aCount;
+                }
+
+                $aLatest = (string) ($a->latest_post_at ?? '');
+                $bLatest = (string) ($b->latest_post_at ?? '');
+                if ($aLatest !== $bLatest) {
+                    return strcmp($bLatest, $aLatest);
+                }
+
+                return strcasecmp((string) $a->disease_name, (string) $b->disease_name);
+            })
+            ->values();
     }
 }

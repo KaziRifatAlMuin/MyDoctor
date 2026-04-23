@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
 class Post extends Model
@@ -12,7 +13,6 @@ class Post extends Model
 
     protected $fillable = [
         'user_id',
-        'disease_id',
         'description',
         'is_anonymous',
         'approved_at',
@@ -73,9 +73,29 @@ class Post extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function disease()
+    public function diseases()
     {
-        return $this->belongsTo(Disease::class);
+        return $this->belongsToMany(Disease::class, 'post_diseases');
+    }
+
+    /**
+     * Backward-compatible alias used by legacy views/controllers.
+     */
+    public function getDiseaseModelsAttribute(): Collection
+    {
+        if ($this->relationLoaded('diseases')) {
+            return $this->getRelation('diseases');
+        }
+
+        return $this->diseases()->get();
+    }
+
+    /**
+     * Primary disease used for legacy UI/components.
+     */
+    public function getPrimaryDiseaseAttribute(): ?Disease
+    {
+        return $this->diseases->first();
     }
 
     public function rejectedBy()

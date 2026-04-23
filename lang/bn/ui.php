@@ -67,6 +67,7 @@ return [
         'trending_diseases' => 'ট্রেন্ডিং রোগ',
         'all_posts' => 'সব পোস্ট',
         'starred_posts' => 'তারকাচিহ্নিত পোস্ট',
+        'starred_diseases_history' => 'তারকাচিহ্নিত রোগের ইতিহাস',
         'pending_posts' => 'অপেক্ষমান পোস্ট',
         'no_posts' => 'কোনো পোস্ট পাওয়া যায়নি',
         'be_first' => 'প্রথম আলোচনা শুরু করুন!',
@@ -113,6 +114,14 @@ return [
         'latest_posts' => 'সর্বশেষ পোস্ট',
         'view_all_diseases' => 'সব রোগ দেখুন',
         'view_all_symptoms' => 'সব লক্ষণ দেখুন',
+        'filter_all_status' => 'সব তারকা ইতিহাস',
+        'filter_current_only' => 'শুধু বর্তমানে তারকাচিহ্নিত',
+        'filter_previously_starred' => 'শুধু পূর্বে তারকাচিহ্নিত',
+        'starred_at' => 'তারকা দেওয়ার সময়',
+        'unstarred_at' => 'তারকা সরানোর সময়',
+        'currently_starred_badge' => 'বর্তমানে তারকাচিহ্নিত',
+        'no_starred_disease_history' => 'এই ফিল্টারে কোনো তারকাচিহ্নিত রোগের ইতিহাস পাওয়া যায়নি।',
+        'history_auto_filter_hint' => 'আপনি অপশন বদলালে ফিল্টার স্বয়ংক্রিয়ভাবে প্রয়োগ হবে।',
     ],
     
     'form' => [

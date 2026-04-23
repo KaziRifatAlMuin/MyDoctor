@@ -31,6 +31,8 @@ class UserModelTest extends TestCase
             'is_active',
             'password',
             'notification_settings',
+            'starred_disease_ids',
+            'starred_disease_history',
         ];
         
         $this->assertEquals($expected, (new User())->getFillable());

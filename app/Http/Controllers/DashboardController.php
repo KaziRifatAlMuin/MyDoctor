@@ -12,6 +12,7 @@ use App\Models\MedicineLog;
 use App\Models\UserDisease;
 use App\Models\Upload;
 use App\Services\LiveEnvironmentService;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -63,6 +64,22 @@ class DashboardController extends Controller
         $totalMissed    = $medicineLogs->sum('total_missed');
         $adherenceRate  = $totalScheduled > 0 ? round(($totalTaken / $totalScheduled) * 100) : 0;
 
+        try {
+            $dailyRollup = DB::table('v_user_dashboard_daily')
+                ->where('user_id', $user->id)
+                ->where('date', '>=', now()->subDays(30)->toDateString())
+                ->get();
+
+            if ($dailyRollup->isNotEmpty()) {
+                $totalScheduled = (int) $dailyRollup->sum('total_scheduled');
+                $totalTaken = (int) $dailyRollup->sum('total_taken');
+                $totalMissed = (int) $dailyRollup->sum('total_missed');
+                $adherenceRate = $totalScheduled > 0 ? round(($totalTaken / $totalScheduled) * 100) : 0;
+            }
+        } catch (\Throwable $e) {
+            // Fallback to Eloquent aggregation when the DB view is unavailable.
+        }
+
         // Active conditions
         $activeConditions = UserDisease::where('user_id', $user->id)
             ->whereIn('status', ['active', 'chronic', 'managed'])
@@ -83,6 +100,31 @@ class DashboardController extends Controller
         // ── 30-day adherence breakdown for sparkline ──
         $adherenceByDay = [];
         $logsByDate = $medicineLogs->groupBy(fn($log) => $log->date->format('Y-m-d'));
+
+        try {
+            $dailyRollup = DB::table('v_user_dashboard_daily')
+                ->where('user_id', $user->id)
+                ->where('date', '>=', now()->subDays(30)->toDateString())
+                ->get()
+                ->keyBy('date');
+
+            if ($dailyRollup->isNotEmpty()) {
+                for ($i = 29; $i >= 0; $i--) {
+                    $date = now()->subDays($i)->format('Y-m-d');
+                    $row = $dailyRollup->get($date);
+                    $adherenceByDay[] = [
+                        'date' => now()->subDays($i)->format('M d'),
+                        'rate' => $row ? (float) $row->adherence_rate : null,
+                    ];
+                }
+            }
+        } catch (\Throwable $e) {
+            // Keep the fallback path below.
+        }
+
+        if ($adherenceByDay !== []) {
+            // Already built from DB view.
+        } else {
         for ($i = 29; $i >= 0; $i--) {
             $date = now()->subDays($i)->format('Y-m-d');
             $dayLogs = $logsByDate[$date] ?? collect();
@@ -91,6 +133,7 @@ class DashboardController extends Controller
                 'date'  => now()->subDays($i)->format('M d'),
                 'rate'  => $dayScheduled > 0 ? round(($dayLogs->sum('total_taken') / $dayScheduled) * 100) : null,
             ];
+        }
         }
 
         // ── Today's pending reminders ──

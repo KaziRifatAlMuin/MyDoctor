@@ -11,11 +11,18 @@ class PostFactory extends Factory
 {
     protected $model = Post::class;
 
+    public function configure(): static
+    {
+        return $this->afterCreating(function (Post $post): void {
+            $diseaseIds = Disease::inRandomOrder()->take(rand(1, 3))->pluck('id');
+            $post->diseases()->attach($diseaseIds);
+        });
+    }
+
     public function definition()
     {
         return [
             'user_id' => User::factory(),
-            'disease_id' => Disease::factory(),
             'description' => $this->faker->paragraphs(3, true),
             'is_anonymous' => false,
             'is_approved' => true,

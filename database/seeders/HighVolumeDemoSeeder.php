@@ -307,13 +307,20 @@ class HighVolumeDemoSeeder extends Seeder
 
                 $post = Post::factory()->create([
                     'user_id' => $ownerId,
-                    'disease_id' => $diseaseId,
                     'is_approved' => $isApproved,
                     'approved_at' => $isApproved ? $createdAt : null,
                     'is_reported' => random_int(1, 100) <= 8,
                     'description' => fake()->paragraphs(random_int(2, 4), true),
                     'created_at' => $createdAt,
                 ]);
+
+                // Explicitly assign one or two disease tags per post.
+                $diseasesToAttach = collect([$diseaseId]);
+                if ($diseaseIds->count() > 1 && random_int(1, 100) <= 50) { // 50% chance to have multiple
+                    $otherDisease = $diseaseIds->filter(fn ($id) => $id !== $diseaseId)->random();
+                    $diseasesToAttach->push($otherDisease);
+                }
+                $post->diseases()->sync($diseasesToAttach->unique()->values()->all());
 
                 $posts->push($post);
             }

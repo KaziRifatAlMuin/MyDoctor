@@ -31,7 +31,7 @@ class PostCreationTest extends TestCase
         $this->actingAs($this->user);
 
         $response = $this->post('/community/posts', [
-            'disease_id' => $this->disease->id,
+            'disease_ids' => [$this->disease->id],
             'description' => 'This is a test post description',
         ]);
 
@@ -44,17 +44,23 @@ class PostCreationTest extends TestCase
 
         $this->assertDatabaseHas('posts', [
             'user_id' => $this->user->id,
-            'disease_id' => $this->disease->id,
             'description' => 'This is a test post description',
             'is_approved' => false,
         ]);
+
+        $post = Post::query()->where('user_id', $this->user->id)->latest('id')->first();
+        $this->assertDatabaseHas('post_diseases', [
+            'post_id' => $post->id,
+            'disease_id' => $this->disease->id,
+        ]);
+        $this->assertSame([$this->disease->id], $post->diseases->pluck('id')->toArray());
     }
 
 #[Test]
     public function unauthenticated_user_cannot_create_a_post()
     {
         $response = $this->post('/community/posts', [
-            'disease_id' => $this->disease->id,
+            'disease_ids' => [$this->disease->id],
             'description' => 'This is a test post',
         ], ['Accept' => 'application/json']);
 
@@ -70,7 +76,7 @@ class PostCreationTest extends TestCase
         $this->actingAs($this->user);
 
         $response = $this->post('/community/posts', [
-            'disease_id' => $this->disease->id,
+            'disease_ids' => [$this->disease->id],
         ]);
 
         $response->assertStatus(422);
@@ -81,17 +87,52 @@ class PostCreationTest extends TestCase
     }
 
 #[Test]
-    public function post_requires_a_valid_disease()
+    public function post_requires_valid_disease_tags()
     {
         $this->actingAs($this->user);
 
         $response = $this->post('/community/posts', [
-            'disease_id' => 99999,
+            'disease_ids' => [99999],
             'description' => 'Test description',
         ]);
 
         $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['disease_id']);
+        $response->assertJsonValidationErrors(['disease_ids.0']);
+    }
+
+#[Test]
+    public function authenticated_user_can_create_a_post_with_multiple_disease_tags()
+    {
+        $this->actingAs($this->user);
+        $secondaryDisease = Disease::factory()->create();
+
+        $response = $this->post('/community/posts', [
+            'disease_ids' => [$this->disease->id, $secondaryDisease->id],
+            'description' => 'Post tagged with multiple diseases',
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'requires_approval' => true,
+        ]);
+
+        $post = Post::query()->where('user_id', $this->user->id)->latest('id')->firstOrFail();
+
+        $this->assertDatabaseHas('post_diseases', [
+            'post_id' => $post->id,
+            'disease_id' => $this->disease->id,
+        ]);
+
+        $this->assertDatabaseHas('post_diseases', [
+            'post_id' => $post->id,
+            'disease_id' => $secondaryDisease->id,
+        ]);
+
+        $this->assertEqualsCanonicalizing(
+            [$this->disease->id, $secondaryDisease->id],
+            $post->diseases()->pluck('diseases.id')->all()
+        );
     }
 
 #[Test]
@@ -104,7 +145,7 @@ class PostCreationTest extends TestCase
         $file = UploadedFile::fake()->create('test-image.jpg', 100, 'image/jpeg');
 
         $response = $this->post('/community/posts', [
-            'disease_id' => $this->disease->id,
+            'disease_ids' => [$this->disease->id],
             'description' => 'Post with image',
             'files' => [$file], // Note: 'files' array, not 'file'
         ]);
@@ -134,7 +175,7 @@ class PostCreationTest extends TestCase
         $file2 = UploadedFile::fake()->create('document.pdf', 100);
 
         $response = $this->post('/community/posts', [
-            'disease_id' => $this->disease->id,
+            'disease_ids' => [$this->disease->id],
             'description' => 'Post with multiple files',
             'files' => [$file1, $file2],
         ]);
@@ -157,7 +198,7 @@ class PostCreationTest extends TestCase
         $file = UploadedFile::fake()->create('large.pdf', 11 * 1024); // 11MB
 
         $response = $this->post('/community/posts', [
-            'disease_id' => $this->disease->id,
+            'disease_ids' => [$this->disease->id],
             'description' => 'Post with large file',
             'files' => [$file],
         ]);
@@ -177,7 +218,7 @@ class PostCreationTest extends TestCase
         $file2 = UploadedFile::fake()->create('file2.pdf', 30 * 1024); // 30MB
 
         $response = $this->post('/community/posts', [
-            'disease_id' => $this->disease->id,
+            'disease_ids' => [$this->disease->id],
             'description' => 'Post with large files',
             'files' => [$file1, $file2],
         ]);

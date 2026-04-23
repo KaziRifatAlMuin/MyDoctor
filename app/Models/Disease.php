@@ -101,7 +101,7 @@ class Disease extends Model
      */
     public function posts()
     {
-        return $this->hasMany(Post::class);
+        return $this->belongsToMany(Post::class, 'post_diseases');
     }
 
     /**
@@ -124,8 +124,12 @@ class Disease extends Model
 
     public function starredByUsers()
     {
-        return $this->belongsToMany(User::class, 'user_starred_diseases')
-            ->withTimestamps();
+        return User::query()
+            ->get()
+            ->filter(function (User $user): bool {
+                return in_array((int) $this->id, $user->getStarredDiseaseIds(), true);
+            })
+            ->values();
     }
 
     public function symptoms()

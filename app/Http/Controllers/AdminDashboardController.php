@@ -49,7 +49,7 @@ class AdminDashboardController extends Controller
             ->latest('recorded_at')
             ->take(6)
             ->get();
-        $pendingPosts = Post::with(['user', 'disease'])
+        $pendingPosts = Post::with(['user', 'diseases'])
             ->where('is_approved', false)
             ->latest()
             ->take(5)
@@ -296,7 +296,7 @@ class AdminDashboardController extends Controller
  */
 public function reportedPosts(Request $request)
 {
-    $posts = Post::with(['user', 'disease'])
+    $posts = Post::with(['user', 'diseases'])
         ->where('is_reported', true)
         ->orderByDesc('updated_at')
         ->paginate(20);
