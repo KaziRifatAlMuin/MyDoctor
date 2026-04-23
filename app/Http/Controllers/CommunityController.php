@@ -280,14 +280,14 @@ class CommunityController extends Controller
                 $this->applyStarredDiseaseOrder($query, $userStarredDiseaseIds);
             }
 
-            // Order by approval time (most recently approved first), then fallback to creation time.
-            $query->orderByDesc('approved_at')->orderByDesc('created_at');
+            // Order by created_at descending (most recently created first) - this is the most reliable way to show newest posts
+            $query->orderByDesc('created_at');
             
             $posts = $query->paginate(10);
             
             // Get all diseases with post counts for the filter sidebar
             $diseases = $this->buildDiseaseCollectionWithCounts(
-                function ($q) use ($showReported, $isAdminCommunity) {
+                function ($q) use ($showReported, $isAdminCommunity, $diseaseId) {
                     if ($showReported) {
                         $q->where('is_reported', true);
                         if (!$isAdminCommunity && Auth::check()) {
@@ -296,6 +296,9 @@ class CommunityController extends Controller
                     } else {
                         $q->where('is_approved', true);
                     }
+                    
+                    // Include the disease filter in the count query
+                    $this->applyDiseaseFilter($q, $diseaseId);
                 },
                 $showReported ? [] : $userStarredDiseaseIds
             );
@@ -423,7 +426,7 @@ class CommunityController extends Controller
 
             $this->applyDiseaseFilter($query, $diseaseId);
 
-            $posts = $query->orderByDesc('approved_at')->orderByDesc('created_at')->paginate(10)->withQueryString();
+            $posts = $query->orderByDesc('created_at')->paginate(10)->withQueryString();
 
             $diseases = $this->buildDiseaseCollectionWithCounts(
                 function ($q) use ($userId) {
@@ -617,7 +620,7 @@ class CommunityController extends Controller
                 abort(403, 'This post is not accessible.');
             }
 
-            $post->load(['user', 'disease', 'comments' => function($q) {
+            $post->load(['user', 'diseases', 'comments' => function($q) {
                 $q->with('user')->withCount(['likes as likes_count'])->latest();
             }])->loadCount(['likes as likes_count']);
             
@@ -652,7 +655,7 @@ class CommunityController extends Controller
             // Load the post with all comments and necessary relationships
             $post->load([
                 'user', 
-                'disease', 
+                'diseases', 
                 'comments' => function($q) {
                     $q->with(['user', 'likes'])
                       ->withCount('likes')
@@ -2165,28 +2168,35 @@ class CommunityController extends Controller
 
     private function applyDiseaseFilter($query, $diseaseId): void
     {
-        if (!$diseaseId || $diseaseId === 'all') {
+        // Handle various "all" cases
+        if (empty($diseaseId) || $diseaseId === 'all' || $diseaseId === '0' || $diseaseId === 0) {
             return;
         }
 
+        // Convert to integer and validate
         $id = (int) $diseaseId;
         if ($id <= 0) {
             return;
         }
 
-        // Log matching count for debugging test failures
+        // Verify the disease exists
+        if (!Disease::where('id', $id)->exists()) {
+            Log::warning('applyDiseaseFilter: Disease ID does not exist', ['disease_id' => $id]);
+            return;
+        }
+
+        // Apply the filter using whereHas for the many-to-many relationship
+        $query->whereHas('diseases', function ($q) use ($id) {
+            $q->where('diseases.id', $id);
+        });
+
+        // Log for debugging
         try {
-            $matching = (clone $query)->whereHas('diseases', function ($q) use ($id) {
-                $q->where('id', $id);
-            })->count();
+            $matching = (clone $query)->count();
             Log::info('applyDiseaseFilter', ['disease_id' => $id, 'matching_posts' => $matching]);
         } catch (\Throwable $e) {
             Log::warning('applyDiseaseFilter count failed: ' . $e->getMessage());
         }
-
-        $query->whereHas('diseases', function ($q) use ($id) {
-            $q->where('id', $id);
-        });
     }
 
     private function applyStarredDiseaseOrder($query, array $diseaseIds): void

@@ -31,8 +31,31 @@
 
         .activity-filter {
             display: grid;
-            grid-template-columns: 1fr 230px;
+            grid-template-columns: 1fr;
             gap: 0.65rem;
+            align-items: flex-end;
+        }
+
+        .filter-search {
+            grid-column: 1 / -1;
+        }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.65rem;
+        }
+
+        @media (min-width: 576px) {
+            .filter-row {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .filter-row {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
         }
 
         .activity-filter input,
@@ -42,6 +65,62 @@
             border: 1px solid rgba(100, 116, 139, 0.35);
             background: #fff;
             padding: 0.5rem 0.75rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .filter-group-row {
+            display: flex;
+            gap: 0.3rem;
+            flex-direction: column;
+        }
+
+        @media (min-width: 768px) {
+            .filter-group-row {
+                flex-direction: row;
+            }
+            .filter-group-row input {
+                flex: 1;
+            }
+        }
+
+        .filter-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        @media (min-width: 768px) {
+            .filter-buttons {
+                flex-wrap: nowrap;
+                gap: 0.3rem;
+            }
+        }
+
+        .filter-buttons button,
+        .filter-buttons a {
+            flex: 1;
+            min-width: 100px;
+        }
+
+        @media (min-width: 768px) {
+            .filter-buttons button,
+            .filter-buttons a {
+                flex: 0 1 auto;
+                min-width: auto;
+            }
         }
 
         .timeline {
@@ -183,16 +262,97 @@
         }
 
         @media (max-width: 992px) {
-            .activity-filter {
+            .filter-row {
                 grid-template-columns: 1fr;
             }
 
             .timeline::before {
-                left: 30px;
+                left: 24px;
             }
 
             .timeline-item {
-                grid-template-columns: 60px 1fr;
+                grid-template-columns: 48px 1fr;
+            }
+
+            .actor-avatar {
+                width: 40px;
+                height: 40px;
+                margin-left: 4px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .activity-page {
+                padding: 0.75rem 0 1rem;
+            }
+
+            .activity-hero {
+                padding: 0.75rem;
+                border-radius: 12px;
+                margin-bottom: 0.75rem;
+            }
+
+            .activity-hero h1 {
+                font-size: 1.1rem;
+            }
+
+            .activity-hero p {
+                font-size: 0.85rem;
+            }
+
+            .filter-row {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-buttons button,
+            .filter-buttons a {
+                font-size: 0.85rem;
+                min-width: 80px;
+            }
+
+            .timeline::before {
+                left: 20px;
+            }
+
+            .timeline-item {
+                grid-template-columns: 44px 1fr;
+                gap: 0.5rem;
+                margin-bottom: 0.75rem;
+            }
+
+            .actor-avatar {
+                width: 36px;
+                height: 36px;
+                font-size: 0.8rem;
+                margin-left: 2px;
+            }
+
+            .activity-card {
+                padding: 0.75rem;
+                border-radius: 12px;
+            }
+
+            .activity-top {
+                flex-direction: column;
+                gap: 0.3rem;
+            }
+
+            .activity-sentence {
+                font-size: 0.85rem;
+            }
+
+            .activity-time {
+                font-size: 0.7rem;
+            }
+
+            .meta-pill {
+                font-size: 0.7rem;
+                padding: 0.2rem 0.5rem;
+            }
+
+            .pagination-wrap {
+                flex-direction: column;
+                gap: 1rem;
             }
         }
     </style>
@@ -202,17 +362,54 @@
     <div class="activity-page container-fluid px-3 px-xl-5">
         <section class="activity-hero">
             <h1><i class="fas fa-stream me-2"></i>{{ __('ui.profile_activity_logs.title') }}</h1>
-            <p>{{ __('ui.profile_activity_logs.subtitle') }}</p>
+            @if($startDate || $endDate)
+                <p style="color:#059669;font-weight:600;margin:0.5rem 0 0">📊 From {{ $startDate }} {{ $startTime ?: '00:00' }} to {{ $endDate }} {{ $endTime ?: '23:59' }}</p>
+            @else
+                <p>{{ __('ui.profile_activity_logs.subtitle') }}</p>
+            @endif
 
             <form id="activityFilterForm" class="activity-filter mt-3" method="GET" action="{{ route('profile.logs') }}">
-                <input id="activitySearchInput" type="text" name="q" value="{{ $search }}"
-                    placeholder="{{ __('ui.admin_activity_logs.search_placeholder') }}" autocomplete="off">
+                <div class="filter-search">
+                    <div class="filter-group">
+                        <label class="filter-label">Search</label>
+                        <input id="activitySearchInput" type="text" name="q" value="{{ $search }}" placeholder="Search by action, description..." autocomplete="off">
+                    </div>
+                </div>
 
-                <select id="activityTypeSelect" name="type">
-                    @foreach ($activityTypes as $value => $label)
-                        <option value="{{ $value }}" @selected($type === $value)>{{ $label }}</option>
-                    @endforeach
-                </select>
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label class="filter-label">Type</label>
+                        <select id="activityTypeSelect" name="type">
+                            @foreach ($activityTypes as $value => $label)
+                                <option value="{{ $value }}" @selected($type === $value)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">From Date & Time</label>
+                        <div class="filter-group-row">
+                            <input type="date" name="start_date" value="{{ $startDate }}" />
+                            <input type="time" name="start_time" value="{{ $startTime }}" />
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">To Date & Time</label>
+                        <div class="filter-group-row">
+                            <input type="date" name="end_date" value="{{ $endDate }}" />
+                            <input type="time" name="end_time" value="{{ $endTime }}" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-buttons" style="display:flex;gap:0.3rem;flex-wrap:wrap">
+                    <button type="button" id="activityFilterButton" class="btn btn-sm btn-primary" style="height:44px;border-radius:12px;padding:0 1rem;white-space:nowrap;flex:1">🔍 Filter</button>
+                    <button type="submit" name="download" value="txt" class="btn btn-sm btn-outline-primary" style="height:44px;border-radius:12px;padding:0 1rem;white-space:nowrap;flex:1">⬇️ Download</button>
+                    @if($startDate || $endDate || $search || $type !== 'all')
+                        <a href="{{ route('profile.logs') }}" class="btn btn-sm btn-outline-secondary" style="height:44px;border-radius:12px;padding:0 1rem;white-space:nowrap;text-decoration:none;display:flex;align-items:center;flex:1;justify-content:center">✕ Clear</a>
+                    @endif
+                </div>
             </form>
         </section>
 
@@ -299,18 +496,27 @@
                 return;
             }
 
-            let debounceTimer;
+            const filterButton = document.getElementById('activityFilterButton');
 
-            searchInput.addEventListener('input', function() {
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(function() {
+            // Submit on Enter in search input
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
                     form.submit();
-                }, 450);
+                }
             });
 
-            typeSelect.addEventListener('change', function() {
-                form.submit();
-            });
+            // Filter button submits the form (regular filtered view)
+            if (filterButton) {
+                filterButton.addEventListener('click', function() {
+                    // Ensure download param is not set
+                    const downloadInput = form.querySelector('button[name="download"]');
+                    if (downloadInput) {
+                        downloadInput.removeAttribute('disabled');
+                    }
+                    form.submit();
+                });
+            }
         })();
     </script>
 @endsection

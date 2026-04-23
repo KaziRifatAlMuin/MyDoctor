@@ -1780,13 +1780,14 @@ body {
                                         </div>
                                         <div style="flex: 1;">
                                             <div class="modal-user-name">{{ Auth::user()->name }}</div>
-                                            <select id="createPostDiseaseIds" class="modal-disease-select" multiple size="4" aria-label="{{ __('ui.community.select_disease') }}">
+                                            <div id="createPostDiseaseIds" class="modal-disease-checkboxes" style="max-height: 150px; overflow-y: auto; border: 1px solid #e4e6eb; border-radius: 6px; padding: 8px;">
                                                 @foreach($diseases as $disease)
-                                                    <option value="{{ $disease->id }}">
+                                                    <label style="display:flex; align-items:center; gap:8px; font-size:13px; color:#65676b; cursor:pointer; padding: 4px 0; margin-bottom: 2px;">
+                                                        <input type="checkbox" name="disease_ids" value="{{ $disease->id }}" style="cursor:pointer;">
                                                         {{ $disease->display_name }}
-                                                    </option>
+                                                    </label>
                                                 @endforeach
-                                            </select>
+                                            </div>
                                             <div style="font-size:12px; color:#65676b; margin-top:6px;">{{ __('ui.community.select_disease') }} (multiple)</div>
                                         </div>
                                     </div>
@@ -2128,7 +2129,7 @@ function clearCreatePostFile() {
 
 function submitCreatePost() {
     const content = document.getElementById('createPostContent').value.trim();
-    const diseaseIds = Array.from(document.getElementById('createPostDiseaseIds').selectedOptions).map(option => option.value);
+    const diseaseIds = Array.from(document.querySelectorAll('#createPostDiseaseIds input[type="checkbox"]:checked')).map(checkbox => checkbox.value);
     const isAnonymous = document.getElementById('createPostAnonymous')?.checked ? '1' : '0';
 
     if (!content && createPostFiles.length === 0) {
@@ -2171,7 +2172,8 @@ function submitCreatePost() {
             textarea.style.height = 'auto';
             updateCreatePostCharCounter();
             clearCreatePostFile();
-            document.getElementById('createPostDiseaseIds').selectedIndex = -1;
+            // Clear all checkboxes
+            document.querySelectorAll('#createPostDiseaseIds input[type="checkbox"]').forEach(checkbox => checkbox.checked = false);
             const anonymousCheckbox = document.getElementById('createPostAnonymous');
             if (anonymousCheckbox) anonymousCheckbox.checked = false;
             createPostModal.hide();
@@ -2201,7 +2203,8 @@ function submitCreatePost() {
 document.getElementById('createPostModal')?.addEventListener('hidden.bs.modal', function() {
     document.getElementById('createPostContent').value = '';
     clearCreatePostFile();
-    document.getElementById('createPostDiseaseIds').selectedIndex = -1;
+    // Clear all checkboxes
+    document.querySelectorAll('#createPostDiseaseIds input[type="checkbox"]').forEach(checkbox => checkbox.checked = false);
     const anonymousCheckbox = document.getElementById('createPostAnonymous');
     if (anonymousCheckbox) anonymousCheckbox.checked = false;
 });

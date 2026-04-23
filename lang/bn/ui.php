@@ -64,6 +64,9 @@ return [
     ],
     
     'community' => [
+        'community_diseases_hub'=> 'কমিউনিটি রোগ ভিত্তিক কার্ড',
+        'choose_disease_card'=>'একটি রোগের কার্ড বাছাই করুন এবং তার জন্য নির্দিষ্ট ফিড দেখুন।',
+        'browse_all_posts' =>'সকল পোস্ট দেখুন',
         'trending_diseases' => 'ট্রেন্ডিং রোগ',
         'all_posts' => 'সব পোস্ট',
         'starred_posts' => 'তারকাচিহ্নিত পোস্ট',

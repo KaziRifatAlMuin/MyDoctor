@@ -8,8 +8,10 @@ use App\Models\Disease;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\View\View;
+use Carbon\Carbon;
 
 class AdminActivityLogController extends Controller
 {
@@ -18,10 +20,16 @@ class AdminActivityLogController extends Controller
         $this->middleware(['auth', 'admin']);
     }
 
-    public function index(Request $request): View
+    public function index(Request $request): View|Response
     {
         $type = trim((string) $request->query('type', 'all'));
         $search = trim((string) $request->query('q', ''));
+
+        // Date/time filter params
+        $startDate = trim((string) $request->query('start_date', ''));
+        $endDate = trim((string) $request->query('end_date', ''));
+        $startTime = trim((string) $request->query('start_time', ''));
+        $endTime = trim((string) $request->query('end_time', ''));
 
         $allowedTypes = array_keys($this->activityTypes());
         if (!in_array($type, $allowedTypes, true)) {
@@ -30,6 +38,23 @@ class AdminActivityLogController extends Controller
 
         $logsQuery = ActivityLog::query()
             ->with('user')
+            // apply date/time filters
+            ->when($startDate !== '', function ($query) use ($startDate, $startTime) {
+                try {
+                    $time = $startTime !== '' ? $startTime : '00:00';
+                    $dt = Carbon::createFromFormat('Y-m-d H:i', sprintf('%s %s', $startDate, $time));
+                    $query->where('created_at', '>=', $dt);
+                } catch (\Throwable $e) {
+                }
+            })
+            ->when($endDate !== '', function ($query) use ($endDate, $endTime) {
+                try {
+                    $time = $endTime !== '' ? $endTime : '23:59';
+                    $dt = Carbon::createFromFormat('Y-m-d H:i', sprintf('%s %s', $endDate, $time));
+                    $query->where('created_at', '<=', $dt);
+                } catch (\Throwable $e) {
+                }
+            })
             ->when($type !== 'all', function ($query) use ($type) {
                 $this->applyTypeFilter($query, $type);
             })
@@ -49,6 +74,40 @@ class AdminActivityLogController extends Controller
             })
             ->orderByDesc('created_at');
 
+        // If download requested, export as TXT
+        if ((string) $request->query('download', '') === 'txt') {
+            $items = $logsQuery->orderByDesc('created_at')->get();
+            // determine from/to timestamps for filename
+            try {
+                $fromDt = $startDate !== '' ? Carbon::createFromFormat('Y-m-d H:i', sprintf('%s %s', $startDate, $startTime !== '' ? $startTime : '00:00')) : ($items->last()->created_at ?? now());
+            } catch (\Throwable $e) {
+                $fromDt = $items->last()->created_at ?? now();
+            }
+            try {
+                $toDt = $endDate !== '' ? Carbon::createFromFormat('Y-m-d H:i', sprintf('%s %s', $endDate, $endTime !== '' ? $endTime : '23:59')) : ($items->first()->created_at ?? now());
+            } catch (\Throwable $e) {
+                $toDt = $items->first()->created_at ?? now();
+            }
+
+            $from = $fromDt->format('Ymd_Hi');
+            $to = $toDt->format('Ymd_Hi');
+            $filename = sprintf('activitylog_mydoctor_from_%s_to_%s.txt', $from, $to);
+
+            $content = $items->map(function ($log) {
+                $time = optional($log->created_at)->format('Y-m-d H:i:s');
+                $user = $log->user?->name ?? 'system';
+                $cat = $log->category ?? 'n/a';
+                $act = $log->action ?? '';
+                $desc = trim((string) $log->description);
+                return sprintf("[%s] %s | %s/%s | %s", $time, $user, $cat, $act, $desc);
+            })->join("\n");
+
+            return response($content, 200, [
+                'Content-Type' => 'text/plain; charset=utf-8',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ]);
+        }
+
         $logs = $logsQuery->paginate(100)->withQueryString();
         $this->enrichLogs($logs, true);
 
@@ -57,6 +116,10 @@ class AdminActivityLogController extends Controller
             'type' => $type,
             'search' => $search,
             'activityTypes' => $this->activityTypes(),
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'startTime' => $startTime,
+            'endTime' => $endTime,
         ]);
     }
 

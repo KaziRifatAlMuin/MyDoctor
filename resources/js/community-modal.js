@@ -254,52 +254,6 @@ if (!window.modalCommentFiles) {
     window.modalCommentFiles = {};
 }
 
-// ==================== POST MODAL FUNCTIONS ====================
-window.openPostModal = function(postId) {
-    const modalBody = document.getElementById('postModalBody');
-    if (!modalBody) {
-        console.error('Post modal body not found');
-        return;
-    }
-    
-    modalBody.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
-    
-    // Show modal
-    const postModalEl = document.getElementById('postModal');
-    if (!postModalEl) {
-        console.error('Post modal element not found');
-        return;
-    }
-    
-    const postModal = new bootstrap.Modal(postModalEl);
-    postModal.show();
-    
-    // Fetch the post HTML
-    fetch(`/community/modal-post/${postId}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Post is deleted or cannot be loaded');
-            }
-            return response.text();
-        })
-        .then(html => {
-            modalBody.innerHTML = html;
-            
-            // Make sure comments section is visible
-            const commentsSection = document.getElementById(`comments-section-${postId}`);
-            if (commentsSection) {
-                commentsSection.style.display = 'block';
-            }
-            
-            // Initialize modal interactions
-            setupModalInteractions(postId);
-        })
-        .catch(error => {
-            console.error('Error loading post:', error);
-            modalBody.innerHTML = '<div class="alert alert-danger m-3">Post is deleted or cannot load</div>';
-        });
-};
-
 window.setupModalInteractions = function(postId) {
     // Auto-resize textareas in modal
     document.querySelectorAll('#postModalBody textarea').forEach(textarea => {

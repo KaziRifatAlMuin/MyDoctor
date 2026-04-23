@@ -2903,6 +2903,27 @@
             });
         };
 
+        // ==================== TOGGLE COMMENTS MODAL ====================
+        window.toggleCommentsModal = function(postId) {
+            const commentsSection = document.getElementById(`comments-section-${postId}`);
+            if (!commentsSection) return;
+            
+            const isVisible = commentsSection.style.display !== 'none' && commentsSection.style.display !== '';
+            const toggleBtn = document.getElementById(`toggle-comments-modal-btn-${postId}`);
+            
+            if (isVisible) {
+                commentsSection.style.display = 'none';
+                if (toggleBtn) {
+                    toggleBtn.innerHTML = '<i class="far fa-comment"></i><span class="comment-count" data-post="' + postId + '">' + toggleBtn.querySelector('.comment-count').textContent + '</span>';
+                }
+            } else {
+                commentsSection.style.display = 'block';
+                if (toggleBtn) {
+                    toggleBtn.innerHTML = '<i class="fas fa-chevron-up"></i><span class="comment-count" data-post="' + postId + '">' + toggleBtn.querySelector('.comment-count').textContent + '</span>';
+                }
+            }
+        };
+
         // ==================== MEDICINE REMINDER MODAL FUNCTIONS ====================
         
         window.openMedicineReminderModal = function(reminderId) {
