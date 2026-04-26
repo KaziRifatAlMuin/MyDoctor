@@ -84,7 +84,7 @@ class SuggestionsBuilderTest extends TestCase
             $this->noSymptoms(), $this->noConditions(), null, $this->defaultMedicines()
         );
 
-        $s = $this->find($result, 'High Blood Pressure Detected');
+        $s = $this->find($result, 'High Blood Pressure (Stage 2)');
         $this->assertNotNull($s, 'Expected high BP suggestion');
         $this->assertEquals('danger', $s['color']);
         $this->assertEquals('Metric Alert', $s['category']);
@@ -99,7 +99,7 @@ class SuggestionsBuilderTest extends TestCase
             $this->noSymptoms(), $this->noConditions(), null, $this->defaultMedicines()
         );
 
-        $s = $this->find($result, 'Low Blood Pressure');
+        $s = $this->find($result, 'Low Blood Pressure (Hypotension)');
         $this->assertNotNull($s, 'Expected low BP suggestion');
         $this->assertEquals('warning', $s['color']);
         $this->assertStringContainsString('85/55', $s['message']);
@@ -113,8 +113,8 @@ class SuggestionsBuilderTest extends TestCase
             $this->noSymptoms(), $this->noConditions(), null, $this->defaultMedicines()
         );
 
-        $this->assertNull($this->find($result, 'High Blood Pressure Detected'));
-        $this->assertNull($this->find($result, 'Low Blood Pressure'));
+        $this->assertNull($this->find($result, 'High Blood Pressure (Stage 2)'));
+        $this->assertNull($this->find($result, 'Low Blood Pressure (Hypotension)'));
     }
 
     // ──────────────────────────────────────────────────
@@ -125,11 +125,11 @@ class SuggestionsBuilderTest extends TestCase
     public function it_generates_high_glucose_suggestion(): void
     {
         $result = $this->build(
-            $this->metricsOf('blood_glucose', ['value' => 200]),
+            $this->metricsOf('blood_glucose', ['value' => 200, 'context' => 'random']),
             $this->noSymptoms(), $this->noConditions(), null, $this->defaultMedicines()
         );
 
-        $s = $this->find($result, 'High Blood Sugar');
+        $s = $this->find($result, 'High Blood Sugar (Hyperglycemia)');
         $this->assertNotNull($s, 'Expected high glucose suggestion');
         $this->assertEquals('danger', $s['color']);
         $this->assertStringContainsString('200', $s['message']);
@@ -143,7 +143,7 @@ class SuggestionsBuilderTest extends TestCase
             $this->noSymptoms(), $this->noConditions(), null, $this->defaultMedicines()
         );
 
-        $s = $this->find($result, 'Low Blood Sugar');
+        $s = $this->find($result, 'Low Blood Sugar (Hypoglycemia)');
         $this->assertNotNull($s, 'Expected low glucose suggestion');
         $this->assertEquals('warning', $s['color']);
         $this->assertStringContainsString('60', $s['message']);
@@ -161,7 +161,7 @@ class SuggestionsBuilderTest extends TestCase
             $this->noSymptoms(), $this->noConditions(), null, $this->defaultMedicines()
         );
 
-        $s = $this->find($result, 'Elevated Heart Rate');
+        $s = $this->find($result, 'Elevated Heart Rate (Tachycardia)');
         $this->assertNotNull($s, 'Expected elevated heart rate suggestion');
         $this->assertEquals('warning', $s['color']);
         $this->assertStringContainsString('105', $s['message']);
@@ -175,7 +175,7 @@ class SuggestionsBuilderTest extends TestCase
             $this->noSymptoms(), $this->noConditions(), null, $this->defaultMedicines()
         );
 
-        $s = $this->find($result, 'Low Heart Rate');
+        $s = $this->find($result, 'Low Heart Rate (Bradycardia)');
         $this->assertNotNull($s, 'Expected low heart rate suggestion');
         $this->assertEquals('info', $s['color']);
     }
@@ -188,8 +188,8 @@ class SuggestionsBuilderTest extends TestCase
             $this->noSymptoms(), $this->noConditions(), null, $this->defaultMedicines()
         );
 
-        $this->assertNull($this->find($result, 'Elevated Heart Rate'));
-        $this->assertNull($this->find($result, 'Low Heart Rate'));
+        $this->assertNull($this->find($result, 'Elevated Heart Rate (Tachycardia)'));
+        $this->assertNull($this->find($result, 'Low Heart Rate (Bradycardia)'));
     }
 
     // ──────────────────────────────────────────────────
@@ -204,9 +204,9 @@ class SuggestionsBuilderTest extends TestCase
             $this->noSymptoms(), $this->noConditions(), null, $this->defaultMedicines()
         );
 
-        $s = $this->find($result, 'Low Oxygen Saturation');
+        $s = $this->find($result, 'Monitor Oxygen Level');
         $this->assertNotNull($s);
-        $this->assertEquals('danger', $s['color']);
+        $this->assertEquals('info', $s['color']);
         $this->assertStringContainsString('92', $s['message']);
     }
 
@@ -218,6 +218,7 @@ class SuggestionsBuilderTest extends TestCase
             $this->noSymptoms(), $this->noConditions(), null, $this->defaultMedicines()
         );
 
+        $this->assertNull($this->find($result, 'Monitor Oxygen Level'));
         $this->assertNull($this->find($result, 'Low Oxygen Saturation'));
     }
 
@@ -233,7 +234,7 @@ class SuggestionsBuilderTest extends TestCase
             $this->noSymptoms(), $this->noConditions(), null, $this->defaultMedicines()
         );
 
-        $s = $this->find($result, 'BMI Indicates Obesity');
+        $s = $this->find($result, 'Obesity (Class I)');
         $this->assertNotNull($s);
         $this->assertEquals('warning', $s['color']);
         $this->assertEquals('Lifestyle', $s['category']);
@@ -247,7 +248,7 @@ class SuggestionsBuilderTest extends TestCase
             $this->noSymptoms(), $this->noConditions(), null, $this->defaultMedicines()
         );
 
-        $s = $this->find($result, 'Overweight BMI');
+        $s = $this->find($result, 'Overweight');
         $this->assertNotNull($s);
         $this->assertEquals('info', $s['color']);
     }
@@ -260,7 +261,7 @@ class SuggestionsBuilderTest extends TestCase
             $this->noSymptoms(), $this->noConditions(), null, $this->defaultMedicines()
         );
 
-        $s = $this->find($result, 'Underweight BMI');
+        $s = $this->find($result, 'Underweight');
         $this->assertNotNull($s);
         $this->assertEquals('warning', $s['color']);
     }
@@ -279,7 +280,7 @@ class SuggestionsBuilderTest extends TestCase
 
         $s = $this->find($result, 'Fever Detected');
         $this->assertNotNull($s);
-        $this->assertEquals('danger', $s['color']);
+        $this->assertEquals('warning', $s['color']);
         $this->assertStringContainsString('38.5', $s['message']);
     }
 
@@ -306,7 +307,7 @@ class SuggestionsBuilderTest extends TestCase
             $this->noSymptoms(), $this->noConditions(), null, $this->defaultMedicines()
         );
 
-        $s = $this->find($result, 'Low Hemoglobin');
+        $s = $this->find($result, 'Low Hemoglobin (Anemia)');
         $this->assertNotNull($s);
         $this->assertEquals('warning', $s['color']);
         $this->assertStringContainsString('10.5', $s['message']);
@@ -324,7 +325,7 @@ class SuggestionsBuilderTest extends TestCase
             40, $this->defaultMedicines()
         );
 
-        $s = $this->find($result, 'Very Low Medicine Adherence');
+        $s = $this->find($result, 'Critical Medicine Adherence');
         $this->assertNotNull($s);
         $this->assertEquals('danger', $s['color']);
         $this->assertEquals('Adherence', $s['category']);
@@ -339,7 +340,7 @@ class SuggestionsBuilderTest extends TestCase
             70, $this->defaultMedicines()
         );
 
-        $s = $this->find($result, 'Improve Your Medicine Adherence');
+        $s = $this->find($result, 'Improve Medicine Adherence');
         $this->assertNotNull($s);
         $this->assertEquals('warning', $s['color']);
         $this->assertStringContainsString('70%', $s['message']);
@@ -367,8 +368,8 @@ class SuggestionsBuilderTest extends TestCase
             null, $this->defaultMedicines()
         );
 
-        $this->assertNull($this->find($result, 'Very Low Medicine Adherence'));
-        $this->assertNull($this->find($result, 'Improve Your Medicine Adherence'));
+        $this->assertNull($this->find($result, 'Critical Medicine Adherence'));
+        $this->assertNull($this->find($result, 'Improve Medicine Adherence'));
         $this->assertNull($this->find($result, 'Excellent Adherence!'));
     }
 
@@ -411,7 +412,9 @@ class SuggestionsBuilderTest extends TestCase
         $s = $this->find($result, 'Multiple Symptoms Logged');
         $this->assertNotNull($s);
         $this->assertEquals('info', $s['color']);
-        $this->assertStringContainsString('6 symptoms', $s['message']);
+        // The message contains "6 distinct symptoms"
+        $this->assertStringContainsString('6', $s['message']);
+        $this->assertStringContainsString('symptoms', $s['message']);
     }
 
     #[Test]

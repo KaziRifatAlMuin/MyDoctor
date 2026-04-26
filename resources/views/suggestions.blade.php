@@ -371,9 +371,6 @@
                 <button class="filter-btn" onclick="filterSuggestions('Adherence', this)">{{ __('ui.suggestions.adherence') }}</button>
                 <button class="filter-btn" onclick="filterSuggestions('Symptom', this)">{{ __('ui.suggestions.symptoms') }}</button>
                 <button class="filter-btn" onclick="filterSuggestions('Condition', this)">{{ __('ui.suggestions.conditions') }}</button>
-                <button class="filter-btn" onclick="filterSuggestions('Lifestyle', this)">{{ __('ui.suggestions.lifestyle') }}</button>
-                <button class="filter-btn" onclick="filterSuggestions('Wellness', this)">{{ __('ui.suggestions.wellness') }}</button>
-                <button class="filter-btn" onclick="filterSuggestions('Getting Started', this)">{{ __('ui.suggestions.getting_started') }}</button>
             </div>
 
             <div class="row">

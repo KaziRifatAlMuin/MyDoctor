@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Cache;
 
 class ForgotPasswordController extends Controller
 {
@@ -22,6 +23,11 @@ class ForgotPasswordController extends Controller
 
     public function sendResetLinkEmail(Request $request)
     {
+        $maintenance = Cache::get('maintenance_mode', config('app.maintenance_mode', false));
+        if ($maintenance === true) {
+            return redirect()->route('maintenance');
+        }
+
         $request->validate([
             'email' => 'required|email|exists:users,email',
         ]);
