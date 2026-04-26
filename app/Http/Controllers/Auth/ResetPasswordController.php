@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Cache;
 
 class ResetPasswordController extends Controller
 {
@@ -27,6 +28,11 @@ class ResetPasswordController extends Controller
 
     public function reset(Request $request)
     {
+        $maintenance = Cache::get('maintenance_mode', config('app.maintenance_mode', false));
+        if ($maintenance === true) {
+            return redirect()->route('maintenance');
+        }
+
         $request->validate([
             'token' => 'required',
             'email' => 'required|email',

@@ -1601,9 +1601,7 @@ return [
     'adherence' => 'Adherence',
     'symptoms' => 'Symptoms',
     'conditions' => 'Conditions',
-    'lifestyle' => 'Lifestyle',
-    'wellness' => 'Wellness',
-    'getting_started' => 'Getting Started',
+
     'everything_looks_good' => 'Everything Looks Good!',
     'no_specific_suggestions' => 'No specific suggestions right now. Keep up the good work!',
     'adherence_30_days' => 'Adherence (30 days)',
@@ -1792,6 +1790,7 @@ return [
         'health' => 'Health',
         'community' => 'Community',
         'logs' => 'Activity Logs',
+        'backups' => 'Backups',
     ],
 
 'terms' => [

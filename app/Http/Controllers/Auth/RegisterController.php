@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Cache;
 
 class RegisterController extends Controller
 {
@@ -42,6 +43,11 @@ class RegisterController extends Controller
      */
     public function register(Request $request)
     {
+        $maintenance = Cache::get('maintenance_mode', config('app.maintenance_mode', false));
+        if ($maintenance === true) {
+            return redirect()->route('maintenance');
+        }
+
         $this->validator($request->all())->validate();
 
         $user = $this->create($request->all());
