@@ -2200,6 +2200,18 @@
 </head>
 
 <body>
+    @php
+        $maintenance = \Illuminate\Support\Facades\Cache::get('maintenance_mode', config('app.maintenance_mode', false));
+        $isAdmin = auth()->check() && auth()->user()->isAdmin();
+
+        // Allow auth-related pages and home page to render normally
+        $isAuthPage = request()->routeIs('login') || request()->routeIs('register') || request()->routeIs('password.*') || request()->routeIs('home');
+
+        if ($maintenance === true && ! $isAdmin && ! $isAuthPage) {
+            echo view('maintenance')->render();
+            exit;
+        }
+    @endphp
     <div class="app-root">
         <!-- Banner / Navbar -->
         @php
@@ -2264,6 +2276,12 @@
                             <a href="{{ route('admin.logs.index') }}"
                                 class="banner-nav-link {{ request()->routeIs('admin.logs.*') ? 'active' : '' }}">
                                 {{ __('ui.admin_tabs.logs') }}
+                            </a>
+                        </li>
+                        <li class="banner-nav-item">
+                            <a href="{{ route('admin.backups.index') }}"
+                                class="banner-nav-link {{ request()->routeIs('admin.backups.*') ? 'active' : '' }}">
+                                {{ __('ui.admin_tabs.backups') }}
                             </a>
                         </li>
                     @else
@@ -2414,6 +2432,21 @@
                                     <h6>{{ auth()->user()->name }}</h6>
                                     <p>{{ auth()->user()->email }}</p>
                                 </div>
+
+                                @if (auth()->user()->isAdmin())
+                                    @php
+                                        $maintenance = \Illuminate\Support\Facades\Cache::get('maintenance_mode', config('app.maintenance_mode', false));
+                                    @endphp
+                                    <div class="dropdown-item-custom d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <i class="fas fa-tools me-2"></i>Maintenance Mode
+                                        </div>
+                                        <button type="button" id="maintenanceToggleBtn" onclick="toggleMaintenance()"
+                                            class="btn btn-sm {{ $maintenance ? 'btn-danger' : 'btn-outline-secondary' }}">
+                                            <span id="maintenanceToggleText">{{ $maintenance ? 'ON' : 'OFF' }}</span>
+                                        </button>
+                                    </div>
+                                @endif
 
                                 @if (! auth()->user()->isAdmin())
                                     <a href="{{ $profileDashboardRoute }}" class="dropdown-item-custom">
@@ -3924,6 +3957,38 @@
 
     <!-- ==================== NOTIFICATION & CHATBOT SCRIPTS ==================== -->
     <script>
+        // Toggle maintenance (admin)
+        async function toggleMaintenance() {
+            const btn = document.getElementById('maintenanceToggleBtn');
+            const text = document.getElementById('maintenanceToggleText');
+            const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            if (!btn) return;
+            btn.disabled = true;
+            try {
+                const res = await fetch('{{ route('admin.maintenance.toggle') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': token,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    const on = !!data.maintenance;
+                    text.textContent = on ? 'ON' : 'OFF';
+                    btn.classList.toggle('btn-danger', on);
+                    btn.classList.toggle('btn-outline-secondary', !on);
+                }
+            } catch (e) {
+                console.error(e);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
         // User dropdown toggle
         function toggleUserDropdown() {
             const dropdown = document.getElementById('userDropdown');

@@ -73,7 +73,7 @@ class SuggestionsBoundaryTest extends TestCase
             $this->noS(), $this->noC(), null, $this->defaultMeds()
         );
 
-        $this->assertTrue($this->has($result, 'High Blood Pressure Detected'));
+        $this->assertTrue($this->has($result, 'High Blood Pressure (Stage 2)'));
     }
 
     #[Test]
@@ -84,7 +84,8 @@ class SuggestionsBoundaryTest extends TestCase
             $this->noS(), $this->noC(), null, $this->defaultMeds()
         );
 
-        $this->assertFalse($this->has($result, 'High Blood Pressure Detected'));
+        // Stage 1 starts at 130, so 139 should be Stage 1
+        $this->assertTrue($this->has($result, 'High Blood Pressure (Stage 1)'));
     }
 
     // ── diastolic (threshold >= 90) ──
@@ -97,7 +98,7 @@ class SuggestionsBoundaryTest extends TestCase
             $this->noS(), $this->noC(), null, $this->defaultMeds()
         );
 
-        $this->assertTrue($this->has($result, 'High Blood Pressure Detected'));
+        $this->assertTrue($this->has($result, 'High Blood Pressure (Stage 2)'));
     }
 
     #[Test]
@@ -108,7 +109,8 @@ class SuggestionsBoundaryTest extends TestCase
             $this->noS(), $this->noC(), null, $this->defaultMeds()
         );
 
-        $this->assertFalse($this->has($result, 'High Blood Pressure Detected'));
+        $this->assertFalse($this->has($result, 'High Blood Pressure (Stage 2)'));
+        $this->assertTrue($this->has($result, 'High Blood Pressure (Stage 1)'));
     }
 
     // ── lower bound (systolic < 90) ──
@@ -121,7 +123,7 @@ class SuggestionsBoundaryTest extends TestCase
             $this->noS(), $this->noC(), null, $this->defaultMeds()
         );
 
-        $this->assertTrue($this->has($result, 'Low Blood Pressure'));
+        $this->assertTrue($this->has($result, 'Low Blood Pressure (Hypotension)'));
     }
 
     #[Test]
@@ -132,7 +134,7 @@ class SuggestionsBoundaryTest extends TestCase
             $this->noS(), $this->noC(), null, $this->defaultMeds()
         );
 
-        $this->assertFalse($this->has($result, 'Low Blood Pressure'));
+        $this->assertFalse($this->has($result, 'Low Blood Pressure (Hypotension)'));
     }
 
     // ──────────────────────────────────────────────────
@@ -143,22 +145,22 @@ class SuggestionsBoundaryTest extends TestCase
     public function glucose_181_is_high(): void
     {
         $result = $this->build(
-            $this->metricOf('blood_glucose', ['value' => 181]),
+            $this->metricOf('blood_glucose', ['value' => 181, 'context' => 'random']),
             $this->noS(), $this->noC(), null, $this->defaultMeds()
         );
 
-        $this->assertTrue($this->has($result, 'High Blood Sugar'));
+        $this->assertTrue($this->has($result, 'High Blood Sugar (Hyperglycemia)'));
     }
 
     #[Test]
     public function glucose_180_is_not_high(): void   // boundary — NOT strictly > 180
     {
         $result = $this->build(
-            $this->metricOf('blood_glucose', ['value' => 180]),
+            $this->metricOf('blood_glucose', ['value' => 180, 'context' => 'random']),
             $this->noS(), $this->noC(), null, $this->defaultMeds()
         );
 
-        $this->assertFalse($this->has($result, 'High Blood Sugar'));
+        $this->assertFalse($this->has($result, 'High Blood Sugar (Hyperglycemia)'));
     }
 
     #[Test]
@@ -169,7 +171,7 @@ class SuggestionsBoundaryTest extends TestCase
             $this->noS(), $this->noC(), null, $this->defaultMeds()
         );
 
-        $this->assertTrue($this->has($result, 'Low Blood Sugar'));
+        $this->assertTrue($this->has($result, 'Low Blood Sugar (Hypoglycemia)'));
     }
 
     #[Test]
@@ -180,7 +182,7 @@ class SuggestionsBoundaryTest extends TestCase
             $this->noS(), $this->noC(), null, $this->defaultMeds()
         );
 
-        $this->assertFalse($this->has($result, 'Low Blood Sugar'));
+        $this->assertFalse($this->has($result, 'Low Blood Sugar (Hypoglycemia)'));
     }
 
     // ──────────────────────────────────────────────────
@@ -195,7 +197,7 @@ class SuggestionsBoundaryTest extends TestCase
             $this->noS(), $this->noC(), null, $this->defaultMeds()
         );
 
-        $this->assertTrue($this->has($result, 'Elevated Heart Rate'));
+        $this->assertTrue($this->has($result, 'Elevated Heart Rate (Tachycardia)'));
     }
 
     #[Test]
@@ -206,7 +208,7 @@ class SuggestionsBoundaryTest extends TestCase
             $this->noS(), $this->noC(), null, $this->defaultMeds()
         );
 
-        $this->assertFalse($this->has($result, 'Elevated Heart Rate'));
+        $this->assertFalse($this->has($result, 'Elevated Heart Rate (Tachycardia)'));
     }
 
     #[Test]
@@ -217,7 +219,7 @@ class SuggestionsBoundaryTest extends TestCase
             $this->noS(), $this->noC(), null, $this->defaultMeds()
         );
 
-        $this->assertTrue($this->has($result, 'Low Heart Rate'));
+        $this->assertTrue($this->has($result, 'Low Heart Rate (Bradycardia)'));
     }
 
     #[Test]
@@ -228,7 +230,7 @@ class SuggestionsBoundaryTest extends TestCase
             $this->noS(), $this->noC(), null, $this->defaultMeds()
         );
 
-        $this->assertFalse($this->has($result, 'Low Heart Rate'));
+        $this->assertFalse($this->has($result, 'Low Heart Rate (Bradycardia)'));
     }
 
     // ──────────────────────────────────────────────────
@@ -243,7 +245,7 @@ class SuggestionsBoundaryTest extends TestCase
             $this->noS(), $this->noC(), null, $this->defaultMeds()
         );
 
-        $this->assertTrue($this->has($result, 'Low Oxygen Saturation'));
+        $this->assertTrue($this->has($result, 'Monitor Oxygen Level'));
     }
 
     #[Test]
@@ -254,7 +256,7 @@ class SuggestionsBoundaryTest extends TestCase
             $this->noS(), $this->noC(), null, $this->defaultMeds()
         );
 
-        $this->assertFalse($this->has($result, 'Low Oxygen Saturation'));
+        $this->assertFalse($this->has($result, 'Monitor Oxygen Level'));
     }
 
     // ──────────────────────────────────────────────────
@@ -269,8 +271,8 @@ class SuggestionsBoundaryTest extends TestCase
             $this->noS(), $this->noC(), null, $this->defaultMeds()
         );
 
-        $this->assertTrue($this->has($result, 'BMI Indicates Obesity'));
-        $this->assertFalse($this->has($result, 'Overweight BMI'));
+        $this->assertTrue($this->has($result, 'Obesity (Class I)'));
+        $this->assertFalse($this->has($result, 'Overweight'));
     }
 
     #[Test]
@@ -281,8 +283,8 @@ class SuggestionsBoundaryTest extends TestCase
             $this->noS(), $this->noC(), null, $this->defaultMeds()
         );
 
-        $this->assertFalse($this->has($result, 'BMI Indicates Obesity'));
-        $this->assertTrue($this->has($result, 'Overweight BMI'));
+        $this->assertFalse($this->has($result, 'Obesity (Class I)'));
+        $this->assertTrue($this->has($result, 'Overweight'));
     }
 
     #[Test]
@@ -293,8 +295,8 @@ class SuggestionsBoundaryTest extends TestCase
             $this->noS(), $this->noC(), null, $this->defaultMeds()
         );
 
-        $this->assertTrue($this->has($result, 'Overweight BMI'));
-        $this->assertFalse($this->has($result, 'BMI Indicates Obesity'));
+        $this->assertTrue($this->has($result, 'Overweight'));
+        $this->assertFalse($this->has($result, 'Obesity (Class I)'));
     }
 
     #[Test]
@@ -305,9 +307,9 @@ class SuggestionsBoundaryTest extends TestCase
             $this->noS(), $this->noC(), null, $this->defaultMeds()
         );
 
-        $this->assertFalse($this->has($result, 'Overweight BMI'));
-        $this->assertFalse($this->has($result, 'BMI Indicates Obesity'));
-        $this->assertFalse($this->has($result, 'Underweight BMI'));
+        $this->assertFalse($this->has($result, 'Overweight'));
+        $this->assertFalse($this->has($result, 'Obesity (Class I)'));
+        $this->assertFalse($this->has($result, 'Underweight'));
     }
 
     #[Test]
@@ -318,7 +320,7 @@ class SuggestionsBoundaryTest extends TestCase
             $this->noS(), $this->noC(), null, $this->defaultMeds()
         );
 
-        $this->assertFalse($this->has($result, 'Underweight BMI'));
+        $this->assertFalse($this->has($result, 'Underweight'));
     }
 
     #[Test]
@@ -329,7 +331,7 @@ class SuggestionsBoundaryTest extends TestCase
             $this->noS(), $this->noC(), null, $this->defaultMeds()
         );
 
-        $this->assertTrue($this->has($result, 'Underweight BMI'));
+        $this->assertTrue($this->has($result, 'Underweight'));
     }
 
     // ──────────────────────────────────────────────────
@@ -370,7 +372,7 @@ class SuggestionsBoundaryTest extends TestCase
             $this->noS(), $this->noC(), null, $this->defaultMeds()
         );
 
-        $this->assertTrue($this->has($result, 'Low Hemoglobin'));
+        $this->assertTrue($this->has($result, 'Low Hemoglobin (Anemia)'));
     }
 
     #[Test]
@@ -381,7 +383,7 @@ class SuggestionsBoundaryTest extends TestCase
             $this->noS(), $this->noC(), null, $this->defaultMeds()
         );
 
-        $this->assertFalse($this->has($result, 'Low Hemoglobin'));
+        $this->assertFalse($this->has($result, 'Low Hemoglobin (Anemia)'));
     }
 
     // ──────────────────────────────────────────────────
@@ -395,20 +397,19 @@ class SuggestionsBoundaryTest extends TestCase
             $this->defaultMet(), $this->noS(), $this->noC(), 49, $this->defaultMeds()
         );
 
-        $this->assertTrue($this->has($result, 'Very Low Medicine Adherence'));
-        $this->assertFalse($this->has($result, 'Improve Your Medicine Adherence'));
+        $this->assertTrue($this->has($result, 'Critical Medicine Adherence'));
+        $this->assertFalse($this->has($result, 'Improve Medicine Adherence'));
     }
 
     #[Test]
     public function adherence_50_is_improve_zone_not_very_low(): void
     {
-        // 50 is NOT < 50, so very-low doesn't fire; 50 IS < 80, so improve fires
         $result = $this->build(
             $this->defaultMet(), $this->noS(), $this->noC(), 50, $this->defaultMeds()
         );
 
-        $this->assertFalse($this->has($result, 'Very Low Medicine Adherence'));
-        $this->assertTrue($this->has($result, 'Improve Your Medicine Adherence'));
+        $this->assertFalse($this->has($result, 'Critical Medicine Adherence'));
+        $this->assertTrue($this->has($result, 'Improve Medicine Adherence'));
     }
 
     #[Test]
@@ -418,7 +419,7 @@ class SuggestionsBoundaryTest extends TestCase
             $this->defaultMet(), $this->noS(), $this->noC(), 79, $this->defaultMeds()
         );
 
-        $this->assertTrue($this->has($result, 'Improve Your Medicine Adherence'));
+        $this->assertTrue($this->has($result, 'Improve Medicine Adherence'));
         $this->assertFalse($this->has($result, 'Excellent Adherence!'));
     }
 
@@ -429,8 +430,8 @@ class SuggestionsBoundaryTest extends TestCase
             $this->defaultMet(), $this->noS(), $this->noC(), 80, $this->defaultMeds()
         );
 
-        $this->assertFalse($this->has($result, 'Very Low Medicine Adherence'));
-        $this->assertFalse($this->has($result, 'Improve Your Medicine Adherence'));
+        $this->assertFalse($this->has($result, 'Critical Medicine Adherence'));
+        $this->assertFalse($this->has($result, 'Improve Medicine Adherence'));
         $this->assertFalse($this->has($result, 'Excellent Adherence!'));
     }
 
@@ -441,8 +442,8 @@ class SuggestionsBoundaryTest extends TestCase
             $this->defaultMet(), $this->noS(), $this->noC(), 89, $this->defaultMeds()
         );
 
-        $this->assertFalse($this->has($result, 'Very Low Medicine Adherence'));
-        $this->assertFalse($this->has($result, 'Improve Your Medicine Adherence'));
+        $this->assertFalse($this->has($result, 'Critical Medicine Adherence'));
+        $this->assertFalse($this->has($result, 'Improve Medicine Adherence'));
         $this->assertFalse($this->has($result, 'Excellent Adherence!'));
     }
 
@@ -453,7 +454,7 @@ class SuggestionsBoundaryTest extends TestCase
             $this->defaultMet(), $this->noS(), $this->noC(), 90, $this->defaultMeds()
         );
 
-        $this->assertFalse($this->has($result, 'Improve Your Medicine Adherence'));
+        $this->assertFalse($this->has($result, 'Improve Medicine Adherence'));
         $this->assertTrue($this->has($result, 'Excellent Adherence!'));
     }
 
@@ -464,7 +465,7 @@ class SuggestionsBoundaryTest extends TestCase
             $this->defaultMet(), $this->noS(), $this->noC(), 0, $this->defaultMeds()
         );
 
-        $this->assertTrue($this->has($result, 'Very Low Medicine Adherence'));
+        $this->assertTrue($this->has($result, 'Critical Medicine Adherence'));
     }
 
     #[Test]
@@ -546,8 +547,8 @@ class SuggestionsBoundaryTest extends TestCase
         );
 
         // No suggestion should fire because systolic is missing
-        $this->assertFalse($this->has($result, 'High Blood Pressure Detected'));
-        $this->assertFalse($this->has($result, 'Low Blood Pressure'));
+        $this->assertFalse($this->has($result, 'High Blood Pressure (Stage 2)'));
+        $this->assertFalse($this->has($result, 'Low Blood Pressure (Hypotension)'));
     }
 
     #[Test]
@@ -558,8 +559,8 @@ class SuggestionsBoundaryTest extends TestCase
             $this->noS(), $this->noC(), null, $this->defaultMeds()
         );
 
-        $this->assertFalse($this->has($result, 'High Blood Sugar'));
-        $this->assertFalse($this->has($result, 'Low Blood Sugar'));
+        $this->assertFalse($this->has($result, 'High Blood Sugar (Hyperglycemia)'));
+        $this->assertFalse($this->has($result, 'Low Blood Sugar (Hypoglycemia)'));
     }
 
     #[Test]
@@ -570,7 +571,7 @@ class SuggestionsBoundaryTest extends TestCase
             $this->noS(), $this->noC(), null, $this->defaultMeds()
         );
 
-        $this->assertFalse($this->has($result, 'Elevated Heart Rate'));
-        $this->assertFalse($this->has($result, 'Low Heart Rate'));
+        $this->assertFalse($this->has($result, 'Elevated Heart Rate (Tachycardia)'));
+        $this->assertFalse($this->has($result, 'Low Heart Rate (Bradycardia)'));
     }
 }

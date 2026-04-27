@@ -219,7 +219,7 @@ class SuggestionsPageTest extends TestCase
                          ->get(route('suggestions'));
 
         $response->assertViewHas('suggestions', function (array $suggestions) {
-            return in_array('High Blood Pressure Detected', array_column($suggestions, 'title'));
+            return in_array('High Blood Pressure (Stage 2)', array_column($suggestions, 'title'));
         });
     }
 
@@ -415,7 +415,8 @@ class SuggestionsPageTest extends TestCase
 
         // With the most recent BP being normal, NO high-BP suggestion should fire
         $response->assertViewHas('suggestions', function (array $suggestions) {
-            return !in_array('High Blood Pressure Detected', array_column($suggestions, 'title'));
+            return !in_array('High Blood Pressure (Stage 2)', array_column($suggestions, 'title'))
+                && !in_array('High Blood Pressure (Stage 1)', array_column($suggestions, 'title'));
         });
     }
 }

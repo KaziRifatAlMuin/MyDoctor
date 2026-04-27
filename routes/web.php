@@ -29,8 +29,6 @@ use App\Models\Upload;
 use App\Models\User;
 use Illuminate\Http\Request;
 
-
-
 /*
 |--------------------------------------------------------------------------
 | Public Routes
@@ -64,6 +62,20 @@ Route::get('/', function () {
 Route::get('/banned', function () {
     return view('auth.banned');
 })->name('banned');
+
+// System maintenance page
+Route::get('/maintenance', function () {
+    return view('maintenance', [
+        'status' => 'Maintenance in progress',
+        'estimated_time' => 'Expected to be complete soon',
+        'work_description' => 'System repairs and improvements'
+    ]);
+})->name('maintenance');
+
+// Admin route to toggle maintenance mode (admins only)
+Route::post('/admin/maintenance/toggle', [App\Http\Controllers\MaintenanceController::class, 'toggle'])
+    ->middleware(['auth', 'admin'])
+    ->name('admin.maintenance.toggle');
 
 // Main navigation pages
 Route::view('/help', 'help')->name('help');
@@ -294,9 +306,8 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureUserIsActive::class, 'veri
         Route::post('/notification/{id}/read', [MedicineReminderController::class, 'markNotificationRead'])->name('notification.read');
         Route::post('/notification/mark-all-read', [MedicineReminderController::class, 'markAllRead'])->name('notification.mark-all-read');
         Route::delete('/notification/{id}/delete', [MedicineReminderController::class, 'deleteNotification'])->name('notification.delete');
-        // Add these routes inside the medicine reminders group (around line ~375)
-Route::post('/{id}/taken-from-notification', [MedicineReminderController::class, 'markTakenFromNotification'])->name('taken-from-notification');
-Route::post('/{id}/missed-from-notification', [MedicineReminderController::class, 'markMissedFromNotification'])->name('missed-from-notification');
+        Route::post('/{id}/taken-from-notification', [MedicineReminderController::class, 'markTakenFromNotification'])->name('taken-from-notification');
+        Route::post('/{id}/missed-from-notification', [MedicineReminderController::class, 'markMissedFromNotification'])->name('missed-from-notification');
     });
 
     // Suggestions
@@ -384,7 +395,7 @@ Route::prefix('community')->name('community.')->middleware(\App\Http\Middleware\
         Route::post('/posts/{post}/report', [CommunityController::class, 'reportPost'])->name('posts.report');
         
         Route::patch('/posts/{post}/approve', [CommunityController::class, 'approvePost'])->name('posts.approve');
-        Route::patch('/posts/{post}/reject', [CommunityController::class, 'rejectPost'])->name('posts.reject'); // NEW: Post reject route
+        Route::patch('/posts/{post}/reject', [CommunityController::class, 'rejectPost'])->name('posts.reject');
 
         Route::post('/posts/{post}/comments', [CommunityController::class, 'storeComment'])->name('comments.store');
         Route::patch('/comments/{comment}', [CommunityController::class, 'updateComment'])->name('comments.update');
@@ -479,9 +490,9 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureUserIsActive::class, 'admi
         Route::get('/posts/pending', [CommunityController::class, 'adminPendingPosts'])->name('posts.pending');
         Route::get('/posts/reported', [CommunityController::class, 'adminReportedPosts'])->name('posts.reported');
         Route::patch('/posts/{post}/approve', [CommunityController::class, 'approvePost'])->name('posts.approve');
-        Route::patch('/posts/{post}/reject', [CommunityController::class, 'rejectPost'])->name('posts.reject'); // NEW: Admin reject post route
+        Route::patch('/posts/{post}/reject', [CommunityController::class, 'rejectPost'])->name('posts.reject');
         Route::delete('/posts/{post}', [CommunityController::class, 'destroyPost'])->name('posts.destroy');
-Route::patch('/community/posts/{post}/clear-report', [CommunityController::class, 'clearReport'])->name('community.posts.clear-report');
+        Route::patch('/community/posts/{post}/clear-report', [CommunityController::class, 'clearReport'])->name('community.posts.clear-report');
         Route::delete('/comments/{comment}', [CommunityController::class, 'destroyComment'])->name('comments.destroy');
         Route::put('/comments/{comment}/likes', [CommunityController::class, 'toggleCommentLike'])->name('comments.like');
         Route::patch('/comments/{comment}', [CommunityController::class, 'updateComment'])->name('comments.update');
@@ -497,6 +508,15 @@ Route::patch('/community/posts/{post}/clear-report', [CommunityController::class
     Route::get('/medical', [App\Http\Controllers\AdminDashboardController::class, 'medical'])->name('medical.index');
     Route::get('/analytics', [App\Http\Controllers\AdminDashboardController::class, 'analytics'])->name('analytics');
     Route::get('/settings', [App\Http\Controllers\AdminDashboardController::class, 'settings'])->name('settings');
+
+    // ========== DATABASE BACKUP ROUTES ==========
+    Route::get('/backups', [App\Http\Controllers\AdminBackupController::class, 'index'])->name('backups.index');
+    Route::post('/backups', [App\Http\Controllers\AdminBackupController::class, 'store'])->name('backups.store');
+    Route::get('/backups/download/{file}', [App\Http\Controllers\AdminBackupController::class, 'download'])->name('backups.download');
+    Route::delete('/backups/{file}', [App\Http\Controllers\AdminBackupController::class, 'destroy'])->name('backups.destroy');
+    Route::post('/backups/download-multiple', [App\Http\Controllers\AdminBackupController::class, 'downloadMultiple'])->name('backups.download-multiple');
+    // ============================================
+
 });
 
 /*

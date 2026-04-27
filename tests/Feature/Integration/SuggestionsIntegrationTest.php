@@ -60,8 +60,8 @@ class SuggestionsIntegrationTest extends TestCase
 
         $response->assertViewHas('suggestions', function (array $suggestions) {
             $titles = array_column($suggestions, 'title');
-            return in_array('High Blood Pressure Detected',   $titles)
-                && in_array('Very Low Medicine Adherence',    $titles);
+            return in_array('High Blood Pressure (Stage 2)', $titles)
+                && in_array('Critical Medicine Adherence', $titles);
         });
     }
 
@@ -288,7 +288,7 @@ class SuggestionsIntegrationTest extends TestCase
         ]);
         UserHealth::factory()->create([
             'user_id' => $user->id, 'metric_type' => 'blood_glucose',
-            'value'   => ['value' => 220], 'recorded_at' => now(),
+            'value'   => ['value' => 220, 'context' => 'random'], 'recorded_at' => now(),
         ]);
         UserHealth::factory()->create([
             'user_id' => $user->id, 'metric_type' => 'temperature',
@@ -301,9 +301,9 @@ class SuggestionsIntegrationTest extends TestCase
 
         $response->assertViewHas('suggestions', function (array $suggestions) {
             $titles = array_column($suggestions, 'title');
-            return in_array('High Blood Pressure Detected', $titles)
-                && in_array('High Blood Sugar',             $titles)
-                && in_array('Fever Detected',               $titles);
+            return in_array('High Blood Pressure (Stage 2)', $titles)
+                && in_array('High Blood Sugar (Hyperglycemia)', $titles)
+                && in_array('Fever Detected', $titles);
         });
     }
 
@@ -331,7 +331,8 @@ class SuggestionsIntegrationTest extends TestCase
 
         // UserA has no BP data → no high-BP suggestion should appear for userA
         $response->assertViewHas('suggestions', function (array $suggestions) {
-            return !in_array('High Blood Pressure Detected', array_column($suggestions, 'title'));
+            return !in_array('High Blood Pressure (Stage 2)', array_column($suggestions, 'title'))
+                && !in_array('High Blood Pressure (Stage 1)', array_column($suggestions, 'title'));
         });
 
         // UserA's latestMetrics should be empty
@@ -368,5 +369,174 @@ class SuggestionsIntegrationTest extends TestCase
         $this->actingAs($userA)
              ->get(route('suggestions'))
              ->assertViewHas('adherenceRate', 50);
+    }
+
+    // ──────────────────────────────────────────────────
+    // Edge cases and additional scenarios
+    // ──────────────────────────────────────────────────
+
+    #[Test]
+    public function user_with_stage_1_hypertension_gets_appropriate_suggestion(): void
+    {
+        $user = User::factory()->create();
+
+        UserHealth::factory()->create([
+            'user_id'     => $user->id,
+            'metric_type' => 'blood_pressure',
+            'value'       => ['systolic' => 135, 'diastolic' => 85],
+            'recorded_at' => now(),
+        ]);
+
+        $response = $this->actingAs($user)
+                         ->get(route('suggestions'))
+                         ->assertOk();
+
+        $response->assertViewHas('suggestions', function (array $suggestions) {
+            return in_array('High Blood Pressure (Stage 1)', array_column($suggestions, 'title'));
+        });
+    }
+
+    #[Test]
+    public function user_with_prediabetes_gets_lifestyle_suggestion(): void
+    {
+        $user = User::factory()->create();
+
+        UserHealth::factory()->create([
+            'user_id'     => $user->id,
+            'metric_type' => 'blood_glucose',
+            'value'       => ['value' => 110, 'context' => 'fasting'],
+            'recorded_at' => now(),
+        ]);
+
+        $response = $this->actingAs($user)
+                         ->get(route('suggestions'))
+                         ->assertOk();
+
+        $response->assertViewHas('suggestions', function (array $suggestions) {
+            return in_array('Prediabetes Range', array_column($suggestions, 'title'));
+        });
+    }
+
+    #[Test]
+    public function user_with_critical_oxygen_level_gets_emergency_suggestion(): void
+    {
+        $user = User::factory()->create();
+
+        UserHealth::factory()->create([
+            'user_id'     => $user->id,
+            'metric_type' => 'oxygen_saturation',
+            'value'       => ['value' => 85],
+            'recorded_at' => now(),
+        ]);
+
+        $response = $this->actingAs($user)
+                         ->get(route('suggestions'))
+                         ->assertOk();
+
+        $response->assertViewHas('suggestions', function (array $suggestions) {
+            return in_array('Critical Oxygen Level', array_column($suggestions, 'title'));
+        });
+    }
+
+    #[Test]
+    public function user_with_severe_obesity_gets_class_iii_suggestion(): void
+    {
+        $user = User::factory()->create();
+
+        UserHealth::factory()->create([
+            'user_id'     => $user->id,
+            'metric_type' => 'bmi',
+            'value'       => ['value' => 42],
+            'recorded_at' => now(),
+        ]);
+
+        $response = $this->actingAs($user)
+                         ->get(route('suggestions'))
+                         ->assertOk();
+
+        $response->assertViewHas('suggestions', function (array $suggestions) {
+            return in_array('Severe Obesity (Class III)', array_column($suggestions, 'title'));
+        });
+    }
+
+    #[Test]
+    public function user_with_high_fever_gets_danger_suggestion(): void
+    {
+        $user = User::factory()->create();
+
+        UserHealth::factory()->create([
+            'user_id'     => $user->id,
+            'metric_type' => 'temperature',
+            'value'       => ['value' => 40.2],
+            'recorded_at' => now(),
+        ]);
+
+        $response = $this->actingAs($user)
+                         ->get(route('suggestions'))
+                         ->assertOk();
+
+        $response->assertViewHas('suggestions', function (array $suggestions) {
+            $suggestion = collect($suggestions)->firstWhere('title', 'High Fever Detected');
+            return $suggestion !== null && $suggestion['color'] === 'danger';
+        });
+    }
+
+    #[Test]
+    public function user_with_multiple_risk_factors_gets_prioritized_suggestions(): void
+    {
+        $user = User::factory()->create();
+
+        // High BP
+        UserHealth::factory()->create([
+            'user_id'     => $user->id,
+            'metric_type' => 'blood_pressure',
+            'value'       => ['systolic' => 160, 'diastolic' => 100],
+            'recorded_at' => now(),
+        ]);
+
+        // Low adherence (0% adherence = 0 taken out of 10 scheduled)
+        $medicine = Medicine::factory()->create(['user_id' => $user->id]);
+        MedicineLog::factory()->create([
+            'user_id'         => $user->id,
+            'medicine_id'     => $medicine->id,
+            'date'            => now()->subDays(5)->format('Y-m-d'),
+            'total_scheduled' => 10,
+            'total_taken'     => 0,
+            'total_missed'    => 10,
+        ]);
+
+        // Severe symptom
+        $symptom = Symptom::factory()->create(['name' => 'severe_headache']);
+        UserSymptom::factory()->create([
+            'user_id'        => $user->id,
+            'symptom_id'     => $symptom->id,
+            'severity_level' => 8,
+            'recorded_at'    => now(),
+        ]);
+
+        $response = $this->actingAs($user)
+                         ->get(route('suggestions'))
+                         ->assertOk();
+
+        $suggestions = $response->viewData('suggestions');
+        $titles = array_column($suggestions, 'title');
+
+        // All three critical issues should be addressed
+        $this->assertContains('High Blood Pressure (Stage 2)', $titles);
+        $this->assertContains('Critical Medicine Adherence', $titles);
+        $this->assertContains('Severe Symptoms Reported', $titles);
+
+        // Verify order (critical alerts should come first)
+        $indices = [
+            'bp' => array_search('High Blood Pressure (Stage 2)', $titles),
+            'adherence' => array_search('Critical Medicine Adherence', $titles),
+            'symptom' => array_search('Severe Symptoms Reported', $titles),
+        ];
+
+        // All should be found and appear before wellness suggestions
+        $wellnessIndex = array_search('Stay Hydrated', $titles);
+        $this->assertLessThan($wellnessIndex, $indices['bp']);
+        $this->assertLessThan($wellnessIndex, $indices['adherence']);
+        $this->assertLessThan($wellnessIndex, $indices['symptom']);
     }
 }

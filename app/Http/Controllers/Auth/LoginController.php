@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Cache;
 
 class LoginController extends Controller
 {
@@ -77,6 +78,12 @@ class LoginController extends Controller
         ], $request->filled('remember'))) {
             
             $request->session()->regenerate();
+
+            // If maintenance mode is enabled, non-admin users should be shown the maintenance page
+            $maintenance = Cache::get('maintenance_mode', config('app.maintenance_mode', false));
+            if ($maintenance === true && ! auth()->user()?->isAdmin()) {
+                return redirect()->route('maintenance');
+            }
 
             return redirect()->to($this->resolveRedirectPath($request, $this->redirectTo));
         }

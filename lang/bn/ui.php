@@ -61,6 +61,7 @@ return [
         'health' => 'স্বাস্থ্য',
         'community' => 'কমিউনিটি',
         'logs' => 'অ্যাক্টিভিটি লগ',
+        'backups' => 'ব্যাকআপ',
     ],
     
     'community' => [
@@ -1014,9 +1015,9 @@ return [
         'metric_alerts' => 'মেট্রিক সতর্কতা',
         'adherence' => 'ঔষধ সেবন হার',
         'conditions' => 'রোগ',
-        'lifestyle' => 'জীবনশৈলী',
-        'wellness' => 'সুস্থতা',
-        'getting_started' => 'শুরু করা',
+        
+        'symptoms' => ' লক্ষণ',
+       
         'everything_looks_good' => 'সবকিছু ভালো দেখাচ্ছে!',
         'no_specific_suggestions' => 'এই মুহূর্তে কোনো নির্দিষ্ট পরামর্শ নেই। ভালো কাজ চালিয়ে যান!',
         'adherence_30_days' => 'ঔষধ সেবন হার (৩০ দিন)',
