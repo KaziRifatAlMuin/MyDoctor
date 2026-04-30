@@ -19,7 +19,7 @@ Managing personal health data across multiple platforms is challenging. Patients
 
 ## Key Features
 
-![User Flow Diagram](storage/app/public/screenshots/user.drawio.png)
+![User Flow Diagram](resources/screenshots/user.drawio.png)
 
 ### Core Features
 
@@ -53,7 +53,7 @@ Managing personal health data across multiple platforms is challenging. Patients
 
 ## System Architecture
 
-![System Architecture Diagram](storage/app/public/screenshots/architecture.png)
+![System Architecture Diagram](resources/screenshots/architecture.png)
 
 ### Overall Architecture
 
@@ -137,8 +137,8 @@ The system follows the **Model-View-Controller (MVC)** architectural pattern wit
 
 ### Entity Relationship Diagrams
 
-![ER Diagram 1](storage/app/public/screenshots/erdiagram1.png)
-![ER Diagram 2](storage/app/public/screenshots/erdiagram2.png)
+![ER Diagram 1](resources/screenshots/erdiagram1.png)
+![ER Diagram 2](resources/screenshots/erdiagram2.png)
 
 ## API Documentation
 
@@ -413,23 +413,23 @@ php artisan serve
 ## Screenshots
 
 ### Dashboard
-![Dashboard](storage/app/public/screenshots/dashboard.png)
+![Dashboard](resources/screenshots/dashboard.png)
 
 ### Health Metrics
 ![Health Metrics](storage/app/public/screenshots/healthmetrics.png)
 
 ### Medicine Management
-![Medicine Management](storage/app/public/screenshots/medicine.png)
+![Medicine Management](resources/screenshots/medicine.png)
 
 ### Community Forum
-![Community Forum](storage/app/public/screenshots/community.png)
+![Community Forum](resources/screenshots/community.png)
 
 ### AI Chatbot
-![AI Chatbot - Conversation](storage/app/public/screenshots/chatbot1.png)
-![AI Chatbot - Health Summary](storage/app/public/screenshots/chatbot2.png)
+![AI Chatbot - Conversation](resources/screenshots/chatbot1.png)
+![AI Chatbot - Conversation(Bangla)](resources/screenshots/chatbot2.png)
 
 ### Internal Mailbox
-![Mailbox](storage/app/public/screenshots/mail.png)
+![Mailbox](resources/screenshots/mail.png)
 
 ---
 
