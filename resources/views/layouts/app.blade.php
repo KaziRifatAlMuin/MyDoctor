@@ -2749,13 +2749,7 @@
                     <p class="footer-text">
                         {{ __('ui.footer.about_text') }}
                     </p>
-                    <div class="social-links">
-                        <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
-                        <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
-                        <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
-                    </div>
+
                 </div>
 
                 <!-- Quick Links -->
