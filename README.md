@@ -851,25 +851,13 @@ php artisan serve
 
 ---
 
-## 📄 License
+## License
 
-<div align="center">
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
-[![Open Source](https://img.shields.io/badge/Open_Source-❤️-red?style=for-the-badge)](https://opensource.org/)
-[![Free to Use](https://img.shields.io/badge/Free_to_Use-✓-green?style=for-the-badge)](https://github.com/KaziRifatAlMuin/MyDoctor)
+Copyright (c) 2026 Kazi Rifat Al Muin & Dipta Chowdhury
 
-</div>
-
-This project is licensed under the **MIT License** - a free and permissive license that allows unlimited use, modification, and distribution.
-
-```yaml
-License: MIT
-Author: Kazi Rifat Al Muin & Dipta Chowdhury
-Year: 2026
-Commercial Use: ✅ Allowed
-Modification: ✅ Allowed
-Distribution: ✅ Allowed
+You are free to use, modify, and distribute this software for personal or commercial purposes, provided that the original copyright notice is included.
 ---
 
 ## Author / Credits
