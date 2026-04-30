@@ -1,6 +1,6 @@
 # MyDoctor - Complete Healthcare Management Platform
 
-**Visit Website:** https://mydoctor.rifatalmuin.com/
+**Visit MyDoctor:** [https://mydoctor.rifatalmuin.com/](https://mydoctor.rifatalmuin.com/)
 
 MyDoctor is a comprehensive healthcare management system that helps users track health metrics, manage medications, receive AI-powered health insights, and connect with a supportive community. Built with Laravel, it serves as a personal health companion for patients managing chronic conditions, caregivers, and health-conscious individuals.
 
@@ -853,15 +853,18 @@ php artisan serve
 
 ## License
 
-This project is licensed under the **MIT License**.
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+Copyright (c) 2026 Kazi Rifat Al Muin & Dipta Chowdhury
 
 You are free to use, modify, and distribute this software for personal or commercial purposes, provided that the original copyright notice is included.
-
 ---
 
 ## Author / Credits
 
-**Developed by** - Kazi Rifat Al Muin & Dipta Chowdhury
+**Developed by** 
+- Kazi Rifat Al Muin - [GitHub](https://github.com/KaziRifatAlMuin)
+- Dipta Chowdhury - [GitHub](https://github.com/dipta-38)
 
 ### Acknowledgments
 
