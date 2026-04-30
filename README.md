@@ -245,178 +245,13 @@ The system follows the **Model-View-Controller (MVC)** architectural pattern wit
 
 ---
 
-## Tech Stack
-
-### Backend
-- **Framework**: Laravel 11
-- **Language**: PHP 8.2+
-- **Database**: MySQL 8.0 (with views and triggers)
-- **Queue**: Database driver (Redis-ready)
-- **Cache**: Database driver (Redis-ready)
-- **Session**: File driver (Database/Redis-ready)
-
-### Frontend
-- **Templating**: Blade with Bootstrap 5
-- **JavaScript**: Vanilla JS with Bootstrap JS
-- **Charts**: Chart.js
-- **Rich Text**: TinyMCE (mailbox composer)
-- **Icons**: Font Awesome 6
-
-### AI & External Services
-- **AI Providers**: OpenRouter API (primary), Google Gemini API (fallback)
-- **Weather**: Open-Meteo API
-- **Air Quality**: Open-Meteo Air Quality API
-- **Geocoding**: Open-Meteo Geocoding API
-
-### DevOps & Tools
-- **Version Control**: Git
-- **Asset Compilation**: Vite
-- **Local Development**: Laravel Sail (Docker) or local PHP/MySQL
-
----
-
-## Installation & Setup
-
-### Prerequisites
-
-- PHP 8.2 or higher
-- Composer
-- MySQL 8.0
-- Node.js & NPM (for asset compilation)
-
-### Step 1: Clone the Repository
-
-```bash
-git clone https://github.com/KaziRifatAlMuin/MyDoctor.git
-cd MyDoctor
-```
-
-### Step 2: Install Dependencies
-
-```bash
-composer install
-npm install
-```
-
-### Step 3: Environment Configuration
-
-```bash
-cp .env.example .env
-php artisan key:generate
-```
-
-### Step 4: Run Migrations & Seeders
-
-```bash
-php artisan migrate --seed
-```
-
-### Step 5: Create Storage Link
-
-```bash
-php artisan storage:link
-```
-
-### Step 6: Compile Assets
-
-```bash
-npm run build
-```
-
-For development with hot reload:
-
-```bash
-npm run dev
-```
-
-### Step 7: Start Queue Worker (Recommended)
-
-```bash
-php artisan queue:work
-```
-
-### Step 8: Start Scheduler (Recommended)
-
-```bash
-php artisan schedule:work
-```
-
-### Step 9: Start the Application
-
-```bash
-php artisan serve
-```
-
-### Step 10: Setup Cron for Reminders (Production)
-
-```bash
-* * * * * php /path-to-project/artisan schedule:run >> /dev/null 2>&1
-```
-
----
-
-## Usage Guide
-
-### For Regular Users
-
-**1. Register an Account**
-- Click "Register" on the homepage
-- Fill in personal details including address (Division/District/Upazila)
-- Verify your email using the link sent to your inbox
-
-**2. Set Up Your Health Profile**
-- Add your medicines via "Medicine → Add Medicine"
-- Create schedules for each medicine (dosage times, frequency)
-- Log health metrics like blood pressure or blood glucose
-
-**3. Track Symptoms**
-- Navigate to "Health → Symptoms"
-- Log symptoms with severity levels (1-10)
-- Add notes for context
-
-**4. Use Medicine Reminders**
-- Receive email and in-app notifications for medicines
-- Click "Taken" when you take your medicine
-- View adherence rates on dashboard
-
-**5. Join the Community**
-- Go to "Community" to see disease-based discussions
-- Create posts (anonymous option available)
-- Like, comment, and star posts for future reference
-- Report inappropriate content to moderators
-
-**6. Chat with AI Assistant**
-- Click the chatbot icon (bottom-right corner)
-- Ask questions like "How is my blood pressure trending?"
-- Get personalized health summaries and suggestions
-
-**7. Manage Your Mailbox**
-- Send messages to other users
-- Save drafts, star important conversations
-- Archive old messages
-
-### Sample Workflow: Managing Hypertension
-
-1. User registers and logs in
-2. Adds "Lisinopril 10mg" to medicines
-3. Creates schedule: daily at 8:00 AM
-4. System generates reminders
-5. User receives notification at 8:00 AM
-6. User clicks "Taken" after taking medicine
-7. Dashboard shows adherence rate increasing
-8. User logs blood pressure reading weekly
-9. AI chatbot provides insights on trends
-10. User discusses experiences in Hypertension community forum
-
----
-
 ## Screenshots
 
 ### Dashboard
 ![Dashboard](resources/screenshots/dashboard.png)
 
 ### Health Metrics
-![Health Metrics](storage/app/public/screenshots/healthmetrics.png)
+![Health Metrics](resources/screenshots/healthmetrics.png)
 
 ### Medicine Management
 ![Medicine Management](resources/screenshots/medicine.png)
@@ -425,8 +260,17 @@ php artisan serve
 ![Community Forum](resources/screenshots/community.png)
 
 ### AI Chatbot
-![AI Chatbot - Conversation](resources/screenshots/chatbot1.png)
-![AI Chatbot - Conversation(Bangla)](resources/screenshots/chatbot2.png)
+
+<table>
+  <tr>
+    <td><img src="resources/screenshots/chatbot1.png" alt="AI Chatbot - Conversation" width="100%"></td>
+    <td><img src="resources/screenshots/chatbot2.png" alt="AI Chatbot - Conversation (Bangla)" width="100%"></td>
+  </tr>
+  <tr>
+    <td align="center"><em>English Conversation</em></td>
+    <td align="center"><em>Bengali Conversation</em></td>
+  </tr>
+</table>
 
 ### Internal Mailbox
 ![Mailbox](resources/screenshots/mail.png)
@@ -802,6 +646,173 @@ mydoctor/
 ```
 
 ---
+
+
+## Tech Stack
+
+### Backend
+- **Framework**: Laravel 11
+- **Language**: PHP 8.2+
+- **Database**: MySQL 8.0 (with views and triggers)
+- **Queue**: Database driver (Redis-ready)
+- **Cache**: Database driver (Redis-ready)
+- **Session**: File driver (Database/Redis-ready)
+
+### Frontend
+- **Templating**: Blade with Bootstrap 5
+- **JavaScript**: Vanilla JS with Bootstrap JS
+- **Charts**: Chart.js
+- **Rich Text**: TinyMCE (mailbox composer)
+- **Icons**: Font Awesome 6
+
+### AI & External Services
+- **AI Providers**: OpenRouter API (primary), Google Gemini API (fallback)
+- **Weather**: Open-Meteo API
+- **Air Quality**: Open-Meteo Air Quality API
+- **Geocoding**: Open-Meteo Geocoding API
+
+### DevOps & Tools
+- **Version Control**: Git
+- **Asset Compilation**: Vite
+- **Local Development**: Laravel Sail (Docker) or local PHP/MySQL
+
+---
+
+## Installation & Setup
+
+### Prerequisites
+
+- PHP 8.2 or higher
+- Composer
+- MySQL 8.0
+- Node.js & NPM (for asset compilation)
+
+### Step 1: Clone the Repository
+
+```bash
+git clone https://github.com/KaziRifatAlMuin/MyDoctor.git
+cd MyDoctor
+```
+
+### Step 2: Install Dependencies
+
+```bash
+composer install
+npm install
+```
+
+### Step 3: Environment Configuration
+
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+### Step 4: Run Migrations & Seeders
+
+```bash
+php artisan migrate --seed
+```
+
+### Step 5: Create Storage Link
+
+```bash
+php artisan storage:link
+```
+
+### Step 6: Compile Assets
+
+```bash
+npm run build
+```
+
+For development with hot reload:
+
+```bash
+npm run dev
+```
+
+### Step 7: Start Queue Worker (Recommended)
+
+```bash
+php artisan queue:work
+```
+
+### Step 8: Start Scheduler (Recommended)
+
+```bash
+php artisan schedule:work
+```
+
+### Step 9: Start the Application
+
+```bash
+php artisan serve
+```
+
+### Step 10: Setup Cron for Reminders (Production)
+
+```bash
+* * * * * php /path-to-project/artisan schedule:run >> /dev/null 2>&1
+```
+
+---
+
+## Usage Guide
+
+### For Regular Users
+
+**1. Register an Account**
+- Click "Register" on the homepage
+- Fill in personal details including address (Division/District/Upazila)
+- Verify your email using the link sent to your inbox
+
+**2. Set Up Your Health Profile**
+- Add your medicines via "Medicine → Add Medicine"
+- Create schedules for each medicine (dosage times, frequency)
+- Log health metrics like blood pressure or blood glucose
+
+**3. Track Symptoms**
+- Navigate to "Health → Symptoms"
+- Log symptoms with severity levels (1-10)
+- Add notes for context
+
+**4. Use Medicine Reminders**
+- Receive email and in-app notifications for medicines
+- Click "Taken" when you take your medicine
+- View adherence rates on dashboard
+
+**5. Join the Community**
+- Go to "Community" to see disease-based discussions
+- Create posts (anonymous option available)
+- Like, comment, and star posts for future reference
+- Report inappropriate content to moderators
+
+**6. Chat with AI Assistant**
+- Click the chatbot icon (bottom-right corner)
+- Ask questions like "How is my blood pressure trending?"
+- Get personalized health summaries and suggestions
+
+**7. Manage Your Mailbox**
+- Send messages to other users
+- Save drafts, star important conversations
+- Archive old messages
+
+### Sample Workflow: Managing Hypertension
+
+1. User registers and logs in
+2. Adds "Lisinopril 10mg" to medicines
+3. Creates schedule: daily at 8:00 AM
+4. System generates reminders
+5. User receives notification at 8:00 AM
+6. User clicks "Taken" after taking medicine
+7. Dashboard shows adherence rate increasing
+8. User logs blood pressure reading weekly
+9. AI chatbot provides insights on trends
+10. User discusses experiences in Hypertension community forum
+
+---
+
 
 ## Future Improvements
 
