@@ -1,10 +1,22 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "kazirifatalmuin/mydoctor",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "description": "Complete Healthcare Management Platform",
+    "keywords": ["laravel", "healthcare", "medicine-reminder", "health-tracking"],
     "license": "MIT",
+    "authors": [
+        {
+            "name": "Kazi Rifat Al Muin",
+            "email": "kazirifatalmuin246@gmail.com",
+            "role": "Developer"
+        },
+        {
+            "name": "Dipta Chowdhury",
+            "email": "diptachy117@gmail.com",
+            "role": "Developer"
+        }
+    ],
     "require": {
         "php": "^8.2",
         "laravel-notification-channels/webpush": "^10.5",

@@ -1933,10 +1933,7 @@ body {
                         <div class="stat-value">{{ number_format($totalComments) }}</div>
                         <div class="stat-label">{{ __('ui.community.comments') }}</div>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-value">{{ number_format($activeToday) }}</div>
-                        <div class="stat-label">{{ __('ui.community.active_today') }}</div>
-                    </div>
+                
                 </div>
             </div>
 
